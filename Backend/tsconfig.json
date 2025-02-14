@@ -10,7 +10,7 @@
       "noFallthroughCasesInSwitch": true,
       "resolveJsonModule": true,
       "skipLibCheck": true,
-      "moduleResolution": "node",
+      "moduleResolution": "nodenext",
       "allowSyntheticDefaultImports": true,
     }
   }
