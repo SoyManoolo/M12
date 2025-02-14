@@ -1,0 +1,17 @@
+{
+    "include": ["src/**/*.ts"],
+    "compilerOptions": {
+      "target": "es2016",
+      "module": "CommonJS",
+      "outDir": "./dist",
+      "esModuleInterop": true,
+      "strict": true,
+      "noImplicitReturns": true,
+      "noFallthroughCasesInSwitch": true,
+      "resolveJsonModule": true,
+      "skipLibCheck": true,
+      "moduleResolution": "node",
+      "allowSyntheticDefaultImports": true,
+    }
+  }
+  
