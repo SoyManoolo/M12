@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+/* @tailwind base;
+@tailwind components;
+@tailwind utilities; */
+
+
+
+/* Tus estilos adicionales */
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #d9cf5e;
+}
+@layer base {
+  /* Preflight styles */
+}
