@@ -1,17 +1,18 @@
 {
-    "include": ["src/**/*.ts"],
+    "include": [
+        "src/**/*.ts"
+    ],
     "compilerOptions": {
-      "target": "es2016",
-      "module": "NodeNext",
-      "outDir": "./dist",
-      "esModuleInterop": true,
-      "strict": true,
-      "noImplicitReturns": true,
-      "noFallthroughCasesInSwitch": true,
-      "resolveJsonModule": true,
-      "skipLibCheck": true,
-      "moduleResolution": "nodenext",
-      "allowSyntheticDefaultImports": true,
+        "target": "es2016",
+        "module": "NodeNext",
+        "outDir": "./dist",
+        "esModuleInterop": true,
+        "strict": true,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+        "resolveJsonModule": true,
+        "skipLibCheck": true,
+        "moduleResolution": "nodenext",
+        "allowSyntheticDefaultImports": true,
     }
-  }
-  
+}
