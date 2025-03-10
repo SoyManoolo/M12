@@ -13,10 +13,12 @@ async function initializeDatabase() {
         console.log("Connection has been established successfully.");
 
         // Sincroniza los modelos con la base de datos (crea las tablas si no existen con alter: true)
-        await sequelize.sync({ alter: false }); 
+        await sequelize.sync({ alter: false });
         console.log("All models were synchronized successfully.");
 
     } catch (error) {
         console.error(error)
     }
 }
+
+initializeDatabase();

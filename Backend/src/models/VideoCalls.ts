@@ -2,7 +2,7 @@ import { DataTypes, Model } from "sequelize";
 import { sequelize } from "../config/database";
 import { User } from "./User";
 
-export class VideoCalls extends Model {}
+export class VideoCalls extends Model { }
 
 VideoCalls.init(
   {
