@@ -11,7 +11,15 @@ afterAll(async () => {
 describe('Users test:', () => {
     test('Test de prueba', async () => {
         await api
-            .get('')
+            .get('/users')
             .expect(200)
-    })
+            .expect('Content-Type', /application\/json/)
+    });
+
+    test('Test de prueba', async () => {
+        await api
+            .get('/users')
+            .expect(200)
+            .expect('Content-Type', /application\/json/)
+    });
 })

@@ -13,6 +13,6 @@
         "resolveJsonModule": true,
         "skipLibCheck": true,
         "moduleResolution": "nodenext",
-        "allowSyntheticDefaultImports": true,
+        "allowSyntheticDefaultImports": true
     }
 }

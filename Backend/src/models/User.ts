@@ -70,15 +70,15 @@ User.init(
         createdAt: "created_at",
         updatedAt: "updated_at",
         indexes: [
-            { 
-                unique: true, 
-                fields: ["email"], 
-                name: "idx_users_email" 
+            {
+                unique: true,
+                fields: ["email"],
+                name: "idx_users_email"
             },
-            { 
-                unique: true, 
-                fields: ["username"], 
-                name: "idx_users_username" 
+            {
+                unique: true,
+                fields: ["username"],
+                name: "idx_users_username"
             },
         ],
     }
