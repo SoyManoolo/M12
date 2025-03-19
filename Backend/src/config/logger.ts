@@ -73,21 +73,21 @@ const saveLogToDatabase = async (level: string, message: string, meta?: object) 
 if (process.env.NODE_ENV !== 'test') {
   cron.schedule('0 0 * * *', async () => {
     try {
-      const oneMonthAgo = new Date();
-      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
       const deletedLogs = await Logs.destroy({
         where: {
-          timestamp: { [Op.lte]: oneMonthAgo },
+          timestamp: { [Op.lte]: oneWeekAgo },
         },
       });
 
-      dbLogger.info(`[CRON] Logs cleanup executed at 00:00. Deleted ${deletedLogs} logs older than one month.`);
+      dbLogger.info(`[CRON] Logs cleanup executed at 00:00. Deleted ${deletedLogs} logs older than one week.`);
     } catch (error) {
       dbLogger.error('[CRON] Error in cron job deleting old logs:', { error });
     }
   });
-  dbLogger.info('Cron job scheduled for log cleanup.');
+  dbLogger.info('Cron job scheduled for log cleanup (retention: 7 days).');
 } else {
   dbLogger.info('Cron job not scheduled in test environment.');
 }
