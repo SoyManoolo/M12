@@ -1,6 +1,6 @@
-import { DataTypes, UUIDV4 } from "sequelize";
-import { Model } from "sequelize";
 import { sequelize } from "../config/database";
+import { Model, DataTypes } from "sequelize";
+
 
 export class User extends Model { }
 
@@ -8,7 +8,7 @@ User.init(
     {
         user_id: {
             type: DataTypes.UUID,
-            defaultValue: UUIDV4,
+            defaultValue: DataTypes.UUIDV4,
             primaryKey: true,
         },
         name: {

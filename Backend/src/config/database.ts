@@ -37,21 +37,29 @@ async function createDatabase(): Promise<boolean> {
 export const sequelize = new Sequelize(process.env.DB_NAME!, process.env.DB_USER!, process.env.DB_PASS!, {
     host: process.env.DB_HOST || "localhost",
     dialect: "postgres",
-    port: Number(process.env.DB_PORT) || 5432, // Cambiar a 5432 para PostgreSQL
+    port: Number(process.env.DB_PORT) || 5432, // Puerto por defecto de PostgreSQL
 });
 
 // Función para inicializar la base de datos
 async function initializeDatabase() {
     try {
+        const databaseCreated = await createDatabase();
+
+        if (databaseCreated) {
+            dbLogger.info("Database created successfully.");
+        }
+        dbLogger.info(`Using database: ${dbName} (Environment: ${process.env.NODE_ENV || "development"})`);
+
         await sequelize.authenticate();
-        console.log("Connection has been established successfully.");
+        dbLogger.info("Connection has been established successfully.");
 
         // Sincroniza los modelos con la base de datos (crea las tablas si no existen con alter: true)
         await sequelize.sync({ alter: false });
-        console.log("All models were synchronized successfully.");
+        dbLogger.info("All models were synchronized successfully.");
 
     } catch (error) {
-        console.error(error)
+        dbLogger.error('Error connecting to the database', { error });
+        throw new AppError(500, "FailedConnection");
     }
 }
 
