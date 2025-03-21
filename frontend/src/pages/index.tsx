@@ -1,17 +1,16 @@
 // src/pages/index.tsx
-import React from "react";
+import React, { useEffect } from "react";
 import Navbar from "../components/Navbar";
+import { useRouter } from 'next/router';
 
-const HomePage: React.FC = () => (
-  <div>
-    <Navbar />
-    <h1>Bienvenido a FriendsGo</h1>
-    <p>Conecta con personas de todo el mundo.</p>
+const HomePage: React.FC = () => {
+  const router = useRouter();
 
-    <input className="bg-amber-300" ></input>
-    
+  useEffect(() => {
+    router.replace('/login');
+  }, [router]);
 
-  </div>
-);
+  return null;
+};
 
 export default HomePage;
