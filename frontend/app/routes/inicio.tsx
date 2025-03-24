@@ -1,41 +1,85 @@
-import { FaHome, FaCog, FaEnvelope, FaVideo, FaBell, FaSearch } from 'react-icons/fa';
-import { useRouter } from 'next/router';
+import { FaHome, FaCog, FaEnvelope, FaVideo, FaBell, FaSearch, FaUser } from 'react-icons/fa';
+import { useNavigate } from "@remix-run/react";
+import type { LoaderFunction } from "@remix-run/node";
+import { json } from "@remix-run/node";
+import { MdPublish } from 'react-icons/md';
 
-const InicioPage = () => {
-  const router = useRouter();
+export const loader: LoaderFunction = async () => {
+  // Aquí irá la lógica para cargar datos iniciales
+  return json({
+    posts: [1, 2, 3],
+    suggestedFriends: [1, 2, 3, 4, 5]
+  });
+};
+
+export default function InicioPage() {
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-black text-white flex">
       {/* Barra lateral izquierda */}
       <div className="w-1/6 border-r border-gray-800 p-4 fixed h-full">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold">LOGO</h1>
+          <h1 className="text-2xl font-bold"
+          onClick={() => navigate('/inicio')}
+          >LOGO</h1>
         </div>
         
         <nav className="space-y-6">
-          <button className="flex items-center space-x-3 text-gray-300 hover:text-white w-full p-2 rounded hover:bg-gray-800">
-            <FaHome className="text-xl" />
-            <span>Inicio</span>
-          </button>
-          
-          <button className="flex items-center space-x-3 text-gray-300 hover:text-white w-full p-2 rounded hover:bg-gray-800">
-            <FaBell className="text-xl" />
-            <span>Notificaciones</span>
-          </button>
-          
-          <button className="flex items-center space-x-3 text-gray-300 hover:text-white w-full p-2 rounded hover:bg-gray-800">
-            <FaEnvelope className="text-xl" />
-            <span>Mensajes</span>
-          </button>
-          
-          <button className="flex items-center space-x-3 text-gray-300 hover:text-white w-full p-2 rounded hover:bg-gray-800">
+
+          {/* Videollamadas */}
+          <button 
+            onClick={() => navigate('/videollamadas')}
+            className="flex items-center space-x-3 text-gray-300 hover:text-white w-full p-2 rounded hover:bg-gray-800"
+          >
             <FaVideo className="text-xl" />
             <span>Videollamadas</span>
           </button>
           
-          <button className="flex items-center space-x-3 text-gray-300 hover:text-white w-full p-2 rounded hover:bg-gray-800">
+
+          {/* Publicar */}
+          <button 
+            onClick={() => navigate('/publicar')}
+            className="flex items-center space-x-3 text-gray-300 hover:text-white w-full p-2 rounded hover:bg-gray-800"
+          >
+            <MdPublish className="text-xl" />
+            <span>Publicar</span>
+          </button>
+
+          {/* Notificaciones */}
+          <button 
+            onClick={() => navigate('/notificaciones')}
+            className="flex items-center space-x-3 text-gray-300 hover:text-white w-full p-2 rounded hover:bg-gray-800"
+          >
+            <FaBell className="text-xl" />
+            <span>Notificaciones</span>
+          </button>
+          
+          {/* Mensajes */}
+          <button 
+            onClick={() => navigate('/mensajes')}
+            className="flex items-center space-x-3 text-gray-300 hover:text-white w-full p-2 rounded hover:bg-gray-800"
+          >
+            <FaEnvelope className="text-xl" />
+            <span>Mensajes</span>
+          </button>
+
+          {/* Configuración */} 
+          <button 
+            onClick={() => navigate('/configuracion')}
+            className="flex items-center space-x-3 text-gray-300 hover:text-white w-full p-2 rounded hover:bg-gray-800"
+          >
             <FaCog className="text-xl" />
             <span>Configuración</span>
+          </button>
+
+          {/* Mi perfil */}
+          <button 
+            onClick={() => navigate('/mi-perfil')}
+            className="flex items-center space-x-3 text-gray-300 hover:text-white w-full p-2 rounded hover:bg-gray-800"
+          >
+            <FaUser className="text-xl" />
+            <span>Mi perfil</span>
           </button>
         </nav>
       </div>
@@ -94,6 +138,4 @@ const InicioPage = () => {
       </div>
     </div>
   );
-};
-
-export default InicioPage; 
+} 
