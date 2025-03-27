@@ -5,7 +5,6 @@
  */
 
 import { PassThrough } from "node:stream";
-
 import type { AppLoadContext, EntryContext } from "@remix-run/node";
 import { createReadableStreamFromReadable } from "@remix-run/node";
 import { RemixServer } from "@remix-run/react";
@@ -23,6 +22,7 @@ export default function handleRequest(
   // free to delete this parameter in your app if you're not using it!
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   loadContext: AppLoadContext
+
 ) {
   return isbot(request.headers.get("user-agent") || "")
     ? handleBotRequest(
@@ -138,3 +138,4 @@ function handleBrowserRequest(
     setTimeout(abort, ABORT_DELAY);
   });
 }
+

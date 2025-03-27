@@ -1,5 +1,5 @@
-import { DataTypes, Model } from "sequelize";
 import { sequelize } from "../config/database";
+import { Model, DataTypes } from "sequelize";
 import { User } from "./User";
 import { Post } from "./Post";
 
@@ -14,7 +14,7 @@ PostComments.init(
     },
     post_id: {
       type: DataTypes.UUID,
-      allowNull: false, 
+      allowNull: false,
       references: {
         model: Post,
         key: "post_id",
@@ -39,10 +39,10 @@ PostComments.init(
   },
   {
     sequelize,
-    tableName: "post_comments", 
-    timestamps: true, 
-    createdAt: "created_at", 
-    updatedAt: false, 
+    tableName: "post_comments",
+    timestamps: true,
+    createdAt: "created_at",
+    updatedAt: false,
     indexes: [
       {
         fields: ["post_id"],

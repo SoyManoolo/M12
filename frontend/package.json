@@ -1,45 +1,51 @@
 {
-  "name": "frontend",
+  "name": "react",
   "private": true,
-  "sideEffects": false,
+  "version": "0.0.0",
   "type": "module",
+  "npm audit": "true",
   "scripts": {
+    "dev": "vite",
     "build": "remix vite:build",
-    "dev": "remix vite:dev",
-    "lint": "eslint --ignore-path .gitignore --cache --cache-location ./node_modules/.cache/eslint .",
-    "start": "remix-serve ./build/server/index.js",
-    "typecheck": "tsc"
+    "lint": "eslint .",
+    "preview": "vite preview"
   },
   "dependencies": {
     "@remix-run/node": "^2.16.2",
     "@remix-run/react": "^2.16.2",
     "@remix-run/serve": "^2.16.2",
-    "axios": "^1.8.4",
-    "isbot": "^4.1.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-icons": "^5.5.0"
+    "@tailwindcss/vite": "^4.0.15",
+    "cookie": "^1.0.2",
+    "isbot": "^5.1.25",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router": "^7.4.0",
+    "react-router-dom": "^7.4.0",
+    "tailwindcss": "^4.0.15"
   },
   "devDependencies": {
+    "@eslint/js": "^9.21.0",
     "@remix-run/dev": "^2.16.2",
     "@types/react": "^18.3.20",
     "@types/react-dom": "^18.3.5",
-    "@typescript-eslint/eslint-plugin": "^6.7.4",
-    "@typescript-eslint/parser": "^6.7.4",
-    "autoprefixer": "^10.4.19",
-    "eslint": "^8.38.0",
-    "eslint-import-resolver-typescript": "^3.6.1",
-    "eslint-plugin-import": "^2.28.1",
-    "eslint-plugin-jsx-a11y": "^6.7.1",
-    "eslint-plugin-react": "^7.33.2",
-    "eslint-plugin-react-hooks": "^4.6.0",
-    "postcss": "^8.4.38",
-    "tailwindcss": "^3.4.4",
-    "typescript": "^5.1.6",
-    "vite": "^6.0.0",
-    "vite-tsconfig-paths": "^4.2.1"
+    "@typescript-eslint/eslint-plugin": "^8.27.0",
+    "@typescript-eslint/parser": "^8.27.0",
+    "@vanilla-extract/integration": "^8.0.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "eslint": "^9.21.0",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-react": "^7.37.4",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "eslint-plugin-react-refresh": "^0.4.19",
+    "globals": "^15.15.0",
+    "typescript": "~5.7.2",
+    "typescript-eslint": "^8.24.1",
+    "vite": "^6.2.3",
+    "vite-tsconfig-paths": "^5.1.4"
   },
-  "engines": {
-    "node": ">=20.0.0"
+  "resolutions": {
+    "vite": "^6.2.3",
+    "esbuild": "^0.25.0",
+    "vite-node": "^3.0.0"
   }
 }
