@@ -1,16 +1,8 @@
-import { FaHome, FaCog, FaEnvelope, FaVideo, FaBell, FaSearch, FaUser } from 'react-icons/fa';
+import { FaCog, FaEnvelope, FaVideo, FaBell, FaSearch, FaUser } from 'react-icons/fa';
 import { useNavigate } from "@remix-run/react";
-import type { LoaderFunction } from "@remix-run/node";
-import { json } from "@remix-run/node";
 import { MdPublish } from 'react-icons/md';
 
-export const loader: LoaderFunction = async () => {
-  // Aquí irá la lógica para cargar datos iniciales
-  return json({
-    posts: [1, 2, 3],
-    suggestedFriends: [1, 2, 3, 4, 5]
-  });
-};
+
 
 export default function InicioPage() {
   const navigate = useNavigate();
@@ -24,7 +16,7 @@ export default function InicioPage() {
           onClick={() => navigate('/inicio')}
           >LOGO</h1>
         </div>
-        
+
         <nav className="space-y-6">
 
           {/* Videollamadas */}
@@ -35,7 +27,6 @@ export default function InicioPage() {
             <FaVideo className="text-xl" />
             <span>Videollamadas</span>
           </button>
-          
 
           {/* Publicar */}
           <button 
@@ -54,7 +45,7 @@ export default function InicioPage() {
             <FaBell className="text-xl" />
             <span>Notificaciones</span>
           </button>
-          
+
           {/* Mensajes */}
           <button 
             onClick={() => navigate('/mensajes')}
@@ -88,7 +79,7 @@ export default function InicioPage() {
       <div className="w-1/2 ml-[16.666667%] border-r border-gray-800">
         <div className="p-4">
           <h2 className="text-xl font-bold mb-4">Feed Principal</h2>
-          
+
           {/* Posts de ejemplo */}
           {[1, 2, 3].map((post) => (
             <div key={post} className="bg-gray-900 rounded-lg p-4 mb-4">
