@@ -3,7 +3,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import { errors } from "celebrate";
 import { AppErrorHandler } from './middlewares/errors/AppErrorHandler';
-import userRoutes from './routes/users'
+import userRoutes from './routes/user'
 
 export const app = express();
 app.use(express.json());

@@ -8,7 +8,7 @@ afterAll(async () => {
     await sequelize.close
 })
 
-describe('Users test:', () => {
+describe('Post test:', () => {
     test('Test de prueba', async () => {
         await api
             .get('/users')
