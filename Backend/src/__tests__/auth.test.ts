@@ -11,7 +11,7 @@ afterAll(async () => {
 describe('Auth test:', () => {
     test('Test de prueba', async () => {
         await api
-            .get('/users')
+            .get('/auth/login')
             .expect(200)
             .expect('Content-Type', /application\/json/)
     });

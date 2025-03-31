@@ -5,6 +5,7 @@ import { Client } from "pg"; // Importar el cliente de PostgreSQL
 
 const isTestEnv = process.env.NODE_ENV === "test";
 const dbName = isTestEnv ? process.env.DB_NAME_TEST : process.env.DB_NAME;
+const alter: boolean = Boolean(process.env.DB_UPDATE) || false;
 
 async function createDatabase(): Promise<boolean> {
     try {
@@ -54,8 +55,12 @@ async function initializeDatabase() {
         dbLogger.info("Connection has been established successfully.");
 
         // Sincroniza los modelos con la base de datos (crea las tablas si no existen con alter: true)
-        await sequelize.sync({ alter: false });
-        dbLogger.info("All models were synchronized successfully.");
+        if (process.env.DB_UPDATE === "true") {
+            await sequelize.sync({ alter: true });
+            dbLogger.info("All models were synchronized successfully.");
+        } else {
+            dbLogger.info("Skipping model synchronization (DB_UPDATE is not 'true')");
+        }
 
     } catch (error) {
         dbLogger.error('Error connecting to the database', { error });

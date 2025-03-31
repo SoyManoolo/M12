@@ -5,6 +5,7 @@ import { Op } from 'sequelize';
 
 let Logs: any;
 let logsInitialized = false;
+const daysToRetainLogs = parseInt(process.env.LOGS_DAYS as string, 10) || 7;
 
 // Promesa para esperar la inicialización del modelo Logs
 const initializeLogs = import('../models/Logs.js')
@@ -74,7 +75,7 @@ if (process.env.NODE_ENV !== 'test') {
   cron.schedule('0 0 * * *', async () => {
     try {
       const oneWeekAgo = new Date();
-      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - daysToRetainLogs);
 
       const deletedLogs = await Logs.destroy({
         where: {
@@ -87,7 +88,7 @@ if (process.env.NODE_ENV !== 'test') {
       dbLogger.error('[CRON] Error in cron job deleting old logs:', { error });
     }
   });
-  dbLogger.info('Cron job scheduled for log cleanup (retention: 7 days).');
+  dbLogger.info(`Cron job scheduled for log cleanup (retention: ${daysToRetainLogs} days).`);
 } else {
   dbLogger.info('Cron job not scheduled in test environment.');
 }
