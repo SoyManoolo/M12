@@ -2,34 +2,44 @@ import { useState } from 'react';
 import { FaHeart, FaShare, FaBookmark, FaComment, FaTimes } from 'react-icons/fa';
 
 interface PostProps {
-  id: string;
-  userImage: string;
-  userName: string;
+  post_id: string;
+  user: {
+    user_id: string;
+    username: string;
+    profile_picture_url: string;
+  };
   description: string;
-  content: string;
+  media_url: string;
   comments: Array<{
-    id: string;
-    text: string;
-    userName: string;
+    comment_id: string;
+    user_id: string;
+    username: string;
+    content: string;
+    created_at: string;
   }>;
-  createdAt: string;
+  created_at: string;
+  likes_count?: number;
+  is_saved?: boolean;
 }
 
 export default function Post({ 
-  id, 
-  userImage, 
-  userName, 
+  post_id, 
+  user, 
   description, 
-  content, 
+  media_url, 
   comments, 
-  createdAt 
+  created_at,
+  likes_count = 0,
+  is_saved = false
 }: PostProps) {
   const [isLiked, setIsLiked] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
+  const [isSaved, setIsSaved] = useState(is_saved);
   const [isShared, setIsShared] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [showAllComments, setShowAllComments] = useState(false);
+  const [currentLikes, setCurrentLikes] = useState(likes_count);
+  const [newComment, setNewComment] = useState('');
 
   // Función para truncar texto
   const truncateText = (text: string, limit: number) => {
@@ -52,6 +62,32 @@ export default function Post({
     setShowFullDescription(!showFullDescription);
   };
 
+  // Función para manejar nuevo comentario
+  const handleAddComment = () => {
+    if (!newComment.trim()) return;
+    // Aquí iría la llamada a la API cuando la implementemos
+    // Por ahora solo simulamos
+    console.log('Nuevo comentario:', {
+      post_id,
+      content: newComment,
+      user_id: 'current_user_id', // Esto vendría del contexto de autenticación
+    });
+    setNewComment('');
+  };
+
+  // Función para manejar likes
+  const handleLike = () => {
+    setIsLiked(!isLiked);
+    setCurrentLikes(prev => isLiked ? prev - 1 : prev + 1);
+    // Aquí iría la llamada a la API cuando la implementemos
+  };
+
+  // Función para guardar post
+  const handleSave = () => {
+    setIsSaved(!isSaved);
+    // Aquí iría la llamada a la API cuando la implementemos
+  };
+
   return (
     <>
       {/* Post normal */}
@@ -61,19 +97,19 @@ export default function Post({
           <div className="w-[80px] flex flex-col items-center space-y-4">
             {/* Perfil y nombre */}
             <img 
-              src={userImage} 
-              alt={userName} 
+              src={user.profile_picture_url} 
+              alt={user.username} 
               className="w-12 h-12 rounded-full cursor-pointer object-cover"
-              onClick={() => window.location.href = `/perfil/${userName}`}
+              onClick={() => window.location.href = `/perfil/${user.username}`}
             />
             <p className="font-semibold text-white cursor-pointer hover:underline text-center text-sm">
-              {userName}
+              {user.username}
             </p>
 
             {/* Acciones en columna con estados */}
             <div className="flex flex-col space-y-4 mt-4">
               <button 
-                onClick={() => setIsLiked(!isLiked)}
+                onClick={handleLike}
                 className={`flex flex-col items-center ${isLiked ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}
               >
                 <FaHeart className="text-xl mb-1" />
@@ -89,7 +125,7 @@ export default function Post({
               </button>
               
               <button 
-                onClick={() => setIsSaved(!isSaved)}
+                onClick={handleSave}
                 className={`flex flex-col items-center ${isSaved ? 'text-yellow-500' : 'text-gray-400 hover:text-white'}`}
               >
                 <FaBookmark className="text-xl mb-1" />
@@ -105,7 +141,7 @@ export default function Post({
               onClick={handleImageClick}
             >
               <img 
-                src={content} 
+                src={media_url} 
                 alt="Contenido del post"
                 className="w-full h-full object-cover"
               />
@@ -141,10 +177,10 @@ export default function Post({
                 <h3 className="text-white font-semibold mb-2">Comentarios</h3>
                 <div className="space-y-2">
                   {(showAllComments ? comments : comments.slice(0, 3)).map(comment => (
-                    <div key={comment.id} className="text-sm text-gray-300">
-                      <span className="font-semibold text-white">{comment.userName}</span>
+                    <div key={comment.comment_id} className="text-sm text-gray-300">
+                      <span className="font-semibold text-white">{comment.username}</span>
                       <span className="inline">
-                        {" "}{truncateText(comment.text, 100)}
+                        {" "}{truncateText(comment.content, 100)}
                       </span>
                     </div>
                   ))}
@@ -169,8 +205,10 @@ export default function Post({
                   type="text"
                   placeholder="Añadir un comentario..."
                   className="flex-1 bg-transparent border-none text-white placeholder-gray-500 focus:outline-none text-sm"
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
                 />
-                <button className="ml-2 text-gray-400 hover:text-white">
+                <button className="ml-2 text-gray-400 hover:text-white" onClick={handleAddComment}>
                   <FaComment className="text-xl" />
                 </button>
               </div>
@@ -196,7 +234,7 @@ export default function Post({
               <FaTimes className="text-2xl" />
             </button>
             <img 
-              src={content} 
+              src={media_url} 
               alt="Contenido expandido"
               className="max-w-full max-h-[90vh] object-contain"
             />
