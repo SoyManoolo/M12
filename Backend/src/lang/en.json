@@ -1,0 +1,93 @@
+{
+    "errors": {
+        "validation": {
+            "PutDNI": "Insert a DNI",
+            "MissingDNI": "DNI is required",
+            "InvalidDNI": "Invalid DNI",
+            "MissingPassword": "Password is required",
+            "IncorrectPassword": "Incorrect password",
+            "MissingEmail": "Email is required",
+            "MissingName": "Name is required",
+            "MissingSurname": "Surname is required",
+            "NoAdmin": "No administrator permissions",
+            "InvalidIdentifier": "Invalid identifier",
+            "InvalidEmail": "Invalid email format",
+            "ValidationError": "Validation Error",
+            "fieldRequired": "The {field} field is required"
+        },
+        "field": {
+            "is_admin": "admin status",
+            "is_active": "active status",
+            "name": "name",
+            "surname": "surname",
+            "email": "email",
+            "identifier": "identifier",
+            "password": "password"
+        },
+        "jwt": {
+            "MissingJwtSecret": "JWT secret is not defined",
+            "MissingJWT": "JWT not provided",
+            "FormatJWT": "Invalid JWT format",
+            "InvalidTempToken": "Invalid temporary token"
+        },
+        "user": {
+            "IncorrectCredentials": "Incorrect credentials",
+            "UserDontExist": "User does not exist",
+            "UserNotFound": "User not found",
+            "UsersNotFound": "No users found",
+            "MissingIdentifier": "Identifier is missing",
+            "UserExist": "User already exists",
+            "NoDataToUpdate": "No data to update",
+            "EmailAlreadyExists": "Email is already in use",
+            "DniAlreadyExists": "DNI is already in use",
+            "AdminCannotBeDeleted": "Administrator cannot be deleted",
+            "UserNotActive": "User is not active",
+            "UserDeleted": "User is deleted"
+        },
+        "registry": {
+            "RegistryOpen": "Check-in already registered",
+            "RegistryNotOpen": "Check-in not registered",
+            "RegistriesNotFound": "No records found",
+            "TimeOutRequired": "Check-out time is required",
+            "TimeInRequired": "Check-in time is required",
+            "CheckTypeRequired": "Check type is required"
+        },
+        "status": {
+            "NotFound": "Resource not found",
+            "InternalServerError": "Internal server error",
+            "Unauthorized": "Unauthorized",
+            "Forbidden": "Forbidden",
+            "BadRequest": "Bad request",
+            "Conflict": "Conflict",
+            "UnprocessableEntity": "Unprocessable entity",
+            "TooManyRequests": "Too many requests",
+            "ServiceUnavailable": "Service unavailable",
+            "GatewayTimeout": "Gateway timeout",
+            "BadGateway": "Bad gateway"
+        },
+        "connection": {
+            "FailedConnection": "Database connection error"
+        }
+    },
+    "success": {
+        "auth": {
+            "login": "Login successful",
+            "logout": "Logout successful",
+            "adminRegistered": "Administrator registered successfully",
+            "userRegistered": "User registered successfully",
+            "passwordChanged": "Password changed successfully",
+            "passwordChangeRequired": "Password change required"
+        },
+        "registry": {
+            "entryRegistered": "Entry registered successfully",
+            "exitRegistered": "Exit registered successfully"
+        },
+        "user": {
+            "usersFound": "Users found successfully",
+            "userFound": "User found successfully",
+            "userUpdated": "User updated successfully",
+            "userDeleted": "User deleted successfully",
+            "userSoftDeleted": "User deactivated successfully"
+        }
+    }
+}

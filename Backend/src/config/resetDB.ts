@@ -9,11 +9,6 @@ const resetDatabase = async () => {
     process.exit(1);
   }
 
-  console.log("DB_NAME_TEST:", process.env.DB_NAME_TEST);
-  console.log("DB_USER:", process.env.DB_USER);
-  console.log("DB_PASS:", process.env.DB_PASS);
-  console.log("DB_HOST:", process.env.DB_HOST);
-
   try {
     console.log("Resetting test database...");
 
