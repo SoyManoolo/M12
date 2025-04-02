@@ -13,6 +13,22 @@
     "license": "ISC",
     "author": "Erik Manuel Saldaña Diaz",
     "type": "commonjs",
+    "jest": {
+        "preset": "ts-jest",
+        "testEnvironment": "node",
+        "setupFiles": [
+          "dotenv/config"
+        ],
+        "transform": {
+          "^.+\\.ts$": "ts-jest"
+        },
+        "moduleNameMapper": {
+          "^(\\.{1,2}/.*)\\.js$": "$1"
+        },
+        "testMatch": [
+          "<rootDir>/src/__tests__/**/*.ts"
+        ]
+      },
     "scripts": {
         "build": "tsc && node -e \"require('shelljs').mkdir('-p', 'dist/lang'); require('shelljs').cp('-R', 'src/lang/*', 'dist/lang/')\"",
         "start": "cross-env NODE_ENV=production node dist/server.js",
