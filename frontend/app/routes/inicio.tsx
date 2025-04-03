@@ -1,7 +1,8 @@
 import { useNavigate } from "@remix-run/react";
 import Navbar from "~/components/Navbar";
 import Post from "~/components/Post";
-import { FaSearch } from 'react-icons/fa';
+import RightSidebar from "~/components/RightSidebar";
+import { useState } from "react";
 
 // Datos de ejemplo - En producción vendrían del backend
 const MOCK_POSTS = [
@@ -253,60 +254,80 @@ const MOCK_POSTS = [
   }
 ];
 
-export default function InicioPage() {
-  const navigate = useNavigate();
+const MOCK_SUGGESTED_USERS = [
+  {
+    user_id: 'user10',
+    username: 'Usuario10',
+    first_name: 'Juan',
+    last_name: 'Pérez',
+    profile_picture_url: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg',
+    common_friends_count: 3
+  },
+  {
+    user_id: 'user11',
+    username: 'Usuario11',
+    first_name: 'María',
+    last_name: 'García',
+    profile_picture_url: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg',
+    common_friends_count: 5
+  },
+  {
+    user_id: 'user12',
+    username: 'Usuario12',
+    first_name: 'Carlos',
+    last_name: 'López',
+    profile_picture_url: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg',
+    common_friends_count: 2
+  }
+];
 
-  const handleNavigation = (route: string) => {
-    navigate(route);
+export default function InicioPage() {
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    // Aquí iría la llamada a la API para buscar usuarios
+    console.log('Buscando usuarios:', query);
+  };
+
+  const handleFollow = (userId: string) => {
+    // Aquí iría la llamada a la API para seguir al usuario
+    console.log('Siguiendo al usuario:', userId);
   };
 
   return (
     <div className="min-h-screen bg-black text-white flex">
       {/* Barra lateral usando el componente Navbar */}
-      <Navbar onNavigate={handleNavigation} />
+      <Navbar />
 
       {/* Contenido central */}
-      <div className="w-1/2 ml-[16.666667%] border-r border-gray-800">
+      <div className="w-2/3 ml-[16.666667%] border-r border-gray-800">
         <div className="p-4">
           <h2 className="text-xl font-bold mb-4">Feed Principal</h2>
 
           {/* Lista de posts */}
-          {MOCK_POSTS.map(post => (
-            <Post key={post.post_id} {...post} />
+          {MOCK_POSTS.map((post) => (
+            <Post
+              key={post.post_id}
+              post_id={post.post_id}
+              user={post.user}
+              description={post.description}
+              media_url={post.media_url}
+              comments={post.comments}
+              created_at={post.created_at}
+              likes_count={post.likes_count}
+              is_saved={post.is_saved}
+            />
           ))}
         </div>
       </div>
 
       {/* Barra lateral derecha */}
-      <div className="w-1/3 p-4 fixed right-0">
-        <div className="mb-6">
-          <div className="relative">
-            <FaSearch className="absolute left-3 top-3 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Buscar amigos..."
-              className="w-full bg-gray-900 rounded-full py-2 pl-10 pr-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-        </div>
-
-        <div className="bg-gray-900 rounded-lg p-4">
-          <h3 className="text-lg font-semibold mb-4">Amigos sugeridos</h3>
-          {/* Lista de amigos */}
-          {[1, 2, 3, 4, 5].map((friend) => (
-            <div key={friend} className="flex items-center justify-between py-3">
-              <div className="flex items-center">
-                <div className="w-10 h-10 bg-gray-700 rounded-full"></div>
-                <div className="ml-3">
-                  <p className="font-semibold">Usuario {friend}</p>
-                  <p className="text-sm text-gray-400">5 amigos en común</p>
-                </div>
-              </div>
-              <button className="text-blue-500 hover:text-blue-400">Seguir</button>
-            </div>
-          ))}
-        </div>
-      </div>
+      <RightSidebar 
+        suggestedUsers={MOCK_SUGGESTED_USERS}
+        onSearch={handleSearch}
+        onFollow={handleFollow}
+      />
     </div>
   );
 } 

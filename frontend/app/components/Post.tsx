@@ -110,7 +110,7 @@ export default function Post({
             <div className="flex flex-col space-y-4 mt-4">
               <button 
                 onClick={handleLike}
-                className={`flex flex-col items-center ${isLiked ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}
+                className={`flex flex-col items-center cursor-pointer ${isLiked ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}
               >
                 <FaHeart className="text-xl mb-1" />
                 <span className="text-xs">Like</span>
@@ -118,7 +118,7 @@ export default function Post({
               
               <button 
                 onClick={() => setIsShared(!isShared)}
-                className={`flex flex-col items-center ${isShared ? 'text-blue-500' : 'text-gray-400 hover:text-white'}`}
+                className={`flex flex-col items-center cursor-pointer ${isShared ? 'text-blue-500' : 'text-gray-400 hover:text-white'}`}
               >
                 <FaShare className="text-xl mb-1" />
                 <span className="text-xs">Compartir</span>
@@ -126,7 +126,7 @@ export default function Post({
               
               <button 
                 onClick={handleSave}
-                className={`flex flex-col items-center ${isSaved ? 'text-yellow-500' : 'text-gray-400 hover:text-white'}`}
+                className={`flex flex-col items-center cursor-pointer ${isSaved ? 'text-yellow-500' : 'text-gray-400 hover:text-white'}`}
               >
                 <FaBookmark className="text-xl mb-1" />
                 <span className="text-xs">Guardar</span>

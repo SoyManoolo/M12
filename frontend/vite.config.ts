@@ -27,9 +27,7 @@ export default defineConfig({
     tailwindcss()
   ],
   server: {
-    hmr: {
-      overlay: false,
-    },
+    hmr: false,
   },
   resolve: {
     alias: {
