@@ -7,7 +7,7 @@ CREATE TABLE users (
     last_name VARCHAR(100) NOT NULL,
     username VARCHAR(50) UNIQUE NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
+    password VARCHAR(255) NOT NULL,
     profile_picture_url VARCHAR(255),
     bio TEXT,
     email_verified BOOLEAN DEFAULT FALSE,

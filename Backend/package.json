@@ -32,8 +32,8 @@
     "scripts": {
         "build": "tsc && node -e \"require('shelljs').mkdir('-p', 'dist/lang'); require('shelljs').cp('-R', 'src/lang/*', 'dist/lang/')\"",
         "start": "cross-env NODE_ENV=production node dist/server.js",
-        "dev": "cross-env NODE_ENV=development nodemon dist/server.js",
-        "test": "cross-env NODE_ENV=test jest --verbose --coverage --detectOpenHandles --silent --runInBand",
+        "dev": "cross-env nodemon dist/server.js",
+        "test": "cross-env NODE_ENV=test jest --verbose --coverage --runInBand --forceExit --detectOpenHandles --silent",
         "test:watch": "npm run test -- --watch",
         "test:reset-db": "cross-env NODE_ENV=test ts-node src/config/resetDB.ts"
     },
