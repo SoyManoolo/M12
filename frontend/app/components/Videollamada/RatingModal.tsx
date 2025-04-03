@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { FaStar } from 'react-icons/fa';
 
 interface RatingModalProps {
   isOpen: boolean;
@@ -34,13 +33,17 @@ export default function RatingModal({ isOpen, onClose, onSubmit }: RatingModalPr
               onMouseLeave={() => setHoveredRating(0)}
               onClick={() => setRating(star)}
             >
-              <FaStar
-                className={`text-3xl ${
+              <svg
+                className={`w-12 h-12 ${
                   star <= (hoveredRating || rating)
-                    ? 'text-yellow-400'
+                    ? 'text-blue-400'
                     : 'text-gray-600'
                 }`}
-              />
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path d="M12 2L20 12L12 22L4 12L12 2Z" />
+              </svg>
             </button>
           ))}
         </div>
