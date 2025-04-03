@@ -1,15 +1,17 @@
 import { useState } from 'react';
-import { FaHeart, FaShare, FaBookmark, FaComment, FaTimes } from 'react-icons/fa';
+import { FaHeart, FaRegHeart, FaBookmark, FaRegBookmark, FaShare, FaComment, FaTimes } from 'react-icons/fa';
+import { formatDistanceToNow } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 interface PostProps {
   post_id: string;
   user: {
     user_id: string;
     username: string;
-    profile_picture_url: string;
+    profile_picture_url: string | null;
   };
   description: string;
-  media_url: string;
+  media_url: string | null;
   comments: Array<{
     comment_id: string;
     user_id: string;
@@ -18,19 +20,23 @@ interface PostProps {
     created_at: string;
   }>;
   created_at: string;
-  likes_count?: number;
-  is_saved?: boolean;
+  likes_count: number;
+  is_saved: boolean;
+  onLike: () => void;
+  onSave: () => void;
 }
 
-export default function Post({ 
-  post_id, 
-  user, 
-  description, 
-  media_url, 
-  comments, 
+export default function Post({
+  post_id,
+  user,
+  description,
+  media_url,
+  comments,
   created_at,
-  likes_count = 0,
-  is_saved = false
+  likes_count,
+  is_saved,
+  onLike,
+  onSave
 }: PostProps) {
   const [isLiked, setIsLiked] = useState(false);
   const [isSaved, setIsSaved] = useState(is_saved);
@@ -79,13 +85,13 @@ export default function Post({
   const handleLike = () => {
     setIsLiked(!isLiked);
     setCurrentLikes(prev => isLiked ? prev - 1 : prev + 1);
-    // Aquí iría la llamada a la API cuando la implementemos
+    onLike();
   };
 
   // Función para guardar post
   const handleSave = () => {
     setIsSaved(!isSaved);
-    // Aquí iría la llamada a la API cuando la implementemos
+    onSave();
   };
 
   return (
@@ -97,7 +103,7 @@ export default function Post({
           <div className="w-[80px] flex flex-col items-center space-y-4">
             {/* Perfil y nombre */}
             <img 
-              src={user.profile_picture_url} 
+              src={user.profile_picture_url || '/default-avatar.png'} 
               alt={user.username} 
               className="w-12 h-12 rounded-full cursor-pointer object-cover"
               onClick={() => window.location.href = `/perfil/${user.username}`}
@@ -108,43 +114,53 @@ export default function Post({
 
             {/* Acciones en columna con estados */}
             <div className="flex flex-col space-y-4 mt-4">
-              <button 
-                onClick={handleLike}
-                className={`flex flex-col items-center cursor-pointer ${isLiked ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}
-              >
-                <FaHeart className="text-xl mb-1" />
-                <span className="text-xs">Like</span>
-              </button>
+              <div className="flex flex-col items-center">
+                <button 
+                  onClick={handleLike}
+                  className={`flex flex-col items-center cursor-pointer ${isLiked ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}
+                >
+                  {isLiked ? <FaHeart className="text-xl mb-1" /> : <FaRegHeart className="text-xl mb-1" />}
+                  <span className="text-xs">Like</span>
+                </button>
+              </div>
               
-              <button 
-                onClick={() => setIsShared(!isShared)}
-                className={`flex flex-col items-center cursor-pointer ${isShared ? 'text-blue-500' : 'text-gray-400 hover:text-white'}`}
-              >
-                <FaShare className="text-xl mb-1" />
-                <span className="text-xs">Compartir</span>
-              </button>
+              <div className="flex flex-col items-center">
+                <button 
+                  onClick={() => setIsShared(!isShared)}
+                  className={`flex flex-col items-center cursor-pointer ${isShared ? 'text-blue-500' : 'text-gray-400 hover:text-white'}`}
+                >
+                  <FaShare className="text-xl mb-1" />
+                  <span className="text-xs">Compartir</span>
+                </button>
+              </div>
               
-              <button 
-                onClick={handleSave}
-                className={`flex flex-col items-center cursor-pointer ${isSaved ? 'text-yellow-500' : 'text-gray-400 hover:text-white'}`}
-              >
-                <FaBookmark className="text-xl mb-1" />
-                <span className="text-xs">Guardar</span>
-              </button>
+              <div className="flex flex-col items-center">
+                <button 
+                  onClick={handleSave}
+                  className={`flex flex-col items-center cursor-pointer ${isSaved ? 'text-yellow-500' : 'text-gray-400 hover:text-white'}`}
+                >
+                  {isSaved ? <FaBookmark className="text-xl mb-1" /> : <FaRegBookmark className="text-xl mb-1" />}
+                  <span className="text-xs">Guardar</span>
+                </button>
+              </div>
             </div>
           </div>
 
           {/* Columna central - más ancha */}
           <div className="w-[500px] px-4">
             <div 
-              className="rounded-lg overflow-hidden bg-gray-800 h-full cursor-pointer"
+              className="rounded-lg overflow-hidden bg-gray-800 h-full cursor-pointer relative"
               onClick={handleImageClick}
             >
               <img 
-                src={media_url} 
+                src={media_url || '/default-image.jpg'} 
                 alt="Contenido del post"
                 className="w-full h-full object-cover"
               />
+              {/* Fecha en el pie de la imagen */}
+              <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 px-2 py-1 rounded text-xs text-gray-300">
+                {formatDistanceToNow(new Date(created_at), { addSuffix: true, locale: es })}
+              </div>
             </div>
           </div>
 
@@ -174,7 +190,10 @@ export default function Post({
 
               {/* Comentarios */}
               <div className="overflow-y-auto">
-                <h3 className="text-white font-semibold mb-2">Comentarios</h3>
+                <div className="flex items-center gap-2 mb-2">
+                  <h3 className="text-white font-semibold">Comentarios</h3>
+                  <span className="text-sm text-gray-400">({comments.length})</span>
+                </div>
                 <div className="space-y-2">
                   {(showAllComments ? comments : comments.slice(0, 3)).map(comment => (
                     <div key={comment.comment_id} className="text-sm text-gray-300">
@@ -234,7 +253,7 @@ export default function Post({
               <FaTimes className="text-2xl" />
             </button>
             <img 
-              src={media_url} 
+              src={media_url || ''} 
               alt="Contenido expandido"
               className="max-w-full max-h-[90vh] object-contain"
             />

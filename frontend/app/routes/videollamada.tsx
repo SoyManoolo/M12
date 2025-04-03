@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { FaVideo, FaArrowRight, FaClock } from 'react-icons/fa';
 import ChatVideollamada from '~/components/Videollamada/ChatVideollamada';
+import RatingModal from '~/components/Videollamada/RatingModal';
 import { useNavigate } from '@remix-run/react';
 
 export default function VideoLlamadaPage() {
   const navigate = useNavigate();
   const [isInCall, setIsInCall] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
+  const [showRatingModal, setShowRatingModal] = useState(false);
   const [messages, setMessages] = useState<Array<{
     id: string;
     text: string;
@@ -42,8 +44,23 @@ export default function VideoLlamadaPage() {
     }]);
   };
 
-  const handleExitCall = () => {
+  const handleFinishCall = () => {
     setIsInCall(false);
+    setShowRatingModal(true);
+  };
+
+  const handleNextCall = () => {
+    setIsInCall(false);
+    // Aquí iría la lógica para conectar con la siguiente videollamada
+    // Por ahora solo reiniciamos el contador
+    setCallDuration(0);
+    setMessages([]);
+    setIsInCall(true);
+  };
+
+  const handleRatingSubmit = (rating: number) => {
+    // Aquí iría la lógica para guardar la valoración
+    console.log('Rating submitted:', rating);
     navigate('/inicio');
   };
 
@@ -62,14 +79,15 @@ export default function VideoLlamadaPage() {
               </div>
 
               <button
-                onClick={handleExitCall}
+                onClick={handleFinishCall}
                 className="bg-red-600 border border-red-700 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center gap-2 cursor-pointer transition-colors"
               >
                 <FaVideo className="text-xl" />
-                <span>SALIR VIDEOLLAMADA</span>
+                <span>FINALIZAR VIDEOLLAMADA</span>
               </button>
 
               <button
+                onClick={handleNextCall}
                 className="bg-gray-900 border border-gray-700 hover:bg-gray-800 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center gap-2 cursor-pointer transition-colors"
               >
                 <FaArrowRight className="text-xl" />
@@ -108,6 +126,12 @@ export default function VideoLlamadaPage() {
           </div>
         </div>
       </div>
+
+      <RatingModal
+        isOpen={showRatingModal}
+        onClose={() => setShowRatingModal(false)}
+        onSubmit={handleRatingSubmit}
+      />
     </div>
   );
 } 

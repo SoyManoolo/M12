@@ -1,8 +1,51 @@
 import { useNavigate } from "@remix-run/react";
-import Navbar from "~/components/Navbar";
-import Post from "~/components/Post";
-import RightSidebar from "~/components/RightSidebar";
+import Navbar from "~/components/Inicio/Navbar";
+import Post from "~/components/Inicio/Post";
+import RightSidebar from "~/components/Inicio/RightSidebar";
 import { useState } from "react";
+
+// Tipos basados en la base de datos
+interface User {
+  user_id: string;
+  first_name: string;
+  last_name: string;
+  username: string;
+  email: string;
+  profile_picture_url: string | null;
+  bio: string | null;
+  email_verified: boolean;
+  is_moderator: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+interface Post {
+  post_id: string;
+  user_id: string;
+  user: User;
+  description: string;
+  media_url: string | null;
+  created_at: string;
+  updated_at: string;
+  likes_count: number;
+  is_saved: boolean;
+  comments: Array<{
+    comment_id: string;
+    user_id: string;
+    username: string;
+    content: string;
+    created_at: string;
+  }>;
+}
+
+interface SuggestedUser {
+  user_id: string;
+  username: string;
+  first_name: string;
+  last_name: string;
+  profile_picture_url: string | null;
+  common_friends_count: number;
+}
 
 // Datos de ejemplo - En producción vendrían del backend
 const MOCK_POSTS = [
@@ -283,6 +326,8 @@ const MOCK_SUGGESTED_USERS = [
 
 export default function InicioPage() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [posts, setPosts] = useState<Post[]>(MOCK_POSTS);
+  const [suggestedUsers, setSuggestedUsers] = useState<SuggestedUser[]>(MOCK_SUGGESTED_USERS);
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -290,9 +335,55 @@ export default function InicioPage() {
     console.log('Buscando usuarios:', query);
   };
 
-  const handleFollow = (userId: string) => {
-    // Aquí iría la llamada a la API para seguir al usuario
-    console.log('Siguiendo al usuario:', userId);
+  const handleFollow = async (userId: string) => {
+    try {
+      // Aquí iría la llamada a la API para seguir al usuario
+      console.log('Siguiendo al usuario:', userId);
+      // Actualizar la UI después de seguir
+      setSuggestedUsers(prev => 
+        prev.map(user => 
+          user.user_id === userId 
+            ? { ...user, common_friends_count: user.common_friends_count + 1 }
+            : user
+        )
+      );
+    } catch (error) {
+      console.error('Error al seguir al usuario:', error);
+    }
+  };
+
+  const handleLike = async (postId: string) => {
+    try {
+      // Aquí iría la llamada a la API para dar like
+      console.log('Dando like al post:', postId);
+      // Actualizar la UI después de dar like
+      setPosts(prev =>
+        prev.map(post =>
+          post.post_id === postId
+            ? { ...post, likes_count: post.likes_count + 1 }
+            : post
+        )
+      );
+    } catch (error) {
+      console.error('Error al dar like:', error);
+    }
+  };
+
+  const handleSave = async (postId: string) => {
+    try {
+      // Aquí iría la llamada a la API para guardar el post
+      console.log('Guardando post:', postId);
+      // Actualizar la UI después de guardar
+      setPosts(prev =>
+        prev.map(post =>
+          post.post_id === postId
+            ? { ...post, is_saved: !post.is_saved }
+            : post
+        )
+      );
+    } catch (error) {
+      console.error('Error al guardar el post:', error);
+    }
   };
 
   return (
@@ -306,7 +397,7 @@ export default function InicioPage() {
           <h2 className="text-xl font-bold mb-4">Feed Principal</h2>
 
           {/* Lista de posts */}
-          {MOCK_POSTS.map((post) => (
+          {posts.map((post) => (
             <Post
               key={post.post_id}
               post_id={post.post_id}
@@ -317,6 +408,8 @@ export default function InicioPage() {
               created_at={post.created_at}
               likes_count={post.likes_count}
               is_saved={post.is_saved}
+              onLike={() => handleLike(post.post_id)}
+              onSave={() => handleSave(post.post_id)}
             />
           ))}
         </div>
@@ -324,7 +417,7 @@ export default function InicioPage() {
 
       {/* Barra lateral derecha */}
       <RightSidebar 
-        suggestedUsers={MOCK_SUGGESTED_USERS}
+        suggestedUsers={suggestedUsers}
         onSearch={handleSearch}
         onFollow={handleFollow}
       />
