@@ -4,7 +4,7 @@ import dbLogger from "./logger";
 import { Client } from "pg"; // Importar el cliente de PostgreSQL
 
 const isTestEnv = process.env.NODE_ENV === "test";
-const dbName = process.env.DB_NAME || "friends_go";
+const dbName = isTestEnv ? process.env.DB_NAME_TEST : process.env.DB_NAME;
 const dbUpdate: boolean = process.env.DB_UPDATE === "true" || false;
 
 
@@ -14,8 +14,7 @@ async function createDatabase(): Promise<boolean> {
             host: process.env.DB_HOST || "localhost",
             user: process.env.DB_USER!,
             password: process.env.DB_PASS!,
-            port: Number(process.env.DB_PORT) || 5432,
-            database: "postgres" // Conectar a la base de datos postgres primero
+            port: Number(process.env.DB_PORT) || 5432, // Puerto por defecto de PostgreSQL
         });
 
         await client.connect();
@@ -32,32 +31,15 @@ async function createDatabase(): Promise<boolean> {
         await client.end();
         return false; // La base de datos ya existe
     } catch (error) {
-        dbLogger.error("Error creating database.", { error: error instanceof Error ? error.message : error });
+        dbLogger.error("Error creating database.", { error });
         throw new AppError(500, "FailedConnection");
     }
 }
 
-export const sequelize = new Sequelize(dbName, process.env.DB_USER!, process.env.DB_PASS!, {
+export const sequelize = new Sequelize(dbName!, process.env.DB_USER!, process.env.DB_PASS!, {
     host: process.env.DB_HOST || "localhost",
     dialect: "postgres",
     port: Number(process.env.DB_PORT) || 5432, // Puerto por defecto de PostgreSQL
-    logging: (msg) => dbLogger.info(msg),
-    pool: {
-        max: 5,
-        min: 0,
-        acquire: 30000,
-        idle: 10000
-    },
-    dialectOptions: {
-        ssl: false
-    },
-    define: {
-        timestamps: true,
-        underscored: true
-    },
-    retry: {
-        max: 3
-    }
 });
 
 // Función para inicializar la base de datos
@@ -82,16 +64,7 @@ async function initializeDatabase() {
         }
 
     } catch (error) {
-        dbLogger.error('Error connecting to the database', { 
-            error: error instanceof Error ? error.message : error,
-            stack: error instanceof Error ? error.stack : undefined,
-            config: {
-                host: process.env.DB_HOST,
-                port: process.env.DB_PORT,
-                database: dbName,
-                user: process.env.DB_USER
-            }
-        });
+        dbLogger.error('Error connecting to the database', { error });
         throw new AppError(500, "FailedConnection");
     }
 }
