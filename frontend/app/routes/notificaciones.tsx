@@ -1,5 +1,5 @@
 import { json } from "@remix-run/node";
-import { useLoaderData } from "@remix-run/react";
+import { useLoaderData, Link } from "@remix-run/react";
 import { useState } from "react";
 import type { Notification, Friend, User, FriendRequest, ChatMessage, PostComment } from "~/types/notifications";
 import Navbar from "~/components/Inicio/Navbar";
@@ -13,13 +13,108 @@ interface LoaderData {
 
 export const loader = async () => {
   try {
-    // TODO: Implementar llamadas a la API cuando esté lista
-    // const response = await fetch('/api/notifications');
-    // const data = await response.json();
-    
-    // Por ahora retornamos datos de ejemplo
+    // Datos mock para pruebas que coinciden con el esquema de la base de datos
+    const mockNotifications: (Notification & { user: User })[] = [
+      {
+        notification_id: '550e8400-e29b-41d4-a716-446655440000',
+        type: 'post_like',
+        user_id: '123e4567-e89b-12d3-a456-426614174000',
+        related_id: '098f6bcd-4621-3373-8ade-4e832627b000', // ID del post
+        is_read: false,
+        created_at: new Date(Date.now() - 1000 * 60 * 5).toISOString(), // 5 minutos atrás
+        severity: 'info',
+        post_id: '098f6bcd-4621-3373-8ade-4e832627b000',
+        user: {
+          user_id: '123e4567-e89b-12d3-a456-426614174000',
+          first_name: 'María',
+          last_name: 'García',
+          username: 'maria_garcia',
+          email: 'maria@example.com',
+          password: 'hashed_password',
+          profile_picture_url: '/images/default-avatar.png',
+          bio: 'Me gusta la fotografía',
+          email_verified: true,
+          is_moderator: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
+      },
+      {
+        notification_id: '550e8400-e29b-41d4-a716-446655440001',
+        type: 'comment',
+        user_id: '123e4567-e89b-12d3-a456-426614174001',
+        related_id: '098f6bcd-4621-3373-8ade-4e832627b001', // ID del post
+        is_read: false,
+        created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 minutos atrás
+        severity: 'info',
+        post_id: '098f6bcd-4621-3373-8ade-4e832627b001',
+        user: {
+          user_id: '123e4567-e89b-12d3-a456-426614174001',
+          first_name: 'Juan',
+          last_name: 'Pérez',
+          username: 'juan_perez',
+          email: 'juan@example.com',
+          password: 'hashed_password',
+          profile_picture_url: '/images/default-avatar.png',
+          bio: 'Amante de la música',
+          email_verified: true,
+          is_moderator: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
+      },
+      {
+        notification_id: '550e8400-e29b-41d4-a716-446655440002',
+        type: 'friend_request',
+        user_id: '123e4567-e89b-12d3-a456-426614174002',
+        related_id: '098f6bcd-4621-3373-8ade-4e832627b002', // ID de la solicitud de amistad
+        is_read: false,
+        created_at: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 horas atrás
+        severity: 'info',
+        post_id: null,
+        user: {
+          user_id: '123e4567-e89b-12d3-a456-426614174002',
+          first_name: 'Ana',
+          last_name: 'Martínez',
+          username: 'ana_martinez',
+          email: 'ana@example.com',
+          password: 'hashed_password',
+          profile_picture_url: '/images/default-avatar.png',
+          bio: 'Viajera incansable',
+          email_verified: true,
+          is_moderator: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
+      },
+      {
+        notification_id: '550e8400-e29b-41d4-a716-446655440003',
+        type: 'message',
+        user_id: '123e4567-e89b-12d3-a456-426614174003',
+        related_id: '098f6bcd-4621-3373-8ade-4e832627b003', // ID del mensaje
+        is_read: false,
+        created_at: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 día atrás
+        severity: 'info',
+        post_id: null,
+        user: {
+          user_id: '123e4567-e89b-12d3-a456-426614174003',
+          first_name: 'Carlos',
+          last_name: 'López',
+          username: 'carlos_lopez',
+          email: 'carlos@example.com',
+          password: 'hashed_password',
+          profile_picture_url: '/images/default-avatar.png',
+          bio: 'Desarrollador web',
+          email_verified: true,
+          is_moderator: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
+      }
+    ];
+
     return json<LoaderData>({
-      notifications: [],
+      notifications: mockNotifications,
       friends: [],
       currentUser: {} as User
     });
@@ -88,7 +183,7 @@ export default function Notificaciones() {
       <Navbar />
 
       {/* Contenido principal - Notificaciones */}
-      <div className="flex-1 ml-[16.666667%] p-6">
+      <div className="flex-1 ml-[16.666667%] p-6 mr-80">
         <h1 className="text-2xl font-bold mb-6 text-white">Notificaciones</h1>
         <div className="space-y-4">
           {notifications.length === 0 ? (
@@ -99,7 +194,19 @@ export default function Notificaciones() {
             notifications.map((notification) => {
               const content = getNotificationContent(notification);
               return (
-                <div key={notification.notification_id} className="bg-gray-800/50 p-4 rounded-lg border border-gray-700 hover:bg-gray-700/50 transition-all">
+                <Link 
+                  to={
+                    notification.type === 'post_like' || notification.type === 'comment'
+                      ? `/post/${notification.related_id}`
+                      : notification.type === 'message'
+                      ? `/mensajes/${notification.user.username}`
+                      : notification.type === 'friend_request'
+                      ? `/amigos`
+                      : '#'
+                  }
+                  key={notification.notification_id} 
+                  className="block bg-gray-800/50 p-4 rounded-lg border border-gray-700 hover:bg-gray-700/50 transition-all"
+                >
                   <div className="flex items-start gap-4">
                     <img 
                       src={notification.user.profile_picture_url || '/images/default-avatar.png'} 
@@ -114,7 +221,7 @@ export default function Notificaciones() {
                       </p>
                     </div>
                   </div>
-                </div>
+                </Link>
               );
             })
           )}

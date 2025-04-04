@@ -15,10 +15,12 @@ export interface User {
 
 export interface Notification {
   notification_id: string;
+  type: 'friend_request' | 'message' | 'comment' | 'post_like' | 'video_call';
   user_id: string;
-  type: string;  // e.g., 'friend_request', 'message', 'comment'
   related_id: string;
+  post_id: string | null;
   is_read: boolean;
+  severity: 'info' | 'warning' | 'error';
   created_at: string;
   // Campos adicionales para UI
   user?: User;  // Usuario relacionado con la notificación
@@ -26,8 +28,9 @@ export interface Notification {
 
 export interface Friend {
   friendship_id: string;
-  user1_id: string;
-  user2_id: string;
+  user_id: string;
+  friend_id: string;
+  status: 'pending' | 'accepted' | 'rejected';
   created_at: string;
   // Campos adicionales para UI
   user?: User;  // Datos del amigo
@@ -57,6 +60,7 @@ export interface PostComment {
   user_id: string;
   content: string;
   created_at: string;
+  updated_at: string;
 }
 
 export interface VideoCall {
@@ -74,7 +78,7 @@ export interface FriendRequest {
   request_id: string;
   sender_id: string;
   receiver_id: string;
-  status: string;  // 'pending', 'accepted', 'rejected'
+  status: 'pending' | 'accepted' | 'rejected';
   created_at: string;
 }
 
