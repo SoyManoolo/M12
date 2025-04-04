@@ -8,14 +8,7 @@ afterAll(async () => {
     await sequelize.close
 })
 
-describe('Users test:', () => {
-    test('Test de prueba', async () => {
-        await api
-            .get('/users')
-            .expect(200)
-            .expect('Content-Type', /application\/json/)
-    });
-
+describe('VideoCall test:', () => {
     test('Test de prueba', async () => {
         await api
             .get('/users')

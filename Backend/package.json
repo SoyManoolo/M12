@@ -13,11 +13,27 @@
     "license": "ISC",
     "author": "Erik Manuel Saldaña Diaz",
     "type": "commonjs",
+    "jest": {
+        "preset": "ts-jest",
+        "testEnvironment": "node",
+        "setupFiles": [
+            "dotenv/config"
+        ],
+        "transform": {
+            "^.+\\.ts$": "ts-jest"
+        },
+        "moduleNameMapper": {
+            "^(\\.{1,2}/.*)\\.js$": "$1"
+        },
+        "testMatch": [
+            "<rootDir>/src/__tests__/**/*.ts"
+        ]
+    },
     "scripts": {
-        "build": "tsc",
+        "build": "tsc && node -e \"require('shelljs').mkdir('-p', 'dist/lang'); require('shelljs').cp('-R', 'src/lang/*', 'dist/lang/')\"",
         "start": "cross-env NODE_ENV=production node dist/server.js",
-        "dev": "cross-env NODE_ENV=development nodemon dist/server.js",
-        "test": "cross-env NODE_ENV=test jest --verbose --coverage --detectOpenHandles --silent --runInBand",
+        "dev": "cross-env nodemon dist/server.js",
+        "test": "cross-env NODE_ENV=test jest --verbose --coverage --runInBand --forceExit --detectOpenHandles --silent",
         "test:watch": "npm run test -- --watch",
         "test:reset-db": "cross-env NODE_ENV=test ts-node src/config/resetDB.ts"
     },
@@ -28,6 +44,7 @@
         "dotenv": "^16.4.7",
         "express": "^5.0.1",
         "http-status-codes": "^2.3.0",
+        "i18n": "^0.15.1",
         "jsonwebtoken": "^9.0.2",
         "node-cron": "^3.0.3",
         "pg": "^8.13.3",
@@ -39,6 +56,7 @@
         "@types/bcryptjs": "^2.4.6",
         "@types/cors": "^2.8.17",
         "@types/express": "^5.0.0",
+        "@types/i18n": "^0.13.12",
         "@types/jest": "^29.5.14",
         "@types/jsonwebtoken": "^9.0.7",
         "@types/node": "^22.10.6",
@@ -49,6 +67,7 @@
         "cross-env": "^7.0.3",
         "jest": "^29.7.0",
         "nodemon": "^3.1.9",
+        "shelljs": "^0.9.2",
         "supertest": "^7.0.0",
         "ts-jest": "^29.2.6",
         "typescript": "^5.7.3",

@@ -1,7 +1,6 @@
 import { sequelize } from "../config/database";
 import { Model, DataTypes } from "sequelize";
 
-
 export class User extends Model { }
 
 User.init(
@@ -33,7 +32,7 @@ User.init(
             unique: true,
             validate: { isEmail: true, notEmpty: true },
         },
-        password_hash: {
+        password: {
             type: DataTypes.STRING(255),
             allowNull: false,
             validate: { notEmpty: true },

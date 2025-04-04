@@ -1,0 +1,93 @@
+{
+    "errors": {
+        "validation": {
+            "PutDNI": "Inserte un DNI",
+            "MissingDNI": "Introduzca el DNI",
+            "InvalidDNI": "DNI no válido",
+            "MissingPassword": "Introduzca la contraseña",
+            "IncorrectPassword": "Contraseña incorrecta",
+            "MissingEmail": "Introduzca el email",
+            "MissingName": "Introduzca el nombre",
+            "MissingSurname": "Introduzca el apellido",
+            "NoAdmin": "No tiene permisos de administrador",
+            "InvalidIdentifier": "Identificador no válido",
+            "InvalidEmail": "Formato de email no válido",
+            "ValidationError": "Error de validación",
+            "fieldRequired": "El campo {field} es obligatorio"
+        },
+        "field": {
+            "is_admin": "estado de administrador",
+            "is_active": "estado de activación",
+            "name": "nombre",
+            "surname": "apellido",
+            "email": "correo electrónico",
+            "identifier": "identificador",
+            "password": "contraseña"
+        },
+        "jwt": {
+            "MissingJwtSecret": "La contraseña JWT no está definida",
+            "MissingJWT": "No se ha proporcionado un JWT",
+            "FormatJWT": "Formato del JWT invalido",
+            "InvalidTempToken": "Token temporal inválido"
+        },
+        "user": {
+            "IncorrectCredentials": "Credenciales incorrectas",
+            "UserDontExist": "Usuario no existente",
+            "UserNotFound": "Usuario no encontrado",
+            "UsersNotFound": "No se encontraron usuarios",
+            "MissingIdentifier": "Falta el identificador",
+            "UserExist": "El usuario ya existe",
+            "NoDataToUpdate": "No hay datos para actualizar",
+            "EmailAlreadyExists": "El email ya está en uso",
+            "DniAlreadyExists": "El DNI ya está en uso",
+            "AdminCannotBeDeleted": "No es posible eliminar al administrador",
+            "UserNotActive": "El usuario no está activo",
+            "UserDeleted": "El usuario está eliminado"
+        },
+        "registry": {
+            "RegistryOpen": "Fichaje de entrada ya registrado",
+            "RegistryNotOpen": "Fichaje de entrada no registrado",
+            "RegistriesNotFound": "No se encontraron registros",
+            "TimeOutRequired": "La hora de salida es obligatoria",
+            "TimeInRequired": "La hora de entrada es obligatoria",
+            "CheckTypeRequired": "El tipo de fichaje es obligatorio"
+        },
+        "status": {
+            "NotFound": "Recurso no encontrado",
+            "InternalServerError": "Error interno del servidor",
+            "Unauthorized": "No autorizado",
+            "Forbidden": "Prohibido",
+            "BadRequest": "Solicitud incorrecta",
+            "Conflict": "Conflicto",
+            "UnprocessableEntity": "Entidad no procesable",
+            "TooManyRequests": "Demasiadas solicitudes",
+            "ServiceUnavailable": "Servicio no disponible",
+            "GatewayTimeout": "Tiempo de espera de la puerta de enlace agotado",
+            "BadGateway": "Puerta de enlace incorrecta"
+        },
+        "connection": {
+            "FailedConnection": "Error al conectar con la base de datos"
+        }
+    },
+    "success": {
+      "auth": {
+        "login": "Inicio de sesión correcto",
+        "logout": "Sesión cerrada correctamente",
+        "adminRegistered": "Administrador registrado correctamente",
+        "userRegistered": "Usuario registrado correctamente",
+        "passwordChanged": "Contraseña cambiada correctamente",
+        "passwordChangeRequired": "Cambio de contraseña requerido"
+      },
+      "registry": {
+        "entryRegistered": "Entrada registrada correctamente",
+        "exitRegistered": "Salida registrada correctamente"
+      },
+      "user": {
+        "usersFound": "Usuarios encontrados correctamente",
+        "userFound": "Usuario encontrado correctamente",
+        "userUpdated": "Usuario actualizado correctamente",
+        "userDeleted": "Usuario eliminado correctamente",
+        "userSoftDeleted": "Usuario desactivado correctamente"
+      }
+    }
+}

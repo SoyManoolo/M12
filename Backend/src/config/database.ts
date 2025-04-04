@@ -5,6 +5,8 @@ import { Client } from "pg"; // Importar el cliente de PostgreSQL
 
 const isTestEnv = process.env.NODE_ENV === "test";
 const dbName = isTestEnv ? process.env.DB_NAME_TEST : process.env.DB_NAME;
+const dbUpdate: boolean = process.env.DB_UPDATE === "true" || false;
+
 
 async function createDatabase(): Promise<boolean> {
     try {
@@ -34,7 +36,7 @@ async function createDatabase(): Promise<boolean> {
     }
 }
 
-export const sequelize = new Sequelize(process.env.DB_NAME!, process.env.DB_USER!, process.env.DB_PASS!, {
+export const sequelize = new Sequelize(dbName!, process.env.DB_USER!, process.env.DB_PASS!, {
     host: process.env.DB_HOST || "localhost",
     dialect: "postgres",
     port: Number(process.env.DB_PORT) || 5432, // Puerto por defecto de PostgreSQL
@@ -48,14 +50,18 @@ async function initializeDatabase() {
         if (databaseCreated) {
             dbLogger.info("Database created successfully.");
         }
-        dbLogger.info(`Using database: ${dbName} (Environment: ${process.env.NODE_ENV || "development"})`);
+        console.log(`Using database: ${dbName} (Environment: ${process.env.NODE_ENV || "development"})`);
 
         await sequelize.authenticate();
         dbLogger.info("Connection has been established successfully.");
 
         // Sincroniza los modelos con la base de datos (crea las tablas si no existen con alter: true)
-        await sequelize.sync({ alter: false });
-        dbLogger.info("All models were synchronized successfully.");
+        if (dbUpdate) {
+            await sequelize.sync({ alter: true });
+            dbLogger.info("All models were synchronized successfully.");
+        } else {
+            dbLogger.info("Skipping model synchronization (DB_UPDATE is not 'true')");
+        }
 
     } catch (error) {
         dbLogger.error('Error connecting to the database', { error });

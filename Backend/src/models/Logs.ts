@@ -10,7 +10,12 @@ Logs.init(
       id: {
         type: DataTypes.UUID,
         defaultValue: DataTypes.UUIDV4,
-        primaryKey: true,
+        unique: true,
+      },
+      sequence: {
+        type: DataTypes.BIGINT,
+        autoIncrement: true,
+        primaryKey: true
       },
       level: {
         type: DataTypes.STRING,
@@ -25,7 +30,7 @@ Logs.init(
         allowNull: true,
       },
       timestamp: {
-        type: DataTypes.DATE,
+        type: DataTypes.DATE(3),
         defaultValue: DataTypes.NOW,
       },
     },
