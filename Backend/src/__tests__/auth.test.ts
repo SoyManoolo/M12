@@ -31,7 +31,7 @@ describe('Auth test:', () => {
         await api
             .post('/auth/login')
             .send({
-                email: "erik.saldi.diaz@gmail.com",
+                identifier: "erik.saldi.diaz@gmail.com",
                 password: "12345678"
             })
             .expect(200)
