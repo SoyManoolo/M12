@@ -1,7 +1,7 @@
 import { json } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { useState } from "react";
-import type { Notification, Friend, User } from "~/types/notifications";
+import type { Notification, Friend, User, FriendRequest, ChatMessage, PostComment } from "~/types/notifications";
 import Navbar from "~/components/Inicio/Navbar";
 import { FaSearch } from 'react-icons/fa';
 
@@ -15,7 +15,7 @@ export const loader = async () => {
   try {
     // TODO: Implementar llamadas a la API cuando esté lista
     // const response = await fetch('/api/notifications');
-    // const notifications = await response.json();
+    // const data = await response.json();
     
     // Por ahora retornamos datos de ejemplo
     return json<LoaderData>({
@@ -64,6 +64,16 @@ export default function Notificaciones() {
           title: 'Nuevo comentario',
           description: `${notification.user.first_name} comentó en tu publicación`
         };
+      case 'post_like':
+        return {
+          title: 'Me gusta en tu publicación',
+          description: `A ${notification.user.first_name} le gustó tu publicación`
+        };
+      case 'video_call':
+        return {
+          title: 'Llamada perdida',
+          description: `${notification.user.first_name} intentó iniciar una videollamada contigo`
+        };
       default:
         return {
           title: 'Nueva notificación',
@@ -92,7 +102,7 @@ export default function Notificaciones() {
                 <div key={notification.notification_id} className="bg-gray-800/50 p-4 rounded-lg border border-gray-700 hover:bg-gray-700/50 transition-all">
                   <div className="flex items-start gap-4">
                     <img 
-                      src={notification.user.profile_picture_url || '/default-avatar.png'} 
+                      src={notification.user.profile_picture_url || '/images/default-avatar.png'} 
                       alt={notification.user.username}
                       className="w-12 h-12 rounded-full object-cover border-2 border-gray-700"
                     />
@@ -134,7 +144,7 @@ export default function Notificaciones() {
               <div key={friend.friendship_id} className="flex items-center gap-3 p-2 hover:bg-gray-800/50 rounded-lg transition-all">
                 <div className="relative">
                   <img 
-                    src={friend.user?.profile_picture_url || '/default-avatar.png'} 
+                    src={friend.user?.profile_picture_url || '/images/default-avatar.png'} 
                     alt={friend.user?.username}
                     className="w-10 h-10 rounded-full object-cover border border-gray-700"
                   />
