@@ -2,7 +2,7 @@ import express from "express";
 import { Request, Response, NextFunction } from 'express';
 import { AuthController } from "../controllers/auth";
 import { AuthService } from "../services/auth";
-import { AuthValidation } from "../middlewares/validation/AuthValidation";
+import { AuthValidation } from "../middlewares/validation/authentication/AuthValidation";
 
 const router = express.Router();
 

@@ -22,11 +22,7 @@ export const celebrateErrorHandler = (error: any, req: Request, res: Response, n
         return translated !== `errors.field.${fieldName}` ? translated : fieldName;
     };
 
-    /**
-     * Extrae los errores de validación del objeto error de Celebrate
-     * Actualmente solo maneja errores de tipo "any.required" (campo obligatorio)
-     * y filtra cualquier resultado nulo
-     */
+    // Extrae los errores de validación del objeto error de Celebrate
     const validationErrors = Array.from(error.details.values())
         .flatMap(detail => detail.details.map(d => {
             if (d.type === 'any.required') {
