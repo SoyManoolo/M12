@@ -36,6 +36,9 @@ export const celebrateErrorHandler = (error: any, req: Request, res: Response, n
                 const message = i18n.__({ phrase: 'errors.validation.fieldRequired', locale });
                 return message.replace('{field}', fieldTranslated);
             }
+            if (d.type === 'string.empty') {
+                return i18n.__({ phrase: d.message, locale });
+            }
             return null;
         }).filter(Boolean));
 

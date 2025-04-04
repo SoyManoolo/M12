@@ -1,28 +1,27 @@
 {
     "errors": {
         "validation": {
-            "PutDNI": "Inseriu un DNI",
-            "MissingDNI": "Introduïu el DNI",
-            "InvalidDNI": "DNI no vàlid",
             "MissingPassword": "Introduïu la contrasenya",
             "IncorrectPassword": "Contrasenya incorrecta",
             "MissingEmail": "Introduïu el correu electrònic",
+            "MissingUsername": "Introduïu el nom d'usuari",
             "MissingName": "Introduïu el nom",
             "MissingSurname": "Introduïu el cognom",
             "NoAdmin": "No teniu permisos d'administrador",
             "InvalidIdentifier": "Identificador no vàlid",
+            "MissingIdentifier": "Falta l'identificador",
             "InvalidEmail": "Format de correu electrònic no vàlid",
             "ValidationError": "Error de validació",
             "fieldRequired": "El camp {field} és obligatori"
         },
         "field": {
-            "is_admin": "estat d'administrador",
-            "is_active": "estat d'activació",
+            "is_moderator": "estat d'administrador",
             "name": "nom",
             "surname": "cognom",
             "email": "correu electrònic",
             "identifier": "identificador",
-            "password": "contrasenya"
+            "password": "contrasenya",
+            "username": "nom d'usuari"
         },
         "jwt": {
             "MissingJwtSecret": "La contrasenya JWT no està definida",

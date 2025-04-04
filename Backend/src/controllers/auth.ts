@@ -7,6 +7,8 @@ export class AuthController {
 
     public async login(req: Request, res: Response, next: NextFunction) {
         try {
+            const locale = req.headers['accept-language'] || 'en';
+            i18n.setLocale(locale);
             const { identifier, password } = req.body;
             const token = await this.authService.login(identifier, password);
 
@@ -23,6 +25,8 @@ export class AuthController {
 
     public async register(req: Request, res: Response, next: NextFunction) {
         try {
+            const locale = req.headers['accept-language'] || 'en';
+            i18n.setLocale(locale);
             const { email, username, name, surname, password } = req.body;
 
             const token = await this.authService.register(email, username, name, surname, password);

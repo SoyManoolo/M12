@@ -7,6 +7,7 @@ import { AuthToken } from "../middlewares/validation/authentication/jwt";
 export class AuthService {
     public async exists(identifier: string) {
         try {
+            console.log(identifier);
             return await User.findOne({
                 where: {
                     [Op.or]: [
@@ -17,8 +18,8 @@ export class AuthService {
             })
         } catch (error) {
             throw new AppError(500, 'InternalServerError');
-        }
-    }
+        };
+    };
 
     public async login(identifier: string, password: string): Promise<string> {
         try {
@@ -35,8 +36,8 @@ export class AuthService {
             return token;
         } catch (error) {
             throw new AppError(500, 'InternalServerError');
-        }
-    }
+        };
+    };
 
     public async register(email: string, username: string, name: string, surname: string, password: string): Promise<string> {
         try {
@@ -65,6 +66,6 @@ export class AuthService {
             return token;
         } catch (error) {
             throw new AppError(500, 'InternalServerError');
-        }
-    }
-}
+        };
+    };
+};

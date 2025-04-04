@@ -1,32 +1,31 @@
 {
     "errors": {
         "validation": {
-            "PutDNI": "Insert a DNI",
-            "MissingDNI": "DNI is required",
-            "InvalidDNI": "Invalid DNI",
-            "MissingPassword": "Password is required",
+            "MissingPassword": "Enter the password",
             "IncorrectPassword": "Incorrect password",
-            "MissingEmail": "Email is required",
-            "MissingName": "Name is required",
-            "MissingSurname": "Surname is required",
-            "NoAdmin": "No administrator permissions",
+            "MissingEmail": "Enter the email",
+            "MissingUsername": "Enter the username",
+            "MissingName": "Enter the name",
+            "MissingSurname": "Enter the surname",
+            "NoAdmin": "You don't have administrator permissions",
             "InvalidIdentifier": "Invalid identifier",
+            "MissingIdentifier": "Missing identifier",
             "InvalidEmail": "Invalid email format",
-            "ValidationError": "Validation Error",
-            "fieldRequired": "The {field} field is required"
+            "ValidationError": "Validation error",
+            "fieldRequired": "The field {field} is required"
         },
         "field": {
-            "is_admin": "admin status",
-            "is_active": "active status",
+            "is_moderator": "administrator status",
             "name": "name",
             "surname": "surname",
             "email": "email",
             "identifier": "identifier",
-            "password": "password"
+            "password": "password",
+            "username": "username"
         },
         "jwt": {
             "MissingJwtSecret": "JWT secret is not defined",
-            "MissingJWT": "JWT not provided",
+            "MissingJWT": "No JWT provided",
             "FormatJWT": "Invalid JWT format",
             "InvalidTempToken": "Invalid temporary token"
         },
@@ -35,7 +34,7 @@
             "UserDontExist": "User does not exist",
             "UserNotFound": "User not found",
             "UsersNotFound": "No users found",
-            "MissingIdentifier": "Identifier is missing",
+            "MissingIdentifier": "Missing identifier",
             "UserExist": "User already exists",
             "NoDataToUpdate": "No data to update",
             "EmailAlreadyExists": "Email is already in use",
@@ -45,8 +44,8 @@
             "UserDeleted": "User is deleted"
         },
         "registry": {
-            "RegistryOpen": "Check-in already registered",
-            "RegistryNotOpen": "Check-in not registered",
+            "RegistryOpen": "Entry check-in already registered",
+            "RegistryNotOpen": "Entry check-in not registered",
             "RegistriesNotFound": "No records found",
             "TimeOutRequired": "Check-out time is required",
             "TimeInRequired": "Check-in time is required",
@@ -66,7 +65,7 @@
             "BadGateway": "Bad gateway"
         },
         "connection": {
-            "FailedConnection": "Database connection error"
+            "FailedConnection": "Failed to connect to database"
         }
     },
     "success": {
