@@ -2,28 +2,64 @@ import { useState } from 'react';
 import { Form, useNavigate, Link } from "@remix-run/react";
 import type { ActionFunction } from "@remix-run/node";
 import { redirect } from "@remix-run/node";
+import { authService } from '../services/auth.service';
 
 export const action: ActionFunction = async ({ request }) => {
   const formData = await request.formData();
-  // Aquí irá la lógica de autenticación cuando la implementemos
-  // Por ahora, simplemente redirigimos a inicio
-  return redirect('/inicio');
+  const email = formData.get('email') as string;
+  const password = formData.get('password') as string;
+
+  try {
+    const response = await authService.login({ email, password });
+    
+    if (response.success && response.token) {
+      return redirect('/inicio', {
+        headers: {
+          'Set-Cookie': `token=${response.token}; Path=/; HttpOnly; SameSite=Lax`
+        }
+      });
+    } else {
+      return redirect('/login?error=' + encodeURIComponent(response.message || 'Error al iniciar sesión'));
+    }
+  } catch (error) {
+    return redirect('/login?error=' + encodeURIComponent('Error al conectar con el servidor'));
+  }
 };
 
 export default function LoginPage() {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log('📤 Datos enviados al backend:', { email, password: '****' });
+    console.log('🔄 Iniciando proceso de login...');
+
+    try {
+      const response = await authService.login({ email, password });
+      console.log('📥 Respuesta del backend:', response);
+      
+      if (response.success && response.token) {
+        console.log('✅ Login exitoso, token recibido');
+        navigate('/inicio');
+      } else {
+        console.log('❌ Error en el login:', response.message);
+      }
+    } catch (error) {
+      console.error('⚠️ Error al conectar con el servidor:', error);
+    }
+  };
+
   const handleGoogleLogin = () => {
+    console.log('🔵 Iniciando login con Google...');
     // Implementar login con Google
-    console.log('Google login');
     navigate('/inicio');
   };
 
   const handleFacebookLogin = () => {
+    console.log('🔵 Iniciando login con Facebook...');
     // Implementar login con Facebook
-    console.log('Facebook login');
     navigate('/inicio');
   };
 
@@ -32,18 +68,19 @@ export default function LoginPage() {
       <div className="w-full max-w-md bg-black border border-gray-800 rounded-lg p-8">
         <h1 className="text-4xl text-white text-center mb-8 font-bold tracking-wider">LOG IN</h1>
         
-        <Form method="post" className="space-y-6">
+        <Form method="post" onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label htmlFor="username" className="block text-gray-300 text-sm font-medium mb-2 tracking-wider">
-              USERNAME/EMAIL
+            <label htmlFor="email" className="block text-gray-300 text-sm font-medium mb-2 tracking-wider">
+              EMAIL
             </label>
             <input
-              type="text"
-              id="username"
-              name="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              type="email"
+              id="email"
+              name="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full px-3 py-2 bg-transparent border border-gray-600 rounded-md text-white focus:outline-none focus:border-white cursor-text"
+              required
             />
           </div>
 
@@ -58,6 +95,7 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full px-3 py-2 bg-transparent border border-gray-600 rounded-md text-white focus:outline-none focus:border-white cursor-text"
+              required
             />
           </div>
 
