@@ -1,7 +1,6 @@
 // src/components/Navbar.tsx
 import { Link } from "@remix-run/react";
 import { FaVideo, FaUpload, FaBell, FaEnvelope, FaCog, FaUser } from 'react-icons/fa';
-import logo from "~/assets/identidad/logo.png";
 
 export default function Navbar() {
   return (
@@ -9,8 +8,8 @@ export default function Navbar() {
       <div className="mb-10 flex justify-center">
         <Link to="/inicio">
           <img 
-            src={logo} 
-            alt="Logo" 
+            src="/images/logo.png"
+            alt="Logo FriendsGo"
             className="h-24 cursor-pointer"
           />
         </Link>
