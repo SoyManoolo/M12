@@ -1,24 +1,74 @@
+/**
+ * @file videollamada.tsx
+ * @description Componente principal de videollamada que integra el chat y la funcionalidad
+ * de llamada. Permite la comunicación en tiempo real entre usuarios.
+ * 
+ * @module VideollamadaPage
+ * @exports VideollamadaPage
+ * 
+ * @requires react
+ * @requires ~/components/Videollamada/ChatVideollamada
+ * @requires ~/components/Videollamada/VideoCall
+ */
+
 import { useState, useEffect } from 'react';
 import { FaVideo, FaArrowRight, FaClock } from 'react-icons/fa';
 import ChatVideollamada from '~/components/Videollamada/ChatVideollamada';
+import VideoCall from '~/components/Videollamada/VideoCall';
 import RatingModal from '~/components/Videollamada/RatingModal';
 import { useNavigate } from '@remix-run/react';
 
-export default function VideoLlamadaPage() {
+/**
+ * @interface Message
+ * @description Define la estructura de un mensaje en el chat
+ * @property {string} id - Identificador único del mensaje
+ * @property {string} content - Contenido del mensaje
+ * @property {string} sender - Nombre del remitente
+ * @property {string} timestamp - Fecha y hora del mensaje
+ * @property {boolean} isOwn - Indica si el mensaje es del usuario actual
+ */
+interface Message {
+  id: string;
+  content: string;
+  sender: string;
+  timestamp: string;
+  isOwn: boolean;
+}
+
+/**
+ * @function VideollamadaPage
+ * @description Componente principal que integra el chat y la videollamada
+ * @returns {JSX.Element} Interfaz de videollamada con chat
+ * 
+ * @state {Message[]} messages - Lista de mensajes del chat
+ * @state {boolean} isCallActive - Estado de la llamada
+ */
+export default function VideollamadaPage() {
   const navigate = useNavigate();
-  const [isInCall, setIsInCall] = useState(false);
-  const [callDuration, setCallDuration] = useState(0);
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: '1',
+      content: '¡Hola! ¿Cómo estás?',
+      sender: 'Usuario1',
+      timestamp: '2024-03-31T12:00:00Z',
+      isOwn: false
+    },
+    {
+      id: '2',
+      content: '¡Hola! Todo bien, ¿y tú?',
+      sender: 'Usuario2',
+      timestamp: '2024-03-31T12:01:00Z',
+      isOwn: true
+    }
+  ]);
+
+  const [isCallActive, setIsCallActive] = useState(false);
   const [showRatingModal, setShowRatingModal] = useState(false);
-  const [messages, setMessages] = useState<Array<{
-    id: string;
-    text: string;
-    sender: string;
-    timestamp: string;
-  }>>([]);
+  const [callDuration, setCallDuration] = useState(0);
 
   // Iniciar el contador cuando se monta el componente
   useEffect(() => {
-    setIsInCall(true);
+    setIsCallActive(true);
     const interval = setInterval(() => {
       setCallDuration(prev => prev + 1);
     }, 1000);
@@ -35,27 +85,38 @@ export default function VideoLlamadaPage() {
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
-  const handleSendMessage = (message: string) => {
-    setMessages(prev => [...prev, {
+  /**
+   * @function handleSendMessage
+   * @description Maneja el envío de un nuevo mensaje
+   * @param {string} content - Contenido del mensaje
+   */
+  const handleSendMessage = (content: string) => {
+    const newMessage: Message = {
       id: Date.now().toString(),
-      text: message,
-      sender: 'me',
-      timestamp: new Date().toLocaleTimeString()
-    }]);
+      content,
+      sender: 'Usuario2',
+      timestamp: new Date().toISOString(),
+      isOwn: true
+    };
+    setMessages(prev => [...prev, newMessage]);
   };
 
-  const handleFinishCall = () => {
-    setIsInCall(false);
+  /**
+   * @function handleEndCall
+   * @description Maneja la finalización de la llamada
+   */
+  const handleEndCall = () => {
+    setIsCallActive(false);
     setShowRatingModal(true);
   };
 
   const handleNextCall = () => {
-    setIsInCall(false);
+    setIsCallActive(false);
     // Aquí iría la lógica para conectar con la siguiente videollamada
     // Por ahora solo reiniciamos el contador
     setCallDuration(0);
     setMessages([]);
-    setIsInCall(true);
+    setIsCallActive(true);
   };
 
   const handleRatingSubmit = (rating: number) => {
@@ -79,7 +140,7 @@ export default function VideoLlamadaPage() {
               </div>
 
               <button
-                onClick={handleFinishCall}
+                onClick={handleEndCall}
                 className="bg-red-600 border border-red-700 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center gap-2 cursor-pointer transition-colors"
               >
                 <FaVideo className="text-xl" />

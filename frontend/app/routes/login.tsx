@@ -1,16 +1,37 @@
+/**
+ * @file login.tsx
+ * @description Componente de página de inicio de sesión que maneja la autenticación de usuarios.
+ * Permite el inicio de sesión con credenciales (email/usuario y contraseña) y opciones
+ * de inicio de sesión social (Google y Facebook).
+ * 
+ * @module LoginPage
+ * @exports LoginPage
+ * 
+ * @requires react
+ * @requires @remix-run/react
+ * @requires @remix-run/node
+ * @requires ~/services/auth.service
+ */
+
 import { useState } from 'react';
 import { Form, useNavigate, Link } from "@remix-run/react";
 import type { ActionFunction } from "@remix-run/node";
 import { redirect } from "@remix-run/node";
 import { authService } from '../services/auth.service';
 
+/**
+ * @function action
+ * @description Función del servidor que maneja el envío del formulario de inicio de sesión
+ * @param {Object} request - Objeto de solicitud HTTP
+ * @returns {Promise<Response>} Redirección a la página de inicio o de error
+ */
 export const action: ActionFunction = async ({ request }) => {
   const formData = await request.formData();
-  const email = formData.get('email') as string;
+  const identifier = formData.get('identifier') as string;
   const password = formData.get('password') as string;
 
   try {
-    const response = await authService.login({ email, password });
+    const response = await authService.login({ identifier, password });
     
     if (response.success && response.token) {
       return redirect('/inicio', {
@@ -26,12 +47,30 @@ export const action: ActionFunction = async ({ request }) => {
   }
 };
 
+/**
+ * @function LoginPage
+ * @description Componente principal de la página de inicio de sesión
+ * @returns {JSX.Element} Formulario de inicio de sesión con opciones de autenticación
+ * 
+ * @state {string} identifier - Estado para el email o nombre de usuario
+ * @state {string} password - Estado para la contraseña
+ * @state {string} error - Estado para mensajes de error
+ * 
+ * @method handleSubmit - Maneja el envío del formulario de inicio de sesión
+ * @method handleGoogleLogin - Maneja el inicio de sesión con Google (pendiente)
+ * @method handleFacebookLogin - Maneja el inicio de sesión con Facebook (pendiente)
+ */
 export default function LoginPage() {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
+  /**
+   * @function handleSubmit
+   * @description Maneja el envío del formulario de inicio de sesión
+   * @param {React.FormEvent} e - Evento del formulario
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -56,12 +95,20 @@ export default function LoginPage() {
     }
   };
 
+  /**
+   * @function handleGoogleLogin
+   * @description Maneja el inicio de sesión con Google (pendiente de implementación)
+   */
   const handleGoogleLogin = () => {
     console.log('🔵 Iniciando login con Google...');
     // Implementar login con Google
     navigate('/inicio');
   };
 
+  /**
+   * @function handleFacebookLogin
+   * @description Maneja el inicio de sesión con Facebook (pendiente de implementación)
+   */
   const handleFacebookLogin = () => {
     console.log('🔵 Iniciando login con Facebook...');
     // Implementar login con Facebook

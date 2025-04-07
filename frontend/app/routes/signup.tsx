@@ -1,9 +1,32 @@
+/**
+ * @file signup.tsx
+ * @description Componente de página de registro que permite a los usuarios crear una nueva cuenta.
+ * Incluye registro con credenciales (nombre, apellido, usuario, email y contraseña) y opciones
+ * de registro social (Google y Facebook).
+ * 
+ * @module SignUpPage
+ * @exports SignUpPage
+ * 
+ * @requires react
+ * @requires @remix-run/react
+ * @requires @remix-run/node
+ * @requires ~/services/auth.service
+ */
+
 import { useState } from 'react';
 import { Form, useNavigate, Link } from "@remix-run/react";
 import type { ActionFunction } from "@remix-run/node";
 import { redirect } from "@remix-run/node";
 import { authService } from '../services/auth.service';
 
+/**
+ * @function action
+ * @description Función del servidor que maneja el envío del formulario de registro
+ * @param {Object} request - Objeto de solicitud HTTP
+ * @returns {Promise<Response>} Redirección a la página de inicio o de error
+ * 
+ * @throws {Error} Si hay problemas de conexión con el servidor
+ */
 export const action: ActionFunction = async ({ request }) => {
   const formData = await request.formData();
   const name = formData.get('name') as string;
@@ -35,6 +58,22 @@ export const action: ActionFunction = async ({ request }) => {
   }
 };
 
+/**
+ * @function SignUpPage
+ * @description Componente principal de la página de registro
+ * @returns {JSX.Element} Formulario de registro con opciones de autenticación
+ * 
+ * @state {string} name - Estado para el nombre del usuario
+ * @state {string} surname - Estado para el apellido del usuario
+ * @state {string} username - Estado para el nombre de usuario
+ * @state {string} email - Estado para el correo electrónico
+ * @state {string} password - Estado para la contraseña
+ * @state {string} error - Estado para mensajes de error
+ * 
+ * @method handleSubmit - Maneja el envío del formulario de registro
+ * @method handleGoogleSignUp - Maneja el registro con Google (pendiente)
+ * @method handleFacebookSignUp - Maneja el registro con Facebook (pendiente)
+ */
 export default function SignUpPage() {
   const [name, setName] = useState('');
   const [surname, setSurname] = useState('');
@@ -44,6 +83,11 @@ export default function SignUpPage() {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
+  /**
+   * @function handleSubmit
+   * @description Maneja el envío del formulario de registro
+   * @param {React.FormEvent} e - Evento del formulario
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -81,12 +125,20 @@ export default function SignUpPage() {
     }
   };
 
+  /**
+   * @function handleGoogleSignUp
+   * @description Maneja el registro con Google (pendiente de implementación)
+   */
   const handleGoogleSignUp = () => {
     console.log('🔵 Iniciando registro con Google...');
     // Implementar signup con Google
     navigate('/inicio');
   };
 
+  /**
+   * @function handleFacebookSignUp
+   * @description Maneja el registro con Facebook (pendiente de implementación)
+   */
   const handleFacebookSignUp = () => {
     console.log('🔵 Iniciando registro con Facebook...');
     // Implementar signup con Facebook
