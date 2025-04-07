@@ -1,7 +1,7 @@
 import { environment } from '../config/environment';
 
 interface LoginCredentials {
-    email: string;
+    identifier: string;
     password: string;
 }
 
@@ -30,7 +30,21 @@ export const authService = {
             });
 
             const data = await response.json();
-            return data;
+            
+            if (!response.ok) {
+                return {
+                    success: false,
+                    status: response.status,
+                    message: data.message || 'Error al iniciar sesión'
+                };
+            }
+
+            return {
+                success: true,
+                status: response.status,
+                token: data.token,
+                message: data.message
+            };
         } catch (error) {
             console.error('Error en login:', error);
             return {
@@ -52,7 +66,21 @@ export const authService = {
             });
 
             const data = await response.json();
-            return data;
+            
+            if (!response.ok) {
+                return {
+                    success: false,
+                    status: response.status,
+                    message: data.message || 'Error al registrarse'
+                };
+            }
+
+            return {
+                success: true,
+                status: response.status,
+                token: data.token,
+                message: data.message
+            };
         } catch (error) {
             console.error('Error en registro:', error);
             return {

@@ -27,27 +27,32 @@ export const action: ActionFunction = async ({ request }) => {
 };
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('📤 Datos enviados al backend:', { email, password: '****' });
+    setError('');
+    console.log('📤 Datos enviados al backend:', { identifier, password: '****' });
     console.log('🔄 Iniciando proceso de login...');
 
     try {
-      const response = await authService.login({ email, password });
+      const response = await authService.login({ identifier, password });
       console.log('📥 Respuesta del backend:', response);
       
       if (response.success && response.token) {
         console.log('✅ Login exitoso, token recibido');
+        localStorage.setItem('token', response.token);
         navigate('/inicio');
       } else {
         console.log('❌ Error en el login:', response.message);
+        setError(response.message || 'Error al iniciar sesión');
       }
     } catch (error) {
       console.error('⚠️ Error al conectar con el servidor:', error);
+      setError('Error al conectar con el servidor');
     }
   };
 
@@ -68,19 +73,26 @@ export default function LoginPage() {
       <div className="w-full max-w-md bg-black border border-gray-800 rounded-lg p-8">
         <h1 className="text-4xl text-white text-center mb-8 font-bold tracking-wider">LOG IN</h1>
         
+        {error && (
+          <div className="mb-4 p-3 bg-red-500/10 border border-red-500 text-red-500 rounded-md text-sm">
+            {error}
+          </div>
+        )}
+        
         <Form method="post" onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label htmlFor="email" className="block text-gray-300 text-sm font-medium mb-2 tracking-wider">
-              EMAIL
+            <label htmlFor="identifier" className="block text-gray-300 text-sm font-medium mb-2 tracking-wider">
+              EMAIL O USUARIO
             </label>
             <input
-              type="email"
-              id="email"
-              name="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="text"
+              id="identifier"
+              name="identifier"
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
               className="w-full px-3 py-2 bg-transparent border border-gray-600 rounded-md text-white focus:outline-none focus:border-white cursor-text"
               required
+              placeholder="Ingresa tu email o nombre de usuario"
             />
           </div>
 

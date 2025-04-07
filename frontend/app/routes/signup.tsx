@@ -41,10 +41,12 @@ export default function SignUpPage() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     console.log('📤 Datos enviados al backend:', { 
       name, 
       surname, 
@@ -67,12 +69,15 @@ export default function SignUpPage() {
       
       if (response.success && response.token) {
         console.log('✅ Registro exitoso, token recibido');
+        localStorage.setItem('token', response.token);
         navigate('/inicio');
       } else {
         console.log('❌ Error en el registro:', response.message);
+        setError(response.message || 'Error al registrarse');
       }
     } catch (error) {
       console.error('⚠️ Error al conectar con el servidor:', error);
+      setError('Error al conectar con el servidor');
     }
   };
 
@@ -92,6 +97,12 @@ export default function SignUpPage() {
     <div className="min-h-screen bg-black flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-black border border-gray-800 rounded-lg p-8">
         <h1 className="text-4xl text-white text-center mb-8 font-bold tracking-wider">SIGN UP</h1>
+        
+        {error && (
+          <div className="mb-4 p-3 bg-red-500/10 border border-red-500 text-red-500 rounded-md text-sm">
+            {error}
+          </div>
+        )}
         
         <Form method="post" onSubmit={handleSubmit} className="space-y-6">
           <div>
