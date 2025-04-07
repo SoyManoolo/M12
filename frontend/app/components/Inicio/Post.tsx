@@ -1,8 +1,27 @@
+/**
+ * Componente Post
+ * 
+ * Este componente representa una publicación individual en el feed de la aplicación.
+ * Incluye:
+ * - Información del autor
+ * - Contenido multimedia (imágenes/videos)
+ * - Interacciones (me gusta, comentarios, compartir)
+ * - Sistema de comentarios
+ * 
+ * @module Post
+ * @requires react
+ * @requires react-icons/fa
+ * @requires date-fns
+ */
+
 import { useState } from 'react';
 import { FaHeart, FaRegHeart, FaBookmark, FaRegBookmark, FaShare, FaComment, FaTimes } from 'react-icons/fa';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 
+/**
+ * Interfaz que define la estructura de datos de una publicación
+ */
 interface PostProps {
   post_id: string;
   user: {
@@ -26,6 +45,12 @@ interface PostProps {
   onSave: () => void;
 }
 
+/**
+ * Componente principal de la publicación
+ * 
+ * @param {PostProps} props - Propiedades del componente
+ * @returns {JSX.Element} Componente de publicación con todas sus funcionalidades
+ */
 export default function Post({
   post_id,
   user,
@@ -38,6 +63,7 @@ export default function Post({
   onLike,
   onSave
 }: PostProps) {
+  // Estados para controlar las interacciones del usuario
   const [isLiked, setIsLiked] = useState(false);
   const [isSaved, setIsSaved] = useState(is_saved);
   const [isShared, setIsShared] = useState(false);
@@ -47,48 +73,67 @@ export default function Post({
   const [currentLikes, setCurrentLikes] = useState(likes_count);
   const [newComment, setNewComment] = useState('');
 
-  // Función para truncar texto
+  /**
+   * Función auxiliar para truncar texto largo
+   * 
+   * @param {string} text - Texto a truncar
+   * @param {number} limit - Límite de caracteres
+   * @returns {string} Texto truncado si excede el límite
+   */
   const truncateText = (text: string, limit: number) => {
     if (text.length <= limit) return text;
     return text.slice(0, limit);
   };
 
-  // Manejadores de eventos
+  /**
+   * Manejador para expandir la imagen
+   */
   const handleImageClick = (e: React.MouseEvent) => {
     e.preventDefault();
     setIsExpanded(true);
   };
 
+  /**
+   * Manejador para cerrar el modal de imagen expandida
+   */
   const handleCloseModal = () => {
     setIsExpanded(false);
   };
 
+  /**
+   * Manejador para alternar la descripción completa
+   */
   const toggleDescription = (e: React.MouseEvent) => {
     e.preventDefault();
     setShowFullDescription(!showFullDescription);
   };
 
-  // Función para manejar nuevo comentario
+  /**
+   * Manejador para agregar un nuevo comentario
+   */
   const handleAddComment = () => {
     if (!newComment.trim()) return;
     // Aquí iría la llamada a la API cuando la implementemos
-    // Por ahora solo simulamos
     console.log('Nuevo comentario:', {
       post_id,
       content: newComment,
-      user_id: 'current_user_id', // Esto vendría del contexto de autenticación
+      user_id: 'current_user_id',
     });
     setNewComment('');
   };
 
-  // Función para manejar likes
+  /**
+   * Manejador para la acción de "me gusta"
+   */
   const handleLike = () => {
     setIsLiked(!isLiked);
     setCurrentLikes(prev => isLiked ? prev - 1 : prev + 1);
     onLike();
   };
 
-  // Función para guardar post
+  /**
+   * Manejador para guardar la publicación
+   */
   const handleSave = () => {
     setIsSaved(!isSaved);
     onSave();
@@ -96,12 +141,12 @@ export default function Post({
 
   return (
     <>
-      {/* Post normal */}
+      {/* Contenedor principal del post */}
       <div className="bg-gray-900 rounded-lg p-4 mb-4 w-full h-[500px]">
         <div className="flex h-full">
-          {/* Columna izquierda - más estrecha */}
+          {/* Columna izquierda - Acciones y perfil */}
           <div className="w-[80px] flex flex-col items-center space-y-4">
-            {/* Perfil y nombre */}
+            {/* Perfil y nombre del usuario */}
             <img 
               src={user.profile_picture_url || '/default-avatar.png'} 
               alt={user.username} 
@@ -112,8 +157,9 @@ export default function Post({
               {user.username}
             </p>
 
-            {/* Acciones en columna con estados */}
+            {/* Contenedor de acciones */}
             <div className="flex flex-col space-y-4 mt-4">
+              {/* Botón de me gusta */}
               <div className="flex flex-col items-center">
                 <button 
                   onClick={handleLike}
@@ -124,6 +170,7 @@ export default function Post({
                 </button>
               </div>
               
+              {/* Botón de compartir */}
               <div className="flex flex-col items-center">
                 <button 
                   onClick={() => setIsShared(!isShared)}
@@ -134,6 +181,7 @@ export default function Post({
                 </button>
               </div>
               
+              {/* Botón de guardar */}
               <div className="flex flex-col items-center">
                 <button 
                   onClick={handleSave}
@@ -146,7 +194,7 @@ export default function Post({
             </div>
           </div>
 
-          {/* Columna central - más ancha */}
+          {/* Columna central - Contenido multimedia */}
           <div className="w-[500px] px-4">
             <div 
               className="rounded-lg overflow-hidden bg-gray-800 h-full cursor-pointer relative"
@@ -157,18 +205,18 @@ export default function Post({
                 alt="Contenido del post"
                 className="w-full h-full object-cover"
               />
-              {/* Fecha en el pie de la imagen */}
+              {/* Fecha de publicación */}
               <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 px-2 py-1 rounded text-xs text-gray-300">
                 {formatDistanceToNow(new Date(created_at), { addSuffix: true, locale: es })}
               </div>
             </div>
           </div>
 
-          {/* Columna derecha reorganizada */}
+          {/* Columna derecha - Descripción y comentarios */}
           <div className="flex-1 pl-4 flex flex-col h-full">
-            {/* Contenedor superior para descripción y comentarios */}
+            {/* Contenedor de descripción y comentarios */}
             <div className="flex-1 overflow-hidden">
-              {/* Descripción */}
+              {/* Sección de descripción */}
               <div className="mb-4">
                 <h3 className="text-white font-semibold mb-2">Descripción</h3>
                 <div className="text-gray-300 text-sm">
@@ -188,7 +236,7 @@ export default function Post({
                 </div>
               </div>
 
-              {/* Comentarios */}
+              {/* Sección de comentarios */}
               <div className="overflow-y-auto">
                 <div className="flex items-center gap-2 mb-2">
                   <h3 className="text-white font-semibold">Comentarios</h3>
@@ -217,7 +265,7 @@ export default function Post({
               </div>
             </div>
 
-            {/* Input de comentarios fijo en la parte inferior */}
+            {/* Input para nuevos comentarios */}
             <div className="mt-auto pt-4 border-t border-gray-800">
               <div className="flex items-center bg-gray-800 rounded-lg p-2">
                 <input
