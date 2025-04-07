@@ -5,25 +5,25 @@ import { compare, hash } from "bcryptjs";
 import { AuthToken } from "../middlewares/validation/authentication/jwt";
 
 export class AuthService {
-    public async exists(identifier: string) {
+    public async exists(id: string) {
         try {
-            console.log(identifier);
-            return await User.findOne({
+            const user = await User.findOne({
                 where: {
                     [Op.or]: [
-                        { email: identifier },
-                        { username: identifier }
+                        { email: id },
+                        { username: id }
                     ]
                 }
-            })
+            });
+            return user;
         } catch (error) {
-            throw new AppError(500, 'InternalServerError');
-        };
-    };
+            throw new AppError(500, 'DatabaseError');
+        }
+    }
 
-    public async login(identifier: string, password: string): Promise<string> {
+    public async login(id: string, password: string): Promise<string> {
         try {
-            const user = await this.exists(identifier);
+            const user = await this.exists(id);
 
             if (!user) throw new AppError(404, 'UserNotFound');
 
@@ -33,8 +33,13 @@ export class AuthService {
 
             const token = new AuthToken().generateToken(user);
 
+            if (!token) throw new AppError(500, 'TokenGenerationError');
+
             return token;
         } catch (error) {
+            if (error instanceof AppError) {
+                throw error;
+            }
             throw new AppError(500, 'InternalServerError');
         };
     };
@@ -65,6 +70,9 @@ export class AuthService {
 
             return token;
         } catch (error) {
+            if (error instanceof AppError) {
+                throw error;
+            }
             throw new AppError(500, 'InternalServerError');
         };
     };

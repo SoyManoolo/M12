@@ -11,7 +11,8 @@ CREATE TABLE users (
     profile_picture_url VARCHAR(255),
     bio TEXT,
     email_verified BOOLEAN DEFAULT FALSE,
-    is_moderator BOOLEAN DEFAULT FALSE,  -- Campo añadido para identificar moderadores
+    is_moderator BOOLEAN DEFAULT FALSE,
+    id_deleted BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -22,6 +23,7 @@ CREATE TABLE posts (
     user_id char(36) REFERENCES users(user_id) ON DELETE CASCADE,
     description TEXT NOT NULL,
     media_url VARCHAR(255),
+    id_deleted BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

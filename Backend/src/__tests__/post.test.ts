@@ -11,7 +11,7 @@ afterAll(async () => {
 describe('Post test:', () => {
     test('Test de prueba', async () => {
         await api
-            .get('/users')
+            .get('/posts')
             .expect(200)
             .expect('Content-Type', /application\/json/)
     });

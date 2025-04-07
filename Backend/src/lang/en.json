@@ -1,92 +1,80 @@
 {
-    "errors": {
-        "validation": {
-            "MissingPassword": "Enter the password",
-            "IncorrectPassword": "Incorrect password",
-            "MissingEmail": "Enter the email",
-            "MissingUsername": "Enter the username",
-            "MissingName": "Enter the name",
-            "MissingSurname": "Enter the surname",
-            "NoAdmin": "You don't have administrator permissions",
-            "InvalidIdentifier": "Invalid identifier",
-            "MissingIdentifier": "Missing identifier",
-            "InvalidEmail": "Invalid email format",
-            "ValidationError": "Validation error",
-            "fieldRequired": "The field {field} is required"
-        },
-        "field": {
-            "is_moderator": "administrator status",
-            "name": "name",
-            "surname": "surname",
-            "email": "email",
-            "identifier": "identifier",
-            "password": "password",
-            "username": "username"
-        },
-        "jwt": {
-            "MissingJwtSecret": "JWT secret is not defined",
-            "MissingJWT": "No JWT provided",
-            "FormatJWT": "Invalid JWT format",
-            "InvalidTempToken": "Invalid temporary token"
-        },
-        "user": {
-            "IncorrectCredentials": "Incorrect credentials",
-            "UserDontExist": "User does not exist",
-            "UserNotFound": "User not found",
-            "UsersNotFound": "No users found",
-            "MissingIdentifier": "Missing identifier",
-            "UserExist": "User already exists",
-            "NoDataToUpdate": "No data to update",
-            "EmailAlreadyExists": "Email is already in use",
-            "DniAlreadyExists": "DNI is already in use",
-            "AdminCannotBeDeleted": "Administrator cannot be deleted",
-            "UserNotActive": "User is not active",
-            "UserDeleted": "User is deleted"
-        },
-        "registry": {
-            "RegistryOpen": "Entry check-in already registered",
-            "RegistryNotOpen": "Entry check-in not registered",
-            "RegistriesNotFound": "No records found",
-            "TimeOutRequired": "Check-out time is required",
-            "TimeInRequired": "Check-in time is required",
-            "CheckTypeRequired": "Check type is required"
-        },
-        "status": {
-            "NotFound": "Resource not found",
-            "InternalServerError": "Internal server error",
-            "Unauthorized": "Unauthorized",
-            "Forbidden": "Forbidden",
-            "BadRequest": "Bad request",
-            "Conflict": "Conflict",
-            "UnprocessableEntity": "Unprocessable entity",
-            "TooManyRequests": "Too many requests",
-            "ServiceUnavailable": "Service unavailable",
-            "GatewayTimeout": "Gateway timeout",
-            "BadGateway": "Bad gateway"
-        },
-        "connection": {
-            "FailedConnection": "Failed to connect to database"
-        }
+  "success": {
+    "auth": {
+      "login": "Correct login",
+      "logout": "Session closed correctly",
+      "adminRegistered": "Administrator registered correctly",
+      "userRegistered": "User registered correctly",
+      "passwordChanged": "Password changed correctly",
+      "passwordChangeRequired": "Required password change"
     },
-    "success": {
-        "auth": {
-            "login": "Login successful",
-            "logout": "Logout successful",
-            "adminRegistered": "Administrator registered successfully",
-            "userRegistered": "User registered successfully",
-            "passwordChanged": "Password changed successfully",
-            "passwordChangeRequired": "Password change required"
-        },
-        "registry": {
-            "entryRegistered": "Entry registered successfully",
-            "exitRegistered": "Exit registered successfully"
-        },
-        "user": {
-            "usersFound": "Users found successfully",
-            "userFound": "User found successfully",
-            "userUpdated": "User updated successfully",
-            "userDeleted": "User deleted successfully",
-            "userSoftDeleted": "User deactivated successfully"
-        }
+    "user": {
+      "usersFound": "Users found correctly",
+      "userFound": "User found correctly",
+      "userUpdated": "User updated correctly",
+      "userDeleted": "User deleted correctly",
+      "userSoftDeleted": "User deactivated correctly"
     }
+  },
+  "errors": {
+    "status": {
+      "NotFound": "Resource not found",
+      "InternalServerError": "Internal Server Error",
+      "Unauthorized": "Unauthorized",
+      "Forbidden": "Forbidden",
+      "BadRequest": "Bad Request",
+      "Conflict": "Conflict",
+      "UnprocessableEntity": "Non -processable entity",
+      "TooManyRequests": "Too many requests",
+      "ServiceUnavailable": "SERVICE NOT AVAILABLE",
+      "GatewayTimeout": "Waiting time for the exhausted gateway",
+      "BadGateway": "Incorrect Link Door"
+    },
+    "connection": {
+      "FailedConnection": "Error connecting with the database"
+    },
+    "jwt": {
+      "MissingJwtSecret": "JWT password is not defined",
+      "MissingJWT": "A JWT has not been provided",
+      "FormatJWT": "Invacid JWT format",
+      "InvalidTempToken": "Token temporary invalid"
+    },
+    "user": {
+      "IncorrectCredentials": "Incorrect credentials",
+      "UserDontExist": "User not existing",
+      "UserNotFound": "User not found",
+      "UsersNotFound": "No users have been found",
+      "MissingIdentifier": "The identifier is missing",
+      "UserExist": "The user already exists",
+      "NoDataToUpdate": "There is no data to update",
+      "EmailAlreadyExists": "Email is already in use",
+      "DniAlreadyExists": "The DNI is already in use",
+      "AdminCannotBeDeleted": "It is not possible to eliminate the administrator",
+      "UserNotActive": "The user is not active",
+      "UserDeleted": "The user is eliminated"
+    },
+    "validation": {
+      "MissingPassword": "Enter the password",
+      "IncorrectPassword": "Incorrect password",
+      "MissingEmail": "Enter email",
+      "MissingUsername": "Enter the username",
+      "MissingName": "Enter the name",
+      "MissingSurname": "Enter your last name",
+      "NoAdmin": "It has no administrator permissions",
+      "InvalidIdentifier": "Non -valid identifier",
+      "MissingIdentifier": "The identifier is missing",
+      "InvalidEmail": "Non -valid email format",
+      "ValidationError": "Validation error",
+      "fieldRequired": "The {Field} field is mandatory"
+    }
+  },
+  "field": {
+    "is_moderator": "Administrator status",
+    "name": "name",
+    "surname": "last name",
+    "email": "email",
+    "identifier": "Identifier",
+    "password": "password",
+    "username": "user name"
+  }
 }
