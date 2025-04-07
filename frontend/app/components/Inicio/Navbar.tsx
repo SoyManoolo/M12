@@ -35,11 +35,20 @@ export default function Navbar() {
   };
 
   const handleProfileClick = () => {
-    // Obtener el usuario actual del localStorage
-    const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-    if (currentUser && currentUser.username) {
-      navigate(`/perfil?username=${currentUser.username}`);
-    }
+    // Mock de usuario mientras la API no esté lista
+    const mockUser = {
+      username: "usuario_demo",
+      first_name: "Usuario",
+      last_name: "Demo",
+      email: "demo@example.com",
+      profile_picture_url: "https://i.pravatar.cc/150"
+    };
+
+    // Guardar mock en localStorage
+    localStorage.setItem('user', JSON.stringify(mockUser));
+    
+    // Navegar al perfil del usuario mock
+    navigate(`/perfil?username=${mockUser.username}`);
   };
 
   return (
@@ -60,9 +69,11 @@ export default function Navbar() {
         {/* Enlace a videollamada - Función principal */}
         <Link 
           to="/videollamada"
-          className="flex items-center justify-center text-white hover:text-gray-300 w-full p-4 rounded-lg hover:bg-gray-800 transition-all transform hover:scale-105 bg-gray-800 border border-gray-700 cursor-pointer"
+          className="flex flex-col items-center justify-center text-white hover:text-blue-400 w-full p-4 rounded-lg hover:bg-gray-800/50 transition-all transform hover:scale-105 cursor-pointer group relative"
         >
-          <FaVideo className="text-4xl" />
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-purple-600/20 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          <FaVideo className="text-5xl mb-2" />
+          <span className="text-sm font-semibold tracking-wider">VIDEOLLAMADA</span>
         </Link>
 
         {/* Enlace a sección de publicaciones */}
