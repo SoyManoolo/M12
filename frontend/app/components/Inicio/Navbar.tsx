@@ -67,7 +67,7 @@ export default function Navbar() {
           <img 
             src="/images/logo.png"
             alt="Logo FriendsGo"
-            className="h-24 cursor-pointer"
+            className="h-32 cursor-pointer"
           />
         </Link>
       </div>
@@ -80,7 +80,7 @@ export default function Navbar() {
           className="flex flex-col items-center justify-center text-white hover:text-blue-400 w-full p-4 rounded-lg hover:bg-gray-800/50 transition-all transform hover:scale-105 cursor-pointer group relative"
         >
           <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-purple-600/20 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"></div>
-          <FaVideo className="text-5xl mb-2" />
+          <FaVideo className="text-4xl mb-2" />
           <span className="text-sm font-semibold tracking-wider">VIDEOLLAMADA</span>
         </Link>
 

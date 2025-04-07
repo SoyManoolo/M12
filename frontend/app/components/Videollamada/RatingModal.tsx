@@ -13,7 +13,7 @@
  */
 
 import { useState } from 'react';
-import { FaStar } from 'react-icons/fa';
+import { FaDiamond } from 'react-icons/fa6';
 
 /**
  * Interfaz que define las propiedades del componente RatingModal
@@ -70,8 +70,8 @@ export default function RatingModal({ isOpen, onClose, onSubmit }: RatingModalPr
               onClick={() => handleRating(star)}
               className="text-2xl mx-1 focus:outline-none"
             >
-              <FaStar
-                className={star <= rating ? 'text-yellow-500' : 'text-gray-400'}
+              <FaDiamond
+                className={star <= rating ? 'text-blue-400' : 'text-gray-400'}
               />
             </button>
           ))}
