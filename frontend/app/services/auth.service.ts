@@ -1,14 +1,27 @@
 import { environment } from '../config/environment';
 
+/**
+ * Servicio de autenticación
+ * 
+ * Este servicio maneja todas las operaciones relacionadas con la autenticación:
+ * - Login de usuarios
+ * - Registro de nuevos usuarios
+ * - Manejo de tokens JWT
+ * 
+ * @module auth.service
+ */
+
 interface LoginCredentials {
-    identifier: string;
+    identifier: string;  // Puede ser email o username
     password: string;
 }
 
-interface RegisterData extends LoginCredentials {
-    username: string;
-    name: string;
-    surname: string;
+interface RegisterData {
+    email: string;      // Email del usuario
+    username: string;   // Nombre de usuario
+    name: string;       // Nombre real
+    surname: string;    // Apellido
+    password: string;   // Contraseña
 }
 
 interface AuthResponse {
