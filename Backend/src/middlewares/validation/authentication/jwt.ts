@@ -5,9 +5,6 @@ import { User } from "../../../models";
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../../errors/AppError";
 
-interface CustomRequest extends Request {
-    user?: jwt.JwtPayload;
-}
 
 export class AuthToken {
 
@@ -30,7 +27,7 @@ export class AuthToken {
         );
     };
 
-    public static verifyToken(req: CustomRequest, res: Response, next: NextFunction): void {
+    public static verifyToken(req: Request, res: Response, next: NextFunction): void {
         // Comprobamos si existe el token
         const authHeader = req.headers['authorization'];
 
@@ -54,7 +51,7 @@ export class AuthToken {
         };
     };
 
-    public static async isModerator(req: CustomRequest, res: Response, next: NextFunction) {
+    public static async isModerator(req: Request, res: Response, next: NextFunction) {
         try {
             // Verifica si el token ha sido validado
             if (!req.user || !req.user.id) throw new AppError(403, "Missing authentication. Please provide a valid token");

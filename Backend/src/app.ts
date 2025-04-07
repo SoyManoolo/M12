@@ -23,6 +23,6 @@ app.use((error: any, req: Request, res: Response, next: NextFunction) => {
 
 });
 
-app.use((error: Error, req: Request, res: Response, next: NextFunction): void => {
-    AppErrorHandler.errorHandler(error, req, res, next);
-});
+// app.use((error: Error, req: Request, res: Response, next: NextFunction): void => {
+//     AppErrorHandler.errorHandler(error, req, res, next);
+// });
