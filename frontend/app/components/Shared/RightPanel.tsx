@@ -14,7 +14,7 @@
  * @module RightPanel
  */
 
-import { Link } from "@remix-run/react";
+import { Link, useNavigate } from "@remix-run/react";
 import { FaSearch } from 'react-icons/fa';
 
 interface User {
@@ -42,6 +42,7 @@ export default function RightPanel({
   onSearch, 
   onFollow 
 }: RightPanelProps) {
+  const navigate = useNavigate();
   const title = mode === 'suggested' 
     ? 'Amigos sugeridos' 
     : mode === 'common' 
@@ -53,6 +54,10 @@ export default function RightPanel({
     : mode === 'common'
     ? 'No hay amigos en común'
     : 'No hay amigos conectados';
+
+  const handleUserClick = (username: string) => {
+    navigate(`/perfilother?username=${username}`);
+  };
 
   return (
     <div className="w-1/4 p-4">
@@ -79,44 +84,47 @@ export default function RightPanel({
         ) : (
           <div className="space-y-4">
             {users.map((user) => (
-              <div key={user.user_id} className="flex items-center justify-between py-3">
-                <div className="flex items-center">
+              <div key={user.user_id} className="flex items-center justify-between py-4">
+                <div 
+                  className="flex items-center cursor-pointer hover:bg-gray-800/50 p-3 rounded-lg transition-colors w-full"
+                  onClick={() => handleUserClick(user.username)}
+                >
                   <div className="relative">
                     <img 
                       src={user.profile_picture_url || 'https://i.pravatar.cc/150'} 
                       alt={user.username}
-                      className="w-10 h-10 rounded-full object-cover"
+                      className="w-12 h-12 rounded-full object-cover"
                     />
                     {mode === 'online' && user.is_online && (
                       <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-black"></div>
                     )}
                   </div>
-                  <div className="ml-3">
-                    <p className="font-semibold text-white">{user.username}</p>
-                    <p className="text-sm text-gray-400">
+                  <div className="ml-4 flex flex-col">
+                    <p className="font-semibold text-white hover:text-blue-400 text-base">{user.username}</p>
+                    <p className="text-sm text-gray-400 hover:text-gray-300">
                       {user.first_name} {user.last_name}
                     </p>
                     {mode === 'suggested' && user.common_friends_count !== undefined && (
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-gray-500 mt-1">
                         {user.common_friends_count} {user.common_friends_count === 1 ? 'amigo' : 'amigos'} en común
                       </p>
                     )}
                     {mode === 'online' && user.is_online && (
-                      <p className="text-xs text-green-500">En línea</p>
+                      <p className="text-xs text-green-500 mt-1">En línea</p>
                     )}
                   </div>
                 </div>
                 {mode === 'suggested' ? (
                   <button 
                     onClick={() => onFollow?.(user.user_id)}
-                    className="px-4 py-1 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors text-sm"
+                    className="px-4 py-1.5 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors text-sm cursor-pointer ml-4"
                   >
                     Seguir
                   </button>
                 ) : (
                   <Link 
                     to={`/perfilother?username=${user.username}`}
-                    className="text-blue-500 hover:text-blue-400 text-sm"
+                    className="text-blue-500 hover:text-blue-400 text-sm cursor-pointer ml-4 whitespace-nowrap"
                   >
                     Ver perfil
                   </Link>
