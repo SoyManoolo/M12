@@ -82,11 +82,11 @@ export default function RightPanel({
         {users.length === 0 ? (
           <p className="text-gray-400 text-center">{emptyMessage}</p>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-2">
             {users.map((user) => (
-              <div key={user.user_id} className="flex items-center justify-between py-4">
+              <div key={user.user_id} className="flex items-center justify-between py-2">
                 <div 
-                  className="flex items-center cursor-pointer hover:bg-gray-800/50 p-3 rounded-lg transition-colors w-full"
+                  className="flex items-center cursor-pointer hover:bg-gray-800/50 p-2 rounded-lg transition-colors w-full"
                   onClick={() => handleUserClick(user.username)}
                 >
                   <div className="relative">
