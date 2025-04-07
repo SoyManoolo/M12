@@ -21,11 +21,12 @@
  * @constant MOCK_SUGGESTED_USERS - Array de usuarios sugeridos de ejemplo
  */
 
-import { useNavigate } from "@remix-run/react";
+import { useNavigate, useLoaderData } from "@remix-run/react";
 import Navbar from "~/components/Inicio/Navbar";
 import Post from "~/components/Inicio/Post";
 import RightPanel from "~/components/Shared/RightPanel";
 import { useState } from "react";
+import { json } from "@remix-run/node";
 
 /**
  * @interface User
@@ -92,23 +93,21 @@ interface Post {
 }
 
 /**
- * @interface SuggestedUser
- * @description Define la estructura de datos de un usuario sugerido para seguir
- * @property {string} user_id - Identificador único del usuario
- * @property {string} username - Nombre de usuario
- * @property {string} first_name - Nombre del usuario
- * @property {string} last_name - Apellido del usuario
- * @property {string} profile_picture_url - URL de la imagen de perfil
- * @property {number} common_friends_count - Número de amigos en común
+ * @interface Friend
+ * @description Define la estructura de datos de una amistad entre usuarios
+ * @property {string} friendship_id - Identificador único de la amistad
+ * @property {string} user1_id - Identificador del primer usuario en la amistad
+ * @property {string} user2_id - Identificador del segundo usuario en la amistad
+ * @property {string} created_at - Fecha de creación de la amistad
+ * @property {User} user - Objeto con la información del segundo usuario en la amistad
  */
 
-interface SuggestedUser {
-  user_id: string;
-  username: string;
-  first_name: string;
-  last_name: string;
-  profile_picture_url: string | null;
-  common_friends_count: number;
+interface Friend {
+  friendship_id: string;
+  user1_id: string;
+  user2_id: string;
+  created_at: string;
+  user: User;
 }
 
 // Datos de ejemplo - En producción vendrían del backend
@@ -491,13 +490,171 @@ const MOCK_SUGGESTED_USERS = [
  * @method handleSave - Maneja el guardado de publicaciones
  */
 
+export const loader = async () => {
+  // Datos mock para pruebas
+  const mockPosts: Post[] = [
+    {
+      post_id: "1",
+      user_id: "1",
+      user: {
+        user_id: "1",
+        first_name: "María",
+        last_name: "García",
+        username: "mariagarcia",
+        email: "maria@example.com",
+        profile_picture_url: "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg",
+        bio: "¡Hola! Me encanta compartir momentos especiales",
+        email_verified: true,
+        is_moderator: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      },
+      description: "¡Disfrutando de un hermoso día en la playa! 🌊☀️ #Verano #Vacaciones",
+      media_url: "https://images.pexels.com/photos/189349/pexels-photo-189349.jpeg",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      likes_count: 15,
+      is_saved: false,
+      comments: [
+        {
+          comment_id: "1",
+          user_id: "2",
+          username: "carlos123",
+          content: "¡Qué foto tan bonita! 😍",
+          created_at: new Date().toISOString()
+        }
+      ]
+    },
+    {
+      post_id: "2",
+      user_id: "2",
+      user: {
+        user_id: "2",
+        first_name: "Carlos",
+        last_name: "Pérez",
+        username: "carlos123",
+        email: "carlos@example.com",
+        profile_picture_url: "https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg",
+        bio: "Amante de la música y la fotografía",
+        email_verified: true,
+        is_moderator: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      },
+      description: "Nueva canción que estoy escuchando 🎵 #Música #Vibes",
+      media_url: "https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      likes_count: 8,
+      is_saved: false,
+      comments: []
+    },
+    {
+      post_id: "3",
+      user_id: "3",
+      user: {
+        user_id: "3",
+        first_name: "Ana",
+        last_name: "Martínez",
+        username: "anamartinez",
+        email: "ana@example.com",
+        profile_picture_url: "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg",
+        bio: "Viajera incansable ✈️",
+        email_verified: true,
+        is_moderator: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      },
+      description: "Nuevo destino, nuevas aventuras 🌍 #Viajes #Aventura",
+      media_url: "https://images.pexels.com/photos/3155666/pexels-photo-3155666.jpeg",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      likes_count: 12,
+      is_saved: false,
+      comments: []
+    },
+    {
+      post_id: "4",
+      user_id: "4",
+      user: {
+        user_id: "4",
+        first_name: "David",
+        last_name: "López",
+        username: "davidlopez",
+        email: "david@example.com",
+        profile_picture_url: "https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg",
+        bio: "Desarrollador web 💻",
+        email_verified: true,
+        is_moderator: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      },
+      description: "Nuevo proyecto en desarrollo 🚀 #Programación #WebDev",
+      media_url: "https://images.pexels.com/photos/1181467/pexels-photo-1181467.jpeg",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      likes_count: 6,
+      is_saved: false,
+      comments: []
+    },
+    {
+      post_id: "5",
+      user_id: "5",
+      user: {
+        user_id: "5",
+        first_name: "Laura",
+        last_name: "Gómez",
+        username: "lauragomez",
+        email: "laura@example.com",
+        profile_picture_url: "https://images.pexels.com/photos/733872/pexels-photo-733872.jpeg",
+        bio: "Fotógrafa profesional 📸",
+        email_verified: true,
+        is_moderator: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      },
+      description: "Nueva sesión de fotos 📷 #Fotografía #Retrato",
+      media_url: "https://images.pexels.com/photos/2387873/pexels-photo-2387873.jpeg",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      likes_count: 20,
+      is_saved: false,
+      comments: []
+    }
+  ];
+
+  const mockFriends: Friend[] = [
+    {
+      friendship_id: "1",
+      user1_id: "1",
+      user2_id: "2",
+      created_at: new Date().toISOString(),
+      user: {
+        user_id: "2",
+        first_name: "Carlos",
+        last_name: "Pérez",
+        username: "carlos123",
+        email: "carlos@example.com",
+        profile_picture_url: "https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg",
+        bio: "Amante de la música",
+        email_verified: true,
+        is_moderator: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+    }
+  ];
+
+  return json({ posts: mockPosts, friends: mockFriends });
+};
+
 export default function InicioPage() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [posts, setPosts] = useState<Post[]>(MOCK_POSTS);
-  const [suggestedUsers, setSuggestedUsers] = useState<SuggestedUser[]>(MOCK_SUGGESTED_USERS);
+  const { posts, friends } = useLoaderData<typeof loader>();
+  const [currentPosts, setCurrentPosts] = useState<Post[]>(posts);
+  const [searchTerm, setSearchTerm] = useState<string>("");
 
   const handleSearch = (query: string) => {
-    setSearchQuery(query);
+    setSearchTerm(query);
     // Aquí iría la llamada a la API para buscar usuarios
     console.log('Buscando usuarios:', query);
   };
@@ -507,11 +664,11 @@ export default function InicioPage() {
       // Aquí iría la llamada a la API para seguir al usuario
       console.log('Siguiendo al usuario:', userId);
       // Actualizar la UI después de seguir
-      setSuggestedUsers(prev => 
-        prev.map(user => 
-          user.user_id === userId 
-            ? { ...user, common_friends_count: user.common_friends_count + 1 }
-            : user
+      setCurrentPosts(prev => 
+        prev.map(post => 
+          post.user.user_id === userId 
+            ? { ...post, user: { ...post.user, is_following: true } }
+            : post
         )
       );
     } catch (error) {
@@ -521,10 +678,8 @@ export default function InicioPage() {
 
   const handleLike = async (postId: string) => {
     try {
-      // Aquí iría la llamada a la API para dar like
       console.log('Dando like al post:', postId);
-      // Actualizar la UI después de dar like
-      setPosts(prev =>
+      setCurrentPosts(prev =>
         prev.map(post =>
           post.post_id === postId
             ? { ...post, likes_count: post.likes_count + 1 }
@@ -538,10 +693,8 @@ export default function InicioPage() {
 
   const handleSave = async (postId: string) => {
     try {
-      // Aquí iría la llamada a la API para guardar el post
       console.log('Guardando post:', postId);
-      // Actualizar la UI después de guardar
-      setPosts(prev =>
+      setCurrentPosts(prev =>
         prev.map(post =>
           post.post_id === postId
             ? { ...post, is_saved: !post.is_saved }
@@ -564,7 +717,7 @@ export default function InicioPage() {
           <h2 className="text-xl font-bold mb-4">Feed Principal</h2>
 
           {/* Lista de posts */}
-          {posts.map((post) => (
+          {currentPosts.map((post: Post) => (
             <Post
               key={post.post_id}
               post_id={post.post_id}
@@ -584,10 +737,12 @@ export default function InicioPage() {
 
       {/* Barra lateral derecha */}
       <RightPanel
-        users={suggestedUsers}
-        mode="suggested"
-        onSearch={handleSearch}
-        onFollow={handleFollow}
+        users={friends.map((friend: Friend) => ({
+          ...friend.user,
+          is_online: true // Esto debería venir del backend
+        }))}
+        mode="online"
+        onSearch={setSearchTerm}
       />
     </div>
   );

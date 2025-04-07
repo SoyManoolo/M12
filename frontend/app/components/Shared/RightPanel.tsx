@@ -4,10 +4,12 @@
  * Panel lateral derecho reutilizable que puede mostrar:
  * - Lista de amigos sugeridos (para perfil propio)
  * - Lista de amigos en común (para perfil de otros)
+ * - Lista de amigos en línea (para notificaciones)
  * Incluye:
  * - Barra de búsqueda de amigos
  * - Lista de usuarios
  * - Funcionalidad de seguimiento (en modo sugeridos)
+ * - Indicador de estado en línea (en modo online)
  * 
  * @module RightPanel
  */
@@ -22,11 +24,12 @@ interface User {
   last_name: string;
   profile_picture_url: string | null;
   common_friends_count?: number;
+  is_online?: boolean;
 }
 
 interface RightPanelProps {
   users: User[];
-  mode: 'suggested' | 'common';
+  mode: 'suggested' | 'common' | 'online';
   showSearch?: boolean;
   onSearch?: (query: string) => void;
   onFollow?: (userId: string) => void;
@@ -39,10 +42,17 @@ export default function RightPanel({
   onSearch, 
   onFollow 
 }: RightPanelProps) {
-  const title = mode === 'suggested' ? 'Amigos sugeridos' : 'Amigos en común';
+  const title = mode === 'suggested' 
+    ? 'Amigos sugeridos' 
+    : mode === 'common' 
+    ? 'Amigos en común' 
+    : 'Amigos en línea';
+    
   const emptyMessage = mode === 'suggested' 
     ? 'No hay sugerencias disponibles' 
-    : 'No hay amigos en común';
+    : mode === 'common'
+    ? 'No hay amigos en común'
+    : 'No hay amigos conectados';
 
   return (
     <div className="w-1/4 p-4">
@@ -71,11 +81,16 @@ export default function RightPanel({
             {users.map((user) => (
               <div key={user.user_id} className="flex items-center justify-between py-3">
                 <div className="flex items-center">
-                  <img 
-                    src={user.profile_picture_url || 'https://i.pravatar.cc/150'} 
-                    alt={user.username}
-                    className="w-10 h-10 rounded-full object-cover"
-                  />
+                  <div className="relative">
+                    <img 
+                      src={user.profile_picture_url || 'https://i.pravatar.cc/150'} 
+                      alt={user.username}
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
+                    {mode === 'online' && user.is_online && (
+                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-black"></div>
+                    )}
+                  </div>
                   <div className="ml-3">
                     <p className="font-semibold text-white">{user.username}</p>
                     <p className="text-sm text-gray-400">
@@ -85,6 +100,9 @@ export default function RightPanel({
                       <p className="text-xs text-gray-500">
                         {user.common_friends_count} {user.common_friends_count === 1 ? 'amigo' : 'amigos'} en común
                       </p>
+                    )}
+                    {mode === 'online' && user.is_online && (
+                      <p className="text-xs text-green-500">En línea</p>
                     )}
                   </div>
                 </div>
