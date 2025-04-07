@@ -35,13 +35,21 @@ export default function Navbar() {
   };
 
   const handleProfileClick = () => {
-    // Mock de usuario mientras la API no esté lista
+    // Mock de usuario basado en la estructura de la base de datos
     const mockUser = {
-      username: "usuario_demo",
+      user_id: "550e8400-e29b-41d4-a716-446655440000",
       first_name: "Usuario",
       last_name: "Demo",
+      username: "usuario_demo",
       email: "demo@example.com",
-      profile_picture_url: "https://i.pravatar.cc/150"
+      password: "hashed_password",
+      profile_picture_url: "https://i.pravatar.cc/150",
+      bio: "¡Hola! Soy un usuario de prueba de FriendsGo.",
+      email_verified: true,
+      is_moderator: false,
+      id_deleted: false,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     };
 
     // Guardar mock en localStorage

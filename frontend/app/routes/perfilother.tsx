@@ -30,6 +30,7 @@ const MOCK_USERS = {
     bio: "¡Hola! Soy Carlos y me encanta la fotografía. 📸 Explorando el mundo a través de mi lente.",
     email_verified: true,
     is_moderator: false,
+    id_deleted: false,
     created_at: "2024-01-01T00:00:00Z",
     updated_at: "2024-01-01T00:00:00Z"
   }
@@ -86,6 +87,7 @@ const MOCK_COMMON_FRIENDS = {
       bio: "Amante de la música y los viajes",
       email_verified: true,
       is_moderator: false,
+      id_deleted: false,
       created_at: "2024-01-02T00:00:00Z",
       updated_at: "2024-01-02T00:00:00Z"
     },
@@ -100,6 +102,7 @@ const MOCK_COMMON_FRIENDS = {
       bio: "Desarrollador web y fotógrafo aficionado",
       email_verified: true,
       is_moderator: false,
+      id_deleted: false,
       created_at: "2024-01-03T00:00:00Z",
       updated_at: "2024-01-03T00:00:00Z"
     },
@@ -114,6 +117,7 @@ const MOCK_COMMON_FRIENDS = {
       bio: "Viajera incansable y amante de la naturaleza",
       email_verified: true,
       is_moderator: false,
+      id_deleted: false,
       created_at: "2024-01-04T00:00:00Z",
       updated_at: "2024-01-04T00:00:00Z"
     }
@@ -148,7 +152,6 @@ export async function loader({ request }: { request: Request }) {
 
 export default function PerfilOther() {
   const { user, posts, commonFriends, isOwnProfile } = useLoaderData<typeof loader>();
-  const [currentPosts, setCurrentPosts] = useState(posts);
   const [searchParams] = useSearchParams();
   const username = searchParams.get("username");
 
@@ -196,7 +199,7 @@ export default function PerfilOther() {
 
           {/* Publicaciones del usuario */}
           <UserPosts
-            posts={currentPosts}
+            posts={posts}
             onLike={handleLike}
             onSave={handleSave}
           />

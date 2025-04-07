@@ -20,8 +20,14 @@ interface UserProfileProps {
     first_name: string;
     last_name: string;
     username: string;
+    email: string;
     profile_picture_url: string | null;
     bio: string | null;
+    email_verified: boolean;
+    is_moderator: boolean;
+    id_deleted: boolean;
+    created_at: string;
+    updated_at: string;
   };
   isOwnProfile?: boolean;
   onEditProfile?: () => void;

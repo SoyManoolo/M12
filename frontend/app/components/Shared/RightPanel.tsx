@@ -22,7 +22,14 @@ interface User {
   username: string;
   first_name: string;
   last_name: string;
+  email: string;
   profile_picture_url: string | null;
+  bio: string | null;
+  email_verified: boolean;
+  is_moderator: boolean;
+  id_deleted: boolean;
+  created_at: string;
+  updated_at: string;
   common_friends_count?: number;
   is_online?: boolean;
 }

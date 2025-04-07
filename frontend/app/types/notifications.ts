@@ -124,6 +124,7 @@ export interface User {
     bio: string | null;         // Biografía del usuario
     email_verified: boolean;    // Estado de verificación de email
     is_moderator: boolean;      // Indica si es moderador
+    id_deleted: boolean;        // Indica si el usuario está eliminado
     created_at: string;         // Fecha de creación
     updated_at: string;         // Fecha de última actualización
 }
