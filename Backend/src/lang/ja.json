@@ -1,0 +1,80 @@
+{
+  "success": {
+    "auth": {
+      "login": "正しいログイン",
+      "logout": "セッションは正しく閉じられました",
+      "adminRegistered": "管理者は正しく登録されています",
+      "userRegistered": "ユーザーは正しく登録されています",
+      "passwordChanged": "パスワードが正しく変更されました",
+      "passwordChangeRequired": "必要なパスワードの変更"
+    },
+    "user": {
+      "usersFound": "ユーザーは正しく見つかりました",
+      "userFound": "ユーザーが正しく見つかりました",
+      "userUpdated": "ユーザーは正しく更新されました",
+      "userDeleted": "ユーザーが正しく削除されました",
+      "userSoftDeleted": "ユーザーは正しく非アクティブ化されました"
+    }
+  },
+  "errors": {
+    "status": {
+      "NotFound": "リソースが見つかりません",
+      "InternalServerError": "内部サーバーエラー",
+      "Unauthorized": "不正",
+      "Forbidden": "禁断",
+      "BadRequest": "要求の形式が正しくありません",
+      "Conflict": "対立",
+      "UnprocessableEntity": "非加工可能なエンティティ",
+      "TooManyRequests": "リクエストが多すぎます",
+      "ServiceUnavailable": "サービスは利用できません",
+      "GatewayTimeout": "疲れたゲートウェイの待ち時間",
+      "BadGateway": "間違ったリンクドア"
+    },
+    "connection": {
+      "FailedConnection": "データベースとの接続エラー"
+    },
+    "jwt": {
+      "MissingJwtSecret": "JWTパスワードは定義されていません",
+      "MissingJWT": "JWTは提供されていません",
+      "FormatJWT": "Invacid JWT形式",
+      "InvalidTempToken": "トークン一時的な無効"
+    },
+    "user": {
+      "IncorrectCredentials": "誤った資格情報",
+      "UserDontExist": "存在していないユーザー",
+      "UserNotFound": "ユーザーが見つかりません",
+      "UsersNotFound": "ユーザーは見つかりませんでした",
+      "MissingIdentifier": "識別子がありません",
+      "UserExist": "ユーザーはすでに存在します",
+      "NoDataToUpdate": "更新するデータはありません",
+      "EmailAlreadyExists": "メールはすでに使用されています",
+      "DniAlreadyExists": "DNIはすでに使用されています",
+      "AdminCannotBeDeleted": "管理者を排除することはできません",
+      "UserNotActive": "ユーザーはアクティブではありません",
+      "UserDeleted": "ユーザーは排除されます"
+    },
+    "validation": {
+      "MissingPassword": "パスワードを入力します",
+      "IncorrectPassword": "パスワードが正しくありません",
+      "MissingEmail": "電子メールを入力してください",
+      "MissingUsername": "ユーザー名を入力します",
+      "MissingName": "名前を入力します",
+      "MissingSurname": "姓を入力してください",
+      "NoAdmin": "管理者の権限はありません",
+      "InvalidIdentifier": "非検証識別子",
+      "MissingIdentifier": "識別子がありません",
+      "InvalidEmail": "非valid電子メール形式",
+      "ValidationError": "検証エラー",
+      "fieldRequired": "{フィールド}フィールドは必須です"
+    }
+  },
+  "field": {
+    "is_moderator": "管理者のステータス",
+    "name": "名前",
+    "surname": "苗字",
+    "email": "メール",
+    "identifier": "識別子",
+    "password": "パスワード",
+    "username": "ユーザー名"
+  }
+}

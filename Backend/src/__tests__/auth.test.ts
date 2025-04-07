@@ -2,7 +2,6 @@ import supertest from "supertest";
 import { app } from "../app";
 import { sequelize } from "../config/database";
 import { User } from "../models";
-import dbLogger from "../config/logger";
 
 const api = supertest(app)
 
@@ -13,7 +12,7 @@ describe('Auth test:', () => {
         await User.destroy({ where: { email: "erik.saldi.diaz@gmail.com" } })
     })
 
-    test('Test de prueba', async () => {
+    test('Test de registro', async () => {
         await api
             .post('/auth/register')
             .send({
@@ -27,11 +26,11 @@ describe('Auth test:', () => {
             .expect('Content-Type', /application\/json/)
     });
 
-    test('Test de prueba', async () => {
+    test('Test de login', async () => {
         await api
             .post('/auth/login')
             .send({
-                identifier: "erik.saldi.diaz@gmail.com",
+                id: "erik.saldi.diaz@gmail.com",
                 password: "12345678"
             })
             .expect(200)
@@ -39,6 +38,7 @@ describe('Auth test:', () => {
     });
 
     afterAll(async () => {
+        await new Promise(resolve => setTimeout(resolve, 500));
         await sequelize.close()
     })
 });

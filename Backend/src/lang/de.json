@@ -1,0 +1,80 @@
+{
+  "success": {
+    "auth": {
+      "login": "Richtige Anmeldung",
+      "logout": "Die Sitzung korrekt geschlossen",
+      "adminRegistered": "Administrator korrekt registriert",
+      "userRegistered": "Benutzer korrekt registriert",
+      "passwordChanged": "Passwort korrekt geändert",
+      "passwordChangeRequired": "Erforderliche Passwortänderung"
+    },
+    "user": {
+      "usersFound": "Benutzer korrekt gefunden",
+      "userFound": "Benutzer korrekt gefunden",
+      "userUpdated": "Benutzer korrekt aktualisiert",
+      "userDeleted": "Benutzer korrekt gelöscht",
+      "userSoftDeleted": "Benutzer korrekt deaktiviert"
+    }
+  },
+  "errors": {
+    "status": {
+      "NotFound": "Ressource nicht gefunden",
+      "InternalServerError": "interner Serverfehler",
+      "Unauthorized": "Nicht autorisiert",
+      "Forbidden": "Verboten",
+      "BadRequest": "Ungültige Anforderung",
+      "Conflict": "Konflikt",
+      "UnprocessableEntity": "Nicht verarbeitbare Entität",
+      "TooManyRequests": "Zu viele Anfragen",
+      "ServiceUnavailable": "Service nicht verfügbar",
+      "GatewayTimeout": "Wartezeit für das erschöpfte Tor",
+      "BadGateway": "Falsche Link -Tür"
+    },
+    "connection": {
+      "FailedConnection": "Fehler mit der Datenbank herstellen"
+    },
+    "jwt": {
+      "MissingJwtSecret": "JWT -Passwort ist nicht definiert",
+      "MissingJWT": "Ein JWT wurde nicht zur Verfügung gestellt",
+      "FormatJWT": "Invazid -JWT -Format",
+      "InvalidTempToken": "Token vorübergehend ungültig"
+    },
+    "user": {
+      "IncorrectCredentials": "Falsche Anmeldeinformationen",
+      "UserDontExist": "Benutzer nicht vorhanden",
+      "UserNotFound": "Benutzer nicht gefunden",
+      "UsersNotFound": "Es wurden keine Benutzer gefunden",
+      "MissingIdentifier": "Die Kennung fehlt",
+      "UserExist": "Der Benutzer existiert bereits",
+      "NoDataToUpdate": "Es sind keine Daten zu aktualisieren",
+      "EmailAlreadyExists": "E -Mail wird bereits verwendet",
+      "DniAlreadyExists": "Der DNI ist bereits verwendet",
+      "AdminCannotBeDeleted": "Es ist nicht möglich, den Administrator zu beseitigen",
+      "UserNotActive": "Der Benutzer ist nicht aktiv",
+      "UserDeleted": "Der Benutzer wird beseitigt"
+    },
+    "validation": {
+      "MissingPassword": "Geben Sie das Passwort ein",
+      "IncorrectPassword": "Falsches Passwort",
+      "MissingEmail": "E -Mail eingeben",
+      "MissingUsername": "Geben Sie den Benutzernamen ein",
+      "MissingName": "Geben Sie den Namen ein",
+      "MissingSurname": "Geben Sie Ihren Nachnamen ein",
+      "NoAdmin": "Es hat keine Administratorberechtigungen",
+      "InvalidIdentifier": "Nicht -Valid -Kennung",
+      "MissingIdentifier": "Die Kennung fehlt",
+      "InvalidEmail": "Nicht -Valid -E -Mail -Format",
+      "ValidationError": "Validierungsfehler",
+      "fieldRequired": "Das Feld {Feld} ist obligatorisch"
+    }
+  },
+  "field": {
+    "is_moderator": "Administratorstatus",
+    "name": "Name",
+    "surname": "Nachname",
+    "email": "E-Mail",
+    "identifier": "Kennung",
+    "password": "Passwort",
+    "username": "Benutzername"
+  }
+}

@@ -1,0 +1,80 @@
+{
+  "success": {
+    "auth": {
+      "login": "正确登录",
+      "logout": "会话正确关闭",
+      "adminRegistered": "管理员正确注册",
+      "userRegistered": "用户正确注册",
+      "passwordChanged": "密码正确更改了",
+      "passwordChangeRequired": "需要更改所需的密码"
+    },
+    "user": {
+      "usersFound": "用户找到了正确的",
+      "userFound": "用户找到了正确的",
+      "userUpdated": "用户正确更新",
+      "userDeleted": "用户正确删除",
+      "userSoftDeleted": "用户正确停用"
+    }
+  },
+  "errors": {
+    "status": {
+      "NotFound": "找不到资源",
+      "InternalServerError": "内部服务器错误",
+      "Unauthorized": "未经授权",
+      "Forbidden": "禁止",
+      "BadRequest": "错误的请求",
+      "Conflict": "冲突",
+      "UnprocessableEntity": "非加工实体",
+      "TooManyRequests": "请求太多",
+      "ServiceUnavailable": "服务不可用",
+      "GatewayTimeout": "等待疲惫的门户的时间",
+      "BadGateway": "链路门不正确"
+    },
+    "connection": {
+      "FailedConnection": "与数据库连接的错误"
+    },
+    "jwt": {
+      "MissingJwtSecret": "JWT密码未定义",
+      "MissingJWT": "尚未提供JWT",
+      "FormatJWT": "Invacid JWT格式",
+      "InvalidTempToken": "令牌临时无效"
+    },
+    "user": {
+      "IncorrectCredentials": "不正确的凭证",
+      "UserDontExist": "用户不存在",
+      "UserNotFound": "找不到用户",
+      "UsersNotFound": "找不到用户",
+      "MissingIdentifier": "标识符丢失了",
+      "UserExist": "用户已经存在",
+      "NoDataToUpdate": "没有数据可以更新",
+      "EmailAlreadyExists": "电子邮件已经在使用",
+      "DniAlreadyExists": "DNI已经在使用",
+      "AdminCannotBeDeleted": "不可能消除管理员",
+      "UserNotActive": "用户不活动",
+      "UserDeleted": "用户被删除"
+    },
+    "validation": {
+      "MissingPassword": "输入密码",
+      "IncorrectPassword": "密码不正确",
+      "MissingEmail": "输入电子邮件",
+      "MissingUsername": "输入用户名",
+      "MissingName": "输入名称",
+      "MissingSurname": "输入您的姓氏",
+      "NoAdmin": "它没有管理员权限",
+      "InvalidIdentifier": "非valid标识符",
+      "MissingIdentifier": "标识符丢失了",
+      "InvalidEmail": "非valid电子邮件格式",
+      "ValidationError": "验证错误",
+      "fieldRequired": "{field}字段是强制性的"
+    }
+  },
+  "field": {
+    "is_moderator": "管理员状态",
+    "name": "姓名",
+    "surname": "姓",
+    "email": "电子邮件",
+    "identifier": "标识符",
+    "password": "密码",
+    "username": "用户名"
+  }
+}

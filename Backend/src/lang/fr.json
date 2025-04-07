@@ -1,0 +1,80 @@
+{
+  "success": {
+    "auth": {
+      "login": "Connexion correcte",
+      "logout": "Session fermée correctement",
+      "adminRegistered": "Administrateur enregistré correctement",
+      "userRegistered": "Utilisateur enregistré correctement",
+      "passwordChanged": "Le mot de passe modifié correctement",
+      "passwordChangeRequired": "Changement de mot de passe requis"
+    },
+    "user": {
+      "usersFound": "Les utilisateurs trouvés correctement",
+      "userFound": "L'utilisateur trouvé correctement",
+      "userUpdated": "Utilisateur mis à jour correctement",
+      "userDeleted": "Utilisateur supprimé correctement",
+      "userSoftDeleted": "L'utilisateur désactivé correctement"
+    }
+  },
+  "errors": {
+    "status": {
+      "NotFound": "Ressource introuvable",
+      "InternalServerError": "Erreur interne du serveur",
+      "Unauthorized": "Non autorisé",
+      "Forbidden": "Interdit",
+      "BadRequest": "Mauvaise demande",
+      "Conflict": "Conflit",
+      "UnprocessableEntity": "Entité non propice",
+      "TooManyRequests": "Trop de demandes",
+      "ServiceUnavailable": "Service non disponible",
+      "GatewayTimeout": "Temps d'attente pour la passerelle épuisée",
+      "BadGateway": "Porte de liaison incorrecte"
+    },
+    "connection": {
+      "FailedConnection": "Erreur de connexion avec la base de données"
+    },
+    "jwt": {
+      "MissingJwtSecret": "Le mot de passe JWT n'est pas défini",
+      "MissingJWT": "Un JWT n'a pas été fourni",
+      "FormatJWT": "Format JWT invacide",
+      "InvalidTempToken": "Token temporaire invalide"
+    },
+    "user": {
+      "IncorrectCredentials": "Des références incorrectes",
+      "UserDontExist": "L'utilisateur n'existe pas",
+      "UserNotFound": "Utilisateur introuvable",
+      "UsersNotFound": "Aucun utilisateur n'a été trouvé",
+      "MissingIdentifier": "L'identifiant est manquant",
+      "UserExist": "L'utilisateur existe déjà",
+      "NoDataToUpdate": "Il n'y a pas de données à mettre à jour",
+      "EmailAlreadyExists": "Le courrier électronique est déjà utilisé",
+      "DniAlreadyExists": "Le DNI est déjà utilisé",
+      "AdminCannotBeDeleted": "Il n'est pas possible d'éliminer l'administrateur",
+      "UserNotActive": "L'utilisateur n'est pas actif",
+      "UserDeleted": "L'utilisateur est éliminé"
+    },
+    "validation": {
+      "MissingPassword": "Entrez le mot de passe",
+      "IncorrectPassword": "Mot de passe incorrect",
+      "MissingEmail": "Entrer le courrier électronique",
+      "MissingUsername": "Entrez le nom d'utilisateur",
+      "MissingName": "Entrez le nom",
+      "MissingSurname": "Entrez votre nom de famille",
+      "NoAdmin": "Il n'a pas d'autorisations d'administrateur",
+      "InvalidIdentifier": "Identifiant non valide",
+      "MissingIdentifier": "L'identifiant est manquant",
+      "InvalidEmail": "Format de messagerie non valide",
+      "ValidationError": "Erreur de validation",
+      "fieldRequired": "Le champ {champ} est obligatoire"
+    }
+  },
+  "field": {
+    "is_moderator": "État de l'administrateur",
+    "name": "nom",
+    "surname": "nom de famille",
+    "email": "e-mail",
+    "identifier": "Identifiant",
+    "password": "mot de passe",
+    "username": "nom d'utilisateur"
+  }
+}

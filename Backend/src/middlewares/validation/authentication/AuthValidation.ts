@@ -6,7 +6,7 @@ export class AuthValidation {
     public loginValidation(req: Request, res: Response, next: NextFunction) {
         return celebrate({
             [Segments.BODY]: Joi.object({
-                identifier: Joi.string()
+                id: Joi.string()
                     .required()
                     .messages({
                         'string.empty': 'errors.validation.MissingIdentifier',

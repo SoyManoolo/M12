@@ -1,9 +1,13 @@
 {
     "include": [
         "src/**/*.ts"
-    ],
+, "src/lang/syncTranslations.ts"    ],
     "compilerOptions": {
-        "target": "es2016",
+        "typeRoots": [
+            "./node_modules/@types",
+            "./src/types"
+        ],
+        "target": "es2022",
         "module": "NodeNext",
         "outDir": "./dist",
         "esModuleInterop": true,

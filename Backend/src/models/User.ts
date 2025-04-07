@@ -61,6 +61,11 @@ User.init(
             allowNull: false,
             defaultValue: false,
         },
+        is_deleted: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: false
+        }
     },
     {
         sequelize,

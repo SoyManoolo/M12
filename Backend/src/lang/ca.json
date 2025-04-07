@@ -1,92 +1,80 @@
 {
-    "errors": {
-        "validation": {
-            "MissingPassword": "Introduïu la contrasenya",
-            "IncorrectPassword": "Contrasenya incorrecta",
-            "MissingEmail": "Introduïu el correu electrònic",
-            "MissingUsername": "Introduïu el nom d'usuari",
-            "MissingName": "Introduïu el nom",
-            "MissingSurname": "Introduïu el cognom",
-            "NoAdmin": "No teniu permisos d'administrador",
-            "InvalidIdentifier": "Identificador no vàlid",
-            "MissingIdentifier": "Falta l'identificador",
-            "InvalidEmail": "Format de correu electrònic no vàlid",
-            "ValidationError": "Error de validació",
-            "fieldRequired": "El camp {field} és obligatori"
-        },
-        "field": {
-            "is_moderator": "estat d'administrador",
-            "name": "nom",
-            "surname": "cognom",
-            "email": "correu electrònic",
-            "identifier": "identificador",
-            "password": "contrasenya",
-            "username": "nom d'usuari"
-        },
-        "jwt": {
-            "MissingJwtSecret": "La contrasenya JWT no està definida",
-            "MissingJWT": "No s'ha proporcionat un JWT",
-            "FormatJWT": "Format del JWT invàlid",
-            "InvalidTempToken": "Token temporal invàlid"
-        },
-        "user": {
-            "IncorrectCredentials": "Credencials incorrectes",
-            "UserDontExist": "Usuari no existent",
-            "UserNotFound": "Usuari no trobat",
-            "UsersNotFound": "No s'han trobat usuaris",
-            "MissingIdentifier": "Falta l'identificador",
-            "UserExist": "L'usuari ja existeix",
-            "NoDataToUpdate": "No hi ha dades per actualitzar",
-            "EmailAlreadyExists": "El correu electrònic ja està en ús",
-            "DniAlreadyExists": "El DNI ja està en ús",
-            "AdminCannotBeDeleted": "No és possible eliminar l'administrador",
-            "UserNotActive": "L'usuari no està actiu",
-            "UserDeleted": "L'usuari està eliminat"
-        },
-        "registry": {
-            "RegistryOpen": "Fitxatge d'entrada ja registrat",
-            "RegistryNotOpen": "Fitxatge d'entrada no registrat",
-            "RegistriesNotFound": "No s'han trobat registres",
-            "TimeOutRequired": "L'hora de sortida és obligatòria",
-            "TimeInRequired": "L'hora d'entrada és obligatòria",
-            "CheckTypeRequired": "El tipus de fitxatge és obligatori"
-        },
-        "status": {
-            "NotFound": "Recurs no trobat",
-            "InternalServerError": "Error intern del servidor",
-            "Unauthorized": "No autoritzat",
-            "Forbidden": "Prohibit",
-            "BadRequest": "Sol·licitud incorrecta",
-            "Conflict": "Conflicte",
-            "UnprocessableEntity": "Entitat no processable",
-            "TooManyRequests": "Massa sol·licituds",
-            "ServiceUnavailable": "Servei no disponible",
-            "GatewayTimeout": "Temps d'espera de la porta d'enllaç esgotat",
-            "BadGateway": "Porta d'enllaç incorrecta"
-        },
-        "connection": {
-            "FailedConnection": "Error en connectar amb la base de dades"
-        }
+  "success": {
+    "auth": {
+      "login": "Corregiu Inici de sessió",
+      "logout": "Sessió es va tancar correctament",
+      "adminRegistered": "L'administrador es va registrar correctament",
+      "userRegistered": "L'usuari es va registrar correctament",
+      "passwordChanged": "La contrasenya va canviar correctament",
+      "passwordChangeRequired": "Canvi de contrasenya obligatori"
     },
-    "success": {
-      "auth": {
-        "login": "Inici de sessió correcte",
-        "logout": "Sessió tancada correctament",
-        "adminRegistered": "Administrador registrat correctament",
-        "userRegistered": "Usuari registrat correctament",
-        "passwordChanged": "Contrasenya canviada correctament",
-        "passwordChangeRequired": "Canvi de contrasenya requerit"
-      },
-      "registry": {
-        "entryRegistered": "Entrada registrada correctament",
-        "exitRegistered": "Sortida registrada correctament"
-      },
-      "user": {
-        "usersFound": "Usuaris trobats correctament",
-        "userFound": "Usuari trobat correctament",
-        "userUpdated": "Usuari actualitzat correctament",
-        "userDeleted": "Usuari eliminat correctament",
-        "userSoftDeleted": "Usuari desactivat correctament"
-      }
+    "user": {
+      "usersFound": "Els usuaris es van trobar correctament",
+      "userFound": "L'usuari es va trobar correctament",
+      "userUpdated": "L'usuari s'ha actualitzat correctament",
+      "userDeleted": "L'usuari s'ha suprimit correctament",
+      "userSoftDeleted": "L'usuari va desactivar correctament"
     }
+  },
+  "errors": {
+    "status": {
+      "NotFound": "Recurs que no es troba",
+      "InternalServerError": "Error del servidor intern",
+      "Unauthorized": "Desautoritzada",
+      "Forbidden": "Prohibit",
+      "BadRequest": "Mala sol·licitud",
+      "Conflict": "Conflicte",
+      "UnprocessableEntity": "Entitat no processable",
+      "TooManyRequests": "Massa peticions",
+      "ServiceUnavailable": "Servei no disponible",
+      "GatewayTimeout": "Temps d’espera per a la passarel·la esgotada",
+      "BadGateway": "Porta d’enllaç incorrecta"
+    },
+    "connection": {
+      "FailedConnection": "Error de connexió amb la base de dades"
+    },
+    "jwt": {
+      "MissingJwtSecret": "La contrasenya JWT no està definida",
+      "MissingJWT": "No s'ha proporcionat un JWT",
+      "FormatJWT": "Format JWT invàcid",
+      "InvalidTempToken": "Token Temporal no és vàlid"
+    },
+    "user": {
+      "IncorrectCredentials": "Credencials incorrectes",
+      "UserDontExist": "L'usuari no existeix",
+      "UserNotFound": "L'usuari no s'ha trobat",
+      "UsersNotFound": "No s'ha trobat cap usuari",
+      "MissingIdentifier": "Falta l’identificador",
+      "UserExist": "L’usuari ja existeix",
+      "NoDataToUpdate": "No hi ha dades per actualitzar",
+      "EmailAlreadyExists": "El correu electrònic ja està en ús",
+      "DniAlreadyExists": "El DNI ja està en ús",
+      "AdminCannotBeDeleted": "No és possible eliminar l'administrador",
+      "UserNotActive": "L'usuari no està actiu",
+      "UserDeleted": "L’usuari s’elimina"
+    },
+    "validation": {
+      "MissingPassword": "Introduïu la contrasenya",
+      "IncorrectPassword": "Contrasenya incorrecta",
+      "MissingEmail": "Introduïu el correu electrònic",
+      "MissingUsername": "Introduïu el nom d'usuari",
+      "MissingName": "Introduïu el nom",
+      "MissingSurname": "Introduïu el vostre cognom",
+      "NoAdmin": "No té permisos d’administrador",
+      "InvalidIdentifier": "Identificador no valid",
+      "MissingIdentifier": "Falta l’identificador",
+      "InvalidEmail": "Format de correu electrònic no valid",
+      "ValidationError": "Error de validació",
+      "fieldRequired": "El camp {camp} és obligatori"
+    }
+  },
+  "field": {
+    "is_moderator": "Estat de l'administrador",
+    "name": "nom",
+    "surname": "Nom",
+    "email": "correu electrònic",
+    "identifier": "Identificador",
+    "password": "contrasenya",
+    "username": "nom d'usuari"
+  }
 }

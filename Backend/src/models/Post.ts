@@ -35,6 +35,11 @@ Post.init(
                 isUrl: true,
             },
         },
+        is_deleted: {
+            type: DataTypes.BOOLEAN,
+            allowNull: false,
+            defaultValue: false
+        }
     },
     {
         sequelize,

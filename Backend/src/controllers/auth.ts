@@ -9,8 +9,8 @@ export class AuthController {
         try {
             const locale = req.headers['accept-language'] || 'en';
             i18n.setLocale(locale);
-            const { identifier, password } = req.body;
-            const token = await this.authService.login(identifier, password);
+            const { id, password } = req.body;
+            const token = await this.authService.login(id, password);
 
             res.status(200).json({
                 success: true,
