@@ -13,7 +13,7 @@ import { json } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 import { useState } from "react";
 import Navbar from "~/components/Inicio/Navbar";
-import RightSidebar from "~/components/Inicio/RightSidebar";
+import RightPanel from "~/components/Shared/RightPanel";
 import UserProfile from "~/components/Perfil/UserProfile";
 import UserPosts from "~/components/Perfil/UserPosts";
 
@@ -127,8 +127,9 @@ export default function Perfil() {
       </div>
 
       {/* Barra lateral derecha */}
-      <RightSidebar
-        suggestedUsers={suggestedUsers}
+      <RightPanel
+        users={suggestedUsers}
+        mode="suggested"
         onSearch={handleSearch}
         onFollow={handleFollow}
       />

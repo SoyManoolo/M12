@@ -11,7 +11,7 @@
  * @requires @remix-run/react
  * @requires ~/components/Inicio/Navbar
  * @requires ~/components/Inicio/Post
- * @requires ~/components/Inicio/RightSidebar
+ * @requires ~/components/Shared/RightPanel
  * 
  * @interface User - Define la estructura de datos de un usuario
  * @interface Post - Define la estructura de datos de una publicación
@@ -24,7 +24,7 @@
 import { useNavigate } from "@remix-run/react";
 import Navbar from "~/components/Inicio/Navbar";
 import Post from "~/components/Inicio/Post";
-import RightSidebar from "~/components/Inicio/RightSidebar";
+import RightPanel from "~/components/Shared/RightPanel";
 import { useState } from "react";
 
 /**
@@ -583,8 +583,9 @@ export default function InicioPage() {
       </div>
 
       {/* Barra lateral derecha */}
-      <RightSidebar 
-        suggestedUsers={suggestedUsers}
+      <RightPanel
+        users={suggestedUsers}
+        mode="suggested"
         onSearch={handleSearch}
         onFollow={handleFollow}
       />
