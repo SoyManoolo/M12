@@ -155,6 +155,7 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               className="w-full px-3 py-2 bg-transparent border border-gray-600 rounded-md text-white focus:outline-none focus:border-white cursor-text"
               required
+              placeholder="Ingresa tu contraseña"
             />
           </div>
 
