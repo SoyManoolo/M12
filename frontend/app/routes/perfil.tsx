@@ -23,6 +23,7 @@ interface User {
   last_name: string;
   username: string;
   email: string;
+  password: string;
   profile_picture_url: string | null;
   bio: string | null;
   email_verified: boolean;
@@ -43,8 +44,8 @@ interface Post {
   is_saved: boolean;
   comments: Array<{
     comment_id: string;
+    post_id: string;
     user_id: string;
-    username: string;
     content: string;
     created_at: string;
   }>;
@@ -119,6 +120,7 @@ export const loader = async () => {
     last_name: "García",
     username: "mariagarcia",
     email: "maria@example.com",
+    password: "hashed_password",
     profile_picture_url: "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg",
     bio: "¡Hola! Me encanta compartir momentos especiales",
     email_verified: true,
@@ -141,8 +143,8 @@ export const loader = async () => {
       comments: [
         {
           comment_id: "1",
+          post_id: "1",
           user_id: "2",
-          username: "carlos123",
           content: "¡Qué foto tan bonita! 😍",
           created_at: new Date().toISOString()
         }
@@ -186,6 +188,7 @@ export const loader = async () => {
         last_name: "Pérez",
         username: "carlos123",
         email: "carlos@example.com",
+        password: "hashed_password",
         profile_picture_url: "https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg",
         bio: "Amante de la música",
         email_verified: true,
@@ -205,6 +208,7 @@ export const loader = async () => {
         last_name: "Martínez",
         username: "anamartinez",
         email: "ana@example.com",
+        password: "hashed_password",
         profile_picture_url: "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg",
         bio: "Viajera incansable ✈️",
         email_verified: true,
@@ -224,6 +228,7 @@ export const loader = async () => {
         last_name: "López",
         username: "davidlopez",
         email: "david@example.com",
+        password: "hashed_password",
         profile_picture_url: "https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg",
         bio: "Desarrollador web 💻",
         email_verified: true,

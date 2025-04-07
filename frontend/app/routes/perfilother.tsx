@@ -25,6 +25,7 @@ const MOCK_USERS = {
     last_name: "Pérez",
     username: "carlos123",
     email: "carlos@example.com",
+    password: "hashed_password",
     profile_picture_url: "https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=400&h=400&fit=crop",
     bio: "¡Hola! Soy Carlos y me encanta la fotografía. 📸 Explorando el mundo a través de mi lente.",
     email_verified: true,
@@ -39,20 +40,16 @@ const MOCK_POSTS = {
     {
       post_id: "550e8400-e29b-41d4-a716-446655440001",
       user_id: "550e8400-e29b-41d4-a716-446655440000",
+      user: MOCK_USERS["carlos123"],
       description: "Capturando la magia del atardecer en la playa. 🌅 #Fotografía #Naturaleza",
-      media_url: "https://images.unsplash.com/photo-1566241832378-917a0f30db2c?w=800&h=600" as string | null,
+      media_url: "https://images.unsplash.com/photo-1566241832378-917a0f30db2c?w=800&h=600",
       created_at: "2024-03-15T18:30:00Z",
       updated_at: "2024-03-15T18:30:00Z",
-      user: {
-        user_id: "550e8400-e29b-41d4-a716-446655440000",
-        username: "carlos123",
-        profile_picture_url: "https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=400&h=400&fit=crop" as string | null
-      },
       comments: [
         {
           comment_id: "550e8400-e29b-41d4-a716-446655440002",
+          post_id: "550e8400-e29b-41d4-a716-446655440001",
           user_id: "550e8400-e29b-41d4-a716-446655440003",
-          username: "mariagarcia",
           content: "¡Increíble foto! Los colores son espectaculares 😍",
           created_at: "2024-03-15T18:35:00Z"
         }
@@ -63,15 +60,11 @@ const MOCK_POSTS = {
     {
       post_id: "550e8400-e29b-41d4-a716-446655440004",
       user_id: "550e8400-e29b-41d4-a716-446655440000",
+      user: MOCK_USERS["carlos123"],
       description: "Explorando nuevos rincones de la ciudad 🌆 #FotografíaUrbana",
-      media_url: "https://images.unsplash.com/photo-1514565131-fce0801e5785?w=800&h=600" as string | null,
+      media_url: "https://images.unsplash.com/photo-1514565131-fce0801e5785?w=800&h=600",
       created_at: "2024-03-14T15:20:00Z",
       updated_at: "2024-03-14T15:20:00Z",
-      user: {
-        user_id: "550e8400-e29b-41d4-a716-446655440000",
-        username: "carlos123",
-        profile_picture_url: "https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=400&h=400&fit=crop" as string | null
-      },
       comments: [],
       likes_count: 18,
       is_saved: false
@@ -84,24 +77,45 @@ const MOCK_COMMON_FRIENDS = {
   "carlos123": [
     {
       user_id: "550e8400-e29b-41d4-a716-446655440004",
-      username: "ana_lopez",
       first_name: "Ana",
       last_name: "López",
+      username: "ana_lopez",
+      email: "ana@example.com",
+      password: "hashed_password",
       profile_picture_url: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop",
+      bio: "Amante de la música y los viajes",
+      email_verified: true,
+      is_moderator: false,
+      created_at: "2024-01-02T00:00:00Z",
+      updated_at: "2024-01-02T00:00:00Z"
     },
     {
       user_id: "550e8400-e29b-41d4-a716-446655440006",
-      username: "juan_martinez",
       first_name: "Juan",
       last_name: "Martínez",
+      username: "juan_martinez",
+      email: "juan@example.com",
+      password: "hashed_password",
       profile_picture_url: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=400&h=400&fit=crop",
+      bio: "Desarrollador web y fotógrafo aficionado",
+      email_verified: true,
+      is_moderator: false,
+      created_at: "2024-01-03T00:00:00Z",
+      updated_at: "2024-01-03T00:00:00Z"
     },
     {
       user_id: "550e8400-e29b-41d4-a716-446655440007",
-      username: "laura_garcia",
       first_name: "Laura",
       last_name: "García",
+      username: "laura_garcia",
+      email: "laura@example.com",
+      password: "hashed_password",
       profile_picture_url: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&h=400&fit=crop",
+      bio: "Viajera incansable y amante de la naturaleza",
+      email_verified: true,
+      is_moderator: false,
+      created_at: "2024-01-04T00:00:00Z",
+      updated_at: "2024-01-04T00:00:00Z"
     }
   ]
 };
