@@ -1,5 +1,21 @@
+/**
+ * Componente RightSidebar
+ * 
+ * Este componente representa la barra lateral derecha de la aplicación.
+ * Incluye:
+ * - Barra de búsqueda de amigos
+ * - Lista de usuarios sugeridos
+ * - Funcionalidad de seguimiento
+ * 
+ * @module RightSidebar
+ * @requires react-icons/fa
+ */
+
 import { FaSearch } from 'react-icons/fa';
 
+/**
+ * Interfaz que define la estructura de un usuario
+ */
 interface User {
   user_id: string;
   username: string;
@@ -8,31 +24,55 @@ interface User {
   profile_picture_url: string | null;
 }
 
+/**
+ * Interfaz que extiende User para usuarios sugeridos
+ * Incluye el conteo de amigos en común
+ */
 interface SuggestedUser extends User {
   common_friends_count: number;
 }
 
+/**
+ * Interfaz que define las propiedades del componente RightSidebar
+ */
 interface RightSidebarProps {
   suggestedUsers?: SuggestedUser[];
   onSearch?: (query: string) => void;
   onFollow?: (userId: string) => void;
 }
 
+/**
+ * Componente principal de la barra lateral derecha
+ * 
+ * @param {RightSidebarProps} props - Propiedades del componente
+ * @returns {JSX.Element} Barra lateral con búsqueda y usuarios sugeridos
+ */
 export default function RightSidebar({ 
   suggestedUsers = [], 
   onSearch, 
   onFollow 
 }: RightSidebarProps) {
+  /**
+   * Manejador para la búsqueda de usuarios
+   * 
+   * @param {React.ChangeEvent<HTMLInputElement>} e - Evento de cambio en el input
+   */
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     onSearch?.(e.target.value);
   };
 
+  /**
+   * Manejador para seguir a un usuario
+   * 
+   * @param {string} userId - ID del usuario a seguir
+   */
   const handleFollow = (userId: string) => {
     onFollow?.(userId);
   };
 
   return (
     <div className="w-1/4 p-4">
+      {/* Contenedor de búsqueda */}
       <div className="mb-6">
         <div className="relative">
           <FaSearch className="absolute left-3 top-3 text-gray-400" />
@@ -45,9 +85,10 @@ export default function RightSidebar({
         </div>
       </div>
 
+      {/* Contenedor de usuarios sugeridos */}
       <div className="bg-gray-900 rounded-lg p-4">
         <h3 className="text-lg font-semibold mb-4">Amigos sugeridos</h3>
-        {/* Lista de amigos sugeridos */}
+        {/* Lista de usuarios sugeridos */}
         {suggestedUsers.map((user) => (
           <div key={user.user_id} className="flex items-center justify-between py-3">
             <div className="flex items-center">

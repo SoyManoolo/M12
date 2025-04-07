@@ -1,59 +1,105 @@
-import { useState } from 'react';
+/**
+ * Componente RatingModal
+ * 
+ * Este componente representa un modal para calificar la experiencia de videollamada.
+ * Incluye:
+ * - Selección de calificación (1-5 estrellas)
+ * - Campo para comentarios
+ * - Botones de acción
+ * 
+ * @module RatingModal
+ * @requires react
+ * @requires react-icons/fa
+ */
 
+import { useState } from 'react';
+import { FaStar } from 'react-icons/fa';
+
+/**
+ * Interfaz que define las propiedades del componente RatingModal
+ */
 interface RatingModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (rating: number) => void;
+  onSubmit: (rating: number, comment: string) => void;
 }
 
+/**
+ * Componente principal del modal de calificación
+ * 
+ * @param {RatingModalProps} props - Propiedades del componente
+ * @returns {JSX.Element | null} Modal de calificación o null si no está abierto
+ */
 export default function RatingModal({ isOpen, onClose, onSubmit }: RatingModalProps) {
+  // Estados para la calificación y comentarios
   const [rating, setRating] = useState(0);
-  const [hoveredRating, setHoveredRating] = useState(0);
+  const [comment, setComment] = useState('');
 
-  if (!isOpen) return null;
+  /**
+   * Manejador para establecer la calificación
+   * 
+   * @param {number} value - Valor de la calificación (1-5)
+   */
+  const handleRating = (value: number) => {
+    setRating(value);
+  };
 
+  /**
+   * Manejador para enviar la calificación
+   */
   const handleSubmit = () => {
-    onSubmit(rating);
+    onSubmit(rating, comment);
+    setRating(0);
+    setComment('');
     onClose();
   };
 
+  // Si el modal no está abierto, no renderizar nada
+  if (!isOpen) return null;
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-gray-900 border border-gray-700 rounded-lg p-6 max-w-md w-full mx-4">
-        <h2 className="text-xl font-semibold text-white mb-4 text-center">
-          VALORACIÓN DEL USUARIO
-        </h2>
+      <div className="bg-gray-900 rounded-lg p-6 w-96">
+        <h2 className="text-xl font-semibold mb-4">Califica la videollamada</h2>
         
-        <div className="flex justify-center space-x-2 mb-6">
+        {/* Contenedor de estrellas */}
+        <div className="flex justify-center mb-4">
           {[1, 2, 3, 4, 5].map((star) => (
             <button
               key={star}
-              className="transform transition-transform hover:scale-110 focus:outline-none"
-              onMouseEnter={() => setHoveredRating(star)}
-              onMouseLeave={() => setHoveredRating(0)}
-              onClick={() => setRating(star)}
+              onClick={() => handleRating(star)}
+              className="text-2xl mx-1 focus:outline-none"
             >
-              <svg
-                className={`w-12 h-12 ${
-                  star <= (hoveredRating || rating)
-                    ? 'text-blue-400'
-                    : 'text-gray-600'
-                }`}
-                viewBox="0 0 24 24"
-                fill="currentColor"
-              >
-                <path d="M12 2L20 12L12 22L4 12L12 2Z" />
-              </svg>
+              <FaStar
+                className={star <= rating ? 'text-yellow-500' : 'text-gray-400'}
+              />
             </button>
           ))}
         </div>
 
-        <button
-          onClick={handleSubmit}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
-        >
-          ENVIAR
-        </button>
+        {/* Campo de comentarios */}
+        <textarea
+          placeholder="Deja un comentario (opcional)"
+          className="w-full h-24 bg-gray-800 rounded-lg p-3 text-white mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+        />
+
+        {/* Botones de acción */}
+        <div className="flex justify-end space-x-4">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={handleSubmit}
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            Enviar
+          </button>
+        </div>
       </div>
     </div>
   );
