@@ -17,46 +17,52 @@ export default function SettingsSidebar({
   onLogout 
 }: SettingsSidebarProps) {
   return (
-    <div className="w-full pr-8">
-      <div className="space-y-4">
-        <button
-          onClick={() => onSectionChange('cuenta')}
-          className={`w-full text-left px-4 py-2 rounded-md flex items-center space-x-3 ${
-            activeSection === 'cuenta' ? 'bg-gray-800' : 'hover:bg-gray-800'
-          }`}
-        >
+    <nav className="space-y-6 px-6">
+      <button
+        onClick={() => onSectionChange('cuenta')}
+        className={`flex items-center space-x-3 text-gray-400 hover:text-white w-full p-2 rounded hover:bg-gray-800/50 cursor-pointer ${
+          activeSection === 'cuenta' ? 'text-white bg-gray-800/50' : ''
+        }`}
+      >
+        <div className="w-8 flex justify-center">
           <FaUser className="text-xl" />
-          <span className="tracking-wider">CUENTA</span>
-        </button>
+        </div>
+        <span className="tracking-wider">CUENTA</span>
+      </button>
 
-        <button
-          onClick={() => onSectionChange('privacidad')}
-          className={`w-full text-left px-4 py-2 rounded-md flex items-center space-x-3 ${
-            activeSection === 'privacidad' ? 'bg-gray-800' : 'hover:bg-gray-800'
-          }`}
-        >
+      <button
+        onClick={() => onSectionChange('privacidad')}
+        className={`flex items-center space-x-3 text-gray-400 hover:text-white w-full p-2 rounded hover:bg-gray-800/50 cursor-pointer ${
+          activeSection === 'privacidad' ? 'text-white bg-gray-800/50' : ''
+        }`}
+      >
+        <div className="w-8 flex justify-center">
           <FaLock className="text-xl" />
-          <span className="tracking-wider">PRIVACIDAD</span>
-        </button>
+        </div>
+        <span className="tracking-wider">PRIVACIDAD</span>
+      </button>
 
-        <button
-          onClick={() => onSectionChange('seguridad')}
-          className={`w-full text-left px-4 py-2 rounded-md flex items-center space-x-3 ${
-            activeSection === 'seguridad' ? 'bg-gray-800' : 'hover:bg-gray-800'
-          }`}
-        >
+      <button
+        onClick={() => onSectionChange('seguridad')}
+        className={`flex items-center space-x-3 text-gray-400 hover:text-white w-full p-2 rounded hover:bg-gray-800/50 cursor-pointer ${
+          activeSection === 'seguridad' ? 'text-white bg-gray-800/50' : ''
+        }`}
+      >
+        <div className="w-8 flex justify-center">
           <FaShieldAlt className="text-xl" />
-          <span className="tracking-wider">SEGURIDAD</span>
-        </button>
-        
-        <button
-          onClick={onLogout}
-          className="w-full text-left px-4 py-2 rounded-md flex items-center space-x-3 text-red-500 hover:bg-gray-800"
-        >
+        </div>
+        <span className="tracking-wider">SEGURIDAD</span>
+      </button>
+      
+      <button
+        onClick={onLogout}
+        className="flex items-center space-x-3 text-red-500 hover:text-red-400 w-full p-2 rounded hover:bg-gray-800/50 cursor-pointer"
+      >
+        <div className="w-8 flex justify-center">
           <FaSignOutAlt className="text-xl" />
-          <span className="tracking-wider">CERRAR SESIÓN</span>
-        </button>
-      </div>
-    </div>
+        </div>
+        <span className="tracking-wider">CERRAR SESIÓN</span>
+      </button>
+    </nav>
   );
 } 
