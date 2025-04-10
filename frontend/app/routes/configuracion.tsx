@@ -64,7 +64,7 @@ export default function ConfiguracionPage() {
         <div className="absolute top-4 right-4">
           <button
             onClick={handleExit}
-            className="flex items-center space-x-2 px-4 py-2 rounded-md text-red-500 hover:text-red-400"
+            className="flex items-center space-x-2 px-4 py-2 rounded-md text-red-500 hover:text-red-400 cursor-pointer"
           >
             <FaSignOutAlt className="text-xl" />
             <span className="tracking-wider">SALIR</span>
@@ -154,14 +154,14 @@ export default function ConfiguracionPage() {
               <button
                 type="button"
                 onClick={handleSaveChanges}
-                className="px-6 py-2 bg-white text-black rounded-md hover:bg-gray-200 transition-colors"
+                className="px-6 py-2 bg-white text-black rounded-md hover:bg-gray-200 transition-colors cursor-pointer"
               >
                 GUARDAR
               </button>
               <button
                 type="button"
                 onClick={handleSaveAndExit}
-                className="px-6 py-2 bg-white text-black rounded-md hover:bg-gray-200 transition-colors"
+                className="px-6 py-2 bg-white text-black rounded-md hover:bg-gray-200 transition-colors cursor-pointer"
               >
                 GUARDAR Y SALIR
               </button>
