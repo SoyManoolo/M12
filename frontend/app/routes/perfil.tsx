@@ -9,6 +9,7 @@
  * @module Perfil
  */
 
+import * as React from 'react';
 import { useLoaderData } from "@remix-run/react";
 import { json } from "@remix-run/node";
 import { useState } from "react";
@@ -247,10 +248,11 @@ export const loader = async () => {
   });
 };
 
-export default function Perfil() {
-  const { user, posts, friends, isOwnProfile } = useLoaderData<typeof loader>();
+export default function Perfil(): React.ReactElement {
+  const { user, posts, friends, isOwnProfile } = useLoaderData<LoaderData>();
   const [currentPosts, setCurrentPosts] = useState<Post[]>(posts);
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [isEditing, setIsEditing] = useState(false);
 
   const handleLike = async (postId: string) => {
     try {

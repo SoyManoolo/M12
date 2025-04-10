@@ -56,21 +56,64 @@ export const authService = {
      */
     async login(credentials: LoginCredentials): Promise<AuthResponse> {
         try {
+            // Validación básica en el frontend
+            if (!credentials.identifier.trim()) {
+                return {
+                    success: false,
+                    status: 400,
+                    message: 'Por favor, ingresa tu email o nombre de usuario'
+                };
+            }
+
+            if (!credentials.password.trim()) {
+                return {
+                    success: false,
+                    status: 400,
+                    message: 'Por favor, ingresa tu contraseña'
+                };
+            }
+
             const response = await fetch(`${environment.apiUrl}${environment.apiEndpoints.auth.login}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(credentials),
+                body: JSON.stringify({
+                    id: credentials.identifier,
+                    password: credentials.password
+                }),
             });
 
             const data = await response.json();
             
             if (!response.ok) {
+                // Mapeo de errores específicos del backend
+                let errorMessage = 'Error al iniciar sesión';
+                
+                switch (data.error) {
+                    case 'IncorrectPassword':
+                        errorMessage = 'Contraseña incorrecta. Por favor, verifica tus credenciales';
+                        break;
+                    case 'UserNotFound':
+                        errorMessage = 'Usuario no encontrado. Verifica tu email o nombre de usuario';
+                        break;
+                    case 'DatabaseError':
+                        errorMessage = 'Error en el servidor. Por favor, intenta más tarde';
+                        break;
+                    case 'MissingIdentifier':
+                        errorMessage = 'Por favor, ingresa tu email o nombre de usuario';
+                        break;
+                    case 'MissingPassword':
+                        errorMessage = 'Por favor, ingresa tu contraseña';
+                        break;
+                    default:
+                        errorMessage = data.message || 'Error al iniciar sesión';
+                }
+
                 return {
                     success: false,
                     status: response.status,
-                    message: data.message || 'Error al iniciar sesión'
+                    message: errorMessage
                 };
             }
 
@@ -85,7 +128,7 @@ export const authService = {
             return {
                 success: false,
                 status: 500,
-                message: 'Error al conectar con el servidor'
+                message: 'Error al conectar con el servidor. Por favor, verifica tu conexión a internet'
             };
         }
     },

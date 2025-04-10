@@ -13,6 +13,7 @@
  * @requires ~/services/auth.service
  */
 
+import * as React from 'react';
 import { useState } from 'react';
 import { Form, useNavigate, Link } from "@remix-run/react";
 import type { ActionFunction } from "@remix-run/node";
@@ -74,7 +75,7 @@ export const action: ActionFunction = async ({ request }) => {
  * @method handleGoogleSignUp - Maneja el registro con Google (pendiente)
  * @method handleFacebookSignUp - Maneja el registro con Facebook (pendiente)
  */
-export default function SignUpPage() {
+export default function SignUpPage(): React.ReactElement {
   const [name, setName] = useState('');
   const [surname, setSurname] = useState('');
   const [username, setUsername] = useState('');
