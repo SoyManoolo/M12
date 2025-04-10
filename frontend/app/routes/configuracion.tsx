@@ -19,6 +19,14 @@ export default function ConfiguracionPage() {
   const handleSaveChanges = () => {
     // Implementar lógica para guardar cambios
     console.log('Guardando cambios...');
+    // No redirige, se queda en la misma página
+  };
+
+  const handleSaveAndExit = () => {
+    // Implementar lógica para guardar cambios
+    console.log('Guardando cambios...');
+    // Redirige al perfil
+    navigate('/perfil');
   };
 
   // Función para el botón SALIR (redirige a inicio)
@@ -152,7 +160,7 @@ export default function ConfiguracionPage() {
               </button>
               <button
                 type="button"
-                onClick={handleSaveChanges}
+                onClick={handleSaveAndExit}
                 className="px-6 py-2 bg-white text-black rounded-md hover:bg-gray-200 transition-colors"
               >
                 GUARDAR Y SALIR
