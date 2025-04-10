@@ -6,7 +6,6 @@
  * - Logo de la aplicación
  * - Enlaces de navegación principales
  * - Iconos para cada sección
- * - Botón de cerrar sesión en la sección de perfil
  * 
  * @module Navbar
  * @requires @remix-run/react
@@ -14,8 +13,8 @@
  */
 
 // src/components/Navbar.tsx
-import { Link, useLocation, useNavigate } from "@remix-run/react";
-import { FaVideo, FaUpload, FaBell, FaEnvelope, FaCog, FaUser, FaSignOutAlt } from 'react-icons/fa';
+import { Link, useNavigate } from "@remix-run/react";
+import { FaVideo, FaUpload, FaBell, FaEnvelope, FaCog, FaUser } from 'react-icons/fa';
 
 /**
  * Componente principal de la barra de navegación
@@ -23,16 +22,7 @@ import { FaVideo, FaUpload, FaBell, FaEnvelope, FaCog, FaUser, FaSignOutAlt } fr
  * @returns {JSX.Element} Barra de navegación con enlaces y funcionalidades principales
  */
 export default function Navbar() {
-  const location = useLocation();
   const navigate = useNavigate();
-  const isProfilePage = location.pathname.includes('/perfil');
-
-  const handleLogout = () => {
-    // Limpiar localStorage
-    localStorage.clear();
-    // Redirigir al login
-    navigate('/login');
-  };
 
   const handleProfileClick = () => {
     // Mock de usuario basado en la estructura de la base de datos
@@ -128,17 +118,6 @@ export default function Navbar() {
           <FaUser className="text-xl" />
           <span className="tracking-wider">PERFIL</span>
         </div>
-
-        {/* Botón de cerrar sesión (solo visible en la página de perfil) */}
-        {isProfilePage && (
-          <button
-            onClick={handleLogout}
-            className="flex items-center space-x-3 text-red-500 hover:text-red-400 w-full p-2 rounded hover:bg-gray-800/50 mt-4 cursor-pointer"
-          >
-            <FaSignOutAlt className="text-xl" />
-            <span className="tracking-wider">CERRAR SESIÓN</span>
-          </button>
-        )}
       </nav>
     </div>
   );
