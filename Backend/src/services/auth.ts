@@ -1,29 +1,14 @@
-import { Op } from "sequelize";
 import { AppError } from "../middlewares/errors/AppError";
 import { User } from "../models";
 import { compare, hash } from "bcryptjs";
 import { AuthToken } from "../middlewares/validation/authentication/jwt";
+import { existsUser } from "../utils/modelExists";
 
 export class AuthService {
-    public async exists(id: string) {
-        try {
-            const user = await User.findOne({
-                where: {
-                    [Op.or]: [
-                        { email: id },
-                        { username: id }
-                    ]
-                }
-            });
-            return user;
-        } catch (error) {
-            throw new AppError(500, 'DatabaseError');
-        }
-    }
 
     public async login(id: string, password: string): Promise<string> {
         try {
-            const user = await this.exists(id);
+            const user = await existsUser(id);
 
             if (!user) throw new AppError(404, 'UserNotFound');
 
@@ -46,10 +31,10 @@ export class AuthService {
 
     public async register(email: string, username: string, name: string, surname: string, password: string): Promise<string> {
         try {
-            const userEmail = await this.exists(email);
+            const userEmail = await existsUser(email);
             if (userEmail) throw new AppError(409, 'UserEmailAlreadyExists');
 
-            const userUsername = await this.exists(username);
+            const userUsername = await existsUser(username);
             if (userUsername) throw new AppError(409, 'UserUsernameAlreadyExists');
 
             const hashedPassword = await hash(password, 10);

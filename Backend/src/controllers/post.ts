@@ -15,6 +15,7 @@ export class PostController {
                 throw new AppError(401, 'Unauthorized');
             }
 
+            const media = req.file;
             const user_id = req.user.id;
             const { description } = req.body;
             console.log(user_id, description);
@@ -35,6 +36,18 @@ export class PostController {
         try {
             const locale = req.headers['accept-language'] || 'en';
             i18n.setLocale(locale);
+
+            const posts = await this.postService.getPosts();
+            if (!posts) {
+                throw new AppError(404, 'PostNotFound');
+            }
+
+            res.status(200).json({
+                success: true,
+                status: 200,
+                message: "hola",
+                data: posts
+            })
         } catch (error) {
             next(error);
         };
@@ -44,6 +57,20 @@ export class PostController {
         try {
             const locale = req.headers['accept-language'] || 'en';
             i18n.setLocale(locale);
+
+            const postId = req.params.id;
+            const { description } = req.body;
+            const updatedPost = await this.postService.updatePost(postId, description);
+
+            if (!updatedPost) throw new AppError(404, 'PostNotFound');
+
+            res.status(200).json({
+                success: true,
+                status: 200,
+                message: "hola",
+                data: updatedPost
+            });
+
         } catch (error) {
             next(error);
         };
@@ -53,6 +80,19 @@ export class PostController {
         try {
             const locale = req.headers['accept-language'] || 'en';
             i18n.setLocale(locale);
+
+            const postId = req.params.id;
+            const deletedPost = await this.postService.deletePost(postId);
+
+            if (!deletedPost) throw new AppError(404, 'PostNotFound');
+
+            res.status(200).json({
+                success: true,
+                status: 200,
+                message: "hola",
+                data: deletedPost
+            });
+
         } catch (error) {
             next(error);
         };
