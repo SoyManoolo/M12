@@ -1,7 +1,14 @@
 import express from "express";
 import { Request, Response, NextFunction } from 'express';
-import { sequelize } from "../config/database";
 
 const router = express.Router();
 
-export default router
+router.post('/', async (req: Request, res: Response, next: NextFunction) => {
+
+});
+
+router.get('/', async (req: Request, res: Response, next: NextFunction) => {
+
+});
+
+export default router;
