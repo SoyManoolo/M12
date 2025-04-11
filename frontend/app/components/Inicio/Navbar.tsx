@@ -94,7 +94,7 @@ export default function Navbar() {
 
         {/* Enlace a mensajes */}
         <Link 
-          to="/mensajes"
+          to="/chats"
           className="flex items-center space-x-3 text-gray-400 hover:text-white w-full p-2 rounded hover:bg-gray-800/50 cursor-pointer"
         >
           <FaEnvelope className="text-xl" />
