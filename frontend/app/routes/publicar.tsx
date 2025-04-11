@@ -24,24 +24,24 @@ export default function Publicar() {
       </div>
 
       {/* Contenido principal */}
-      <div className="flex-1 p-8">
-        <div className="max-w-4xl mx-auto bg-gray-900 rounded-lg shadow-lg p-6 border border-gray-800">
-          <h1 className="text-2xl font-bold mb-6 text-white">Crear Nueva Publicación</h1>
+      <div className="flex-1 p-8 flex items-center justify-center">
+        <div className="w-[900px] bg-gray-900 rounded-lg shadow-lg p-8 border border-gray-800">
+          <h1 className="text-2xl font-bold mb-8 text-white text-center">Crear Nueva Publicación</h1>
           
-          <div className="flex gap-6">
+          <div className="flex gap-8">
             {/* Área de imagen */}
             <div className="flex-1">
-              <div className="border-2 border-dashed border-gray-700 rounded-lg p-4 text-center min-h-[300px] flex items-center justify-center bg-gray-800">
+              <div className="border-2 border-dashed border-gray-700 rounded-lg p-6 text-center min-h-[350px] flex items-center justify-center bg-gray-800">
                 {selectedImage ? (
                   <img
                     src={selectedImage}
                     alt="Vista previa"
-                    className="max-w-full max-h-[300px] object-contain"
+                    className="max-w-full max-h-[350px] object-contain rounded-lg"
                   />
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-6">
                     <svg
-                      className="mx-auto h-12 w-12 text-gray-500"
+                      className="mx-auto h-16 w-16 text-gray-500"
                       stroke="currentColor"
                       fill="none"
                       viewBox="0 0 48 48"
@@ -54,10 +54,10 @@ export default function Publicar() {
                         strokeLinejoin="round"
                       />
                     </svg>
-                    <div className="flex flex-col items-center">
+                    <div className="flex flex-col items-center space-y-4">
                       <label
                         htmlFor="file-upload"
-                        className="cursor-pointer bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                        className="cursor-pointer bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition-colors text-lg font-medium"
                       >
                         Seleccionar imagen
                       </label>
@@ -79,7 +79,7 @@ export default function Publicar() {
             {/* Área de descripción */}
             <div className="flex-1">
               <textarea
-                className="w-full h-[300px] p-4 bg-gray-800 border border-gray-700 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-400"
+                className="w-full h-[350px] p-6 bg-gray-800 border border-gray-700 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-400 text-lg"
                 placeholder="Escribe una descripción para tu publicación..."
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -88,10 +88,10 @@ export default function Publicar() {
           </div>
 
           {/* Botón de publicar */}
-          <div className="mt-6 flex justify-end">
+          <div className="mt-8 flex justify-center">
             <button
               type="button"
-              className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors"
+              className="bg-blue-600 text-white px-12 py-3 rounded-md hover:bg-blue-700 transition-colors text-lg font-medium"
             >
               Publicar
             </button>
