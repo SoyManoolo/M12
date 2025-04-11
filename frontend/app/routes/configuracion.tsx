@@ -44,13 +44,6 @@ export default function ConfiguracionPage() {
     <div className="min-h-screen bg-black text-white flex">
       {/* Sidebar fijo a la izquierda */}
       <div className="w-1/6 h-screen fixed left-0 top-0 border-r border-gray-800">
-        <div className="mb-10 flex justify-center pt-6">
-          <img 
-            src="/images/logo.png"
-            alt="Logo FriendsGo"
-            className="h-32 cursor-pointer"
-          />
-        </div>
         <SettingsSidebar 
           activeSection={activeSection}
           onSectionChange={setActiveSection}
