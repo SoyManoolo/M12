@@ -1,16 +1,18 @@
 import { Socket, Server } from "socket.io";
 import { CommentService } from "../services/comment";
 
-export function chatEvents(socket: Socket, io: Server) {
-    socket.on("chat-message", async (data) => {
+const commentService = new CommentService();
 
-    })
+export function commentEvents(socket: Socket, io: Server) {
+    socket.on("post-comment", async (data) => {
 
-    socket.on("message-update", async (data) => {
+    });
 
-    })
+    socket.on("comment-update", async (data) => {
 
-    socket.on("message-delete", async (data) => {
+    });
 
-    })
-}
+    socket.on("comment-delete", async (data) => {
+
+    });
+};

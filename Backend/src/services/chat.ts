@@ -17,4 +17,9 @@ export class ChatService {
     public async updateMessage(message_id: string, content: string) {
 
     }
+
+    // Método para eliminar un mensaje
+    public async deleteMessage(message_id: string) {
+
+    }
 }

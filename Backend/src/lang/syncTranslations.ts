@@ -68,7 +68,7 @@ const translateText = async (text: string, targetLang: string): Promise<string> 
 
 const syncTranslations = async (): Promise<void> => {
   const baseFilePath: string = path.join(baseDir, `${baseLocale}.json`);
-  
+
   if (!fs.existsSync(baseFilePath)) {
     console.error(`Archivo base no encontrado: ${baseFilePath}`);
     return;
