@@ -150,23 +150,19 @@ M12/
   <tr>
     <td align="center">
       <a href="https://github.com/SoyManoolo">
-        <img src="https://avatars.githubusercontent.com/u/SoyManoolo" width="100px;" alt="Erik Saldaña"/>
+        <img src="https://github.com/SoyManoolo.png" width="100px;" alt=""/>
         <br />
-        <sub><b>Erik Saldaña</b></sub>
-      </a>
-      <br />
-      <a href="https://github.com/SoyManoolo">
+        <b>SoyManoolo</b>
+        <br />
         <img src="https://img.shields.io/badge/GitHub-SoyManoolo-181717?logo=github" alt="GitHub"/>
       </a>
     </td>
     <td align="center">
       <a href="https://github.com/Rediaj04">
-        <img src="https://avatars.githubusercontent.com/u/Rediaj04" width="100px;" alt="Jaider Cabarcas"/>
+        <img src="https://github.com/Rediaj04.png" width="100px;" alt=""/>
         <br />
-        <sub><b>Jaider Cabarcas</b></sub>
-      </a>
-      <br />
-      <a href="https://github.com/Rediaj04">
+        <b>Rediaj04</b>
+        <br />
         <img src="https://img.shields.io/badge/GitHub-Rediaj04-181717?logo=github" alt="GitHub"/>
       </a>
     </td>
