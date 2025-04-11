@@ -12,7 +12,8 @@
 import { useState } from 'react';
 import type { MetaFunction } from '@remix-run/node';
 import Navbar from '~/components/Inicio/Navbar';
-import { FaSearch } from 'react-icons/fa';
+import ChatItem from '~/components/Chats/ChatItem';
+import { FaSearch, FaEnvelope } from 'react-icons/fa';
 
 export const meta: MetaFunction = () => {
   return [
@@ -65,8 +66,7 @@ export default function Chats() {
         timestamp: new Date().toISOString()
       },
       unread_count: 0
-    },
-    // Más chats mock...
+    }
   ];
 
   // Filtrar chats basado en la búsqueda
@@ -74,22 +74,33 @@ export default function Chats() {
     chat.user.username.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const handleChatClick = (chatId: string) => {
+    // Aquí iría la lógica para abrir el chat
+    console.log('Abriendo chat:', chatId);
+  };
+
   return (
     <div className="flex min-h-screen bg-black text-white">
       {/* Navbar */}
       <Navbar />
 
       {/* Contenido principal */}
-      <div className="flex-1 ml-[16.666667%] p-6">
+      <div className="flex-1 ml-[-15%] pt-8 p-4">
         <div className="max-w-4xl mx-auto">
+          {/* Encabezado */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-white mb-2">Mensajes</h1>
+            <p className="text-gray-400">Gestiona tus conversaciones y mantente conectado</p>
+          </div>
+
           {/* Barra de búsqueda */}
-          <div className="mb-6">
+          <div className="mb-8">
             <div className="relative">
-              <FaSearch className="absolute left-3 top-3 text-gray-400" />
+              <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
                 placeholder="Buscar en mensajes..."
-                className="w-full bg-gray-900 rounded-full py-2 pl-10 pr-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-gray-900 rounded-xl py-3 pl-12 pr-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -97,43 +108,37 @@ export default function Chats() {
           </div>
 
           {/* Lista de chats */}
-          <div className="space-y-2">
+          <div className="space-y-4">
             {filteredChats.map((chat) => (
-              <div
+              <ChatItem
                 key={chat.chat_id}
-                className="flex items-center bg-gray-900 rounded-lg p-4 hover:bg-gray-800 transition-colors cursor-pointer"
-              >
-                {/* Foto de perfil */}
-                <div className="relative">
-                  <img
-                    src={chat.user.profile_picture_url || '/images/default-avatar.png'}
-                    alt={chat.user.username}
-                    className="w-12 h-12 rounded-full object-cover"
-                  />
-                  {chat.unread_count > 0 && (
-                    <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                      {chat.unread_count}
-                    </div>
-                  )}
-                </div>
-
-                {/* Información del chat */}
-                <div className="ml-4 flex-1">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-white">{chat.user.username}</h3>
-                    <span className="text-xs text-gray-400">
-                      {new Date(chat.last_message.timestamp).toLocaleTimeString([], {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </span>
-                  </div>
-                  <p className="text-gray-400 text-sm truncate">
-                    {chat.last_message.content}
-                  </p>
-                </div>
-              </div>
+                chat={chat}
+                onClick={() => handleChatClick(chat.chat_id)}
+              />
             ))}
+
+            {/* Mensaje cuando no hay chats */}
+            {filteredChats.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-16 bg-gray-900/50 rounded-xl border border-gray-800">
+                <div className="w-24 h-24 bg-gray-800 rounded-full flex items-center justify-center mb-6">
+                  <FaEnvelope className="text-4xl text-gray-400" />
+                </div>
+                <h3 className="text-xl font-semibold text-white mb-2">
+                  {searchQuery ? 'No se encontraron chats' : 'No tienes chats activos'}
+                </h3>
+                <p className="text-gray-400 text-center max-w-md mb-6">
+                  {searchQuery 
+                    ? 'Intenta con otros términos de búsqueda o inicia una nueva conversación'
+                    : 'Comienza una nueva conversación con tus amigos o contactos'}
+                </p>
+                <button 
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  onClick={() => {/* Aquí iría la lógica para iniciar nuevo chat */}}
+                >
+                  Iniciar nuevo chat
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
