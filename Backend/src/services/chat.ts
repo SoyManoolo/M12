@@ -1,11 +1,8 @@
-import { io } from "../server";
 import { ChatMessages } from "../models/ChatMessages";
 import { User } from "../models/User";
 import { AppError } from "../middlewares/errors/AppError";
 
 export class ChatService {
-    constructor() {};
-
     // Método para crear un nuevo mensaje
     public async createMessage(sender_id: string, receiver_id: string, content: string) {
 
