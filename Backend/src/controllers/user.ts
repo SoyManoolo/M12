@@ -6,29 +6,29 @@ import { UserService } from '../services/user';
 export class UserController {
     constructor(private userService: UserService) { }
 
-    // Método para obtener todos los usuarios
-    public async getUsers(req: Request, res: Response, next: NextFunction) {
-        try {
-            const locale = req.headers['accept-language'] || 'en';
-            i18n.setLocale(locale);
-
-        } catch (error) {
-            next (error);
-        }
-    }
-
     // Método para obtener un usuario
     public async getUser(req: Request, res: Response, next: NextFunction) {
         try {
             const locale = req.headers['accept-language'] || 'en';
             i18n.setLocale(locale);
 
-            const { userId } = req.params;
-            const user = await this.userService.getUser(userId);
+            const filters = {
+                id: req.params.id,
+                username: req.query.username as string
+            };
+
+            const user = await this.userService.getUser(filters);
+
+            res.status(200).json({
+                success: true,
+                status: 200,
+                message: "hola",
+                data: user
+            });
         } catch (error) {
             next (error);
-        }
-    }
+        };
+    };
 
     // Método para editar un usuario
     public async updateUser(req: Request, res: Response, next: NextFunction) {
@@ -36,11 +36,25 @@ export class UserController {
             const locale = req.headers['accept-language'] || 'en';
             i18n.setLocale(locale);
 
-            const { userId } = req.params
+            const filters = {
+                id: req.params.id,
+                username: req.query.username as string
+            };
+
+            const updateData = req.body;
+
+            const user = await this.userService.updateUser(filters, updateData);
+
+            res.status(200).json({
+                success: true,
+                status: 200,
+                message: "hola",
+                data: user
+            });
         } catch (error) {
             next (error);
         }
-    }
+    };
 
     // Método para eliminar un usuario
     public async deleteUser(req: Request, res: Response, next: NextFunction) {
@@ -48,11 +62,15 @@ export class UserController {
             const locale = req.headers['accept-language'] || 'en';
             i18n.setLocale(locale);
 
-            const { userId } = req.params
-            const user = await this.userService.deleteUser(userId);
+            const filters = {
+                id: req.params.id,
+                username: req.query.username as string
+            };
+
+            const user = await this.userService.deleteUser(filters);
         } catch (error) {
             next (error);
         }
-    }
+    };
 
-}
+};

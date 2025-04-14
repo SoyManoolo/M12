@@ -1,14 +1,16 @@
 import { Op } from "sequelize";
 import { AppError } from "../middlewares/errors/AppError";
 import { User, Post } from "../models";
+import { UserFilters } from "../types/custom";
 
-export async function existsUser(id: string) {
+export async function existsUser(filters: UserFilters) {
     try {
         const user = await User.findOne({
             where: {
                 [Op.or]: [
-                    { email: id },
-                    { username: id }
+                    { user_id: filters.userId},
+                    { email: filters.email },
+                    { username: filters.username }
                 ]
             }
         });
