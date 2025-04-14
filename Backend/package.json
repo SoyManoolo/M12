@@ -31,6 +31,9 @@
     },
     "scripts": {
         "build": "tsc && node -e \"require('shelljs').mkdir('-p', 'dist/lang'); require('shelljs').cp('-R', 'src/lang/*', 'dist/lang/')\"",
+        "start:cleanup": "pm2 start dist/scripts/cleanup.js --name cleanup-job --cron '0 3 * * *'",
+        "stop:cleanup": "pm2 stop cleanup-job",
+        "delete:cleanup": "pm2 delete cleanup-job",
         "sync-translations": "ts-node src/lang/syncTranslations.ts",
         "start": "cross-env NODE_ENV=production node dist/server.js",
         "dev": "cross-env nodemon dist/server.js",

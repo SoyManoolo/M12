@@ -35,7 +35,7 @@ PostComments.init(
     content: {
       type: DataTypes.TEXT,
       allowNull: false,
-    },
+    }
   },
   {
     sequelize,
@@ -43,6 +43,8 @@ PostComments.init(
     timestamps: true,
     createdAt: "created_at",
     updatedAt: false,
+    deletedAt: "deleted_at",
+    paranoid: true,
     indexes: [
       {
         fields: ["post_id"],

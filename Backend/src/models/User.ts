@@ -60,11 +60,6 @@ User.init(
             type: DataTypes.BOOLEAN,
             allowNull: false,
             defaultValue: false,
-        },
-        is_deleted: {
-            type: DataTypes.BOOLEAN,
-            allowNull: false,
-            defaultValue: false
         }
     },
     {
@@ -73,6 +68,8 @@ User.init(
         timestamps: true,
         createdAt: "created_at",
         updatedAt: "updated_at",
+        deletedAt: "deleted_at",
+        paranoid: true,
         indexes: [
             {
                 unique: true,
