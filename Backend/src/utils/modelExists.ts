@@ -15,8 +15,8 @@ export async function existsUser(id: string) {
         return user;
     } catch (error) {
         throw new AppError(500, 'DatabaseError');
-    }
-}
+    };
+};
 
 export async function existsPost(id: string) {
     try {
@@ -28,5 +28,5 @@ export async function existsPost(id: string) {
         return post;
     } catch (error) {
         throw new AppError(500, 'DatabaseError');
-    }
-}
+    };
+};
