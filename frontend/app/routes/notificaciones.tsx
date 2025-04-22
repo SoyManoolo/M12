@@ -1,6 +1,6 @@
 import { json } from "@remix-run/node";
 import { useLoaderData, Link } from "@remix-run/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Notification, User } from "~/types/notifications";
 import Navbar from "~/components/Inicio/Navbar";
 import RightPanel from "~/components/Shared/RightPanel";
@@ -81,8 +81,17 @@ export const loader = async () => {
 };
 
 export default function Notificaciones() {
+  const [mounted, setMounted] = useState(false);
   const { notifications, friends } = useLoaderData<typeof loader>();
   const [searchTerm, setSearchTerm] = useState<string>("");
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return null;
+  }
 
   const formatTimeAgo = (dateString: string) => {
     const date = new Date(dateString);
@@ -144,12 +153,12 @@ export default function Notificaciones() {
         <div className="p-6">
           <h1 className="text-2xl font-bold mb-6 text-white">Notificaciones</h1>
           <div className="space-y-4">
-            {notifications.length === 0 ? (
+            {notifications?.length === 0 ? (
               <div className="bg-gray-800/50 rounded-lg p-6 text-center">
                 <p className="text-gray-400">No tienes notificaciones nuevas</p>
               </div>
             ) : (
-              notifications.map((notification) => {
+              notifications?.map((notification) => {
                 const content = getNotificationContent(notification);
                 return (
                   <Link 
@@ -189,12 +198,13 @@ export default function Notificaciones() {
 
       {/* Barra lateral derecha - Amigos en línea */}
       <RightPanel
-        users={friends.map((friend: Friend) => ({
+        users={friends?.map((friend: Friend) => ({
           ...friend.user,
           is_online: true // Esto debería venir del backend
-        }))}
+        })) || []}
         mode="online"
         onSearch={setSearchTerm}
+        suggestedUsers={[]}
       />
     </div>
   );

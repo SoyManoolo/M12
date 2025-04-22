@@ -1,9 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Navbar from '~/components/Inicio/Navbar';
 
 export default function Publicar() {
+  const [mounted, setMounted] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [description, setDescription] = useState('');
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -15,6 +20,10 @@ export default function Publicar() {
       reader.readAsDataURL(file);
     }
   };
+
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <div className="flex min-h-screen bg-black">
