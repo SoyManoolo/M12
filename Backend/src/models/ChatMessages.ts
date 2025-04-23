@@ -46,7 +46,9 @@ ChatMessages.init(
     tableName: "chat_messages",
     timestamps: true,
     createdAt: "created_at",
-    updatedAt: false,
+    updatedAt: "updated_at",
+    deletedAt: "deleted_at",
+    paranoid: true,
     indexes: [
       {
         fields: ["sender_id", "receiver_id"],
