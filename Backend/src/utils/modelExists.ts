@@ -1,22 +1,24 @@
 import { Op } from "sequelize";
 import { AppError } from "../middlewares/errors/AppError";
 import { User, Post } from "../models";
+import { UserFilters } from "../types/custom";
 
-export async function existsUser(id: string) {
+export async function existsUser(filters: UserFilters) {
     try {
         const user = await User.findOne({
             where: {
                 [Op.or]: [
-                    { email: id },
-                    { username: id }
+                    { user_id: filters.userId},
+                    { email: filters.email },
+                    { username: filters.username }
                 ]
             }
         });
         return user;
     } catch (error) {
         throw new AppError(500, 'DatabaseError');
-    }
-}
+    };
+};
 
 export async function existsPost(id: string) {
     try {
@@ -28,5 +30,5 @@ export async function existsPost(id: string) {
         return post;
     } catch (error) {
         throw new AppError(500, 'DatabaseError');
-    }
-}
+    };
+};

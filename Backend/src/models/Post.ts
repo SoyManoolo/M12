@@ -34,11 +34,6 @@ Post.init(
             validate: {
                 isUrl: true,
             },
-        },
-        is_deleted: {
-            type: DataTypes.BOOLEAN,
-            allowNull: false,
-            defaultValue: false
         }
     },
     {
@@ -47,6 +42,8 @@ Post.init(
         timestamps: true,
         createdAt: "created_at",
         updatedAt: "updated_at",
+        deletedAt: "deleted_at",
+        paranoid: true,
         indexes: [
             {
                 fields: ["user_id"],

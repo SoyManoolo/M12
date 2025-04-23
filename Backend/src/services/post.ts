@@ -80,9 +80,7 @@ export class PostService {
 
             if (!post) throw new AppError(404, "");
 
-            await post.update({ isDeleted: true });
-
-            await post.reload();
+            await post.destroy();
 
             return post;
         } catch (error) {
