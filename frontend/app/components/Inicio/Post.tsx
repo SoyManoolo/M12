@@ -263,7 +263,7 @@ export default function Post({
                   )}
                 </div>
               </div>
-            </div>￼
+            </div>
 
 
             {/* Input para nuevos comentarios */}

@@ -29,6 +29,7 @@ interface User {
   bio: string | null;
   email_verified: boolean;
   is_moderator: boolean;
+  id_deleted: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -67,52 +68,6 @@ interface LoaderData {
   isOwnProfile: boolean;
 }
 
-// Datos de ejemplo - Reemplazar con datos reales de la API
-const MOCK_USER = {
-  user_id: "1",
-  first_name: "María",
-  last_name: "García",
-  username: "mariagarcia",
-  profile_picture_url: "/images/default-avatar.png",
-  bio: "¡Hola! Me encanta compartir momentos especiales y conectar con personas nuevas.",
-};
-
-const MOCK_POSTS = [
-  {
-    post_id: "1",
-    user: {
-      user_id: "1",
-      username: "mariagarcia",
-      profile_picture_url: "/images/default-avatar.png" as string | null,
-    },
-    description: "¡Disfrutando de un hermoso día!",
-    media_url: "/images/post1.jpg" as string | null,
-    comments: [
-      {
-        comment_id: "1",
-        user_id: "2",
-        username: "carlos123",
-        content: "¡Qué bonito día!",
-        created_at: new Date().toISOString(),
-      }
-    ],
-    created_at: new Date().toISOString(),
-    likes_count: 15,
-    is_saved: false,
-  },
-];
-
-const MOCK_SUGGESTED_USERS = [
-  {
-    user_id: "2",
-    username: "carlos123",
-    first_name: "Carlos",
-    last_name: "Pérez",
-    profile_picture_url: "/images/default-avatar.png",
-    common_friends_count: 3,
-  },
-];
-
 export const loader = async () => {
   // Datos mock para pruebas
   const mockUser: User = {
@@ -126,6 +81,7 @@ export const loader = async () => {
     bio: "¡Hola! Me encanta compartir momentos especiales",
     email_verified: true,
     is_moderator: false,
+    id_deleted: false,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
   };
@@ -194,6 +150,7 @@ export const loader = async () => {
         bio: "Amante de la música",
         email_verified: true,
         is_moderator: false,
+        id_deleted: false,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }
@@ -214,6 +171,7 @@ export const loader = async () => {
         bio: "Viajera incansable ✈️",
         email_verified: true,
         is_moderator: false,
+        id_deleted: false,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }
@@ -234,6 +192,7 @@ export const loader = async () => {
         bio: "Desarrollador web 💻",
         email_verified: true,
         is_moderator: false,
+        id_deleted: false,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       }
@@ -250,20 +209,10 @@ export const loader = async () => {
 
 export default function Perfil(): React.ReactElement {
   const { user, posts, friends, isOwnProfile } = useLoaderData<LoaderData>();
-  const [currentPosts, setCurrentPosts] = useState<Post[]>(posts);
-  const [searchTerm, setSearchTerm] = useState<string>("");
-  const [isEditing, setIsEditing] = useState(false);
 
   const handleLike = async (postId: string) => {
     try {
       console.log('Dando like al post:', postId);
-      setCurrentPosts(prev =>
-        prev.map(post =>
-          post.post_id === postId
-            ? { ...post, likes_count: post.likes_count + 1 }
-            : post
-        )
-      );
     } catch (error) {
       console.error('Error al dar like:', error);
     }
@@ -272,13 +221,6 @@ export default function Perfil(): React.ReactElement {
   const handleSave = async (postId: string) => {
     try {
       console.log('Guardando post:', postId);
-      setCurrentPosts(prev =>
-        prev.map(post =>
-          post.post_id === postId
-            ? { ...post, is_saved: !post.is_saved }
-            : post
-        )
-      );
     } catch (error) {
       console.error('Error al guardar el post:', error);
     }
@@ -306,7 +248,7 @@ export default function Perfil(): React.ReactElement {
 
           {/* Publicaciones del usuario */}
           <UserPosts
-            posts={currentPosts}
+            posts={posts}
             onLike={handleLike}
             onSave={handleSave}
           />
@@ -320,7 +262,6 @@ export default function Perfil(): React.ReactElement {
           is_online: true // Esto debería venir del backend
         }))}
         mode="online"
-        onSearch={setSearchTerm}
       />
     </div>
   );
