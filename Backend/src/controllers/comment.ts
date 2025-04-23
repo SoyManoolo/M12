@@ -13,6 +13,18 @@ export class CommentController {
 
             const { postId } = req.params;
             const comments = await this.commentService.getComments(postId);
+
+            if (!comments) {
+                throw new AppError(404, 'CommentsNotFound');
+            }
+
+            res.status(200).json({
+                success: true,
+                status: 200,
+                data: {
+                    comments
+                }
+            });
         } catch (error) {
             next(error);
         };
@@ -25,6 +37,16 @@ export class CommentController {
 
             const { commentId } = req.params;
             const comment = await this.commentService.deleteComment(commentId);
+
+            if (!comment) {
+                throw new AppError(404, 'CommentNotFound');
+            }
+
+            res.status(200).json({
+                success: true,
+                status: 200,
+                message: "hola"
+            });
         } catch (error) {
             next(error);
         };

@@ -1,16 +1,28 @@
 import { PostComments } from '../models/PostComments';
 import { User } from '../models/User';
 import { AppError } from '../middlewares/errors/AppError';
-import { Post } from '../models/Post';
 
 export class CommentService {
     // Método para crear un nuevo comentario
-    public async createComment(post_id: string, user_id: string, content: string) {
+    public async createComment(post_id: string, user_id: string, content: string): Promise<PostComments> {
+        try {
+            const comment = await PostComments.create({
+                post_id,
+                user_id,
+                content
+            })
+            if (!comment) throw new AppError(400, '');
 
+            return comment;
+        } catch (error) {
+            if (error instanceof AppError) throw error;
+
+            throw new AppError(500, 'InternalServerError');
+        }
     };
 
     // Método para editar un comentario
-    public async getComments(post_id: string) {
+    public async getComments(post_id: string): Promise<PostComments[]> {
         try {
             const comments = await PostComments.findAll({
                 where: {
@@ -23,12 +35,17 @@ export class CommentService {
                     }
                 ]
             })
+
+            if (!comments) throw new AppError(404, 'CommentsNotFound');
+
+            return comments;
         } catch (error) {
             if (error instanceof AppError) {
                 throw error;
             }
-            throw new AppError(500, 'InternalServerError');
-        }
+            if (error instanceof AppError) throw error;
+
+            throw new AppError(500, 'InternalServerError');        }
     };
 
     // Método para eliminar un comentario

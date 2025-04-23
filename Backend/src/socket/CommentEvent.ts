@@ -5,14 +5,26 @@ const commentService = new CommentService();
 
 export function commentEvents(socket: Socket, io: Server) {
     socket.on("post-comment", async (data) => {
+        try {
 
+        } catch (error) {
+
+        }
     });
 
     socket.on("comment-update", async (data) => {
+        try {
 
+        } catch (error) {
+            
+        }
     });
 
     socket.on("comment-delete", async (data) => {
+        try {
 
+        } catch (error) {
+            
+        }
     });
 };
