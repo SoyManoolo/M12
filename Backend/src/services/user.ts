@@ -16,9 +16,7 @@ export class UserService {
             };
 
             const user = await User.findOne(query);
-            if (!user) {
-                throw new AppError(404, "");
-            };
+            if (!user) throw new AppError(404, "");
 
             return user;
         } catch (error) {
@@ -40,9 +38,7 @@ export class UserService {
             };
 
             const user = await User.findOne(query);
-            if (!user) {
-                throw new AppError(404, "");
-            };
+            if (!user) throw new AppError(404, "");
 
             return user;
         } catch (error) {
@@ -57,9 +53,7 @@ export class UserService {
         try {
             const user = await existsUser(filters);
 
-            if (!user) {
-                throw new AppError(404, "");
-            };
+            if (!user) throw new AppError(404, "");
 
             await user.destroy();
 

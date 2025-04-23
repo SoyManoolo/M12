@@ -7,15 +7,27 @@ const router = express.Router();
 const userService = new UserService();
 const userController = new UserController(userService);
 
-router.get('/:id?', async (req: Request, res: Response, next: NextFunction) => {
+router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
     await userController.getUser(req, res, next);
 });
 
-router.patch('/:id?', async (req: Request, res: Response, next: NextFunction) => {
+router.get('/', async (req: Request, res: Response, next: NextFunction) => {
+    await userController.getUser(req, res, next);
+});
+
+router.patch('/:id', async (req: Request, res: Response, next: NextFunction) => {
     await userController.updateUser(req, res, next);
 });
 
-router.delete('/:id?', async (req: Request, res: Response, next: NextFunction) => {
+router.patch('/', async (req: Request, res: Response, next: NextFunction) => {
+    await userController.updateUser(req, res, next);
+});
+
+router.delete('/:id', async (req: Request, res: Response, next: NextFunction) => {
+    await userController.deleteUser(req, res, next);
+});
+
+router.delete('/', async (req: Request, res: Response, next: NextFunction) => {
     await userController.deleteUser(req, res, next);
 });
 
