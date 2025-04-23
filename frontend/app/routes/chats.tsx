@@ -110,8 +110,8 @@ export default function Chats() {
   );
 
   const handleChatClick = (chatId: string) => {
-    // Aquí iría la lógica para abrir el chat
-    console.log('Abriendo chat:', chatId);
+    // Redirigir a la página de chat individual
+    window.location.href = `/chat?chatId=${chatId}`;
   };
 
   return (
