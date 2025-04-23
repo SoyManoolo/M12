@@ -358,10 +358,7 @@ export default function InicioPage() {
 
       {/* Barra lateral derecha */}
       <RightPanel
-        users={friends.map((friend: Friend) => ({
-          ...friend.user,
-          is_online: true // Esto debería venir del backend
-        }))}
+        friends={friends}
         mode="online"
       />
     </div>

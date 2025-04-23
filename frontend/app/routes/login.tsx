@@ -11,6 +11,7 @@
  * @requires @remix-run/react
  * @requires @remix-run/node
  * @requires ~/services/auth.service
+ * @requires ~/hooks/useAuth.tsx
  */
 
 import { useState } from 'react';
@@ -18,6 +19,7 @@ import { Form, useNavigate, Link } from "@remix-run/react";
 import type { ActionFunction } from "@remix-run/node";
 import { redirect } from "@remix-run/node";
 import { authService } from '../services/auth.service';
+import { useAuth } from '../hooks/useAuth.tsx';
 
 /**
  * @function action
@@ -65,6 +67,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { setToken } = useAuth();
 
   /**
    * @function handleSubmit
@@ -83,7 +86,7 @@ export default function LoginPage() {
       
       if (response.success && response.token) {
         console.log('✅ Login exitoso, token recibido');
-        localStorage.setItem('token', response.token);
+        setToken(response.token);
         navigate('/inicio');
       } else {
         console.log('❌ Error en el login:', response.message);

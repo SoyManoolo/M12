@@ -34,17 +34,25 @@ interface User {
   is_online?: boolean;
 }
 
+interface Friend {
+  friendship_id: string;
+  user1_id: string;
+  user2_id: string;
+  created_at: string;
+  user: User;
+}
+
 interface RightPanelProps {
-  users: User[];
-  mode: 'suggested' | 'common' | 'online';
+  friends: Friend[];
+  mode?: 'suggested' | 'common' | 'online';
   showSearch?: boolean;
   onSearch?: (query: string) => void;
   onFollow?: (userId: string) => void;
 }
 
 export default function RightPanel({ 
-  users, 
-  mode, 
+  friends, 
+  mode = 'suggested', 
   showSearch = true,
   onSearch, 
   onFollow 
@@ -87,51 +95,51 @@ export default function RightPanel({
         {/* Panel principal */}
         <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
           <h3 className="text-lg font-semibold mb-4 text-white">{title}</h3>
-          {users.length === 0 ? (
+          {friends.length === 0 ? (
             <p className="text-gray-400 text-center">{emptyMessage}</p>
           ) : (
             <div className="space-y-2">
-              {users.map((user) => (
-                <div key={user.user_id} className="flex items-center justify-between py-2">
+              {friends.map((friend) => (
+                <div key={friend.friendship_id} className="flex items-center justify-between py-2">
                   <div 
                     className="flex items-center cursor-pointer hover:bg-gray-800/50 p-2 rounded-lg transition-colors w-full"
-                    onClick={() => handleUserClick(user.username)}
+                    onClick={() => handleUserClick(friend.user.username)}
                   >
                     <div className="relative">
                       <img 
-                        src={user.profile_picture_url || 'https://i.pravatar.cc/150'} 
-                        alt={user.username}
+                        src={friend.user.profile_picture_url || 'https://i.pravatar.cc/150'} 
+                        alt={friend.user.username}
                         className="w-12 h-12 rounded-full object-cover"
                       />
-                      {mode === 'online' && user.is_online && (
+                      {mode === 'online' && friend.user.is_online && (
                         <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-black"></div>
                       )}
                     </div>
                     <div className="ml-4 flex flex-col">
-                      <p className="font-semibold text-white hover:text-blue-400 text-base">{user.username}</p>
+                      <p className="font-semibold text-white hover:text-blue-400 text-base">{friend.user.username}</p>
                       <p className="text-sm text-gray-400 hover:text-gray-300">
-                        {user.first_name} {user.last_name}
+                        {friend.user.first_name} {friend.user.last_name}
                       </p>
-                      {mode === 'suggested' && user.common_friends_count !== undefined && (
+                      {mode === 'suggested' && friend.user.common_friends_count !== undefined && (
                         <p className="text-xs text-gray-500 mt-1">
-                          {user.common_friends_count} {user.common_friends_count === 1 ? 'amigo' : 'amigos'} en común
+                          {friend.user.common_friends_count} {friend.user.common_friends_count === 1 ? 'amigo' : 'amigos'} en común
                         </p>
                       )}
-                      {mode === 'online' && user.is_online && (
+                      {mode === 'online' && friend.user.is_online && (
                         <p className="text-xs text-green-500 mt-1">En línea</p>
                       )}
                     </div>
                   </div>
                   {mode === 'suggested' ? (
                     <button 
-                      onClick={() => onFollow?.(user.user_id)}
+                      onClick={() => onFollow?.(friend.user.user_id)}
                       className="px-4 py-1.5 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors text-sm cursor-pointer ml-4"
                     >
                       Seguir
                     </button>
                   ) : (
                     <Link 
-                      to={`/perfilother?username=${user.username}`}
+                      to={`/perfilother?username=${friend.user.username}`}
                       className="text-blue-500 hover:text-blue-400 text-sm cursor-pointer ml-4 whitespace-nowrap"
                     >
                       Ver perfil

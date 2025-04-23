@@ -5,6 +5,7 @@ import {
   Scripts,
   ScrollRestoration,
 } from "@remix-run/react";
+import { AuthProvider } from "./hooks/useAuth.tsx";
 
 import "./tailwind.css";
 
@@ -38,5 +39,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 // Componente raíz de la aplicación
 export default function App() {
-  return <Outlet />;
+  return (
+    <AuthProvider>
+      <Outlet />
+    </AuthProvider>
+  );
 }
