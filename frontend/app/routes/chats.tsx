@@ -125,7 +125,6 @@ export default function Chats() {
           {/* Encabezado */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-white mb-2">Mensajes</h1>
-            <p className="text-gray-400">Gestiona tus conversaciones y mantente conectado</p>
           </div>
 
           {/* Barra de búsqueda */}

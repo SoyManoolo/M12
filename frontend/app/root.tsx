@@ -11,7 +11,7 @@ import "./tailwind.css";
 // Definir metadatos por defecto para la aplicación
 export const meta = () => {
   return [
-    { title: "Mi aplicación Remix" },
+    { title: "FriendsGO" },
     { name: "description", content: "Una aplicación construida con Remix y Tailwind" },
     { name: "viewport", content: "width=device-width,initial-scale=1" },
   ];
