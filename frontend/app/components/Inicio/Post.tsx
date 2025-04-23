@@ -263,7 +263,8 @@ export default function Post({
                   )}
                 </div>
               </div>
-            </div>
+            </div>￼
+
 
             {/* Input para nuevos comentarios */}
             <div className="mt-auto pt-4 border-t border-gray-800">

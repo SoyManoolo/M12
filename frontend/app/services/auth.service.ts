@@ -27,8 +27,8 @@ interface LoginCredentials {
 interface RegisterData {
     email: string;      // Email del usuario
     username: string;   // Nombre de usuario
-    first_name: string; // Nombre del usuario
-    last_name: string;  // Apellido del usuario
+    name: string;       // Nombre del usuario
+    surname: string;    // Apellido del usuario
     password: string;   // Contraseña
     profile_picture_url?: string; // URL de la foto de perfil (opcional)
     bio?: string;       // Biografía (opcional)
