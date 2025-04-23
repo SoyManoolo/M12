@@ -160,9 +160,12 @@ export default function LoginPage() {
           </div>
 
           <div className="text-right">
-            <a href="#" className="text-sm text-gray-400 hover:text-white tracking-wider cursor-pointer">
-              FORGOT PASSWORD?
-            </a>
+            <Link
+              to="/forgot-password"
+              className="text-sm text-gray-400 hover:text-white tracking-wider cursor-pointer"
+            >
+              HAS OLVIDADO TU CONTRASEÑA?
+            </Link>
           </div>
 
           <button
