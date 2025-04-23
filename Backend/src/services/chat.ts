@@ -1,6 +1,7 @@
 import { ChatMessages } from "../models/ChatMessages";
 import { AppError } from "../middlewares/errors/AppError";
 import { Op } from "sequelize";
+import { existCommentChat } from "../utils/modelExists";
 
 export class ChatService {
     // Método para crear un nuevo mensaje
@@ -94,7 +95,7 @@ export class ChatService {
 
         await message.reload();
 
-        return message;
+        return { result: true, message_id };
     } catch (error) {
         if (error instanceof AppError) {
             throw error;
@@ -106,17 +107,13 @@ export class ChatService {
     // Método para eliminar un mensaje
     public async deleteMessage(message_id: string) {
     try {
-        const message = await ChatMessages.destroy(
-            {
-                where: {
-                    message_id
-                }
-            }
-        );
+        const messageExist = await existCommentChat(message_id);
 
-        if (!message) throw new AppError(404, 'MessageNotFound');
+        if (!messageExist) throw new AppError(404, 'MessageNotFound');
 
-        return message;
+        await messageExist.destroy()
+
+        return { result: true, message_id };
 
     } catch (error) {
         if (error instanceof AppError) {
