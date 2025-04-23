@@ -1,9 +1,24 @@
+/**
+ * Página de Notificaciones
+ * 
+ * Muestra todas las notificaciones del usuario en una lista mezclada.
+ * Incluye:
+ * - Notificaciones de solicitudes de amistad
+ * - Notificaciones de mensajes
+ * - Notificaciones de comentarios
+ * - Notificaciones de likes
+ * - Notificaciones de videollamadas
+ * 
+ * @module Notificaciones
+ */
+
 import { json } from "@remix-run/node";
 import { useLoaderData, Link } from "@remix-run/react";
 import { useState, useEffect } from "react";
 import type { Notification, User } from "~/types/notifications";
 import Navbar from "~/components/Inicio/Navbar";
 import RightPanel from "~/components/Shared/RightPanel";
+import { FaUserFriends, FaComment, FaHeart, FaVideo, FaCheck, FaTimes } from 'react-icons/fa';
 
 interface Friend {
   friendship_id: string;
@@ -85,6 +100,31 @@ export const loader = async () => {
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         }
+      },
+      {
+        notification_id: "2",
+        type: "message",
+        user_id: "3",
+        related_id: "1",
+        post_id: null,
+        is_read: false,
+        severity: "info",
+        created_at: new Date().toISOString(),
+        user: {
+          user_id: "3",
+          first_name: "Ana",
+          last_name: "López",
+          username: "analopez",
+          email: "ana@example.com",
+          password: "hashed_password",
+          profile_picture_url: "https://images.pexels.com/photos/733872/pexels-photo-733872.jpeg",
+          bio: "Viajera y fotógrafa",
+          email_verified: true,
+          is_moderator: false,
+          id_deleted: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
       }
     ];
 
@@ -144,6 +184,43 @@ export default function Notificaciones(): React.ReactElement {
     }
   };
 
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'friend_request':
+        return <FaUserFriends className="text-blue-500" />;
+      case 'message':
+        return <FaComment className="text-green-500" />;
+      case 'comment':
+        return <FaComment className="text-yellow-500" />;
+      case 'post_like':
+        return <FaHeart className="text-red-500" />;
+      case 'video_call':
+        return <FaVideo className="text-purple-500" />;
+      default:
+        return null;
+    }
+  };
+
+  const getNotificationStyle = (type: string, isRead: boolean) => {
+    const baseStyle = 'p-4 rounded-lg border transition-colors';
+    const readStyle = isRead ? 'border-gray-800 bg-gray-900/50' : 'border-blue-500 bg-blue-500/10';
+    
+    switch (type) {
+      case 'friend_request':
+        return `${baseStyle} ${readStyle}`;
+      case 'message':
+        return `${baseStyle} ${isRead ? 'border-gray-800 bg-gray-900/50' : 'border-green-500 bg-green-500/10'}`;
+      case 'comment':
+        return `${baseStyle} ${isRead ? 'border-gray-800 bg-gray-900/50' : 'border-yellow-500 bg-yellow-500/10'}`;
+      case 'post_like':
+        return `${baseStyle} ${isRead ? 'border-gray-800 bg-gray-900/50' : 'border-red-500 bg-red-500/10'}`;
+      case 'video_call':
+        return `${baseStyle} ${isRead ? 'border-gray-800 bg-gray-900/50' : 'border-purple-500 bg-purple-500/10'}`;
+      default:
+        return `${baseStyle} ${readStyle}`;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-black text-white flex">
       {/* Barra lateral usando el componente Navbar */}
@@ -151,25 +228,21 @@ export default function Notificaciones(): React.ReactElement {
 
       {/* Contenido central */}
       <div className="w-2/3 ml-[16.666667%] border-r border-gray-800">
-        <div className="p-6 space-y-6">
+        <div className="p-6">
+          <h1 className="text-3xl font-bold mb-6">Notificaciones</h1>
+
           {/* Lista de notificaciones */}
           <div className="space-y-4">
             {currentNotifications.map((notification) => (
               <div
                 key={notification.notification_id}
-                className={`p-4 rounded-lg border ${
-                  notification.is_read
-                    ? 'border-gray-800 bg-gray-900/50'
-                    : 'border-blue-500 bg-blue-500/10'
-                }`}
+                className={getNotificationStyle(notification.type, notification.is_read)}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <img
-                      src={notification.user?.profile_picture_url || '/images/default-avatar.png'}
-                      alt={notification.user?.username}
-                      className="w-10 h-10 rounded-full"
-                    />
+                    <div className="w-10 h-10 flex items-center justify-center">
+                      {getNotificationIcon(notification.type)}
+                    </div>
                     <div>
                       <p className="text-sm">
                         <span className="font-semibold">{notification.user?.username}</span>
@@ -184,7 +257,23 @@ export default function Notificaciones(): React.ReactElement {
                       </p>
                     </div>
                   </div>
-                  {!notification.is_read && (
+
+                  {notification.type === 'friend_request' ? (
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => handleAcceptFriend(notification.related_id)}
+                        className="p-2 bg-green-500 text-white rounded-full hover:bg-green-600"
+                      >
+                        <FaCheck />
+                      </button>
+                      <button
+                        onClick={() => handleRejectFriend(notification.related_id)}
+                        className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600"
+                      >
+                        <FaTimes />
+                      </button>
+                    </div>
+                  ) : !notification.is_read && (
                     <button
                       onClick={() => handleMarkAsRead(notification.notification_id)}
                       className="text-blue-500 hover:text-blue-400 text-sm"
@@ -192,47 +281,6 @@ export default function Notificaciones(): React.ReactElement {
                       Marcar como leída
                     </button>
                   )}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Solicitudes de amistad */}
-          <div className="space-y-4">
-            <h2 className="text-xl font-bold">Solicitudes de amistad</h2>
-            {currentFriends.map((friend) => (
-              <div
-                key={friend.friendship_id}
-                className="p-4 rounded-lg border border-gray-800 bg-gray-900/50"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <img
-                      src={friend.user.profile_picture_url || '/images/default-avatar.png'}
-                      alt={friend.user.username}
-                      className="w-10 h-10 rounded-full"
-                    />
-                    <div>
-                      <p className="font-semibold">{friend.user.username}</p>
-                      <p className="text-sm text-gray-400">
-                        {new Date(friend.created_at).toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => handleAcceptFriend(friend.friendship_id)}
-                      className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-                    >
-                      Aceptar
-                    </button>
-                    <button
-                      onClick={() => handleRejectFriend(friend.friendship_id)}
-                      className="px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600"
-                    >
-                      Rechazar
-                    </button>
-                  </div>
                 </div>
               </div>
             ))}
