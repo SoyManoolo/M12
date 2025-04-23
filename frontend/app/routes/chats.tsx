@@ -13,6 +13,7 @@ import { useState } from 'react';
 import type { MetaFunction } from '@remix-run/node';
 import Navbar from '~/components/Inicio/Navbar';
 import ChatItem from '~/components/Chats/ChatItem';
+import RightPanel from '~/components/Shared/RightPanel';
 import { FaSearch, FaEnvelope } from 'react-icons/fa';
 
 export const meta: MetaFunction = () => {
@@ -69,6 +70,40 @@ export default function Chats() {
     }
   ];
 
+  // Mock de datos de amigos en línea
+  const mockOnlineFriends = [
+    {
+      user_id: '1',
+      username: 'usuario1',
+      first_name: 'Usuario',
+      last_name: 'Uno',
+      email: 'usuario1@example.com',
+      profile_picture_url: 'https://i.pravatar.cc/150?img=1',
+      bio: null,
+      email_verified: true,
+      is_moderator: false,
+      id_deleted: false,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      is_online: true
+    },
+    {
+      user_id: '2',
+      username: 'usuario2',
+      first_name: 'Usuario',
+      last_name: 'Dos',
+      email: 'usuario2@example.com',
+      profile_picture_url: 'https://i.pravatar.cc/150?img=2',
+      bio: null,
+      email_verified: true,
+      is_moderator: false,
+      id_deleted: false,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      is_online: true
+    }
+  ];
+
   // Filtrar chats basado en la búsqueda
   const filteredChats = mockChats.filter(chat =>
     chat.user.username.toLowerCase().includes(searchQuery.toLowerCase())
@@ -80,13 +115,13 @@ export default function Chats() {
   };
 
   return (
-    <div className="flex min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-black text-white flex">
       {/* Navbar */}
       <Navbar />
 
       {/* Contenido principal */}
-      <div className="flex-1 ml-[-15%] pt-8 p-4">
-        <div className="max-w-4xl mx-auto">
+      <div className="w-2/3 ml-[16.666667%] border-r border-gray-800">
+        <div className="p-6">
           {/* Encabezado */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-white mb-2">Mensajes</h1>
@@ -142,6 +177,12 @@ export default function Chats() {
           </div>
         </div>
       </div>
+
+      {/* Panel lateral derecho */}
+      <RightPanel
+        users={mockOnlineFriends}
+        mode="online"
+      />
     </div>
   );
 } 
