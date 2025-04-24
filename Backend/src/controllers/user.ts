@@ -13,8 +13,8 @@ export class UserController {
             i18n.setLocale(locale);
 
             const filters = {
-                id: req.params.id,
-                username: req.query.username as string
+                userId: req.params.id || undefined,
+                username: req.query.username as string || undefined
             };
 
             const user = await this.userService.getUser(filters);
