@@ -86,6 +86,7 @@ export default function LoginPage() {
       
       if (response.success && response.token) {
         console.log('✅ Login exitoso, token recibido');
+        localStorage.setItem('token', response.token);
         setToken(response.token);
         navigate('/inicio');
       } else {

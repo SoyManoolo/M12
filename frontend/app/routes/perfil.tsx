@@ -71,10 +71,74 @@ interface LoaderData {
 }
 
 export const loader = async () => {
+  // Datos mock de amigos
+  const mockFriends: Friend[] = [
+    {
+      friendship_id: "1",
+      user1_id: "1",
+      user2_id: "2",
+      created_at: new Date().toISOString(),
+      user: {
+        user_id: "2",
+        first_name: "Ana",
+        last_name: "López",
+        username: "ana_lopez",
+        email: "ana@example.com",
+        profile_picture_url: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop",
+        bio: "Amante de la música y los viajes",
+        email_verified: true,
+        is_moderator: false,
+        id_deleted: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+    },
+    {
+      friendship_id: "2",
+      user1_id: "1",
+      user2_id: "3",
+      created_at: new Date().toISOString(),
+      user: {
+        user_id: "3",
+        first_name: "Carlos",
+        last_name: "Martínez",
+        username: "carlos_martinez",
+        email: "carlos@example.com",
+        profile_picture_url: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=400&h=400&fit=crop",
+        bio: "Desarrollador web y fotógrafo aficionado",
+        email_verified: true,
+        is_moderator: false,
+        id_deleted: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+    },
+    {
+      friendship_id: "3",
+      user1_id: "1",
+      user2_id: "4",
+      created_at: new Date().toISOString(),
+      user: {
+        user_id: "4",
+        first_name: "Laura",
+        last_name: "García",
+        username: "laura_garcia",
+        email: "laura@example.com",
+        profile_picture_url: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&h=400&fit=crop",
+        bio: "Viajera incansable y amante de la naturaleza",
+        email_verified: true,
+        is_moderator: false,
+        id_deleted: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+    }
+  ];
+
   return json({ 
     user: null, 
     posts: [], 
-    friends: [],
+    friends: mockFriends,
     isOwnProfile: true 
   });
 };
@@ -83,7 +147,8 @@ export default function Perfil(): React.ReactElement {
   const { token } = useAuth();
   const [user, setUser] = useState<User | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
-  const [friends, setFriends] = useState<Friend[]>([]);
+  const { friends: loaderFriends } = useLoaderData<typeof loader>();
+  const [friends, setFriends] = useState<Friend[]>(loaderFriends);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -92,18 +157,57 @@ export default function Perfil(): React.ReactElement {
       if (!token) {
         setError('No hay token de autenticación');
         setLoading(false);
+        // Redirigir al login si no hay token
+        window.location.href = '/login';
         return;
       }
 
       try {
-        const response = await userService.getProfile(token);
-        if (response.success && response.data) {
-          setUser(response.data);
+        // Decodificar el token para obtener el user_id y username
+        const tokenPayload = JSON.parse(atob(token.split('.')[1]));
+        const userId = tokenPayload.id;
+        const username = tokenPayload.username;
+
+        // Actualizar la URL sin recargar la página
+        window.history.replaceState({}, '', `/perfil?username=${username}`);
+
+        // Hacer la petición a la API
+        const response = await fetch(`http://localhost:3000/users/${userId}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Error al obtener el perfil');
+        }
+
+        const data = await response.json();
+        if (data.data && data.data.length > 0) {
+          const userData = data.data[0];
+          // Si no hay foto de perfil, dejamos null para manejarlo en el componente
+          setUser({
+            user_id: userData.user_id,
+            first_name: userData.name,
+            last_name: userData.surname,
+            username: userData.username,
+            email: userData.email,
+            profile_picture_url: userData.profile_picture_url,
+            bio: userData.bio,
+            email_verified: userData.email_verified,
+            is_moderator: userData.is_moderator,
+            id_deleted: userData.deleted_at !== null,
+            created_at: userData.created_at,
+            updated_at: userData.updated_at
+          });
         } else {
-          setError(response.message || 'Error al cargar el perfil');
+          throw new Error('No se encontraron datos del perfil');
         }
       } catch (err) {
         setError('Error al conectar con el servidor');
+        console.error('Error al obtener el perfil:', err);
       } finally {
         setLoading(false);
       }
@@ -185,10 +289,11 @@ export default function Perfil(): React.ReactElement {
         </div>
       </div>
 
-      {/* Panel derecho */}
-      <div className="w-1/3">
-        <RightPanel friends={friends} />
-      </div>
+      {/* Barra lateral derecha */}
+      <RightPanel
+        friends={friends}
+        mode="online"
+      />
     </div>
   );
 } 

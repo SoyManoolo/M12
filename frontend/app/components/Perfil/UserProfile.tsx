@@ -44,11 +44,17 @@ export default function UserProfile({ user, isOwnProfile, onEditProfile }: UserP
             <div className="flex items-start space-x-6">
                 {/* Foto de perfil */}
                 <div className="relative">
-                    <img
-                        src={user.profile_picture_url || '/images/default-avatar.png'}
-                        alt={`${user.username} profile`}
-                        className="w-32 h-32 rounded-full object-cover border-4 border-gray-800"
-                    />
+                    {user.profile_picture_url ? (
+                        <img
+                            src={user.profile_picture_url}
+                            alt={`${user.username} profile`}
+                            className="w-32 h-32 rounded-full object-cover border-4 border-gray-800"
+                        />
+                    ) : (
+                        <div className="w-32 h-32 rounded-full border-4 border-gray-800 bg-gray-800 flex items-center justify-center">
+                            <span className="text-gray-400 text-sm text-center px-2">Sin foto de perfil</span>
+                        </div>
+                    )}
                 </div>
 
                 {/* Información del usuario */}

@@ -27,7 +27,7 @@ export const userService = {
             const tokenPayload = JSON.parse(atob(token.split('.')[1]));
             const userId = tokenPayload.id;
 
-            const response = await fetch(`${environment.apiUrl}/user/${userId}`, {
+            const response = await fetch(`${environment.apiUrl}/users/${userId}`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -68,7 +68,7 @@ export const userService = {
             const tokenPayload = JSON.parse(atob(token.split('.')[1]));
             const userId = tokenPayload.id;
 
-            const response = await fetch(`${environment.apiUrl}/user/${userId}`, {
+            const response = await fetch(`${environment.apiUrl}/users/${userId}`, {
                 method: 'PATCH',
                 headers: {
                     'Authorization': `Bearer ${token}`,
