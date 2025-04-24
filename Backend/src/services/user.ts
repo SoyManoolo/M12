@@ -13,26 +13,30 @@ export class UserService {
     // Método para obtener un usuario
     public async getUser(filters: UserFilters) {
         try {
-            const query: any = {};
-            if (filters.userId) {
-                if (!isValidUUID(filters.userId)) {
-                    throw new AppError(404, "Usuario no encontrado");
+            // Caso 1: Buscar por UUID
+            if (filters.user_id) {
+                if (!isValidUUID(filters.user_id)) {
+                    throw new AppError(404, "UUID no válido");
                 }
-                query.user_id = filters.userId;
-            }
-            if (filters.username) query.username = filters.username;
-
-            // Si no hay filtros, devolver todos los usuarios
-            if (Object.keys(query).length === 0) {
-                const users = await User.findAll();
-                return users;
+                const user = await User.findByPk(filters.user_id);
+                if (!user) throw new AppError(404, "Usuario no encontrado");
+                return [user];
             }
 
-            // Si hay filtros, buscar usuarios que coincidan
-            const users = await User.findAll({ where: query });
-            if (!users || users.length === 0) throw new AppError(404, "Usuario no encontrado");
+            // Caso 2: Buscar por username
+            if (filters.username) {
+                const user = await User.findOne({
+                    where: {
+                        username: filters.username
+                    }
+                });
+                if (!user) throw new AppError(404, "Usuario no encontrado");
+                return [user];
+            }
 
-            return users;
+            // Caso 3: Sin filtros, devolver todos los usuarios
+            return await User.findAll();
+
         } catch (error) {
             if (error instanceof AppError) {
                 throw error;
@@ -45,7 +49,7 @@ export class UserService {
     public async updateUser(filters: { id?: string, username?: string }, updateData: any) {
         try {
             const query: any = {};
-            if (filters.id) query._id = filters.id;
+            if (filters.id) query.user_id = filters.id;
             if (filters.username) query.username = filters.username;
 
             if (Object.keys(query).length === 0) {

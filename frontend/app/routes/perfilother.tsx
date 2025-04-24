@@ -208,7 +208,13 @@ export default function PerfilOther() {
 
       {/* Panel lateral derecho con amigos en común */}
       <RightPanel
-        users={commonFriends}
+        friends={commonFriends.map(user => ({
+          friendship_id: user.user_id,
+          user1_id: user.user_id,
+          user2_id: user.user_id,
+          created_at: new Date().toISOString(),
+          user
+        }))}
         mode="common"
       />
     </div>

@@ -179,7 +179,13 @@ export default function Chats() {
 
       {/* Panel lateral derecho */}
       <RightPanel
-        users={mockOnlineFriends}
+        friends={mockOnlineFriends.map(user => ({
+          friendship_id: user.user_id,
+          user1_id: user.user_id,
+          user2_id: user.user_id,
+          created_at: new Date().toISOString(),
+          user
+        }))}
         mode="online"
       />
     </div>

@@ -29,11 +29,11 @@ import { useAuth } from '../hooks/useAuth.tsx';
  */
 export const action: ActionFunction = async ({ request }) => {
   const formData = await request.formData();
-  const identifier = formData.get('identifier') as string;
+  const id = formData.get('id') as string;
   const password = formData.get('password') as string;
 
   try {
-    const response = await authService.login({ identifier, password });
+    const response = await authService.login({ id, password });
     
     if (response.success && response.token) {
       return redirect('/inicio', {
@@ -54,7 +54,7 @@ export const action: ActionFunction = async ({ request }) => {
  * @description Componente principal de la página de inicio de sesión
  * @returns {JSX.Element} Formulario de inicio de sesión con opciones de autenticación
  * 
- * @state {string} identifier - Estado para el email o nombre de usuario
+ * @state {string} id - Estado para el email o nombre de usuario
  * @state {string} password - Estado para la contraseña
  * @state {string} error - Estado para mensajes de error
  * 
@@ -63,7 +63,7 @@ export const action: ActionFunction = async ({ request }) => {
  * @method handleFacebookLogin - Maneja el inicio de sesión con Facebook (pendiente)
  */
 export default function LoginPage() {
-  const [identifier, setIdentifier] = useState('');
+  const [id, setId] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -77,11 +77,11 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    console.log('📤 Datos enviados al backend:', { identifier, password: '****' });
+    console.log('📤 Datos enviados al backend:', { id, password: '****' });
     console.log('🔄 Iniciando proceso de login...');
 
     try {
-      const response = await authService.login({ identifier, password });
+      const response = await authService.login({ id, password });
       console.log('📥 Respuesta del backend:', response);
       
       if (response.success && response.token) {
@@ -131,15 +131,15 @@ export default function LoginPage() {
         
         <Form method="post" onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label htmlFor="identifier" className="block text-gray-300 text-sm font-medium mb-2 tracking-wider">
+            <label htmlFor="id" className="block text-gray-300 text-sm font-medium mb-2 tracking-wider">
               EMAIL O USUARIO
             </label>
             <input
               type="text"
-              id="identifier"
-              name="identifier"
-              value={identifier}
-              onChange={(e) => setIdentifier(e.target.value)}
+              id="id"
+              name="id"
+              value={id}
+              onChange={(e) => setId(e.target.value)}
               className="w-full px-3 py-2 bg-transparent border border-gray-600 rounded-md text-white focus:outline-none focus:border-white cursor-text"
               required
               placeholder="Ingresa tu email o nombre de usuario"

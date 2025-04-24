@@ -12,23 +12,35 @@ export class UserController {
             const locale = req.headers['accept-language'] || 'en';
             i18n.setLocale(locale);
 
+            // Si hay un ID en los parámetros, buscar por UUID
+            if (req.params.id) {
+                const user = await this.userService.getUser({ user_id: req.params.id });
+                return res.status(200).json({
+                    success: true,
+                    status: 200,
+                    message: "hola",
+                    data: user
+                });
+            }
+
+            // Si no hay ID, buscar por username o devolver todos
             const filters = {
-                userId: req.params.id || undefined,
                 username: req.query.username as string || undefined
             };
 
-            const user = await this.userService.getUser(filters);
+            const users = await this.userService.getUser(filters);
 
-            res.status(200).json({
+            return res.status(200).json({
                 success: true,
                 status: 200,
                 message: "hola",
-                data: user
+                data: users
             });
         } catch (error) {
-            next (error);
-        };
-    };
+            next(error);
+            return; // Aseguramos que se retorne un valor en el catch
+        }
+    }
 
     // Método para editar un usuario
     public async updateUser(req: Request, res: Response, next: NextFunction) {

@@ -5,17 +5,29 @@ import { UserFilters } from "../types/custom";
 
 export async function existsUser(filters: UserFilters) {
     try {
+        const whereClause: any = {
+            [Op.or]: []
+        };
+
+        if (filters.username) {
+            whereClause[Op.or].push({ username: filters.username });
+        }
+
+        if (filters.email) {
+            whereClause[Op.or].push({ email: filters.email });
+        }
+
+        // Si no hay condiciones, retornar null
+        if (whereClause[Op.or].length === 0) {
+            return null;
+        }
+
         const user = await User.findOne({
-            where: {
-                [Op.or]: [
-                    { user_id: filters.userId},
-                    { email: filters.email },
-                    { username: filters.username }
-                ]
-            }
+            where: whereClause
         });
         return user;
     } catch (error) {
+        console.error('Error en existsUser:', error);
         throw new AppError(500, 'DatabaseError');
     };
 };

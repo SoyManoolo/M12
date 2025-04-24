@@ -14,10 +14,10 @@ import { environment } from '../config/environment';
 
 /**
  * Interfaz para las credenciales de inicio de sesión
- * El campo 'identifier' puede ser email o nombre de usuario
+ * El campo 'id' puede ser email o nombre de usuario
  */
 interface LoginCredentials {
-    identifier: string;  // Email o nombre de usuario
+    id: string;  // Email o nombre de usuario
     password: string;    // Contraseña del usuario
 }
 
@@ -57,7 +57,7 @@ export const authService = {
     async login(credentials: LoginCredentials): Promise<AuthResponse> {
         try {
             // Validación básica en el frontend
-            if (!credentials.identifier.trim()) {
+            if (!credentials.id.trim()) {
                 return {
                     success: false,
                     status: 400,
@@ -79,7 +79,7 @@ export const authService = {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    id: credentials.identifier,
+                    id: credentials.id,
                     password: credentials.password
                 }),
             });

@@ -290,10 +290,7 @@ export default function Notificaciones(): React.ReactElement {
 
       {/* Barra lateral derecha */}
       <RightPanel
-        users={friends.map((friend: Friend) => ({
-          ...friend.user,
-          is_online: true
-        }))}
+        friends={friends}
         mode="online"
       />
     </div>
