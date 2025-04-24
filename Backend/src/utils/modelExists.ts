@@ -44,3 +44,16 @@ export async function existsPost(id: string) {
         throw new AppError(500, 'DatabaseError');
     };
 };
+
+export async function existCommentChat(id: string) {
+    try {
+        const comment = await Post.findOne({
+            where: {
+                comment_id: id
+            }
+        });
+        return comment;
+    } catch (error) {
+        throw new AppError(500, 'DatabaseError');
+    };
+}

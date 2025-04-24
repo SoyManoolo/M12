@@ -39,9 +39,9 @@ export class PostService {
 
             if (!posts || posts.length === 0) throw new AppError(404, 'PostNotFound');
 
-            const hasNextPage = posts.length > limit;
+            const hasNextPage: boolean = posts.length > limit;
 
-            const resultPosts = hasNextPage ? posts.slice(0, limit) : posts;
+            const resultPosts: Post[] = hasNextPage ? posts.slice(0, limit) : posts;
 
             const nextCursor = hasNextPage ? resultPosts[resultPosts.length - 1].dataValues.post_id : null;
 
