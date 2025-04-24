@@ -173,5 +173,43 @@ export const authService = {
                 message: 'Error al conectar con el servidor'
             };
         }
+    },
+
+    /**
+     * Cierra la sesión del usuario actual
+     * @returns {Promise<AuthResponse>} Respuesta del servidor
+     */
+    async logout(): Promise<AuthResponse> {
+        try {
+            const response = await fetch(`${environment.apiUrl}${environment.apiEndpoints.auth.logout}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            const data = await response.json();
+            
+            if (!response.ok) {
+                return {
+                    success: false,
+                    status: response.status,
+                    message: data.message || 'Error al cerrar sesión'
+                };
+            }
+
+            return {
+                success: true,
+                status: response.status,
+                message: data.message || 'Sesión cerrada correctamente'
+            };
+        } catch (error) {
+            console.error('Error en logout:', error);
+            return {
+                success: false,
+                status: 500,
+                message: 'Error al conectar con el servidor'
+            };
+        }
     }
 }; 

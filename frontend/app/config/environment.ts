@@ -16,7 +16,8 @@ export const environment = {
         // Endpoints relacionados con autenticación
         auth: {
             login: '/auth/login',      // Endpoint para inicio de sesión
-            register: '/auth/register' // Endpoint para registro de usuarios
+            register: '/auth/register', // Endpoint para registro de usuarios
+            logout: '/auth/logout'     // Endpoint para cerrar sesión
         }
     }
 }; 

@@ -11,9 +11,11 @@ import { useState } from 'react';
 import { Form, useNavigate } from "@remix-run/react";
 import SettingsSidebar from "~/components/Settings/SettingsSidebar";
 import { FaSignOutAlt } from 'react-icons/fa';
+import { useAuth } from '../hooks/useAuth';
 
 export default function ConfiguracionPage() {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [activeSection, setActiveSection] = useState('cuenta');
 
   const handleSaveChanges = () => {
@@ -35,8 +37,8 @@ export default function ConfiguracionPage() {
   };
 
   // Función para el botón CERRAR SESIÓN (limpia localStorage y redirige a login)
-  const handleLogout = () => {
-    localStorage.clear();
+  const handleLogout = async () => {
+    await logout();
     navigate('/login');
   };
 

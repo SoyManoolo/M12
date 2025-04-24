@@ -1,9 +1,11 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { authService } from '../services/auth.service';
 
 interface AuthContextType {
     token: string | null;
     setToken: (token: string | null) => void;
     isAuthenticated: boolean;
+    logout: () => Promise<void>;
 }
 
 interface AuthProviderProps {
@@ -30,10 +32,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
     }, [token]);
 
+    const logout = async () => {
+        try {
+            await authService.logout();
+            setToken(null);
+            localStorage.removeItem('token');
+        } catch (error) {
+            console.error('Error al cerrar sesión:', error);
+        }
+    };
+
     const value: AuthContextType = {
         token,
         setToken,
-        isAuthenticated: !!token
+        isAuthenticated: !!token,
+        logout
     };
 
     return (
