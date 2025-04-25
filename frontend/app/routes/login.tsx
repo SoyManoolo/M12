@@ -15,7 +15,7 @@
  */
 
 import { useState } from 'react';
-import { Form, useNavigate, Link } from "@remix-run/react";
+import { Form, Link, useSearchParams } from "@remix-run/react";
 import type { ActionFunction } from "@remix-run/node";
 import { redirect } from "@remix-run/node";
 import { authService } from '../services/auth.service';
@@ -65,8 +65,8 @@ export const action: ActionFunction = async ({ request }) => {
 export default function LoginPage() {
   const [id, setId] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const error = searchParams.get('error') || '';
   const { setToken } = useAuth();
 
   /**
@@ -76,7 +76,6 @@ export default function LoginPage() {
    */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
     console.log('📤 Datos enviados al backend:', { id, password: '****' });
     console.log('🔄 Iniciando proceso de login...');
 
@@ -88,14 +87,12 @@ export default function LoginPage() {
         console.log('✅ Login exitoso, token recibido');
         localStorage.setItem('token', response.token);
         setToken(response.token);
-        navigate('/inicio');
-      } else {
-        console.log('❌ Error en el login:', response.message);
-        setError(response.message || 'Error al iniciar sesión');
+        // Dejamos que el action de Remix maneje la redirección
+        const form = e.target as HTMLFormElement;
+        form.submit();
       }
     } catch (error) {
       console.error('⚠️ Error al conectar con el servidor:', error);
-      setError('Error al conectar con el servidor');
     }
   };
 
@@ -106,7 +103,6 @@ export default function LoginPage() {
   const handleGoogleLogin = () => {
     console.log('🔵 Iniciando login con Google...');
     // Implementar login con Google
-    navigate('/inicio');
   };
 
   /**
@@ -116,7 +112,6 @@ export default function LoginPage() {
   const handleFacebookLogin = () => {
     console.log('🔵 Iniciando login con Facebook...');
     // Implementar login con Facebook
-    navigate('/inicio');
   };
 
   return (
@@ -197,15 +192,6 @@ export default function LoginPage() {
                 FACEBOOK
               </button>
             </div>
-          </div>
-
-          <div className="text-center mt-6">
-            <Link
-              to="/signup"
-              className="inline-block text-gray-400 hover:text-white text-sm tracking-wider border border-gray-600 px-6 py-2 rounded-md cursor-pointer"
-            >
-              OR SIGN UP
-            </Link>
           </div>
         </Form>
       </div>

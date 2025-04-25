@@ -21,12 +21,14 @@
  * @constant MOCK_SUGGESTED_USERS - Array de usuarios sugeridos de ejemplo
  */
 
-import { useLoaderData } from "@remix-run/react";
+import React from 'react';
+import { useLoaderData, redirect } from "@remix-run/react";
 import Navbar from "~/components/Inicio/Navbar";
 import Post from "~/components/Inicio/Post";
 import RightPanel from "~/components/Shared/RightPanel";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { json } from "@remix-run/node";
+import { useAuth } from "~/hooks/useAuth";
 
 /**
  * @interface User
@@ -129,7 +131,15 @@ interface Friend {
  * @method handleSave - Maneja el guardado de publicaciones
  */
 
-export const loader = async () => {
+export const loader = async ({ request }: { request: Request }) => {
+  // Verificar si hay un token en las cookies
+  const cookieHeader = request.headers.get("Cookie");
+  const token = cookieHeader?.split(";").find(c => c.trim().startsWith("token="))?.split("=")[1];
+
+  if (!token) {
+    return redirect("/login");
+  }
+
   // Datos mock para pruebas
   const mockPosts: Post[] = [
     {
@@ -290,17 +300,27 @@ export const loader = async () => {
     }
   ];
 
-  return json({ posts: mockPosts, friends: mockFriends });
+  return json({ 
+    posts: mockPosts,
+    friends: mockFriends,
+    error: null
+  });
 };
 
 export default function InicioPage() {
-  const { posts, friends } = useLoaderData<typeof loader>();
-  const [currentPosts, setCurrentPosts] = useState<Post[]>(posts);
+  const { token } = useAuth();
+  const { posts: loaderPosts, friends, error } = useLoaderData<typeof loader>();
+  const [posts, setPosts] = useState<Post[]>(loaderPosts);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
 
   const handleLike = async (postId: string) => {
     try {
       console.log('Dando like al post:', postId);
-      setCurrentPosts(prev =>
+      setPosts(prev =>
         prev.map(post =>
           post.post_id === postId
             ? { ...post, likes_count: post.likes_count + 1 }
@@ -315,7 +335,7 @@ export default function InicioPage() {
   const handleSave = async (postId: string) => {
     try {
       console.log('Guardando post:', postId);
-      setCurrentPosts(prev =>
+      setPosts(prev =>
         prev.map(post =>
           post.post_id === postId
             ? { ...post, is_saved: !post.is_saved }
@@ -338,7 +358,7 @@ export default function InicioPage() {
           <h2 className="text-xl font-bold mb-4">Feed Principal</h2>
 
           {/* Lista de posts */}
-          {currentPosts.map((post: Post) => (
+          {posts.map((post: Post) => (
             <Post
               key={post.post_id}
               post_id={post.post_id}

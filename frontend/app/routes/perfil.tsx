@@ -9,10 +9,9 @@
  * @module Perfil
  */
 
-import * as React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLoaderData } from "@remix-run/react";
 import { json } from "@remix-run/node";
-import { useState, useEffect } from "react";
 import Navbar from "~/components/Inicio/Navbar";
 import UserProfile from "~/components/Perfil/UserProfile";
 import UserPosts from "~/components/Perfil/UserPosts";
