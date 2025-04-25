@@ -2,13 +2,13 @@ import { AppError } from "../middlewares/errors/AppError";
 import { User } from "../models";
 import { compare, hash } from "bcryptjs";
 import { AuthToken } from "../middlewares/validation/authentication/jwt";
-import { existsUser } from "../utils/modelExists";
+import { Op } from "sequelize";
 
 export class AuthService {
 
     public async login(id: string, password: string): Promise<string> {
         try {
-            const user = await existsUser({username: id});
+            const user = await User.findOne({ where: { [Op.or]: [{ username: id }, { email: id }] } });
 
             if (!user) throw new AppError(404, 'UserNotFound');
 
@@ -25,18 +25,25 @@ export class AuthService {
             if (error instanceof AppError) {
                 throw error;
             };
+            console.error("Login error:", error);
             throw new AppError(500, 'InternalServerError');
         };
     };
 
     public async register(email: string, username: string, name: string, surname: string, password: string): Promise<string> {
         try {
-            const user = await existsUser({email, username});
-            if (user) throw new AppError(409, 'UserEmailAlreadyExists');
+            const existingUser = await User.findOne({ where: { [Op.or]: [{ username }, { email }] } });
+            if (existingUser) {
+                if (existingUser.dataValues.email === email) {
+                    throw new AppError(409, 'UserEmailAlreadyExists');
+                } else {
+                    throw new AppError(409, 'UserUsernameAlreadyExists'); // Usar un código/mensaje diferente
+                }
+            }
 
             const hashedPassword = await hash(password, 10);
 
-            await User.create({
+            const newUser = await User.create({
                 email,
                 username,
                 name,
@@ -44,11 +51,16 @@ export class AuthService {
                 password: hashedPassword
             });
 
-            if (!user) throw new AppError(500, 'InternalServerError');
+            if (!newUser) {
+                 console.error("User creation failed unexpectedly."); // Log para depuración
+                 throw new AppError(500, 'UserCreationError');
+            }
 
-            const token = new AuthToken().generateToken(user);
+            const token = new AuthToken().generateToken(newUser);
 
-            if (!token) throw new AppError(500, 'TokenGenerationError');
+            if (!token) {
+                 throw new AppError(500, 'TokenGenerationError');
+            }
 
             return token;
         } catch (error) {

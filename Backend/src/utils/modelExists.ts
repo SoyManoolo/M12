@@ -3,6 +3,7 @@ import { AppError } from "../middlewares/errors/AppError";
 import { User, Post } from "../models";
 import { UserFilters } from "../types/custom";
 
+// Revisar filtros, error undefined
 export async function existsUser(filters: UserFilters) {
     try {
         const user = await User.findOne({
