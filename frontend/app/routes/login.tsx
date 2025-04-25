@@ -193,6 +193,15 @@ export default function LoginPage() {
               </button>
             </div>
           </div>
+
+          <div className="text-center mt-6">
+            <Link
+              to="/signup"
+              className="inline-block text-gray-400 hover:text-white text-sm tracking-wider border border-gray-600 px-6 py-2 rounded-md cursor-pointer"
+            >
+              OR SIGN UP
+            </Link>
+          </div>
         </Form>
       </div>
     </div>
