@@ -4,18 +4,35 @@ import { existsUser } from "../utils/modelExists";
 import { UserFilters, UpdateUserData } from '../types/custom';
 
 export class UserService {
-    // Método para obtener un usuario
+
+    // Método para obtener todos los usuarios - LISTO
+    public async getUsers() {
+        try{
+            const users = await User.findAll();
+            if (!users || users.length === 0) throw new AppError(404, 'UserNotFound');
+
+            return users;
+        } catch (error) {
+            if (error instanceof AppError) {
+                throw error;
+            }
+            throw new AppError(500, 'InternalServerError');
+        }
+    }
+    // Método para obtener un usuario - LISTO
     public async getUser(filters: UserFilters) {
         try {
-            const query: any = {};
-            if (filters.userId) query._id = filters.userId;
-            if (filters.username) query.username = filters.username;
+            console.log("He entrado en el servicio");
+            console.log("Filters: ", filters);
 
-            if (Object.keys(query).length === 0) {
+            if (Object.keys(filters).length === 0) {
                 throw new AppError(400, "");
             };
 
-            const user = await User.findOne(query);
+            const user = await existsUser(filters);
+
+            console.log("User: ", user);
+
             if (!user) throw new AppError(404, "");
 
             return user;
@@ -23,7 +40,8 @@ export class UserService {
             if (error instanceof AppError) {
                 throw error;
             }
-            throw new AppError(500, 'InternalServerError');        }
+            throw new AppError(500, 'InternalServerError');
+        }
     };
 
     // Método para editar un usuario

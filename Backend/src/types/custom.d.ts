@@ -9,7 +9,7 @@ declare global {
 }
 
 export interface UserFilters {
-    userId?: string;
+    user_id?: string;
     username?: string;
     email?: string;
 }

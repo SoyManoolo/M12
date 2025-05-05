@@ -7,11 +7,18 @@ const router = express.Router();
 const userService = new UserService();
 const userController = new UserController(userService);
 
-router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
-    await userController.getUser(req, res, next);
-});
-
+// Ruta para obtener todos los usuarios
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
+    await userController.getUsers(req, res, next);
+})
+
+// Ruta para obtener un usuario por su username
+// router.get('/', async (req: Request, res: Response, next: NextFunction) => {
+//     await userController.getUser(req, res, next);
+// });
+
+router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
+    console.log("He entrado en la ruta")
     await userController.getUser(req, res, next);
 });
 

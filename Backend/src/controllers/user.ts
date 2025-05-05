@@ -1,19 +1,38 @@
 import { Request, Response, NextFunction } from 'express';
 import i18n from '../config/i18n';
-import { AppError } from '../middlewares/errors/AppError';
 import { UserService } from '../services/user';
 
 export class UserController {
     constructor(private userService: UserService) { }
 
-    // Método para obtener un usuario
-    public async getUser(req: Request, res: Response, next: NextFunction) {
+    public async getUsers(req: Request, res: Response, next: NextFunction) {
         try {
             const locale = req.headers['accept-language'] || 'en';
             i18n.setLocale(locale);
 
+            const users = await this.userService.getUsers();
+
+            res.status(200).json({
+                success: true,
+                status: 200,
+                message: "hola",
+                data: users
+            });
+        } catch (error) {
+            next(error);
+        };
+    }
+
+    // Método para obtener un usuario
+    public async getUser(req: Request, res: Response, next: NextFunction) {
+        try {
+            console.log("He entrado en el controlador");
+
+            const locale = req.headers['accept-language'] || 'en';
+            i18n.setLocale(locale);
+
             const filters = {
-                id: req.params.id,
+                user_id: req.params.id,
                 username: req.query.username as string
             };
 
@@ -37,7 +56,7 @@ export class UserController {
             i18n.setLocale(locale);
 
             const filters = {
-                id: req.params.id,
+                user_id: req.params.id,
                 username: req.query.username as string
             };
 
@@ -63,7 +82,7 @@ export class UserController {
             i18n.setLocale(locale);
 
             const filters = {
-                id: req.params.id,
+                user_id: req.params.id,
                 username: req.query.username as string
             };
 
