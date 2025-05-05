@@ -26,7 +26,7 @@ router.patch('/:id', async (req: Request, res: Response, next: NextFunction) => 
     await userController.updateUser(req, res, next);
 });
 
-router.patch('/', async (req: Request, res: Response, next: NextFunction) => {
+router.patch('/username', async (req: Request, res: Response, next: NextFunction) => {
     await userController.updateUser(req, res, next);
 });
 
@@ -34,7 +34,7 @@ router.delete('/:id', async (req: Request, res: Response, next: NextFunction) =>
     await userController.deleteUser(req, res, next);
 });
 
-router.delete('/', async (req: Request, res: Response, next: NextFunction) => {
+router.delete('/username', async (req: Request, res: Response, next: NextFunction) => {
     await userController.deleteUser(req, res, next);
 });
 

@@ -183,6 +183,10 @@ npm test
 
 Registra un nuevo usuario.
 
+```sh
+curl -X POST http://localhost:3000/auth/register
+```
+
 **Body:**
 
 ```json
@@ -207,6 +211,10 @@ Registra un nuevo usuario.
 ```
 
 #### `POST /auth/login`
+
+```sh
+curl -X POST http://localhost:3000/auth/login
+```
 
 Inicia sesión.
 
@@ -236,6 +244,10 @@ Inicia sesión.
 
 Obtiene todos los usuarios.
 
+```sh
+curl -X GET http://localhost:3000/users
+```
+
 **Headers:**
 
 ```
@@ -264,6 +276,10 @@ Authorization: Bearer token
 
 Obtiene un usuario específico por ID.
 
+```sh
+curl -X GET http://localhost:3000/users/:id
+```
+
 **Headers:**
 
 ```
@@ -289,6 +305,10 @@ Authorization: Bearer token
 #### `GET /users/username`
 
 Obtiene un usuario específico por nombre de usuario.
+
+```sh
+curl -X POST http://localhost:3000/users/username?username=nombre_usuario
+```
 
 **Headers:**
 
@@ -321,6 +341,10 @@ username=nombreUsuario
 #### `PATCH /users/:id`
 
 Actualiza la información de un usuario por ID.
+
+```sh
+curl -X PATCH http://localhost:3000/users/:id
+```
 
 **Headers:**
 
@@ -355,6 +379,10 @@ Authorization: Bearer token
 
 Actualiza la información del usuario autenticado.
 
+```sh
+curl -X PATCH http://localhost:3000/users/username?username=nombre_usuario
+```
+
 **Headers:**
 
 ```
@@ -388,6 +416,10 @@ Authorization: Bearer token
 
 Elimina un usuario específico por ID.
 
+```sh
+curl -X DELETE http://localhost:3000/users/:id
+```
+
 **Headers:**
 
 ```
@@ -404,7 +436,7 @@ Authorization: Bearer token
 }
 ```
 
-#### `DELETE /users`
+#### `DELETE /users/username`
 
 Elimina el usuario autenticado.
 
@@ -429,6 +461,10 @@ Authorization: Bearer token
 #### `POST /posts`
 
 Crea una nueva publicación.
+
+```sh
+curl -X POST http://localhost:3000/posts
+```
 
 **Headers:**
 
@@ -465,6 +501,10 @@ media: [archivo] (opcional)
 
 Obtiene publicaciones paginadas.
 
+```sh
+curl -X GET http://localhost:3000/posts
+```
+
 **Query Params (opcionales):**
 
 ```
@@ -498,6 +538,10 @@ cursor=post_id
 #### `PATCH /posts/:id`
 
 Actualiza una publicación específica.
+
+```sh
+curl -X PATCH http://localhost:3000/posts/:id
+```
 
 **Headers:**
 
@@ -534,6 +578,10 @@ Authorization: Bearer token
 
 Elimina una publicación específica.
 
+```sh
+curl -X DELETE http://localhost:3000/posts/:id
+```
+
 **Headers:**
 
 ```
@@ -559,6 +607,10 @@ Authorization: Bearer token
 #### `GET /chat`
 
 Obtiene los mensajes entre dos usuarios.
+
+```sh
+curl -X GET http://localhost:3000/chat
+```
 
 **Headers:**
 
