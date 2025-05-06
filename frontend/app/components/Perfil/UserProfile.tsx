@@ -19,26 +19,129 @@ import { useAuth } from '../../hooks/useAuth.tsx';
 
 interface UserProfileData {
     user_id: string;
-    first_name: string;
-    last_name: string;
+    name: string;
+    surname: string;
     username: string;
     email: string;
     profile_picture_url: string | null;
     bio: string | null;
     email_verified: boolean;
     is_moderator: boolean;
-    id_deleted: boolean;
+    deleted_at: string | null;
     created_at: string;
     updated_at: string;
+    active_video_call: boolean;
 }
 
 interface UserProfileProps {
-    user: UserProfileData;
+    userId?: string;
+    username?: string;
     isOwnProfile: boolean;
     onEditProfile: () => void;
 }
 
-export default function UserProfile({ user, isOwnProfile, onEditProfile }: UserProfileProps) {
+export default function UserProfile({ userId, username, isOwnProfile, onEditProfile }: UserProfileProps) {
+    const [user, setUser] = useState<UserProfileData | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const { token } = useAuth();
+
+    useEffect(() => {
+        const fetchUserData = async () => {
+            if (!token) {
+                setError('No hay token de autenticación');
+                setLoading(false);
+                return;
+            }
+
+            try {
+                let response;
+                if (userId) {
+                    response = await userService.getUserById(userId, token);
+                } else if (username) {
+                    response = await userService.getUserByUsername(username, token);
+                } else {
+                    throw new Error('Se requiere userId o username');
+                }
+
+                if (response.success && response.data) {
+                    setUser(response.data);
+                } else {
+                    setError(response.message || 'Error al cargar el perfil');
+                }
+            } catch (err) {
+                setError('Error al cargar el perfil');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchUserData();
+    }, [userId, username, token]);
+
+    const handleUpdateProfile = async (updateData: Partial<UserProfileData>) => {
+        if (!token || !user) return;
+
+        try {
+            let response;
+            if (userId) {
+                response = await userService.updateUserById(userId, updateData, token);
+            } else if (username) {
+                response = await userService.updateUserByUsername(username, updateData, token);
+            }
+
+            if (response?.success && response.data) {
+                setUser(response.data);
+            } else {
+                setError(response?.message || 'Error al actualizar el perfil');
+            }
+        } catch (err) {
+            setError('Error al actualizar el perfil');
+        }
+    };
+
+    const handleDeleteProfile = async () => {
+        if (!token || !user) return;
+
+        try {
+            let response;
+            if (userId) {
+                response = await userService.deleteUserById(userId, token);
+            } else if (username) {
+                response = await userService.deleteUserByUsername(username, token);
+            }
+
+            if (response?.success) {
+                // Redirigir al login o página principal
+                window.location.href = '/login';
+            } else {
+                setError(response?.message || 'Error al eliminar el perfil');
+            }
+        } catch (err) {
+            setError('Error al eliminar el perfil');
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
+                <div className="flex items-center justify-center h-32">
+                    <p className="text-gray-400">Cargando perfil...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (error || !user) {
+        return (
+            <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
+                <div className="flex items-center justify-center h-32">
+                    <p className="text-red-500">{error || 'Error al cargar el perfil'}</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
             <div className="flex items-start space-x-6">
@@ -62,19 +165,27 @@ export default function UserProfile({ user, isOwnProfile, onEditProfile }: UserP
                     <div className="flex items-center justify-between mb-4">
                         <div>
                             <h1 className="text-2xl font-bold text-white">
-                                {user.first_name} {user.last_name}
+                                {user.name} {user.surname}
                             </h1>
                             <p className="text-gray-400">@{user.username}</p>
                         </div>
                         
                         {isOwnProfile && (
-                            <button
-                                onClick={onEditProfile}
-                                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center space-x-2 transition-colors"
-                            >
-                                <FaEdit />
-                                <span>Editar perfil</span>
-                            </button>
+                            <div className="flex space-x-2">
+                                <button
+                                    onClick={onEditProfile}
+                                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center space-x-2 transition-colors"
+                                >
+                                    <FaEdit />
+                                    <span>Editar perfil</span>
+                                </button>
+                                <button
+                                    onClick={handleDeleteProfile}
+                                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+                                >
+                                    Eliminar cuenta
+                                </button>
+                            </div>
                         )}
                     </div>
 

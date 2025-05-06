@@ -2,31 +2,58 @@ import { environment } from '../config/environment';
 
 interface UserProfile {
     user_id: string;
-    first_name: string;
-    last_name: string;
+    name: string;
+    surname: string;
     username: string;
     email: string;
     profile_picture_url: string | null;
     bio: string | null;
     email_verified: boolean;
     is_moderator: boolean;
-    id_deleted: boolean;
+    deleted_at: string | null;
     created_at: string;
     updated_at: string;
+    active_video_call: boolean;
+}
+
+interface ApiResponse<T> {
+    success: boolean;
+    status: number;
+    message: string;
+    data?: T;
 }
 
 export const userService = {
     /**
-     * Obtiene el perfil del usuario actual
-     * @param token - Token JWT del usuario
-     * @returns Promise con los datos del perfil
+     * Obtiene todos los usuarios
      */
-    async getProfile(token: string): Promise<{ success: boolean; data?: UserProfile; message?: string }> {
+    async getAllUsers(token: string): Promise<ApiResponse<UserProfile[]>> {
         try {
-            // Decodificar el token para obtener el ID del usuario
-            const tokenPayload = JSON.parse(atob(token.split('.')[1]));
-            const userId = tokenPayload.id;
+            const response = await fetch(`${environment.apiUrl}/users`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
 
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Error al obtener usuarios:', error);
+            return {
+                success: false,
+                status: 500,
+                message: 'Error al conectar con el servidor'
+            };
+        }
+    },
+
+    /**
+     * Obtiene un usuario por ID
+     */
+    async getUserById(userId: string, token: string): Promise<ApiResponse<UserProfile>> {
+        try {
             const response = await fetch(`${environment.apiUrl}/users/${userId}`, {
                 method: 'GET',
                 headers: {
@@ -35,39 +62,48 @@ export const userService = {
                 },
             });
 
-            if (!response.ok) {
-                return {
-                    success: false,
-                    message: 'Error al obtener el perfil'
-                };
-            }
-
             const data = await response.json();
-            return {
-                success: true,
-                data: data.data
-            };
+            return data;
         } catch (error) {
             console.error('Error al obtener el perfil:', error);
             return {
                 success: false,
+                status: 500,
                 message: 'Error al conectar con el servidor'
             };
         }
     },
 
     /**
-     * Actualiza el perfil del usuario
-     * @param token - Token JWT del usuario
-     * @param updateData - Datos a actualizar
-     * @returns Promise con el resultado de la actualización
+     * Obtiene un usuario por username
      */
-    async updateProfile(token: string, updateData: Partial<UserProfile>): Promise<{ success: boolean; data?: UserProfile; message?: string }> {
+    async getUserByUsername(username: string, token: string): Promise<ApiResponse<UserProfile>> {
         try {
-            // Decodificar el token para obtener el ID del usuario
-            const tokenPayload = JSON.parse(atob(token.split('.')[1]));
-            const userId = tokenPayload.id;
+            const response = await fetch(`${environment.apiUrl}/users/username?username=${username}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
 
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Error al obtener el perfil:', error);
+            return {
+                success: false,
+                status: 500,
+                message: 'Error al conectar con el servidor'
+            };
+        }
+    },
+
+    /**
+     * Actualiza un usuario por ID
+     */
+    async updateUserById(userId: string, updateData: Partial<UserProfile>, token: string): Promise<ApiResponse<UserProfile>> {
+        try {
             const response = await fetch(`${environment.apiUrl}/users/${userId}`, {
                 method: 'PATCH',
                 headers: {
@@ -77,22 +113,89 @@ export const userService = {
                 body: JSON.stringify(updateData),
             });
 
-            if (!response.ok) {
-                return {
-                    success: false,
-                    message: 'Error al actualizar el perfil'
-                };
-            }
-
             const data = await response.json();
-            return {
-                success: true,
-                data: data.data
-            };
+            return data;
         } catch (error) {
             console.error('Error al actualizar el perfil:', error);
             return {
                 success: false,
+                status: 500,
+                message: 'Error al conectar con el servidor'
+            };
+        }
+    },
+
+    /**
+     * Actualiza un usuario por username
+     */
+    async updateUserByUsername(username: string, updateData: Partial<UserProfile>, token: string): Promise<ApiResponse<UserProfile>> {
+        try {
+            const response = await fetch(`${environment.apiUrl}/users/username?username=${username}`, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(updateData),
+            });
+
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Error al actualizar el perfil:', error);
+            return {
+                success: false,
+                status: 500,
+                message: 'Error al conectar con el servidor'
+            };
+        }
+    },
+
+    /**
+     * Elimina un usuario por ID
+     */
+    async deleteUserById(userId: string, token: string): Promise<ApiResponse<void>> {
+        try {
+            const response = await fetch(`${environment.apiUrl}/users/${userId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Error al eliminar el usuario:', error);
+            return {
+                success: false,
+                status: 500,
+                message: 'Error al conectar con el servidor'
+            };
+        }
+    },
+
+    /**
+     * Elimina un usuario por username
+     */
+    async deleteUserByUsername(username: string, token: string): Promise<ApiResponse<void>> {
+        try {
+            const response = await fetch(`${environment.apiUrl}/users/username?username=${username}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Error al eliminar el usuario:', error);
+            return {
+                success: false,
+                status: 500,
                 message: 'Error al conectar con el servidor'
             };
         }

@@ -20,16 +20,17 @@ import { FaSearch } from 'react-icons/fa';
 interface User {
   user_id: string;
   username: string;
-  first_name: string;
-  last_name: string;
+  name: string;
+  surname: string;
   email: string;
   profile_picture_url: string | null;
   bio: string | null;
   email_verified: boolean;
   is_moderator: boolean;
-  id_deleted: boolean;
+  deleted_at: string | null;
   created_at: string;
   updated_at: string;
+  active_video_call: boolean;
   common_friends_count?: number;
   is_online?: boolean;
 }
@@ -129,7 +130,7 @@ export default function RightPanel({
                     <div className="ml-4 flex flex-col">
                       <p className="font-semibold text-white hover:text-blue-400 text-base">{friend.user.username}</p>
                       <p className="text-sm text-gray-400 hover:text-gray-300">
-                        {friend.user.first_name} {friend.user.last_name}
+                        {friend.user.name} {friend.user.surname}
                       </p>
                       {mode === 'suggested' && friend.user.common_friends_count !== undefined && (
                         <p className="text-xs text-gray-500 mt-1">

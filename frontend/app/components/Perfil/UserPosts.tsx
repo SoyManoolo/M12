@@ -13,17 +13,18 @@ import Post from '~/components/Inicio/Post';
 
 interface User {
   user_id: string;
-  first_name: string;
-  last_name: string;
+  name: string;
+  surname: string;
   username: string;
   email: string;
   profile_picture_url: string | null;
   bio: string | null;
   email_verified: boolean;
   is_moderator: boolean;
-  id_deleted: boolean;
+  deleted_at: string | null;
   created_at: string;
   updated_at: string;
+  active_video_call: boolean;
 }
 
 interface UserPostsProps {
