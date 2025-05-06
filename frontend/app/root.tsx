@@ -6,6 +6,7 @@ import {
   ScrollRestoration,
 } from "@remix-run/react";
 import { AuthProvider } from "./hooks/useAuth.tsx";
+import { useState, useEffect } from "react";
 
 import "./tailwind.css";
 
@@ -39,9 +40,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 // Componente raíz de la aplicación
 export default function App() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
     <AuthProvider>
-      <Outlet />
+      {mounted ? <Outlet /> : null}
     </AuthProvider>
   );
 }

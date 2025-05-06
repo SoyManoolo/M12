@@ -13,8 +13,7 @@
  * @requires ~/services/auth.service
  */
 
-import * as React from 'react';
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Form, useNavigate, Link } from "@remix-run/react";
 import type { ActionFunction } from "@remix-run/node";
 import { redirect } from "@remix-run/node";
@@ -76,6 +75,7 @@ export const action: ActionFunction = async ({ request }) => {
  * @method handleFacebookSignUp - Maneja el registro con Facebook (pendiente)
  */
 export default function SignUpPage(): React.ReactElement {
+  const [mounted, setMounted] = useState(false);
   const [name, setName] = useState('');
   const [surname, setSurname] = useState('');
   const [username, setUsername] = useState('');
@@ -83,6 +83,16 @@ export default function SignUpPage(): React.ReactElement {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="text-white">Cargando...</div>
+    </div>;
+  }
 
   /**
    * @function handleSubmit
