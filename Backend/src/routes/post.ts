@@ -17,6 +17,10 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
     await postController.getPosts(req, res, next);
 });
 
+router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
+    await postController.getPostsUser(req, res, next);
+});
+
 router.patch('/:id', async (req: Request, res: Response, next: NextFunction) => {
     await postController.updatePost(req, res, next);
 });
