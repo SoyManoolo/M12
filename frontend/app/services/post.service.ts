@@ -21,12 +21,15 @@ interface PostsResponse {
 class PostService {
   private baseUrl = 'http://localhost:3000';
 
-  async getPosts(token: string, cursor?: string): Promise<PostsResponse> {
+  async getPosts(token: string, cursor?: string, username?: string): Promise<PostsResponse> {
     try {
       const url = new URL(`${this.baseUrl}/posts`);
       url.searchParams.append('limit', '10');
       if (cursor) {
         url.searchParams.append('cursor', cursor);
+      }
+      if (username) {
+        url.searchParams.append('username', username);
       }
 
       const response = await fetch(url.toString(), {
