@@ -5,13 +5,28 @@ import { existsPost, existsUser } from "../utils/modelExists";
 import { UserFilters } from "../types/custom";
 
 export class PostService {
+    // Guarda la ruta de la carpeta media y las subcarpetas images y videos
+    private readonly imageBasePath: string = '/media/images';
+    private readonly videoBasePath: string = '/media/videos';
     // Método para crear un nuevo post
-    public async createPost(user_id: string, description: string) {
+    public async createPost(user_id: string, description: string, media?: Express.Multer.File) {
         try {
-            const post = await Post.create({
+            const postData: any = {
                 user_id,
                 description
-            })
+            }
+
+            if (media) {
+                const basePath = media.mimetype.startsWith('image/')
+                    ? this.imageBasePath
+                    : this.videoBasePath;
+
+                const mediaUrl = `${basePath}/${media.filename}`;
+                postData.media = mediaUrl;
+            }
+
+            const post = await Post.create(postData)
+
             return post;
         } catch (error) {
             if (error instanceof AppError) {
