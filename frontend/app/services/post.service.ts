@@ -35,11 +35,27 @@ class PostService {
         }
       });
 
-      if (!response.ok) {
-        throw new Error('Error al obtener los posts');
+      const data = await response.json();
+
+      // Si el servidor responde con 404 y el mensaje es "PostNotFound", 
+      // lo tratamos como un caso válido de "no hay posts"
+      if (response.status === 404 && data.message === "PostNotFound") {
+        return {
+          success: true,
+          status: 200,
+          message: "No hay posts disponibles",
+          data: {
+            posts: [],
+            nextCursor: null
+          }
+        };
       }
 
-      return await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Error al obtener los posts');
+      }
+
+      return data;
     } catch (error) {
       console.error('Error en getPosts:', error);
       throw error;

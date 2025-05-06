@@ -187,8 +187,9 @@ export default function InicioPage() {
           }));
           setPosts(transformedPosts);
           setNextCursor(response.data.nextCursor);
+          setError(null); // Limpiamos cualquier error previo
         } else {
-          throw new Error(response.message || 'Error al obtener los posts');
+          setError(response.message || 'Error al obtener los posts');
         }
       } catch (err) {
         console.error('Error al obtener los posts:', err);
@@ -274,18 +275,41 @@ export default function InicioPage() {
 
   if (loading && posts.length === 0) {
     return (
-      <div className="min-h-screen bg-black text-white flex justify-center items-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="min-h-screen bg-black text-white flex">
+        <Navbar />
+        <div className="w-2/3 ml-[16.666667%] border-r border-gray-800">
+          <div className="p-4">
+            <h2 className="text-xl font-bold mb-4">Feed Principal</h2>
+            <div className="flex justify-center items-center h-[calc(100vh-200px)]">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+            </div>
+          </div>
+        </div>
+        <RightPanel friends={[]} mode="online" />
       </div>
     );
   }
 
   if (error && posts.length === 0) {
     return (
-      <div className="min-h-screen bg-black text-white flex justify-center items-center">
-        <div className="bg-red-500/10 border border-red-500 text-red-500 px-4 py-3 rounded">
-          {error}
+      <div className="min-h-screen bg-black text-white flex">
+        <Navbar />
+        <div className="w-2/3 ml-[16.666667%] border-r border-gray-800">
+          <div className="p-4">
+            <h2 className="text-xl font-bold mb-4">Feed Principal</h2>
+            <div className="bg-gray-900 rounded-lg p-6 text-center border border-gray-800">
+              <p className="text-gray-400">{error === "No hay posts disponibles" ? (
+                <>
+                  <p className="text-gray-400">No hay publicaciones para mostrar</p>
+                  <p className="text-gray-500 text-sm mt-2">Sé el primero en compartir algo</p>
+                </>
+              ) : (
+                error
+              )}</p>
+            </div>
+          </div>
         </div>
+        <RightPanel friends={[]} mode="online" />
       </div>
     );
   }
@@ -304,6 +328,7 @@ export default function InicioPage() {
           {posts.length === 0 ? (
             <div className="bg-gray-900 rounded-lg p-6 text-center border border-gray-800">
               <p className="text-gray-400">No hay publicaciones para mostrar</p>
+              <p className="text-gray-500 text-sm mt-2">Sé el primero en compartir algo</p>
             </div>
           ) : (
             <>

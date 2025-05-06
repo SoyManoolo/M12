@@ -10,6 +10,8 @@ import { useState } from 'react';
 import { useNavigate, useSearchParams } from "@remix-run/react";
 import Navbar from "~/components/Inicio/Navbar";
 import { useAuth } from "~/hooks/useAuth";
+import { environment } from "~/config/environment";
+import { FaSignOutAlt } from 'react-icons/fa';
 
 export default function ConfiguracionPage() {
   const navigate = useNavigate();
@@ -59,6 +61,32 @@ export default function ConfiguracionPage() {
     }
     // Aquí iría la lógica para cambiar la contraseña
     console.log('Cambiando contraseña:', passwordData);
+  };
+
+  const handleLogout = async () => {
+    try {
+      if (token) {
+        // Llamar al endpoint de logout
+        const response = await fetch(`${environment.apiUrl}${environment.apiEndpoints.auth.logout}/${token}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        // Independientemente de la respuesta del servidor, eliminamos el token y redirigimos
+        localStorage.removeItem('token');
+        navigate('/login');
+      } else {
+        // Si no hay token, simplemente redirigimos
+        navigate('/login');
+      }
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+      // Aún con error, eliminamos el token y redirigimos
+      localStorage.removeItem('token');
+      navigate('/login');
+    }
   };
 
   return (
@@ -207,6 +235,13 @@ export default function ConfiguracionPage() {
             }`}
           >
             Seguridad
+          </button>
+          <button
+            onClick={handleLogout}
+            className="w-full text-left px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 flex items-center space-x-2 cursor-pointer"
+          >
+            <FaSignOutAlt />
+            <span>Cerrar sesión</span>
           </button>
         </nav>
       </div>
