@@ -44,12 +44,8 @@ export const action: ActionFunction = async ({ request }) => {
       password
     });
     
-    if (response.success && response.token) {
-      return redirect('/inicio', {
-        headers: {
-          'Set-Cookie': `token=${response.token}; Path=/; HttpOnly; SameSite=Lax`
-        }
-      });
+    if (response.success) {
+      return redirect('/login?message=Registro exitoso. Por favor, inicia sesión.');
     } else {
       return redirect('/signup?error=' + encodeURIComponent(response.message || 'Error al registrarse'));
     }
