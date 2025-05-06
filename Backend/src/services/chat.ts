@@ -1,4 +1,4 @@
-import { ChatMessages } from "../models/ChatMessages";
+import { ChatMessages } from "../models";
 import { AppError } from "../middlewares/errors/AppError";
 import { Op } from "sequelize";
 import { existCommentChat } from "../utils/modelExists";

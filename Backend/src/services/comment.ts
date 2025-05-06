@@ -1,5 +1,5 @@
-import { PostComments } from '../models/PostComments';
-import { User } from '../models/User';
+import { PostComments } from '../models';
+import { User } from '../models';
 import { AppError } from '../middlewares/errors/AppError';
 
 export class CommentService {

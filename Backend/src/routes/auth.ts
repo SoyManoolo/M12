@@ -19,4 +19,8 @@ router.post('/register', registerValidation, async (req: Request, res: Response,
     await authController.register(req, res, next);
 });
 
+router.delete('/logout/:token', async (req: Request, res: Response, next: NextFunction) => {
+    await authController.logout(req, res, next);
+});
+
 export default router

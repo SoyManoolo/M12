@@ -13,6 +13,7 @@ import { ContentModeration } from './ContentModeration';
 import { Notifications } from './Notifications';
 import { SavedPosts } from './SavedPosts';
 import { Logs } from './Logs';
+import { JWT } from './JWT';
 
 // User & Post relationships
 User.hasMany(Post, {
@@ -346,5 +347,6 @@ export {
   ContentModeration,
   Notifications,
   SavedPosts,
-  Logs
+  Logs,
+  JWT
 };

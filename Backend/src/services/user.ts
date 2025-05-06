@@ -45,17 +45,13 @@ export class UserService {
     };
 
     // Método para editar un usuario
-    public async updateUser(filters: { id?: string, username?: string }, updateData: any) {
+    public async updateUser(filters: UserFilters, updateData: UpdateUserData) {
         try {
-            const query: any = {};
-            if (filters.id) query._id = filters.id;
-            if (filters.username) query.username = filters.username;
-
-            if (Object.keys(query).length === 0) {
+            if (Object.keys(filters).length === 0) {
                 throw new AppError(400, "");
             };
 
-            const user = await User.findOne(query);
+            const user = await existsUser(filters);
             if (!user) throw new AppError(404, "");
 
             return user;
