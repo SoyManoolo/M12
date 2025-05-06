@@ -150,6 +150,7 @@ export default function InicioPage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -185,6 +186,7 @@ export default function InicioPage() {
             comments: [] // Esto debería venir del backend
           }));
           setPosts(transformedPosts);
+          setNextCursor(response.data.nextCursor);
         } else {
           throw new Error(response.message || 'Error al obtener los posts');
         }
@@ -198,6 +200,47 @@ export default function InicioPage() {
 
     fetchPosts();
   }, [token]);
+
+  const handleLoadMore = async () => {
+    if (!token || !nextCursor || loading) return;
+
+    setLoading(true);
+    try {
+      const response = await postService.getPosts(token, nextCursor);
+      if (response.success) {
+        const transformedPosts = response.data.posts.map(post => ({
+          ...post,
+          user: {
+            user_id: post.user_id,
+            name: "Usuario",
+            surname: "Demo",
+            username: "usuario",
+            email: "usuario@demo.com",
+            profile_picture_url: null,
+            bio: null,
+            email_verified: false,
+            is_moderator: false,
+            deleted_at: null,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            active_video_call: false
+          },
+          likes_count: 0,
+          is_saved: false,
+          comments: []
+        }));
+        setPosts(prev => [...prev, ...transformedPosts]);
+        setNextCursor(response.data.nextCursor);
+      } else {
+        throw new Error(response.message || 'Error al cargar más posts');
+      }
+    } catch (err) {
+      console.error('Error al cargar más posts:', err);
+      setError(err instanceof Error ? err.message : 'Error al conectar con el servidor');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleLike = async (postId: string) => {
     try {
@@ -229,7 +272,7 @@ export default function InicioPage() {
     }
   };
 
-  if (loading) {
+  if (loading && posts.length === 0) {
     return (
       <div className="min-h-screen bg-black text-white flex justify-center items-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -237,7 +280,7 @@ export default function InicioPage() {
     );
   }
 
-  if (error) {
+  if (error && posts.length === 0) {
     return (
       <div className="min-h-screen bg-black text-white flex justify-center items-center">
         <div className="bg-red-500/10 border border-red-500 text-red-500 px-4 py-3 rounded">
@@ -263,21 +306,36 @@ export default function InicioPage() {
               <p className="text-gray-400">No hay publicaciones para mostrar</p>
             </div>
           ) : (
-            posts.map((post: Post) => (
-              <Post
-                key={post.post_id}
-                post_id={post.post_id}
-                user={post.user}
-                description={post.description}
-                media_url={post.media_url}
-                comments={post.comments}
-                created_at={post.created_at}
-                likes_count={post.likes_count}
-                is_saved={post.is_saved}
-                onLike={() => handleLike(post.post_id)}
-                onSave={() => handleSave(post.post_id)}
-              />
-            ))
+            <>
+              {posts.map((post: Post) => (
+                <Post
+                  key={post.post_id}
+                  post_id={post.post_id}
+                  user={post.user}
+                  description={post.description}
+                  media_url={post.media_url}
+                  comments={post.comments}
+                  created_at={post.created_at}
+                  likes_count={post.likes_count}
+                  is_saved={post.is_saved}
+                  onLike={() => handleLike(post.post_id)}
+                  onSave={() => handleSave(post.post_id)}
+                />
+              ))}
+              
+              {/* Botón de cargar más */}
+              {nextCursor && (
+                <div className="flex justify-center mt-6">
+                  <button
+                    onClick={handleLoadMore}
+                    disabled={loading}
+                    className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loading ? 'Cargando...' : 'Cargar más'}
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

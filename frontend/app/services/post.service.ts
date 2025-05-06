@@ -14,7 +14,6 @@ interface PostsResponse {
   message: string;
   data: {
     posts: Post[];
-    hasNextPage: boolean;
     nextCursor: string | null;
   };
 }
@@ -22,9 +21,15 @@ interface PostsResponse {
 class PostService {
   private baseUrl = 'http://localhost:3000';
 
-  async getPosts(token: string): Promise<PostsResponse> {
+  async getPosts(token: string, cursor?: string): Promise<PostsResponse> {
     try {
-      const response = await fetch(`${this.baseUrl}/posts`, {
+      const url = new URL(`${this.baseUrl}/posts`);
+      url.searchParams.append('limit', '10');
+      if (cursor) {
+        url.searchParams.append('cursor', cursor);
+      }
+
+      const response = await fetch(url.toString(), {
         headers: {
           'Authorization': `Bearer ${token}`
         }
