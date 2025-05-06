@@ -28,12 +28,9 @@ Post.init(
                 notEmpty: true,
             },
         },
-        media_url: {
+        media: {
             type: DataTypes.STRING(255),
             allowNull: true,
-            validate: {
-                isUrl: true,
-            },
         }
     },
     {

@@ -55,12 +55,12 @@ export class PostController {
             };
 
             // Guarda toda la informacion del post
-            const media = req.file;
+            const media = req.file || undefined;
             const user_id = req.user.id;
-            const { description } = req.body;
+            const description = req.body.description;
 
             // Llama al servicio para crear el post
-            const newPost = await this.postService.createPost(user_id, description);
+            const newPost = await this.postService.createPost(user_id, description, media);
 
             // Devuelve una respuesta JSON con el nuevo post creado
             res.status(200).json({
