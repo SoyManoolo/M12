@@ -122,10 +122,9 @@ export default function SignUpPage(): React.ReactElement {
       
       console.log('📥 Respuesta del backend:', response);
       
-      if (response.success && response.token) {
-        console.log('✅ Registro exitoso, token recibido');
-        localStorage.setItem('token', response.token);
-        navigate('/inicio');
+      if (response.success) {
+        console.log('✅ Registro exitoso');
+        navigate('/login?message=Registro exitoso. Por favor, inicia sesión.');
       } else {
         console.log('❌ Error en el registro:', response.message);
         setError(response.message || 'Error al registrarse');
@@ -142,7 +141,7 @@ export default function SignUpPage(): React.ReactElement {
    */
   const handleGoogleSignUp = () => {
     console.log('🔵 Iniciando registro con Google...');
-    // Implementar signup con Google
+    // Implementar registro con Google
     navigate('/inicio');
   };
 
@@ -152,14 +151,14 @@ export default function SignUpPage(): React.ReactElement {
    */
   const handleFacebookSignUp = () => {
     console.log('🔵 Iniciando registro con Facebook...');
-    // Implementar signup con Facebook
+    // Implementar registro con Facebook
     navigate('/inicio');
   };
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-black border border-gray-800 rounded-lg p-8">
-        <h1 className="text-4xl text-white text-center mb-8 font-bold tracking-wider">SIGN UP</h1>
+        <h1 className="text-4xl text-white text-center mb-8 font-bold tracking-wider">REGISTRARSE</h1>
         
         {error && (
           <div className="mb-4 p-3 bg-red-500/10 border border-red-500 text-red-500 rounded-md text-sm">
@@ -170,7 +169,7 @@ export default function SignUpPage(): React.ReactElement {
         <Form method="post" onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label htmlFor="name" className="block text-gray-300 text-sm font-medium mb-2 tracking-wider">
-              NAME
+              NOMBRE
             </label>
             <input
               type="text"
@@ -185,7 +184,7 @@ export default function SignUpPage(): React.ReactElement {
 
           <div>
             <label htmlFor="surname" className="block text-gray-300 text-sm font-medium mb-2 tracking-wider">
-              SURNAME
+              APELLIDOS
             </label>
             <input
               type="text"
@@ -200,7 +199,7 @@ export default function SignUpPage(): React.ReactElement {
 
           <div>
             <label htmlFor="username" className="block text-gray-300 text-sm font-medium mb-2 tracking-wider">
-              USERNAME
+              NOMBRE DE USUARIO
             </label>
             <input
               type="text"
@@ -215,7 +214,7 @@ export default function SignUpPage(): React.ReactElement {
 
           <div>
             <label htmlFor="email" className="block text-gray-300 text-sm font-medium mb-2 tracking-wider">
-              EMAIL
+              CORREO ELECTRÓNICO
             </label>
             <input
               type="email"
@@ -230,7 +229,7 @@ export default function SignUpPage(): React.ReactElement {
 
           <div>
             <label htmlFor="password" className="block text-gray-300 text-sm font-medium mb-2 tracking-wider">
-              PASSWORD
+              CONTRASEÑA
             </label>
             <input
               type="password"
@@ -247,11 +246,11 @@ export default function SignUpPage(): React.ReactElement {
             type="submit"
             className="w-full bg-white text-black py-2 px-4 rounded-md hover:bg-gray-200 transition-colors tracking-wider cursor-pointer"
           >
-            SIGN UP
+            REGISTRARSE
           </button>
 
           <div className="mt-6">
-            <p className="text-gray-400 text-center mb-4 tracking-wider">SIGN UP WITH:</p>
+            <p className="text-gray-400 text-center mb-4 tracking-wider">REGISTRARSE CON:</p>
             <div className="flex justify-center space-x-4">
               <button
                 type="button"
@@ -275,7 +274,7 @@ export default function SignUpPage(): React.ReactElement {
               to="/login"
               className="inline-block text-gray-400 hover:text-white text-sm tracking-wider border border-gray-600 px-6 py-2 rounded-md cursor-pointer"
             >
-              BACK TO LOGIN
+              VOLVER A INICIAR SESIÓN
             </Link>
           </div>
         </Form>

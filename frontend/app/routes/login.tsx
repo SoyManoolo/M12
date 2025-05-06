@@ -57,6 +57,7 @@ export const action: ActionFunction = async ({ request }) => {
  * @state {string} id - Estado para el email o nombre de usuario
  * @state {string} password - Estado para la contraseña
  * @state {string} error - Estado para mensajes de error
+ * @state {string} message - Estado para mensajes de éxito
  * 
  * @method handleSubmit - Maneja el envío del formulario de inicio de sesión
  * @method handleGoogleLogin - Maneja el inicio de sesión con Google (pendiente)
@@ -67,6 +68,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [searchParams] = useSearchParams();
   const error = searchParams.get('error') || '';
+  const message = searchParams.get('message') || '';
   const { setToken } = useAuth();
 
   /**
@@ -117,11 +119,17 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-black flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-black border border-gray-800 rounded-lg p-8">
-        <h1 className="text-4xl text-white text-center mb-8 font-bold tracking-wider">LOG IN</h1>
+        <h1 className="text-4xl text-white text-center mb-8 font-bold tracking-wider">INICIA SESIÓN</h1>
         
         {error && (
           <div className="mb-4 p-3 bg-red-500/10 border border-red-500 text-red-500 rounded-md text-sm">
             {error}
+          </div>
+        )}
+
+        {message && (
+          <div className="mb-4 p-3 bg-green-500/10 border border-green-500 text-green-500 rounded-md text-sm">
+            {message}
           </div>
         )}
         
@@ -144,7 +152,7 @@ export default function LoginPage() {
 
           <div>
             <label htmlFor="password" className="block text-gray-300 text-sm font-medium mb-2 tracking-wider">
-              PASSWORD
+              CONTRASEÑA
             </label>
             <input
               type="password"
@@ -171,11 +179,11 @@ export default function LoginPage() {
             type="submit"
             className="w-full bg-white text-black py-2 px-4 rounded-md hover:bg-gray-200 transition-colors tracking-wider cursor-pointer"
           >
-            LOG IN
+            INICIA SESIÓN
           </button>
 
           <div className="mt-6">
-            <p className="text-gray-400 text-center mb-4 tracking-wider">LOG IN WITH:</p>
+            <p className="text-gray-400 text-center mb-4 tracking-wider">INICIA SESIÓN CON:</p>
             <div className="flex justify-center space-x-4">
               <button
                 type="button"
@@ -199,7 +207,7 @@ export default function LoginPage() {
               to="/signup"
               className="inline-block text-gray-400 hover:text-white text-sm tracking-wider border border-gray-600 px-6 py-2 rounded-md cursor-pointer"
             >
-              OR SIGN UP
+              O REGISTRATE
             </Link>
           </div>
         </Form>
