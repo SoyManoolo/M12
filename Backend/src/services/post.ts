@@ -1,7 +1,8 @@
-import { Op } from "sequelize";
+import { Op, where } from "sequelize";
 import { AppError } from "../middlewares/errors/AppError";
 import { Post } from "../models";
-import { existsPost } from "../utils/modelExists";
+import { existsPost, existsUser } from "../utils/modelExists";
+import { UserFilters } from "../types/custom";
 
 export class PostService {
     // Método para crear un nuevo post
@@ -16,6 +17,68 @@ export class PostService {
             throw new AppError(500, 'InternalServerError');
         };
     };
+
+    // Método para obtener los posts de un usuario
+    public async getPostsUser(filters: UserFilters, limit: number = 10, cursor?: string) {
+        try {
+            if (Object.keys(filters).length === 0) {
+                throw new AppError(400, "");
+            };
+
+            const user = await existsUser(filters);
+
+            if (!user) throw new AppError(404, "");
+
+            const user_id = user.dataValues.user_id;
+
+            const queryOptions: any = {
+                limit: limit + 1,
+                where: {
+                    user_id
+                },
+                order: [['created_at', 'DESC']]
+            };
+
+            if (cursor) {
+                const lastPost = await Post.findByPk(cursor);
+                if (lastPost) {
+                    queryOptions.where = {
+                        [Op.and]: [
+                            { user_id },  // Mantener la condición de user_id
+                            {
+                                createdAt: {
+                                    [Op.lt]: lastPost.dataValues.createdAt
+                                }
+                            }
+                        ]
+                    };
+                }
+            }
+
+            const posts = await Post.findAll(queryOptions)
+
+            // Si no hay posts, lanzamos un error
+            if (!posts || posts.length === 0) throw new AppError(404, 'PostNotFound');
+
+            // Si hay más posts, los paginamos
+            const hasNextPage: boolean = posts.length > limit;
+
+            // Si hay más posts, eliminamos el último post de la lista
+            const resultPosts: Post[] = hasNextPage ? posts.slice(0, limit) : posts;
+
+            // Obtenemos el cursor del último post
+            const nextCursor = hasNextPage ? resultPosts[resultPosts.length - 1].dataValues.post_id : null;
+
+            return {
+                posts: resultPosts,
+                hasNextPage,
+                nextCursor
+            };
+        } catch (error) {
+            throw new AppError(500, 'InternalServerError');
+        };
+    }
+
     // Método para obtener los posts paginados
     public async getPosts(limit: number = 10, cursor?: string) {
         try {
@@ -37,12 +100,16 @@ export class PostService {
 
             const posts = await Post.findAll(queryOptions);
 
+            // Si no hay posts, lanzamos un error
             if (!posts || posts.length === 0) throw new AppError(404, 'PostNotFound');
 
+            // Si hay más posts, los paginamos
             const hasNextPage: boolean = posts.length > limit;
 
+            // Si hay más posts, eliminamos el último post de la lista
             const resultPosts: Post[] = hasNextPage ? posts.slice(0, limit) : posts;
 
+            // Obtenemos el cursor del último post
             const nextCursor = hasNextPage ? resultPosts[resultPosts.length - 1].dataValues.post_id : null;
 
             return {

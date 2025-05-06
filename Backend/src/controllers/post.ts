@@ -3,8 +3,41 @@ import i18n from '../config/i18n';
 import { PostService } from '../services/post';
 import { AppError } from '../middlewares/errors/AppError';
 
+
 export class PostController {
-    constructor(private readonly postService: PostService) {};
+
+    constructor(private readonly postService: PostService) { };
+
+    public async getPostsUser(req: Request, res: Response, next: NextFunction) {
+        try {
+            // Guarda el idioma en la variable locale y lo asigna a i18n
+            const locale = req.headers['accept-language'] || 'en';
+            i18n.setLocale(locale);
+
+            const filters = {
+                user_id: req.params.id as string,
+                username: req.query.username as string
+            };
+
+            // Llama al servicio para obtener los posts
+            const posts = await this.postService.getPostsUser(filters);
+
+            // Si no hay posts, lanza un error
+            if (!posts) {
+                throw new AppError(404, 'PostNotFound');
+            };
+
+            // Devuelve una respuesta JSON con los posts obtenidos
+            res.status(200).json({
+                success: true,
+                status: 200,
+                message: "hola",
+                data: posts
+            })
+        } catch (error) {
+            next(error);
+        }
+    }
 
     // Metodo del controlador para crear un nuevo post
     public async createPost(req: Request, res: Response, next: NextFunction) {
@@ -16,7 +49,7 @@ export class PostController {
             // Verifica si el usuario está autenticado
             if (!req.user?.id) {
                 throw new AppError(401, 'Unauthorized');
-            }
+            };
 
             // Guarda toda la informacion del post
             const media = req.file;
@@ -38,7 +71,7 @@ export class PostController {
         };
     };
 
-    public async getPosts(req:Request, res: Response, next: NextFunction) {
+    public async getPosts(req: Request, res: Response, next: NextFunction) {
         try {
             // Guarda el idioma en la variable locale y lo asigna a i18n
             const locale = req.headers['accept-language'] || 'en';
@@ -50,7 +83,7 @@ export class PostController {
             // Si no hay posts, lanza un error
             if (!posts) {
                 throw new AppError(404, 'PostNotFound');
-            }
+            };
 
             // Devuelve una respuesta JSON con los posts obtenidos
             res.status(200).json({
