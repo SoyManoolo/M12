@@ -21,7 +21,7 @@ export class PostService {
         try {
             const queryOptions: any = {
                 limit: limit + 1,
-                order: [['created_at', 'DESC']]
+                order: [['createdAt', 'DESC']]
             };
 
             if (cursor) {

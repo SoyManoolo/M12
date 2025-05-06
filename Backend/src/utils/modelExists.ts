@@ -3,35 +3,40 @@ import { AppError } from "../middlewares/errors/AppError";
 import { User, Post } from "../models";
 import { UserFilters } from "../types/custom";
 
+// Método para comprobar si existe un usuario
 export async function existsUser(filters: UserFilters) {
     try {
-        const whereClause: any = {
-            [Op.or]: []
-        };
-
-        if (filters.username) {
-            whereClause[Op.or].push({ username: filters.username });
+        const orConditions = [];
+        if (filters.user_id) {
+            orConditions.push({ user_id: filters.user_id });
         }
-
         if (filters.email) {
-            whereClause[Op.or].push({ email: filters.email });
+            orConditions.push({ email: filters.email });
+        }
+        if (filters.username) {
+            orConditions.push({ username: filters.username });
         }
 
-        // Si no hay condiciones, retornar null
-        if (whereClause[Op.or].length === 0) {
+        // Si no hay condiciones válidas, no buscar
+        if (orConditions.length === 0) {
+            console.warn("existsUser called with no valid filters.");
             return null;
         }
 
         const user = await User.findOne({
-            where: whereClause
+            where: {
+                [Op.or]: orConditions
+            }
         });
         return user;
     } catch (error) {
-        console.error('Error en existsUser:', error);
-        throw new AppError(500, 'DatabaseError');
-    };
+        if (error instanceof AppError) {
+            throw error;
+        }
+        throw new AppError(500, 'InternalServerError');    };
 };
 
+// Método para comprobar si existe un post
 export async function existsPost(id: string) {
     try {
         const post = await Post.findOne({
@@ -41,10 +46,13 @@ export async function existsPost(id: string) {
         });
         return post;
     } catch (error) {
-        throw new AppError(500, 'DatabaseError');
-    };
+        if (error instanceof AppError) {
+            throw error;
+        }
+        throw new AppError(500, 'InternalServerError');    };
 };
 
+// Método para comprobar si existe un comentario
 export async function existCommentChat(id: string) {
     try {
         const comment = await Post.findOne({
@@ -54,6 +62,8 @@ export async function existCommentChat(id: string) {
         });
         return comment;
     } catch (error) {
-        throw new AppError(500, 'DatabaseError');
-    };
+        if (error instanceof AppError) {
+            throw error;
+        }
+        throw new AppError(500, 'InternalServerError');    };
 }

@@ -3,40 +3,39 @@ import { AppError } from "../middlewares/errors/AppError";
 import { existsUser } from "../utils/modelExists";
 import { UserFilters, UpdateUserData } from '../types/custom';
 
-// Función para validar UUID
-function isValidUUID(uuid: string) {
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    return uuidRegex.test(uuid);
-}
-
 export class UserService {
-    // Método para obtener un usuario
+
+    // Método para obtener todos los usuarios - LISTO
+    public async getUsers() {
+        try{
+            const users = await User.findAll();
+            if (!users || users.length === 0) throw new AppError(404, 'UserNotFound');
+
+            return users;
+        } catch (error) {
+            if (error instanceof AppError) {
+                throw error;
+            }
+            throw new AppError(500, 'InternalServerError');
+        }
+    }
+    // Método para obtener un usuario - LISTO
     public async getUser(filters: UserFilters) {
         try {
-            // Caso 1: Buscar por UUID
-            if (filters.user_id) {
-                if (!isValidUUID(filters.user_id)) {
-                    throw new AppError(404, "UUID no válido");
-                }
-                const user = await User.findByPk(filters.user_id);
-                if (!user) throw new AppError(404, "Usuario no encontrado");
-                return [user];
-            }
+            console.log("He entrado en el servicio");
+            console.log("Filters: ", filters);
 
-            // Caso 2: Buscar por username
-            if (filters.username) {
-                const user = await User.findOne({
-                    where: {
-                        username: filters.username
-                    }
-                });
-                if (!user) throw new AppError(404, "Usuario no encontrado");
-                return [user];
-            }
+            if (Object.keys(filters).length === 0) {
+                throw new AppError(400, "");
+            };
 
-            // Caso 3: Sin filtros, devolver todos los usuarios
-            return await User.findAll();
+            const user = await existsUser(filters);
 
+            console.log("User: ", user);
+
+            if (!user) throw new AppError(404, "");
+
+            return user;
         } catch (error) {
             if (error instanceof AppError) {
                 throw error;
@@ -49,7 +48,7 @@ export class UserService {
     public async updateUser(filters: { id?: string, username?: string }, updateData: any) {
         try {
             const query: any = {};
-            if (filters.id) query.user_id = filters.id;
+            if (filters.id) query._id = filters.id;
             if (filters.username) query.username = filters.username;
 
             if (Object.keys(query).length === 0) {

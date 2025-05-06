@@ -1,36 +1,18 @@
 import { Request, Response, NextFunction } from 'express';
 import i18n from '../config/i18n';
-import { AppError } from '../middlewares/errors/AppError';
 import { UserService } from '../services/user';
 
 export class UserController {
     constructor(private userService: UserService) { }
 
-    // Método para obtener un usuario
-    public async getUser(req: Request, res: Response, next: NextFunction) {
+    public async getUsers(req: Request, res: Response, next: NextFunction) {
         try {
             const locale = req.headers['accept-language'] || 'en';
             i18n.setLocale(locale);
 
-            // Si hay un ID en los parámetros, buscar por UUID
-            if (req.params.id) {
-                const user = await this.userService.getUser({ user_id: req.params.id });
-                return res.status(200).json({
-                    success: true,
-                    status: 200,
-                    message: "hola",
-                    data: user
-                });
-            }
+            const users = await this.userService.getUsers();
 
-            // Si no hay ID, buscar por username o devolver todos
-            const filters = {
-                username: req.query.username as string || undefined
-            };
-
-            const users = await this.userService.getUser(filters);
-
-            return res.status(200).json({
+            res.status(200).json({
                 success: true,
                 status: 200,
                 message: "hola",
@@ -38,9 +20,34 @@ export class UserController {
             });
         } catch (error) {
             next(error);
-            return; // Aseguramos que se retorne un valor en el catch
-        }
+        };
     }
+
+    // Método para obtener un usuario
+    public async getUser(req: Request, res: Response, next: NextFunction) {
+        try {
+            console.log("He entrado en el controlador");
+
+            const locale = req.headers['accept-language'] || 'en';
+            i18n.setLocale(locale);
+
+            const filters = {
+                user_id: req.params.id,
+                username: req.query.username as string
+            };
+
+            const user = await this.userService.getUser(filters);
+
+            res.status(200).json({
+                success: true,
+                status: 200,
+                message: "hola",
+                data: user
+            });
+        } catch (error) {
+            next (error);
+        };
+    };
 
     // Método para editar un usuario
     public async updateUser(req: Request, res: Response, next: NextFunction) {
@@ -49,7 +56,7 @@ export class UserController {
             i18n.setLocale(locale);
 
             const filters = {
-                id: req.params.id,
+                user_id: req.params.id,
                 username: req.query.username as string
             };
 
@@ -75,7 +82,7 @@ export class UserController {
             i18n.setLocale(locale);
 
             const filters = {
-                id: req.params.id,
+                user_id: req.params.id,
                 username: req.query.username as string
             };
 

@@ -18,10 +18,9 @@ export class AuthToken {
     };
 
     public generateToken(user: User): string {
-        // Generamos un token con el id y el username del usuario
+        // Generamos un token con el id y el dni del usuario
         return jwt.sign({
             id: user.dataValues.user_id,
-            username: user.dataValues.username
         },
             AuthToken.secretKey,
             { expiresIn: 3600 }

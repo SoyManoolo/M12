@@ -7,33 +7,34 @@ const router = express.Router();
 const userService = new UserService();
 const userController = new UserController(userService);
 
-// Ruta para obtener todos los usuarios o filtrar por username
+// Ruta para obtener todos los usuarios
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
+    await userController.getUsers(req, res, next);
+});
+
+// Ruta para obtener un usuario por su username
+router.get('/username', async (req: Request, res: Response, next: NextFunction) => {
     await userController.getUser(req, res, next);
 });
 
-// Ruta para obtener un usuario por UUID
 router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
+    console.log("He entrado en la ruta")
     await userController.getUser(req, res, next);
 });
 
-// Ruta para actualizar usuarios por filtros
-router.patch('/', async (req: Request, res: Response, next: NextFunction) => {
-    await userController.updateUser(req, res, next);
-});
-
-// Ruta para actualizar un usuario por UUID
 router.patch('/:id', async (req: Request, res: Response, next: NextFunction) => {
     await userController.updateUser(req, res, next);
 });
 
-// Ruta para eliminar usuarios por filtros
-router.delete('/', async (req: Request, res: Response, next: NextFunction) => {
+router.patch('/username', async (req: Request, res: Response, next: NextFunction) => {
+    await userController.updateUser(req, res, next);
+});
+
+router.delete('/:id', async (req: Request, res: Response, next: NextFunction) => {
     await userController.deleteUser(req, res, next);
 });
 
-// Ruta para eliminar un usuario por UUID
-router.delete('/:id', async (req: Request, res: Response, next: NextFunction) => {
+router.delete('/username', async (req: Request, res: Response, next: NextFunction) => {
     await userController.deleteUser(req, res, next);
 });
 
