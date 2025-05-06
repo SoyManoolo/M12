@@ -16,6 +16,7 @@ import { useEffect, useState } from 'react';
 import { FaEdit } from 'react-icons/fa';
 import { userService } from '../../services/user.service';
 import { useAuth } from '../../hooks/useAuth.tsx';
+import { useNavigate } from 'react-router-dom';
 
 interface UserProfileData {
     user_id: string;
@@ -45,6 +46,7 @@ export default function UserProfile({ userId, username, isOwnProfile, onEditProf
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const { token } = useAuth();
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchUserData = async () => {
@@ -122,6 +124,10 @@ export default function UserProfile({ userId, username, isOwnProfile, onEditProf
         }
     };
 
+    const handleEditProfile = () => {
+        navigate('/configuracion?section=cuenta');
+    };
+
     if (loading) {
         return (
             <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
@@ -173,7 +179,7 @@ export default function UserProfile({ userId, username, isOwnProfile, onEditProf
                         {isOwnProfile && (
                             <div className="flex space-x-2">
                                 <button
-                                    onClick={onEditProfile}
+                                    onClick={handleEditProfile}
                                     className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center space-x-2 transition-colors"
                                 >
                                     <FaEdit />
