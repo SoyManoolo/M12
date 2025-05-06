@@ -200,11 +200,32 @@ export default function Post({
               className="rounded-lg overflow-hidden bg-gray-800 h-full cursor-pointer relative"
               onClick={handleImageClick}
             >
-              <img 
-                src={media_url || '/default-image.jpg'} 
-                alt="Contenido del post"
-                className="w-full h-full object-cover"
-              />
+              {media_url ? (
+                <img 
+                  src={media_url} 
+                  alt="Contenido del post"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gray-800">
+                  <div className="text-center">
+                    <svg
+                      className="mx-auto h-16 w-16 text-gray-600"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                    <p className="mt-2 text-gray-500">Sin imagen</p>
+                  </div>
+                </div>
+              )}
               {/* Fecha de publicación */}
               <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 px-2 py-1 rounded text-xs text-gray-300">
                 {formatDistanceToNow(new Date(created_at), { addSuffix: true, locale: es })}

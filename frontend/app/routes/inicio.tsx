@@ -29,39 +29,40 @@ import RightPanel from "~/components/Shared/RightPanel";
 import { useState, useEffect } from "react";
 import { json } from "@remix-run/node";
 import { useAuth } from "~/hooks/useAuth";
+import { postService } from "~/services/post.service";
 
 /**
  * @interface User
  * @description Define la estructura de datos de un usuario en el sistema
  * @property {string} user_id - Identificador único del usuario
- * @property {string} first_name - Nombre del usuario
- * @property {string} last_name - Apellido del usuario
+ * @property {string} name - Nombre del usuario
+ * @property {string} surname - Apellido del usuario
  * @property {string} username - Nombre de usuario único
  * @property {string} email - Correo electrónico del usuario
  * @property {string} profile_picture_url - URL de la imagen de perfil
  * @property {string} bio - Biografía del usuario
  * @property {boolean} email_verified - Estado de verificación del email
  * @property {boolean} is_moderator - Indica si el usuario es moderador
- * @property {boolean} id_deleted - Indica si el usuario está eliminado
+ * @property {boolean} deleted_at - Indica si el usuario está eliminado
  * @property {string} created_at - Fecha de creación del usuario
  * @property {string} updated_at - Fecha de última actualización
- * @property {boolean} is_online - Indica si el usuario está en línea
+ * @property {boolean} active_video_call - Indica si el usuario está en línea
  */
 
 interface User {
   user_id: string;
-  first_name: string;
-  last_name: string;
+  name: string;
+  surname: string;
   username: string;
   email: string;
   profile_picture_url: string | null;
   bio: string | null;
   email_verified: boolean;
   is_moderator: boolean;
-  id_deleted: boolean;
+  deleted_at: string | null;
   created_at: string;
   updated_at: string;
-  is_online?: boolean;
+  active_video_call: boolean;
 }
 
 /**
@@ -132,7 +133,6 @@ interface Friend {
  */
 
 export const loader = async ({ request }: { request: Request }) => {
-  // Verificar si hay un token en las cookies
   const cookieHeader = request.headers.get("Cookie");
   const token = cookieHeader?.split(";").find(c => c.trim().startsWith("token="))?.split("=")[1];
 
@@ -140,182 +140,64 @@ export const loader = async ({ request }: { request: Request }) => {
     return redirect("/login");
   }
 
-  // Datos mock para pruebas
-  const mockPosts: Post[] = [
-    {
-      post_id: "1",
-      user_id: "1",
-      user: {
-        user_id: "1",
-        first_name: "María",
-        last_name: "García",
-        username: "mariagarcia",
-        email: "maria@example.com",
-        profile_picture_url: "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg",
-        bio: "¡Hola! Me encanta compartir momentos especiales",
-        email_verified: true,
-        is_moderator: false,
-        id_deleted: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      },
-      description: "¡Disfrutando de un hermoso día en la playa! 🌊☀️ #Verano #Vacaciones",
-      media_url: "https://images.pexels.com/photos/189349/pexels-photo-189349.jpeg",
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      likes_count: 15,
-      is_saved: false,
-      comments: [
-        {
-          comment_id: "1",
-          user_id: "2",
-          username: "carlos123",
-          content: "¡Qué foto tan bonita! 😍",
-          created_at: new Date().toISOString()
-        }
-      ]
-    },
-    {
-      post_id: "2",
-      user_id: "2",
-      user: {
-        user_id: "2",
-        first_name: "Carlos",
-        last_name: "Pérez",
-        username: "carlos123",
-        email: "carlos@example.com",
-        profile_picture_url: "https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg",
-        bio: "Amante de la música y la fotografía",
-        email_verified: true,
-        is_moderator: false,
-        id_deleted: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      },
-      description: "Nueva canción que estoy escuchando 🎵 #Música #Vibes",
-      media_url: "https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg",
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      likes_count: 8,
-      is_saved: false,
-      comments: []
-    },
-    {
-      post_id: "3",
-      user_id: "3",
-      user: {
-        user_id: "3",
-        first_name: "Ana",
-        last_name: "Martínez",
-        username: "anamartinez",
-        email: "ana@example.com",
-        profile_picture_url: "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg",
-        bio: "Viajera incansable ✈️",
-        email_verified: true,
-        is_moderator: false,
-        id_deleted: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      },
-      description: "Nuevo destino, nuevas aventuras 🌍 #Viajes #Aventura",
-      media_url: "https://images.pexels.com/photos/3155666/pexels-photo-3155666.jpeg",
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      likes_count: 12,
-      is_saved: false,
-      comments: []
-    },
-    {
-      post_id: "4",
-      user_id: "4",
-      user: {
-        user_id: "4",
-        first_name: "David",
-        last_name: "López",
-        username: "davidlopez",
-        email: "david@example.com",
-        profile_picture_url: "https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg",
-        bio: "Desarrollador web 💻",
-        email_verified: true,
-        is_moderator: false,
-        id_deleted: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      },
-      description: "Nuevo proyecto en desarrollo 🚀 #Programación #WebDev",
-      media_url: "https://images.pexels.com/photos/1181467/pexels-photo-1181467.jpeg",
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      likes_count: 6,
-      is_saved: false,
-      comments: []
-    },
-    {
-      post_id: "5",
-      user_id: "5",
-      user: {
-        user_id: "5",
-        first_name: "Laura",
-        last_name: "Gómez",
-        username: "lauragomez",
-        email: "laura@example.com",
-        profile_picture_url: "https://images.pexels.com/photos/733872/pexels-photo-733872.jpeg",
-        bio: "Fotógrafa profesional 📸",
-        email_verified: true,
-        is_moderator: false,
-        id_deleted: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      },
-      description: "Nueva sesión de fotos 📷 #Fotografía #Retrato",
-      media_url: "https://images.pexels.com/photos/2387873/pexels-photo-2387873.jpeg",
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      likes_count: 20,
-      is_saved: false,
-      comments: []
-    }
-  ];
-
-  const mockFriends: Friend[] = [
-    {
-      friendship_id: "1",
-      user1_id: "1",
-      user2_id: "2",
-      created_at: new Date().toISOString(),
-      user: {
-        user_id: "2",
-        first_name: "Carlos",
-        last_name: "Pérez",
-        username: "carlos123",
-        email: "carlos@example.com",
-        profile_picture_url: "https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg",
-        bio: "Amante de la música",
-        email_verified: true,
-        is_moderator: false,
-        id_deleted: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }
-    }
-  ];
-
   return json({ 
-    posts: mockPosts,
-    friends: mockFriends,
     error: null
   });
 };
 
 export default function InicioPage() {
   const { token } = useAuth();
-  const { posts: loaderPosts, friends, error } = useLoaderData<typeof loader>();
-  const [posts, setPosts] = useState<Post[]>(loaderPosts);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
+  useEffect(() => {
+    const fetchPosts = async () => {
+      if (!token) {
+        setError('No hay token de autenticación');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await postService.getPosts(token);
+        if (response.success) {
+          // Transformar los posts para incluir la información necesaria para el componente Post
+          const transformedPosts = response.data.posts.map(post => ({
+            ...post,
+            user: {
+              user_id: post.user_id,
+              name: "Usuario", // Esto debería venir del backend
+              surname: "Demo", // Esto debería venir del backend
+              username: "usuario", // Esto debería venir del backend
+              email: "usuario@demo.com", // Esto debería venir del backend
+              profile_picture_url: null, // Esto debería venir del backend
+              bio: null, // Esto debería venir del backend
+              email_verified: false, // Esto debería venir del backend
+              is_moderator: false, // Esto debería venir del backend
+              deleted_at: null, // Esto debería venir del backend
+              created_at: new Date().toISOString(), // Esto debería venir del backend
+              updated_at: new Date().toISOString(), // Esto debería venir del backend
+              active_video_call: false // Esto debería venir del backend
+            },
+            likes_count: 0, // Esto debería venir del backend
+            is_saved: false, // Esto debería venir del backend
+            comments: [] // Esto debería venir del backend
+          }));
+          setPosts(transformedPosts);
+        } else {
+          throw new Error(response.message || 'Error al obtener los posts');
+        }
+      } catch (err) {
+        console.error('Error al obtener los posts:', err);
+        setError(err instanceof Error ? err.message : 'Error al conectar con el servidor');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPosts();
+  }, [token]);
 
   const handleLike = async (postId: string) => {
     try {
@@ -347,6 +229,24 @@ export default function InicioPage() {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black text-white flex justify-center items-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-black text-white flex justify-center items-center">
+        <div className="bg-red-500/10 border border-red-500 text-red-500 px-4 py-3 rounded">
+          {error}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-black text-white flex">
       {/* Barra lateral usando el componente Navbar */}
@@ -358,27 +258,33 @@ export default function InicioPage() {
           <h2 className="text-xl font-bold mb-4">Feed Principal</h2>
 
           {/* Lista de posts */}
-          {posts.map((post: Post) => (
-            <Post
-              key={post.post_id}
-              post_id={post.post_id}
-              user={post.user}
-              description={post.description}
-              media_url={post.media_url}
-              comments={post.comments}
-              created_at={post.created_at}
-              likes_count={post.likes_count}
-              is_saved={post.is_saved}
-              onLike={() => handleLike(post.post_id)}
-              onSave={() => handleSave(post.post_id)}
-            />
-          ))}
+          {posts.length === 0 ? (
+            <div className="bg-gray-900 rounded-lg p-6 text-center border border-gray-800">
+              <p className="text-gray-400">No hay publicaciones para mostrar</p>
+            </div>
+          ) : (
+            posts.map((post: Post) => (
+              <Post
+                key={post.post_id}
+                post_id={post.post_id}
+                user={post.user}
+                description={post.description}
+                media_url={post.media_url}
+                comments={post.comments}
+                created_at={post.created_at}
+                likes_count={post.likes_count}
+                is_saved={post.is_saved}
+                onLike={() => handleLike(post.post_id)}
+                onSave={() => handleSave(post.post_id)}
+              />
+            ))
+          )}
         </div>
       </div>
 
       {/* Barra lateral derecha */}
       <RightPanel
-        friends={friends}
+        friends={[]}
         mode="online"
       />
     </div>
