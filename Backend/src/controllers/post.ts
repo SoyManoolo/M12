@@ -19,8 +19,11 @@ export class PostController {
                 username: req.query.username as string
             };
 
+            const limit = req.query.limit? parseInt(req.query.limit as string, 10) : undefined;
+            const cursor = req.query.cursor as string | undefined;
+
             // Llama al servicio para obtener los posts
-            const posts = await this.postService.getPostsUser(filters);
+            const posts = await this.postService.getPostsUser(filters, limit, cursor);
 
             // Si no hay posts, lanza un error
             if (!posts) {
@@ -36,8 +39,8 @@ export class PostController {
             })
         } catch (error) {
             next(error);
-        }
-    }
+        };
+    };
 
     // Metodo del controlador para crear un nuevo post
     public async createPost(req: Request, res: Response, next: NextFunction) {
@@ -77,8 +80,11 @@ export class PostController {
             const locale = req.headers['accept-language'] || 'en';
             i18n.setLocale(locale);
 
+            const limit = req.query.limit? parseInt(req.query.limit as string, 10) : undefined;
+            const cursor = req.query.cursor as string | undefined;
+
             // Llama al servicio para obtener los posts
-            const posts = await this.postService.getPosts();
+            const posts = await this.postService.getPosts(limit, cursor);
 
             // Si no hay posts, lanza un error
             if (!posts) {
