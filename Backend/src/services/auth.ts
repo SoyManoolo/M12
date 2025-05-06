@@ -1,11 +1,12 @@
 import { AppError } from "../middlewares/errors/AppError";
-import { User } from "../models";
+import { User, JWT } from "../models";
 import { compare, hash } from "bcryptjs";
 import { AuthToken } from "../middlewares/validation/authentication/jwt";
 import { Op } from "sequelize";
 
 export class AuthService {
 
+    // Método para iniciar sesión
     public async login(id: string, password: string): Promise<string> {
         try {
             const user = await User.findOne({ where: { [Op.or]: [{ username: id }, { email: id }] } });
@@ -20,6 +21,10 @@ export class AuthService {
 
             if (!token) throw new AppError(500, 'TokenGenerationError');
 
+            JWT.create({
+                token
+            });
+
             return token;
         } catch (error) {
             if (error instanceof AppError) {
@@ -30,6 +35,7 @@ export class AuthService {
         };
     };
 
+    // Método para registrar un nuevo usuario
     public async register(email: string, username: string, name: string, surname: string, password: string): Promise<string> {
         try {
             const existingUser = await User.findOne({ where: { [Op.or]: [{ username }, { email }] } });
@@ -62,6 +68,10 @@ export class AuthService {
                  throw new AppError(500, 'TokenGenerationError');
             }
 
+            JWT.create({
+                token
+            });
+
             return token;
         } catch (error) {
             if (error instanceof AppError) {
@@ -70,4 +80,21 @@ export class AuthService {
             throw new AppError(500, 'InternalServerError');
         };
     };
+
+    public async logout(token: string) {
+        try {
+            const jwt = await JWT.findOne({ where: { token } });
+
+            if (!jwt) throw new AppError(404, 'TokenNotFound');
+
+            await jwt.destroy();
+
+            return true;
+        } catch (error) {
+            if (error instanceof AppError) {
+                throw error;
+            };
+            throw new AppError(500, 'InternalServerError');
+        };
+    }
 };

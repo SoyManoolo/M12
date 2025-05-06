@@ -41,4 +41,23 @@ export class AuthController {
             next(error);
         };
     };
+
+    public async logout(req: Request, res: Response, next: NextFunction) {
+        try {
+            const locale = req.headers['accept-language'] || 'en';
+            i18n.setLocale(locale);
+            const { token } = req.params;
+
+            const response = await this.authService.logout(token);
+
+            res.status(200).json({
+                success: true,
+                status: 200,
+                message: i18n.__('success.auth.logout'),
+                response
+            });
+        } catch (error) {
+            next(error);
+        };
+    }
 };

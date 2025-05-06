@@ -18,6 +18,8 @@ export interface UpdateUserData {
     username?: string;
     email?: string;
     password?: string;
+    bio?: string;
+    profile_picture?: string;
 }
 
 export {};

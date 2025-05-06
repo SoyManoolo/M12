@@ -37,7 +37,7 @@ User.init(
             allowNull: false,
             validate: { notEmpty: true },
         },
-        profile_picture_url: {
+        profile_picture: {
             type: DataTypes.STRING(255),
             allowNull: true,
             validate: { isUrl: true },

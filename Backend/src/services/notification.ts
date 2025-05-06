@@ -1,5 +1,4 @@
-import { Notifications } from '../models/Notifications';
-import { User } from '../models/User';
+import { Notifications, User } from '../models';
 import { AppError } from '../middlewares/errors/AppError';
 import { existsUser } from '../utils/modelExists';
 

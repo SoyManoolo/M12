@@ -20,11 +20,10 @@ app.use('/auth', authRoutes);
 app.use('/posts', postRoutes);
 app.use('/chat', chatROutes);
 
-app.use((error: any, req: Request, res: Response, next: NextFunction) => {
-    celebrateErrorHandler(error, req, res, next);
+// app.use((error: any, req: Request, res: Response, next: NextFunction) => {
+//     celebrateErrorHandler(error, req, res, next);
+// });
 
-});
-
-app.use((error: Error, req: Request, res: Response, next: NextFunction): void => {
-    AppErrorHandler.errorHandler(error, req, res, next);
-});
+// app.use((error: Error, req: Request, res: Response, next: NextFunction): void => {
+//     AppErrorHandler.errorHandler(error, req, res, next);
+// });

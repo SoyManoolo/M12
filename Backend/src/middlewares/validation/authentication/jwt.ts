@@ -1,7 +1,7 @@
 // Middleware para generacion de tokern y validación
 
 import jwt from "jsonwebtoken";
-import { User } from "../../../models";
+import { JWT, User } from "../../../models";
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../../errors/AppError";
 
@@ -21,6 +21,7 @@ export class AuthToken {
         // Generamos un token con el id y el dni del usuario
         return jwt.sign({
             id: user.dataValues.user_id,
+            username: user.dataValues.username,
         },
             AuthToken.secretKey,
             { expiresIn: 3600 }
@@ -44,9 +45,18 @@ export class AuthToken {
             // Verificamos el token y lo guardamos en req.user
             req.user = jwt.verify(token, AuthToken.secretKey) as jwt.JwtPayload;
 
+            // Verificamos si el token existe en la base de datos
+            const tokenExist = JWT.findOne({ where: { token } });
+
+            // Si el token no existe en la base de datos devolvemos un error
+            if (!tokenExist) throw new AppError(403, "TokenNotFound");
+
             // Pasamos al siguiente middleware
             next();
         } catch (error) {
+            if (error instanceof AppError) {
+                throw error;
+            };
             throw new AppError(403, "FormatJWT");
         };
     };
@@ -65,6 +75,9 @@ export class AuthToken {
             // Pasa al siguiente middleware si el usuario es admin
             next();
         } catch (error) {
+            if (error instanceof AppError) {
+                throw error;
+            };
             next(new AppError(403, "Error verifying admin privileges"));
         };
     };
