@@ -14,6 +14,9 @@ export class PostService {
             })
             return post;
         } catch (error) {
+            if (error instanceof AppError) {
+                throw error;
+            }
             throw new AppError(500, 'InternalServerError');
         };
     };
@@ -46,8 +49,8 @@ export class PostService {
                         [Op.and]: [
                             { user_id },  // Mantener la condición de user_id
                             {
-                                createdAt: {
-                                    [Op.lt]: lastPost.dataValues.createdAt
+                                created_at: {
+                                    [Op.lt]: lastPost.dataValues.created_at
                                 }
                             }
                         ]
@@ -75,6 +78,9 @@ export class PostService {
                 nextCursor
             };
         } catch (error) {
+            if (error instanceof AppError) {
+                throw error;
+            }
             throw new AppError(500, 'InternalServerError');
         };
     }
@@ -91,8 +97,8 @@ export class PostService {
                 const lastPost = await Post.findByPk(cursor);
                 if (lastPost) {
                     queryOptions.where = {
-                        createdAt: {
-                            [Op.lt]: lastPost.dataValues.createdAt // Obtenemos posts más antiguos que el cursor
+                        created_at: {
+                            [Op.lt]: lastPost.dataValues.created_at // Obtenemos posts más antiguos que el cursor
                         }
                     };
                 }
@@ -118,6 +124,9 @@ export class PostService {
                 nextCursor
             };
         } catch (error) {
+            if (error instanceof AppError) {
+                throw error;
+            }
             throw new AppError(500, 'InternalServerError');
         };
     };
@@ -136,6 +145,9 @@ export class PostService {
             return post;
 
         } catch (error) {
+            if (error instanceof AppError) {
+                throw error;
+            }
             throw new AppError(500, 'InternalServerError');
         };
     };
@@ -151,6 +163,9 @@ export class PostService {
 
             return post;
         } catch (error) {
+            if (error instanceof AppError) {
+                throw error;
+            }
             throw new AppError(500, 'InternalServerError');
         };
     };
