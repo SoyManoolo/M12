@@ -1,27 +1,5 @@
 import { environment } from '../config/environment';
-
-interface UserProfile {
-    user_id: string;
-    name: string;
-    surname: string;
-    username: string;
-    email: string;
-    profile_picture_url: string | null;
-    bio: string | null;
-    email_verified: boolean;
-    is_moderator: boolean;
-    deleted_at: string | null;
-    created_at: string;
-    updated_at: string;
-    active_video_call: boolean;
-}
-
-interface ApiResponse<T> {
-    success: boolean;
-    status: number;
-    message: string;
-    data?: T;
-}
+import type { UserProfile, ApiResponse } from '../types/user.types';
 
 export const userService = {
     /**
@@ -44,7 +22,8 @@ export const userService = {
             return {
                 success: false,
                 status: 500,
-                message: 'Error al conectar con el servidor'
+                message: 'Error al conectar con el servidor',
+                data: [] as UserProfile[]
             };
         }
     },
@@ -82,7 +61,8 @@ export const userService = {
             return {
                 success: false,
                 status: 500,
-                message: 'Error al conectar con el servidor'
+                message: 'Error al conectar con el servidor',
+                data: {} as UserProfile
             };
         }
     },
@@ -107,7 +87,8 @@ export const userService = {
             return {
                 success: false,
                 status: 500,
-                message: 'Error al conectar con el servidor'
+                message: 'Error al conectar con el servidor',
+                data: {} as UserProfile
             };
         }
     },
@@ -133,7 +114,8 @@ export const userService = {
             return {
                 success: false,
                 status: 500,
-                message: 'Error al conectar con el servidor'
+                message: 'Error al conectar con el servidor',
+                data: {} as UserProfile
             };
         }
     },
@@ -159,7 +141,8 @@ export const userService = {
             return {
                 success: false,
                 status: 500,
-                message: 'Error al conectar con el servidor'
+                message: 'Error al conectar con el servidor',
+                data: {} as UserProfile
             };
         }
     },
@@ -184,7 +167,8 @@ export const userService = {
             return {
                 success: false,
                 status: 500,
-                message: 'Error al conectar con el servidor'
+                message: 'Error al conectar con el servidor',
+                data: undefined
             };
         }
     },
@@ -209,7 +193,8 @@ export const userService = {
             return {
                 success: false,
                 status: 500,
-                message: 'Error al conectar con el servidor'
+                message: 'Error al conectar con el servidor',
+                data: undefined
             };
         }
     }

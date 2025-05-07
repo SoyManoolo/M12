@@ -6,12 +6,14 @@
  * @exports ConfiguracionPage
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from "@remix-run/react";
 import Navbar from "~/components/Inicio/Navbar";
 import { useAuth } from "~/hooks/useAuth";
 import { environment } from "~/config/environment";
 import { FaSignOutAlt } from 'react-icons/fa';
+import { userService } from "~/services/user.service";
+import type { UserProfile } from "~/types/user.types";
 
 export default function ConfiguracionPage() {
   const navigate = useNavigate();
@@ -30,6 +32,41 @@ export default function ConfiguracionPage() {
     newPassword: '',
     confirmPassword: ''
   });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Cargar datos del usuario al montar el componente
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!token) return;
+      
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await userService.getUserById('me', token);
+        
+        if (!response.success || !response.data) {
+          throw new Error('No se recibieron datos del usuario');
+        }
+
+        // Actualizar el estado con los datos del usuario
+        setFormData({
+          username: response.data.username || '',
+          email: response.data.email || '',
+          name: response.data.name || '',
+          surname: response.data.surname || '',
+          bio: response.data.bio || ''
+        });
+      } catch (err) {
+        setError('Error al cargar los datos del usuario');
+        console.error('Error al cargar datos del usuario:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, [token]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -49,18 +86,74 @@ export default function ConfiguracionPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Aquí iría la lógica para guardar los cambios
-    console.log('Guardando cambios:', formData);
+    if (!token) return;
+
+    try {
+      setError(null);
+      // Actualizar los datos del usuario
+      const response = await fetch(`${environment.apiUrl}/users/me`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          username: formData.username,
+          email: formData.email,
+          name: formData.name,
+          surname: formData.surname,
+          bio: formData.bio
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al actualizar los datos');
+      }
+      
+      alert('Datos actualizados correctamente');
+    } catch (err) {
+      setError('Error al actualizar los datos');
+      console.error('Error al actualizar datos:', err);
+    }
   };
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!token) return;
+
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      alert('Las contraseñas no coinciden');
+      setError('Las contraseñas no coinciden');
       return;
     }
-    // Aquí iría la lógica para cambiar la contraseña
-    console.log('Cambiando contraseña:', passwordData);
+    try {
+      setError(null);
+      // Actualizar la contraseña
+      const response = await fetch(`${environment.apiUrl}/users/me/password`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          current_password: passwordData.currentPassword,
+          new_password: passwordData.newPassword
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al actualizar la contraseña');
+      }
+      
+      alert('Contraseña actualizada correctamente');
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+    } catch (err) {
+      setError('Error al actualizar la contraseña');
+      console.error('Error al actualizar contraseña:', err);
+    }
   };
 
   const handleLogout = async () => {
@@ -89,6 +182,19 @@ export default function ConfiguracionPage() {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black text-white flex">
+        <Navbar />
+        <div className="w-2/3 ml-[16.666667%] p-8">
+          <div className="flex justify-center items-center h-full">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-black text-white flex">
       {/* Barra lateral usando el componente Navbar */}
@@ -100,6 +206,12 @@ export default function ConfiguracionPage() {
           <h1 className="text-2xl font-bold mb-8">
             {activeSection.toUpperCase()}
           </h1>
+
+          {error && (
+            <div className="mb-4 p-4 bg-red-500/20 border border-red-500 rounded-md text-red-500">
+              {error}
+            </div>
+          )}
 
           {activeSection === 'cuenta' && (
             <form onSubmit={handleSubmit} className="space-y-6">
