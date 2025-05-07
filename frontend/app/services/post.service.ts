@@ -3,6 +3,7 @@ interface Post {
   user_id: string;
   description: string;
   media_url: string | null;
+  media?: string | null;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
@@ -20,6 +21,12 @@ interface PostsResponse {
 
 class PostService {
   private baseUrl = 'http://localhost:3000';
+
+  private getFullMediaUrl(mediaUrl: string | null): string | null {
+    if (!mediaUrl) return null;
+    if (mediaUrl.startsWith('http')) return mediaUrl;
+    return `${this.baseUrl}${mediaUrl}`;
+  }
 
   async getPosts(token: string, cursor?: string, username?: string): Promise<PostsResponse> {
     try {
@@ -57,6 +64,12 @@ class PostService {
       if (!response.ok) {
         throw new Error(data.message || 'Error al obtener los posts');
       }
+
+      // Transformar las URLs de las imágenes
+      data.data.posts = data.data.posts.map((post: Post) => ({
+        ...post,
+        media_url: this.getFullMediaUrl(post.media || post.media_url)
+      }));
 
       return data;
     } catch (error) {
