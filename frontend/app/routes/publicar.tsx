@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Navbar from '~/components/Inicio/Navbar';
 import { useAuth } from '~/hooks/useAuth';
+import { redirect } from "@remix-run/node";
 
 interface CreatePostResponse {
   success: boolean;
@@ -17,6 +18,13 @@ interface CreatePostResponse {
     is_saved: boolean;
   };
 }
+
+export const loader = async ({ request }: { request: Request }) => {
+  const cookieHeader = request.headers.get("Cookie");
+  const token = cookieHeader?.split(";").find((c: string) => c.trim().startsWith("token="))?.split("=")[1];
+  if (!token) return redirect("/login");
+  return null;
+};
 
 export default function Publicar() {
   const { token } = useAuth();

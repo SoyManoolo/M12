@@ -14,6 +14,14 @@ import { environment } from "~/config/environment";
 import { FaSignOutAlt } from 'react-icons/fa';
 import { userService } from "~/services/user.service";
 import type { UserProfile } from "~/types/user.types";
+import { redirect } from "@remix-run/node";
+
+export const loader = async ({ request }: { request: Request }) => {
+  const cookieHeader = request.headers.get("Cookie");
+  const token = cookieHeader?.split(";").find((c: string) => c.trim().startsWith("token=") )?.split("=")[1];
+  if (!token) return redirect("/login");
+  return null;
+};
 
 export default function ConfiguracionPage() {
   const navigate = useNavigate();

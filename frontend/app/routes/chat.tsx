@@ -15,6 +15,7 @@ import { useSearchParams } from '@remix-run/react';
 import Navbar from '~/components/Inicio/Navbar';
 import ChatUserInfo from '~/components/Chats/ChatUserInfo';
 import { FaPaperPlane } from 'react-icons/fa';
+import { redirect } from "@remix-run/node";
 
 interface Message {
   id: string;
@@ -34,6 +35,13 @@ interface User {
   bio: string | null;
   is_online: boolean;
 }
+
+export const loader = async ({ request }: { request: Request }) => {
+  const cookieHeader = request.headers.get("Cookie");
+  const token = cookieHeader?.split(";").find((c: string) => c.trim().startsWith("token="))?.split("=")[1];
+  if (!token) return redirect("/login");
+  return null;
+};
 
 export default function Chat() {
   const [searchParams] = useSearchParams();

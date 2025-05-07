@@ -17,6 +17,7 @@ import ChatVideollamada from '~/components/Videollamada/ChatVideollamada';
 import VideoCall from '~/components/Videollamada/VideoCall';
 import RatingModal from '~/components/Videollamada/RatingModal';
 import { useNavigate } from '@remix-run/react';
+import { redirect } from "@remix-run/node";
 
 /**
  * @interface Message
@@ -195,4 +196,11 @@ export default function VideollamadaPage() {
       />
     </div>
   );
-} 
+}
+
+export const loader = async ({ request }: { request: Request }) => {
+  const cookieHeader = request.headers.get("Cookie");
+  const token = cookieHeader?.split(";").find((c: string) => c.trim().startsWith("token="))?.split("=")[1];
+  if (!token) return redirect("/login");
+  return null;
+}; 

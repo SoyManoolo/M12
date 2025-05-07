@@ -12,7 +12,7 @@
  * @module Notificaciones
  */
 
-import { json } from "@remix-run/node";
+import { json, redirect } from "@remix-run/node";
 import { useLoaderData, Link } from "@remix-run/react";
 import { useState, useEffect } from "react";
 import type { Notification, User } from "~/types/notifications";
@@ -34,23 +34,26 @@ interface LoaderData {
   currentUser: User;
 }
 
-export const loader = async () => {
+export const loader = async ({ request }: { request: Request }) => {
+  const cookieHeader = request.headers.get("Cookie");
+  const token = cookieHeader?.split(";").find((c: string) => c.trim().startsWith("token="))?.split("=")[1];
+  if (!token) return redirect("/login");
   try {
     // Datos mock para pruebas
     const mockUser: User = {
       user_id: "1",
-      first_name: "María",
-      last_name: "García",
       username: "mariagarcia",
+      name: "María",
+      surname: "García",
       email: "maria@example.com",
-      password: "hashed_password",
       profile_picture_url: "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg",
       bio: "¡Hola! Me encanta compartir momentos especiales",
       email_verified: true,
       is_moderator: false,
-      id_deleted: false,
+      deleted_at: null,
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
+      active_video_call: false
     };
 
     const mockFriend: Friend = {
@@ -60,18 +63,18 @@ export const loader = async () => {
       created_at: new Date().toISOString(),
       user: {
         user_id: "2",
-        first_name: "Carlos",
-        last_name: "Pérez",
         username: "carlos123",
+        name: "Carlos",
+        surname: "Pérez",
         email: "carlos@example.com",
-        password: "hashed_password",
         profile_picture_url: "https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg",
         bio: "Amante de la música",
         email_verified: true,
         is_moderator: false,
-        id_deleted: false,
+        deleted_at: null,
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        active_video_call: false
       }
     };
 
