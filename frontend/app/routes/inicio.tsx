@@ -293,66 +293,44 @@ export default function InicioPage() {
     }
   };
 
-  if (loading && posts.length === 0) {
-    return (
-      <div className="min-h-screen bg-black text-white flex">
-        <Navbar />
-        <div className="w-2/3 ml-[16.666667%] border-r border-gray-800">
-          <div className="p-4">
-            <h2 className="text-xl font-bold mb-4">Feed Principal</h2>
-            <div className="flex justify-center items-center h-[calc(100vh-200px)]">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-            </div>
-          </div>
-        </div>
-        <RightPanel friends={[]} mode="online" />
-      </div>
-    );
-  }
-
-  if (error && posts.length === 0) {
-    return (
-      <div className="min-h-screen bg-black text-white flex">
-        <Navbar />
-        <div className="w-2/3 ml-[16.666667%] border-r border-gray-800">
-          <div className="p-4">
-            <h2 className="text-xl font-bold mb-4">Feed Principal</h2>
-            <div className="bg-gray-900 rounded-lg p-6 text-center border border-gray-800">
-              <p className="text-gray-400">{error === "No hay posts disponibles" ? (
-                <>
-                  <p className="text-gray-400">No hay publicaciones para mostrar</p>
-                  <p className="text-gray-500 text-sm mt-2">Sé el primero en compartir algo</p>
-                </>
-              ) : (
-                error
-              )}</p>
-            </div>
-          </div>
-        </div>
-        <RightPanel friends={[]} mode="online" />
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-black text-white flex">
-      {/* Barra lateral usando el componente Navbar */}
       <Navbar />
-
-      {/* Contenido central */}
       <div className="w-2/3 ml-[16.666667%] border-r border-gray-800">
         <div className="p-4">
           <h2 className="text-xl font-bold mb-4">Feed Principal</h2>
 
-          {/* Lista de posts */}
-          {posts.length === 0 ? (
+          {loading && posts.length === 0 ? (
+            <div className="flex justify-center items-center h-[calc(100vh-200px)]">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+            </div>
+          ) : error ? (
             <div className="bg-gray-900 rounded-lg p-6 text-center border border-gray-800">
-              <p className="text-gray-400">No hay publicaciones para mostrar</p>
-              <p className="text-gray-500 text-sm mt-2">Sé el primero en compartir algo</p>
+              <div className="text-4xl mb-4">📝</div>
+              <h3 className="text-xl font-semibold text-white mb-2">¡No hay publicaciones disponibles!</h3>
+              <p className="text-gray-400 mb-4">Sé el primero en compartir algo con la comunidad.</p>
+              <button
+                onClick={() => window.location.href = '/publicar'}
+                className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors"
+              >
+                Crear mi primera publicación
+              </button>
+            </div>
+          ) : posts.length === 0 ? (
+            <div className="bg-gray-900 rounded-lg p-6 text-center border border-gray-800">
+              <div className="text-4xl mb-4">📝</div>
+              <h3 className="text-xl font-semibold text-white mb-2">¡No hay publicaciones disponibles!</h3>
+              <p className="text-gray-400 mb-4">Sé el primero en compartir algo con la comunidad.</p>
+              <button
+                onClick={() => window.location.href = '/publicar'}
+                className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors"
+              >
+                Crear mi primera publicación
+              </button>
             </div>
           ) : (
             <>
-              {posts.map((post: Post) => (
+              {posts.map((post) => (
                 <Post
                   key={post.post_id}
                   post_id={post.post_id}
@@ -370,7 +348,6 @@ export default function InicioPage() {
                 />
               ))}
               
-              {/* Botón de cargar más */}
               {nextCursor && (
                 <div className="flex justify-center mt-6">
                   <button
@@ -386,12 +363,7 @@ export default function InicioPage() {
           )}
         </div>
       </div>
-
-      {/* Barra lateral derecha */}
-      <RightPanel
-        friends={[]}
-        mode="online"
-      />
+      <RightPanel friends={[]} mode="online" />
     </div>
   );
 } 
