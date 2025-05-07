@@ -93,6 +93,7 @@ export default function Perfil(): React.ReactElement {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -123,6 +124,11 @@ export default function Perfil(): React.ReactElement {
           };
           setUser(userData);
           
+          // Limpiar la URL si estamos en nuestro propio perfil
+          if (window.location.search.includes('username=')) {
+            navigate('/perfil', { replace: true });
+          }
+          
           // Obtener posts del usuario
           const postsResponse = await postService.getPosts(token, undefined, userData.username);
           if (postsResponse.success) {
@@ -148,7 +154,7 @@ export default function Perfil(): React.ReactElement {
     };
 
     fetchUserData();
-  }, [token]);
+  }, [token, navigate]);
 
   const handleLoadMore = async () => {
     if (!token || !nextCursor || loading || !user) return;

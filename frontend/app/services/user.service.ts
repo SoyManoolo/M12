@@ -54,6 +54,19 @@ export const userService = {
      */
     async getUserById(userId: string, token: string): Promise<ApiResponse<UserProfile>> {
         try {
+            // Si el userId es 'me', decodificamos el token para obtener el ID
+            if (userId === 'me') {
+                // Decodificar el token JWT
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+
+                const payload = JSON.parse(jsonPayload);
+                userId = payload.id; // El ID del usuario está en el payload del token
+            }
+
             const response = await fetch(`${environment.apiUrl}/users/${userId}`, {
                 method: 'GET',
                 headers: {
