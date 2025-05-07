@@ -16,6 +16,7 @@ import Navbar from '~/components/Inicio/Navbar';
 import ChatUserInfo from '~/components/Chats/ChatUserInfo';
 import { FaPaperPlane } from 'react-icons/fa';
 import { redirect } from "@remix-run/node";
+import type { User } from '~/types/user.types';
 
 interface Message {
   id: string;
@@ -24,16 +25,6 @@ interface Message {
   receiver_id: string;
   created_at: string;
   is_own: boolean;
-}
-
-interface User {
-  user_id: string;
-  username: string;
-  first_name: string;
-  last_name: string;
-  profile_picture_url: string | null;
-  bio: string | null;
-  is_online: boolean;
 }
 
 export const loader = async ({ request }: { request: Request }) => {
@@ -53,11 +44,17 @@ export default function Chat() {
   const mockChatUser: User = {
     user_id: '1',
     username: 'usuario1',
-    first_name: 'Usuario',
-    last_name: 'Uno',
+    name: 'Usuario',
+    surname: 'Uno',
+    email: 'usuario1@example.com',
     profile_picture_url: 'https://i.pravatar.cc/150?img=1',
     bio: '¡Hola! Me encanta compartir momentos especiales',
-    is_online: true
+    email_verified: true,
+    is_moderator: false,
+    deleted_at: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    active_video_call: false
   };
 
   // Mock de mensajes
@@ -122,7 +119,7 @@ export default function Chat() {
         <div className="flex flex-col h-screen">
           {/* Encabezado del chat */}
           <div className="p-4 border-b border-gray-800">
-            <h1 className="text-xl font-bold">{chatUser.first_name} {chatUser.last_name}</h1>
+            <h1 className="text-xl font-bold">{chatUser.name} {chatUser.surname}</h1>
           </div>
 
           {/* Mensajes */}

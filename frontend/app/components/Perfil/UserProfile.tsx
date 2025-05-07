@@ -17,45 +17,49 @@ import { FaEdit } from 'react-icons/fa';
 import { userService } from '../../services/user.service';
 import { useAuth } from '../../hooks/useAuth.tsx';
 import { useNavigate } from 'react-router-dom';
-
-interface UserProfileData {
-    user_id: string;
-    name: string;
-    surname: string;
-    username: string;
-    email: string;
-    profile_picture_url: string | null;
-    bio: string | null;
-    email_verified: boolean;
-    is_moderator: boolean;
-    deleted_at: string | null;
-    created_at: string;
-    updated_at: string;
-    active_video_call: boolean;
-}
+import type { User } from '~/types/user.types';
 
 interface UserProfileProps {
+    user?: User;
     userId?: string;
     username?: string;
     isOwnProfile: boolean;
-    onEditProfile: () => void;
+    onEditProfile?: () => void;
 }
 
-export default function UserProfile({ userId, username, isOwnProfile, onEditProfile }: UserProfileProps) {
-    const [user, setUser] = useState<UserProfileData | null>(null);
-    const [loading, setLoading] = useState(true);
+export default function UserProfile({ user: userProp, userId, username, isOwnProfile, onEditProfile }: UserProfileProps) {
+    const [user, setUser] = useState<User | null>(userProp || null);
+    const [loading, setLoading] = useState(!userProp);
     const [error, setError] = useState<string | null>(null);
     const { token } = useAuth();
     const navigate = useNavigate();
 
+    function mapUserProfileToUser(profile: any): User {
+        return {
+            user_id: profile.user_id,
+            username: profile.username,
+            name: profile.name,
+            surname: profile.surname,
+            email: profile.email,
+            profile_picture_url: profile.profile_picture_url ?? null,
+            bio: profile.bio ?? null,
+            email_verified: profile.email_verified,
+            is_moderator: profile.is_moderator,
+            deleted_at: profile.deleted_at ?? null,
+            created_at: profile.created_at,
+            updated_at: profile.updated_at,
+            active_video_call: profile.active_video_call ?? false
+        };
+    }
+
     useEffect(() => {
+        if (userProp) return;
         const fetchUserData = async () => {
             if (!token) {
                 setError('No hay token de autenticación');
                 setLoading(false);
                 return;
             }
-
             try {
                 let response;
                 if (userId) {
@@ -65,9 +69,8 @@ export default function UserProfile({ userId, username, isOwnProfile, onEditProf
                 } else {
                     throw new Error('Se requiere userId o username');
                 }
-
                 if (response.success && response.data) {
-                    setUser(response.data);
+                    setUser(mapUserProfileToUser(response.data));
                 } else {
                     setError(response.message || 'Error al cargar el perfil');
                 }
@@ -77,23 +80,23 @@ export default function UserProfile({ userId, username, isOwnProfile, onEditProf
                 setLoading(false);
             }
         };
-
         fetchUserData();
-    }, [userId, username, token]);
+    }, [userId, username, token, userProp]);
 
-    const handleUpdateProfile = async (updateData: Partial<UserProfileData>) => {
+    const handleUpdateProfile = async (updateData: Partial<User>) => {
         if (!token || !user) return;
-
+        const cleanUpdateData: any = { ...updateData };
+        if ('bio' in cleanUpdateData && cleanUpdateData.bio === null) cleanUpdateData.bio = undefined;
+        if ('profile_picture_url' in cleanUpdateData && cleanUpdateData.profile_picture_url === null) cleanUpdateData.profile_picture_url = undefined;
         try {
             let response;
             if (userId) {
-                response = await userService.updateUserById(userId, updateData, token);
+                response = await userService.updateUserById(userId, cleanUpdateData, token);
             } else if (username) {
-                response = await userService.updateUserByUsername(username, updateData, token);
+                response = await userService.updateUserByUsername(username, cleanUpdateData, token);
             }
-
             if (response?.success && response.data) {
-                setUser(response.data);
+                setUser(mapUserProfileToUser(response.data));
             } else {
                 setError(response?.message || 'Error al actualizar el perfil');
             }

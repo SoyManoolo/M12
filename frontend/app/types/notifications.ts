@@ -7,6 +7,8 @@
  * @module notifications
  */
 
+import type { User } from './user.types';
+
 /**
  * Enumeración de tipos de notificación
  */
@@ -108,25 +110,6 @@ export interface SystemNotification extends BaseNotification {
     type: NotificationType.SYSTEM;
     title: string;              // Título de la notificación
     message: string;            // Mensaje de la notificación
-}
-
-/**
- * Interfaz que define la estructura de un usuario
- */
-export interface User {
-    user_id: string;            // Identificador único del usuario
-    first_name: string;         // Nombre del usuario
-    last_name: string;          // Apellido del usuario
-    username: string;           // Nombre de usuario
-    email: string;              // Correo electrónico
-    password: string;           // Contraseña (hasheada)
-    profile_picture_url: string | null; // URL de la foto de perfil
-    bio: string | null;         // Biografía del usuario
-    email_verified: boolean;    // Estado de verificación de email
-    is_moderator: boolean;      // Indica si es moderador
-    id_deleted: boolean;        // Indica si el usuario está eliminado
-    created_at: string;         // Fecha de creación
-    updated_at: string;         // Fecha de última actualización
 }
 
 /**

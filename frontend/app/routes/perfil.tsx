@@ -113,14 +113,14 @@ export default function Perfil(): React.ReactElement {
             surname: userResponse.data.surname,
             username: userResponse.data.username,
             email: userResponse.data.email,
-            profile_picture_url: userResponse.data.profile_picture_url,
-            bio: userResponse.data.bio,
+            profile_picture_url: userResponse.data.profile_picture_url ?? null,
+            bio: userResponse.data.bio ?? null,
             email_verified: userResponse.data.email_verified,
             is_moderator: userResponse.data.is_moderator,
-            deleted_at: userResponse.data.deleted_at,
+            deleted_at: null,
             created_at: userResponse.data.created_at,
             updated_at: userResponse.data.updated_at,
-            active_video_call: userResponse.data.active_video_call
+            active_video_call: false
           };
           setUser(userData);
           

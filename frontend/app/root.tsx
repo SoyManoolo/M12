@@ -7,8 +7,22 @@ import {
 } from "@remix-run/react";
 import { AuthProvider } from "./hooks/useAuth.tsx";
 import { useState, useEffect } from "react";
+import { json } from "@remix-run/node";
+import type { LoaderFunction } from "@remix-run/node";
 
 import "./tailwind.css";
+
+// Middleware para manejar rutas específicas
+export const loader: LoaderFunction = async ({ request }) => {
+  const url = new URL(request.url);
+  
+  // Si es una ruta de Chrome DevTools, devolver 200 OK
+  if (url.pathname.includes("/.well-known/appspecific/com.chrome.devtools.json")) {
+    return json({}, { status: 200 });
+  }
+  
+  return null;
+};
 
 // Definir metadatos por defecto para la aplicación
 export const meta = () => {
