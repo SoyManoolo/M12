@@ -90,9 +90,9 @@ export default function ConfiguracionPage() {
 
     try {
       setError(null);
-      // Actualizar los datos del usuario
-      const response = await fetch(`${environment.apiUrl}/users/me`, {
-        method: 'PUT',
+      // Actualizar los datos del usuario usando la ruta correcta con el username
+      const response = await fetch(`${environment.apiUrl}/users/username?username=${formData.username}`, {
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
@@ -107,12 +107,18 @@ export default function ConfiguracionPage() {
       });
 
       if (!response.ok) {
-        throw new Error('Error al actualizar los datos');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error al actualizar los datos');
       }
       
-      alert('Datos actualizados correctamente');
+      const data = await response.json();
+      if (data.success) {
+        alert('Datos actualizados correctamente');
+      } else {
+        throw new Error(data.message || 'Error al actualizar los datos');
+      }
     } catch (err) {
-      setError('Error al actualizar los datos');
+      setError(err instanceof Error ? err.message : 'Error al actualizar los datos');
       console.error('Error al actualizar datos:', err);
     }
   };
