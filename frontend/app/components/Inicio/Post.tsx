@@ -15,7 +15,7 @@
  */
 
 import { useState } from 'react';
-import { FaHeart, FaRegHeart, FaBookmark, FaRegBookmark, FaShare, FaComment, FaTimes } from 'react-icons/fa';
+import { FaHeart, FaRegHeart, FaBookmark, FaRegBookmark, FaShare, FaComment, FaTimes, FaTrash } from 'react-icons/fa';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -43,6 +43,8 @@ interface PostProps {
   is_saved: boolean;
   onLike: () => void;
   onSave: () => void;
+  currentUserId?: string; // ID del usuario actual
+  onDelete?: (postId: string) => void; // Función para eliminar el post
 }
 
 /**
@@ -61,7 +63,9 @@ export default function Post({
   likes_count,
   is_saved,
   onLike,
-  onSave
+  onSave,
+  currentUserId,
+  onDelete
 }: PostProps) {
   // Estados para controlar las interacciones del usuario
   const [isLiked, setIsLiked] = useState(false);
@@ -139,6 +143,12 @@ export default function Post({
     onSave();
   };
 
+  const handleDelete = async () => {
+    if (window.confirm('¿Estás seguro de que quieres eliminar esta publicación?')) {
+      onDelete?.(post_id);
+    }
+  };
+
   return (
     <>
       {/* Contenedor principal del post */}
@@ -147,12 +157,14 @@ export default function Post({
           {/* Columna izquierda - Acciones y perfil */}
           <div className="w-[80px] flex flex-col items-center space-y-4">
             {/* Perfil y nombre del usuario */}
-            <img 
-              src={user.profile_picture_url || '/default-avatar.png'} 
-              alt={user.username} 
-              className="w-12 h-12 rounded-full cursor-pointer object-cover"
-              onClick={() => window.location.href = `/perfil/${user.username}`}
-            />
+            <div className="relative w-full flex justify-center">
+              <img 
+                src={user.profile_picture_url || '/default-avatar.png'} 
+                alt={user.username} 
+                className="w-12 h-12 rounded-full cursor-pointer object-cover"
+                onClick={() => window.location.href = `/perfil/${user.username}`}
+              />
+            </div>
             <p className="font-semibold text-white cursor-pointer hover:underline text-center text-sm">
               {user.username}
             </p>
@@ -191,6 +203,19 @@ export default function Post({
                   <span className="text-xs">Guardar</span>
                 </button>
               </div>
+              {/* Botón de eliminar (papelera) solo si el post es del usuario actual */}
+              {currentUserId === user.user_id && (
+                <div className="flex flex-col items-center mt-2">
+                  <button
+                    onClick={handleDelete}
+                    title="Eliminar publicación"
+                    className="flex flex-col items-center cursor-pointer text-red-500 hover:text-red-700 focus:outline-none"
+                  >
+                    <FaTrash className="text-xl mb-1" />
+                    <span className="text-xs">Eliminar</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 

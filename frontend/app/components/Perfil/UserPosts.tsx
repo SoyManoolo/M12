@@ -10,6 +10,7 @@
  */
 
 import Post from '~/components/Inicio/Post';
+import { useAuth } from '~/hooks/useAuth';
 
 interface User {
   user_id: string;
@@ -51,6 +52,16 @@ interface UserPostsProps {
 }
 
 export default function UserPosts({ posts, onLike, onSave }: UserPostsProps) {
+  const { token } = useAuth();
+  let currentUserId: string | undefined = undefined;
+  if (token) {
+    try {
+      currentUserId = JSON.parse(atob(token.split('.')[1])).user_id;
+    } catch (e) {
+      currentUserId = undefined;
+    }
+  }
+
   if (posts.length === 0) {
     return (
       <div className="bg-gray-900 rounded-lg p-6 text-center border border-gray-800">
@@ -81,6 +92,7 @@ export default function UserPosts({ posts, onLike, onSave }: UserPostsProps) {
           is_saved={post.is_saved}
           onLike={() => onLike(post.post_id)}
           onSave={() => onSave(post.post_id)}
+          currentUserId={currentUserId}
         />
       ))}
     </div>

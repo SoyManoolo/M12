@@ -273,6 +273,26 @@ export default function InicioPage() {
     }
   };
 
+  const handleDelete = async (postId: string) => {
+    if (!token) {
+      setError('No hay token de autenticación');
+      return;
+    }
+
+    try {
+      const response = await postService.deletePost(token, postId);
+      if (response.success) {
+        // Eliminar el post de la lista local
+        setPosts(prevPosts => prevPosts.filter(post => post.post_id !== postId));
+      } else {
+        setError(response.message || 'Error al eliminar el post');
+      }
+    } catch (err) {
+      console.error('Error al eliminar el post:', err);
+      setError(err instanceof Error ? err.message : 'Error al conectar con el servidor');
+    }
+  };
+
   if (loading && posts.length === 0) {
     return (
       <div className="min-h-screen bg-black text-white flex">
@@ -345,6 +365,8 @@ export default function InicioPage() {
                   is_saved={post.is_saved}
                   onLike={() => handleLike(post.post_id)}
                   onSave={() => handleSave(post.post_id)}
+                  currentUserId={token ? JSON.parse(atob(token.split('.')[1])).user_id : undefined}
+                  onDelete={handleDelete}
                 />
               ))}
               

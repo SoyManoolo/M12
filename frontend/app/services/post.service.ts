@@ -77,6 +77,31 @@ class PostService {
       throw error;
     }
   }
+
+  async deletePost(token: string, postId: string): Promise<{ success: boolean; message: string }> {
+    try {
+      const response = await fetch(`${this.baseUrl}/posts/${postId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Error al eliminar el post');
+      }
+
+      return {
+        success: true,
+        message: 'Post eliminado exitosamente'
+      };
+    } catch (error) {
+      console.error('Error en deletePost:', error);
+      throw error;
+    }
+  }
 }
 
 export const postService = new PostService(); 
