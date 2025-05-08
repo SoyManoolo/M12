@@ -13,16 +13,16 @@
 import { useState } from 'react';
 import { Link } from '@remix-run/react';
 import { FaArrowLeft, FaEnvelope } from 'react-icons/fa';
+import { useMessage } from '../hooks/useMessage';
+import Message from '../components/Shared/Message';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-  const [error, setError] = useState('');
+  const { message, showMessage, clearMessage } = useMessage();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setStatus('loading');
-    setError('');
+    showMessage('info', 'Enviando email de recuperación...');
 
     try {
       // Aquí iría la lógica para enviar el email de recuperación
@@ -31,78 +31,60 @@ export default function ForgotPassword() {
       // Simulamos un retraso de red
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      setStatus('success');
+      showMessage('success', 'Te hemos enviado un email con las instrucciones para recuperar tu contraseña');
     } catch (err) {
-      setStatus('error');
-      setError('Error al enviar el email de recuperación. Por favor, inténtalo de nuevo.');
+      showMessage('error', 'No pudimos enviar el email de recuperación. Por favor, inténtalo de nuevo');
     }
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Logo y título */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold mb-2">Recuperar Contraseña</h1>
-          <p className="text-gray-400">
-            Ingresa tu email y te enviaremos un enlace para restablecer tu contraseña
-          </p>
-        </div>
+    <div className="min-h-screen bg-black flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-black border border-gray-800 rounded-lg p-8">
+        <h1 className="text-4xl text-white text-center mb-8 font-bold tracking-wider">RECUPERAR CONTRASEÑA</h1>
+        
+        {message && (
+          <Message
+            type={message.type}
+            message={message.text}
+            onClose={clearMessage}
+          />
+        )}
 
-        {/* Formulario */}
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-400 mb-2">
-              Email
+            <label htmlFor="email" className="block text-gray-300 text-sm font-medium mb-2 tracking-wider">
+              CORREO ELECTRÓNICO
             </label>
             <div className="relative">
-              <FaEnvelope className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <FaEnvelope className="text-gray-400" />
+              </div>
               <input
                 type="email"
                 id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="tu@email.com"
-                className="w-full bg-gray-900 rounded-lg py-3 pl-10 pr-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-10 px-3 py-2 bg-transparent border border-gray-600 rounded-md text-white focus:outline-none focus:border-white cursor-text"
                 required
+                placeholder="Ingresa tu correo electrónico"
               />
             </div>
           </div>
 
-          {/* Mensajes de estado */}
-          {status === 'success' && (
-            <div className="p-4 bg-green-900/50 border border-green-800 rounded-lg text-green-400">
-              <p>¡Email enviado! Revisa tu bandeja de entrada para restablecer tu contraseña.</p>
-            </div>
-          )}
-
-          {status === 'error' && (
-            <div className="p-4 bg-red-900/50 border border-red-800 rounded-lg text-red-400">
-              <p>{error}</p>
-            </div>
-          )}
-
-          {/* Botón de envío */}
           <button
             type="submit"
-            disabled={status === 'loading'}
-            className={`w-full py-3 px-4 rounded-lg font-medium transition-colors ${
-              status === 'loading'
-                ? 'bg-gray-700 cursor-not-allowed'
-                : 'bg-blue-600 hover:bg-blue-700'
-            }`}
+            className="w-full bg-white text-black py-2 px-4 rounded-md hover:bg-gray-200 transition-colors tracking-wider cursor-pointer"
           >
-            {status === 'loading' ? 'Enviando...' : 'Enviar Email'}
+            ENVIAR INSTRUCCIONES
           </button>
 
-          {/* Enlace para volver al login */}
           <div className="text-center">
             <Link
               to="/login"
-              className="inline-flex items-center text-blue-500 hover:text-blue-400"
+              className="inline-flex items-center text-gray-400 hover:text-white text-sm tracking-wider"
             >
               <FaArrowLeft className="mr-2" />
-              Volver al inicio de sesión
+              VOLVER A INICIAR SESIÓN
             </Link>
           </div>
         </form>

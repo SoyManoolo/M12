@@ -15,6 +15,32 @@ import { FaSignOutAlt } from 'react-icons/fa';
 import { userService } from "~/services/user.service";
 import type { UserProfile } from "~/types/user.types";
 import { redirect } from "@remix-run/node";
+import { useMessage } from '../hooks/useMessage';
+import Message from '../components/Shared/Message';
+import { authService } from '../services/auth.service';
+
+/**
+ * Función auxiliar para obtener el username del token JWT
+ * @param token Token JWT
+ * @returns Username del usuario
+ */
+const getUsernameFromToken = (token: string | null): string => {
+  if (!token) return '';
+  
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+
+    const payload = JSON.parse(jsonPayload);
+    return payload.username;
+  } catch (error) {
+    console.error('Error al decodificar el token:', error);
+    return '';
+  }
+};
 
 export const loader = async ({ request }: { request: Request }) => {
   const cookieHeader = request.headers.get("Cookie");
@@ -24,9 +50,12 @@ export const loader = async ({ request }: { request: Request }) => {
 };
 
 export default function ConfiguracionPage() {
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const { token } = useAuth();
+  const navigate = useNavigate();
+  const { message, showMessage, clearMessage } = useMessage();
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [searchParams] = useSearchParams();
   const [activeSection, setActiveSection] = useState(searchParams.get('section') || 'cuenta');
   const [formData, setFormData] = useState({
     username: '',
@@ -40,41 +69,47 @@ export default function ConfiguracionPage() {
     newPassword: '',
     confirmPassword: ''
   });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  // Cargar datos del usuario al montar el componente
   useEffect(() => {
     const fetchUserData = async () => {
-      if (!token) return;
-      
       try {
-        setLoading(true);
-        setError(null);
-        const response = await userService.getUserById('me', token);
-        
-        if (!response.success || !response.data) {
-          throw new Error('No se recibieron datos del usuario');
+        const username = getUsernameFromToken(token);
+        if (!username) {
+          showMessage('error', 'No pudimos obtener tu información de sesión');
+          return;
         }
 
-        // Actualizar el estado con los datos del usuario
-        setFormData({
-          username: response.data.username || '',
-          email: response.data.email || '',
-          name: response.data.name || '',
-          surname: response.data.surname || '',
-          bio: response.data.bio || ''
+        const response = await fetch(`${environment.apiUrl}/users/username?username=${username}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
         });
-      } catch (err) {
-        setError('Error al cargar los datos del usuario');
-        console.error('Error al cargar datos del usuario:', err);
+
+        const data = await response.json();
+        if (data.success) {
+          setUser(data.data);
+          setFormData({
+            username: data.data.username || '',
+            email: data.data.email || '',
+            name: data.data.name || '',
+            surname: data.data.surname || '',
+            bio: data.data.bio || ''
+          });
+        } else {
+          showMessage('error', data.message || 'No pudimos cargar tu información');
+        }
+      } catch (error) {
+        console.error('Error al obtener datos:', error);
+        showMessage('error', 'No pudimos conectarnos al servidor. Por favor, verifica tu conexión a internet');
       } finally {
         setLoading(false);
       }
     };
 
     fetchUserData();
-  }, [token]);
+  }, [token, showMessage]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -94,137 +129,127 @@ export default function ConfiguracionPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!token) return;
+    try {
+      const username = getUsernameFromToken(token);
+      if (!username) {
+        showMessage('error', 'No pudimos obtener tu información de sesión');
+        return;
+      }
+
+      const response = await fetch(`${environment.apiUrl}/users/username?username=${username}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(formData)
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        showMessage('success', 'Datos actualizados correctamente');
+      } else {
+        throw new Error(data.message || 'Error al actualizar los datos');
+      }
+    } catch (err) {
+      console.error('Error al actualizar datos:', err);
+      showMessage('error', err instanceof Error ? err.message : 'Error al actualizar los datos');
+    }
+  };
+
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      showMessage('error', 'Las contraseñas no coinciden');
+      return;
+    }
 
     try {
-      setError(null);
-      // Actualizar los datos del usuario usando la ruta correcta con el username
-      const response = await fetch(`${environment.apiUrl}/users/username?username=${formData.username}`, {
+      const username = getUsernameFromToken(token);
+      if (!username) {
+        showMessage('error', 'No pudimos obtener tu información de sesión');
+        return;
+      }
+
+      const response = await fetch(`${environment.apiUrl}/users/username?username=${username}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          username: formData.username,
-          email: formData.email,
-          name: formData.name,
-          surname: formData.surname,
-          bio: formData.bio
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword
         })
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Error al actualizar los datos');
-      }
-      
       const data = await response.json();
       if (data.success) {
-        alert('Datos actualizados correctamente');
+        showMessage('success', 'Contraseña actualizada correctamente');
+        setPasswordData({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: ''
+        });
       } else {
-        throw new Error(data.message || 'Error al actualizar los datos');
+        throw new Error(data.message || 'Error al actualizar la contraseña');
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al actualizar los datos');
-      console.error('Error al actualizar datos:', err);
-    }
-  };
-
-  const handlePasswordSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!token) return;
-
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setError('Las contraseñas no coinciden');
-      return;
-    }
-    try {
-      setError(null);
-      // Actualizar la contraseña
-      const response = await fetch(`${environment.apiUrl}/users/me/password`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          current_password: passwordData.currentPassword,
-          new_password: passwordData.newPassword
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al actualizar la contraseña');
-      }
-      
-      alert('Contraseña actualizada correctamente');
-      setPasswordData({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-      });
-    } catch (err) {
-      setError('Error al actualizar la contraseña');
       console.error('Error al actualizar contraseña:', err);
+      showMessage('error', err instanceof Error ? err.message : 'Error al actualizar la contraseña');
     }
   };
 
   const handleLogout = async () => {
     try {
-      if (token) {
-        // Llamar al endpoint de logout
-        const response = await fetch(`${environment.apiUrl}${environment.apiEndpoints.auth.logout}/${token}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-
-        // Independientemente de la respuesta del servidor, eliminamos el token y redirigimos
+      const response = await authService.logout();
+      if (response.success) {
+        showMessage('success', 'Sesión cerrada correctamente');
         localStorage.removeItem('token');
         navigate('/login');
       } else {
-        // Si no hay token, simplemente redirigimos
-        navigate('/login');
+        showMessage('error', response.message || 'No pudimos cerrar tu sesión');
       }
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
-      // Aún con error, eliminamos el token y redirigimos
-      localStorage.removeItem('token');
-      navigate('/login');
+      showMessage('error', 'No pudimos conectarnos al servidor. Por favor, verifica tu conexión a internet');
     }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black text-white flex">
-        <Navbar />
-        <div className="w-2/3 ml-[16.666667%] p-8">
-          <div className="flex justify-center items-center h-full">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-          </div>
-        </div>
+      <div className="min-h-screen bg-black text-white flex justify-center items-center">
+        <div className="text-white">Cargando...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-black text-white flex justify-center items-center">
+        <Message
+          type="error"
+          message="No pudimos cargar tu información"
+          onClose={clearMessage}
+        />
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-black text-white flex">
-      {/* Barra lateral usando el componente Navbar */}
       <Navbar />
-
-      {/* Contenido principal */}
+      
       <div className="w-2/3 ml-[16.666667%] border-r border-gray-800">
         <div className="p-8">
-          <h1 className="text-2xl font-bold mb-8">
-            {activeSection.toUpperCase()}
-          </h1>
-
-          {error && (
-            <div className="mb-4 p-4 bg-red-500/20 border border-red-500 rounded-md text-red-500">
-              {error}
-            </div>
+          <h1 className="text-3xl font-bold mb-8">CONFIGURACIÓN</h1>
+          
+          {message && (
+            <Message
+              type={message.type}
+              message={message.text}
+              onClose={clearMessage}
+            />
           )}
 
           {activeSection === 'cuenta' && (
@@ -339,7 +364,6 @@ export default function ConfiguracionPage() {
         </div>
       </div>
 
-      {/* Barra lateral derecha */}
       <div className="w-1/6 p-6">
         <nav className="space-y-2">
           <button

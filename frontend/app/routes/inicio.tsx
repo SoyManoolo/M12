@@ -311,7 +311,7 @@ export default function InicioPage() {
               <p className="text-gray-400 mb-4">Sé el primero en compartir algo con la comunidad.</p>
               <button
                 onClick={() => window.location.href = '/publicar'}
-                className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors cursor-pointer"
               >
                 Crear mi primera publicación
               </button>
@@ -323,7 +323,7 @@ export default function InicioPage() {
               <p className="text-gray-400 mb-4">Sé el primero en compartir algo con la comunidad.</p>
               <button
                 onClick={() => window.location.href = '/publicar'}
-                className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors cursor-pointer"
               >
                 Crear mi primera publicación
               </button>

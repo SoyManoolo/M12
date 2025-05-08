@@ -12,14 +12,18 @@
  * @requires @remix-run/node
  * @requires ~/services/auth.service
  * @requires ~/hooks/useAuth.tsx
+ * @requires ~/hooks/useMessage
+ * @requires ~/components/Shared/Message
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Form, Link, useSearchParams } from "@remix-run/react";
 import type { ActionFunction } from "@remix-run/node";
 import { redirect } from "@remix-run/node";
 import { authService } from '../services/auth.service';
 import { useAuth } from '../hooks/useAuth.tsx';
+import { useMessage } from '../hooks/useMessage';
+import Message from '../components/Shared/Message';
 
 /**
  * @function action
@@ -42,10 +46,10 @@ export const action: ActionFunction = async ({ request }) => {
         }
       });
     } else {
-      return redirect('/login?error=' + encodeURIComponent(response.message || 'Error al iniciar sesión'));
+      return redirect('/login');
     }
   } catch (error) {
-    return redirect('/login?error=' + encodeURIComponent('Error al conectar con el servidor'));
+    return redirect('/login');
   }
 };
 
@@ -66,9 +70,17 @@ export const action: ActionFunction = async ({ request }) => {
 export default function LoginPage() {
   const [id, setId] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
   const { setToken } = useAuth();
+  const { message, showMessage, clearMessage } = useMessage();
+
+  useEffect(() => {
+    // Verificar si hay un mensaje de éxito del registro
+    const signupSuccess = localStorage.getItem('signupSuccess');
+    if (signupSuccess) {
+      showMessage('success', signupSuccess);
+      localStorage.removeItem('signupSuccess');
+    }
+  }, [showMessage]);
 
   /**
    * @function handleSubmit
@@ -77,7 +89,6 @@ export default function LoginPage() {
    */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(''); // Limpiar error anterior
     console.log('📤 Datos enviados al backend:', { id, password: '****' });
     console.log('🔄 Iniciando proceso de login...');
 
@@ -89,24 +100,17 @@ export default function LoginPage() {
         console.log('✅ Login exitoso, token recibido');
         localStorage.setItem('token', response.token);
         setToken(response.token);
+        showMessage('success', response.message || '¡Bienvenido de nuevo!');
         // Dejamos que el action de Remix maneje la redirección
         const form = e.target as HTMLFormElement;
         form.submit();
       } else {
-        // Mensajes de error más concisos
-        let userFriendlyMessage = '';
-        if (response.status === 404) {
-          userFriendlyMessage = 'Usuario no encontrado';
-        } else if (response.status === 401) {
-          userFriendlyMessage = 'Contraseña incorrecta';
-        } else {
-          userFriendlyMessage = 'Error al iniciar sesión';
-        }
-        setError(userFriendlyMessage);
+        console.log('❌ Error en el login:', response.message);
+        showMessage('error', response.message || 'No pudimos iniciar tu sesión');
       }
     } catch (error) {
       console.error('⚠️ Error al conectar con el servidor:', error);
-      setError('Error de conexión');
+      showMessage('error', 'No pudimos conectarnos al servidor. Por favor, verifica tu conexión a internet');
     }
   };
 
@@ -133,16 +137,12 @@ export default function LoginPage() {
       <div className="w-full max-w-md bg-black border border-gray-800 rounded-lg p-8">
         <h1 className="text-4xl text-white text-center mb-8 font-bold tracking-wider">INICIA SESIÓN</h1>
         
-        {error && (
-          <div className="mb-4 p-3 bg-red-500/10 border border-red-500 text-red-500 rounded-md text-sm">
-            {error}
-          </div>
-        )}
-
         {message && (
-          <div className="mb-4 p-3 bg-green-500/10 border border-green-500 text-green-500 rounded-md text-sm">
-            {message}
-          </div>
+          <Message
+            type={message.type}
+            message={message.text}
+            onClose={clearMessage}
+          />
         )}
         
         <Form method="post" onSubmit={handleSubmit} className="space-y-6">

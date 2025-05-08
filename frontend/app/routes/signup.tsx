@@ -18,6 +18,8 @@ import { Form, useNavigate, Link } from "@remix-run/react";
 import type { ActionFunction } from "@remix-run/node";
 import { redirect } from "@remix-run/node";
 import { authService } from '../services/auth.service';
+import { useMessage } from '../hooks/useMessage';
+import Message from '../components/Shared/Message';
 
 /**
  * @function action
@@ -45,12 +47,12 @@ export const action: ActionFunction = async ({ request }) => {
     });
     
     if (response.success) {
-      return redirect('/login?message=Registro exitoso. Por favor, inicia sesión.');
+      return redirect('/login');
     } else {
-      return redirect('/signup?error=' + encodeURIComponent(response.message || 'Error al registrarse'));
+      return redirect('/signup');
     }
   } catch (error) {
-    return redirect('/signup?error=' + encodeURIComponent('Error al conectar con el servidor'));
+    return redirect('/signup');
   }
 };
 
@@ -77,8 +79,8 @@ export default function SignUpPage(): React.ReactElement {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { message, showMessage, clearMessage } = useMessage();
 
   useEffect(() => {
     setMounted(true);
@@ -97,7 +99,6 @@ export default function SignUpPage(): React.ReactElement {
    */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
     console.log('📤 Datos enviados al backend:', { 
       name, 
       surname, 
@@ -120,14 +121,17 @@ export default function SignUpPage(): React.ReactElement {
       
       if (response.success) {
         console.log('✅ Registro exitoso');
-        navigate('/login?message=Registro exitoso. Por favor, inicia sesión.');
+        showMessage('success', response.message || '¡Cuenta creada con éxito! Ya puedes iniciar sesión');
+        // Guardamos el mensaje en localStorage antes de navegar
+        localStorage.setItem('signupSuccess', response.message || '¡Cuenta creada con éxito! Ya puedes iniciar sesión');
+        navigate('/login');
       } else {
         console.log('❌ Error en el registro:', response.message);
-        setError(response.message || 'Error al registrarse');
+        showMessage('error', response.message || 'No pudimos crear tu cuenta');
       }
     } catch (error) {
       console.error('⚠️ Error al conectar con el servidor:', error);
-      setError('Error al conectar con el servidor');
+      showMessage('error', 'No pudimos conectarnos al servidor. Por favor, verifica tu conexión a internet');
     }
   };
 
@@ -156,10 +160,12 @@ export default function SignUpPage(): React.ReactElement {
       <div className="w-full max-w-md bg-black border border-gray-800 rounded-lg p-8">
         <h1 className="text-4xl text-white text-center mb-8 font-bold tracking-wider">REGISTRARSE</h1>
         
-        {error && (
-          <div className="mb-4 p-3 bg-red-500/10 border border-red-500 text-red-500 rounded-md text-sm">
-            {error}
-          </div>
+        {message && (
+          <Message
+            type={message.type}
+            message={message.text}
+            onClose={clearMessage}
+          />
         )}
         
         <Form method="post" onSubmit={handleSubmit} className="space-y-6">

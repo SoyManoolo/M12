@@ -87,27 +87,27 @@ export const authService = {
             const data = await response.json();
             
             if (!response.ok) {
-                // Mapeo de errores específicos del backend
-                let errorMessage = 'Error al iniciar sesión';
+                // Mensajes de error más amigables
+                let errorMessage = 'No pudimos iniciar tu sesión';
                 
                 switch (data.error) {
                     case 'IncorrectPassword':
-                        errorMessage = 'Contraseña incorrecta. Por favor, verifica tus credenciales';
+                        errorMessage = 'La contraseña que ingresaste no es correcta';
                         break;
                     case 'UserNotFound':
-                        errorMessage = 'Usuario no encontrado. Verifica tu email o nombre de usuario';
+                        errorMessage = 'No encontramos una cuenta con ese email o nombre de usuario';
                         break;
                     case 'DatabaseError':
-                        errorMessage = 'Error en el servidor. Por favor, intenta más tarde';
+                        errorMessage = 'Estamos teniendo problemas técnicos. Por favor, intenta más tarde';
                         break;
                     case 'MissingIdentifier':
-                        errorMessage = 'Por favor, ingresa tu email o nombre de usuario';
+                        errorMessage = 'Necesitamos tu email o nombre de usuario para continuar';
                         break;
                     case 'MissingPassword':
-                        errorMessage = 'Por favor, ingresa tu contraseña';
+                        errorMessage = 'Por favor, ingresa tu contraseña para continuar';
                         break;
                     default:
-                        errorMessage = data.message || 'Error al iniciar sesión';
+                        errorMessage = data.message || 'No pudimos iniciar tu sesión. Por favor, intenta de nuevo';
                 }
 
                 return {
@@ -121,14 +121,14 @@ export const authService = {
                 success: true,
                 status: response.status,
                 token: data.token,
-                message: data.message
+                message: '¡Bienvenido de nuevo!'
             };
         } catch (error) {
             console.error('Error en login:', error);
             return {
                 success: false,
                 status: 500,
-                message: 'Error al conectar con el servidor. Por favor, verifica tu conexión a internet'
+                message: 'No pudimos conectarnos al servidor. Por favor, verifica tu conexión a internet'
             };
         }
     },
@@ -141,6 +141,47 @@ export const authService = {
      */
     async register(userData: RegisterData): Promise<AuthResponse> {
         try {
+            // Validaciones básicas
+            if (!userData.email.trim()) {
+                return {
+                    success: false,
+                    status: 400,
+                    message: 'Por favor, ingresa tu correo electrónico'
+                };
+            }
+
+            if (!userData.username.trim()) {
+                return {
+                    success: false,
+                    status: 400,
+                    message: 'Por favor, elige un nombre de usuario'
+                };
+            }
+
+            if (!userData.name.trim()) {
+                return {
+                    success: false,
+                    status: 400,
+                    message: 'Por favor, ingresa tu nombre'
+                };
+            }
+
+            if (!userData.surname.trim()) {
+                return {
+                    success: false,
+                    status: 400,
+                    message: 'Por favor, ingresa tus apellidos'
+                };
+            }
+
+            if (!userData.password.trim()) {
+                return {
+                    success: false,
+                    status: 400,
+                    message: 'Por favor, elige una contraseña'
+                };
+            }
+
             const response = await fetch(`${environment.apiUrl}${environment.apiEndpoints.auth.register}`, {
                 method: 'POST',
                 headers: {
@@ -152,25 +193,44 @@ export const authService = {
             const data = await response.json();
             
             if (!response.ok) {
+                // Mensajes de error más amigables
+                let errorMessage = 'No pudimos crear tu cuenta';
+                
+                switch (data.error) {
+                    case 'EmailAlreadyExists':
+                        errorMessage = 'Ya existe una cuenta con ese correo electrónico';
+                        break;
+                    case 'UsernameAlreadyExists':
+                        errorMessage = 'Ese nombre de usuario ya está en uso';
+                        break;
+                    case 'InvalidEmail':
+                        errorMessage = 'Por favor, ingresa un correo electrónico válido';
+                        break;
+                    case 'InvalidPassword':
+                        errorMessage = 'La contraseña debe tener al menos 6 caracteres';
+                        break;
+                    default:
+                        errorMessage = data.message || 'No pudimos crear tu cuenta. Por favor, intenta de nuevo';
+                }
+
                 return {
                     success: false,
                     status: response.status,
-                    message: data.message || 'Error al registrarse'
+                    message: errorMessage
                 };
             }
 
             return {
                 success: true,
                 status: response.status,
-                token: data.token,
-                message: data.message
+                message: '¡Cuenta creada con éxito! Ya puedes iniciar sesión'
             };
         } catch (error) {
             console.error('Error en registro:', error);
             return {
                 success: false,
                 status: 500,
-                message: 'Error al conectar con el servidor'
+                message: 'No pudimos conectarnos al servidor. Por favor, verifica tu conexión a internet'
             };
         }
     },
