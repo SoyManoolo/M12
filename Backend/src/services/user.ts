@@ -48,13 +48,9 @@ export class UserService {
                 throw new AppError(400, "");
             };
 
-            console.log("filters", filters);
-            console.log("updateData", updateData);
-
             const user = await existsUser(filters);
             if (!user) throw new AppError(404, "");
 
-            console.log("user", user);
             const newUser = await user.update(updateData);
 
             if (!newUser) throw new AppError(404, "");
