@@ -18,9 +18,9 @@ const videoDir = path.join(uploadDir, 'videos');
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     // Determinar si es imagen o video
-    if (file.mimetype.startsWith('images/')) {
+    if (file.mimetype.startsWith('image/')) {
       cb(null, imageDir);
-    } else if (file.mimetype.startsWith('videos/')) {
+    } else if (file.mimetype.startsWith('video/')) {
       cb(null, videoDir);
     } else {
       cb(new Error('Tipo de archivo no soportado'), '');
