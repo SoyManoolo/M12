@@ -45,8 +45,31 @@ const getUsernameFromToken = (token: string | null): string => {
 export const loader = async ({ request }: { request: Request }) => {
   const cookieHeader = request.headers.get("Cookie");
   const token = cookieHeader?.split(";").find((c: string) => c.trim().startsWith("token=") )?.split("=")[1];
-  if (!token) return redirect("/login");
-  return null;
+  
+  if (!token) {
+    return redirect("/login");
+  }
+
+  try {
+    // Intentamos obtener los datos del usuario para verificar que el token es válido
+    const response = await fetch(`${environment.apiUrl}/users/username?username=${getUsernameFromToken(token)}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data = await response.json();
+    if (!data.success) {
+      return redirect("/login");
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Error al verificar el token:', error);
+    return redirect("/login");
+  }
 };
 
 export default function ConfiguracionPage() {
@@ -72,10 +95,15 @@ export default function ConfiguracionPage() {
 
   useEffect(() => {
     const fetchUserData = async () => {
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+
       try {
         const username = getUsernameFromToken(token);
         if (!username) {
-          showMessage('error', 'No pudimos obtener tu información de sesión');
+          navigate('/login');
           return;
         }
 
@@ -98,18 +126,18 @@ export default function ConfiguracionPage() {
             bio: data.data.bio || ''
           });
         } else {
-          showMessage('error', data.message || 'No pudimos cargar tu información');
+          navigate('/login');
         }
       } catch (error) {
         console.error('Error al obtener datos:', error);
-        showMessage('error', 'No pudimos conectarnos al servidor. Por favor, verifica tu conexión a internet');
+        navigate('/login');
       } finally {
         setLoading(false);
       }
     };
 
     fetchUserData();
-  }, [token, showMessage]);
+  }, [token, navigate]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -216,22 +244,10 @@ export default function ConfiguracionPage() {
     }
   };
 
-  if (loading) {
+  if (loading || !user) {
     return (
       <div className="min-h-screen bg-black text-white flex justify-center items-center">
-        <div className="text-white">Cargando...</div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-black text-white flex justify-center items-center">
-        <Message
-          type="error"
-          message="No pudimos cargar tu información"
-          onClose={clearMessage}
-        />
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     );
   }

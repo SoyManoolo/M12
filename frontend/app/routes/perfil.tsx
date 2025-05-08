@@ -98,56 +98,36 @@ export default function Perfil(): React.ReactElement {
   useEffect(() => {
     const fetchUserData = async () => {
       if (!token) {
-        setError('No hay token de autenticación');
-        setLoading(false);
+        navigate('/login');
         return;
       }
 
       try {
-        // Obtener datos del usuario
-        const userResponse = await userService.getUserById('me', token);
-        if (userResponse.success && userResponse.data) {
+        const response = await userService.getUserById('me', token);
+        if (response.success) {
           const userData: User = {
-            user_id: userResponse.data.user_id,
-            name: userResponse.data.name,
-            surname: userResponse.data.surname,
-            username: userResponse.data.username,
-            email: userResponse.data.email,
-            profile_picture_url: userResponse.data.profile_picture_url ?? null,
-            bio: userResponse.data.bio ?? null,
-            email_verified: userResponse.data.email_verified,
-            is_moderator: userResponse.data.is_moderator,
+            user_id: response.data.user_id,
+            name: response.data.name,
+            surname: response.data.surname,
+            username: response.data.username,
+            email: response.data.email,
+            profile_picture_url: response.data.profile_picture_url ?? null,
+            bio: response.data.bio ?? null,
+            email_verified: response.data.email_verified,
+            is_moderator: response.data.is_moderator,
             deleted_at: null,
-            created_at: userResponse.data.created_at,
-            updated_at: userResponse.data.updated_at,
+            created_at: response.data.created_at,
+            updated_at: response.data.updated_at,
             active_video_call: false
           };
           setUser(userData);
-          
-          // Limpiar la URL si estamos en nuestro propio perfil
-          if (window.location.search.includes('username=')) {
-            navigate('/perfil', { replace: true });
-          }
-          
-          // Obtener posts del usuario
-          const postsResponse = await postService.getPosts(token, undefined, userData.username);
-          if (postsResponse.success) {
-            const transformedPosts = postsResponse.data.posts.map(post => ({
-              ...post,
-              user: userData,
-              likes_count: 0,
-              is_saved: false,
-              comments: []
-            }));
-            setPosts(transformedPosts);
-            setNextCursor(postsResponse.data.nextCursor);
-          }
         } else {
-          setError(userResponse.message || 'Error al obtener datos del usuario');
+          console.error('Error al obtener datos del usuario:', response.message);
+          navigate('/login');
         }
-      } catch (err) {
-        console.error('Error al obtener datos:', err);
-        setError(err instanceof Error ? err.message : 'Error al conectar con el servidor');
+      } catch (error) {
+        console.error('Error al obtener datos:', error);
+        navigate('/login');
       } finally {
         setLoading(false);
       }
@@ -218,30 +198,10 @@ export default function Perfil(): React.ReactElement {
     console.log("Editando perfil...");
   };
 
-  if (loading && !user) {
+  if (loading || !user) {
     return (
       <div className="min-h-screen bg-black text-white flex justify-center items-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
-
-  if (error && !user) {
-    return (
-      <div className="min-h-screen bg-black text-white flex justify-center items-center">
-        <div className="bg-red-500/10 border border-red-500 text-red-500 px-4 py-3 rounded">
-          {error}
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-black text-white flex justify-center items-center">
-        <div className="bg-yellow-500/10 border border-yellow-500 text-yellow-500 px-4 py-3 rounded">
-          No se encontró el perfil
-        </div>
       </div>
     );
   }
