@@ -83,14 +83,20 @@ interface User {
 interface Post {
   post_id: string;
   user_id: string;
-  user: User;
   description: string;
-  media_url: string | null;
+  media: string;
   created_at: string;
   updated_at: string;
-  likes_count: number;
-  is_saved: boolean;
-  comments: Array<{
+  deleted_at: string | null;
+  likes_count: string;
+  author: {
+    user_id: string;
+    username: string;
+    profile_picture: string | null;
+    name: string;
+  };
+  is_saved?: boolean;
+  comments?: Array<{
     comment_id: string;
     user_id: string;
     username: string;
@@ -164,26 +170,18 @@ export default function InicioPage() {
         const response = await postService.getPosts(token);
         if (response.success) {
           // Transformar los posts para incluir la información necesaria para el componente Post
-          const transformedPosts = response.data.posts.map(post => ({
-            ...post,
-            user: {
-              user_id: post.user_id,
-              name: "Usuario", // Esto debería venir del backend
-              surname: "Demo", // Esto debería venir del backend
-              username: "usuario", // Esto debería venir del backend
-              email: "usuario@demo.com", // Esto debería venir del backend
-              profile_picture_url: null, // Esto debería venir del backend
-              bio: null, // Esto debería venir del backend
-              email_verified: false, // Esto debería venir del backend
-              is_moderator: false, // Esto debería venir del backend
-              deleted_at: null, // Esto debería venir del backend
-              created_at: new Date().toISOString(), // Esto debería venir del backend
-              updated_at: new Date().toISOString(), // Esto debería venir del backend
-              active_video_call: false // Esto debería venir del backend
-            },
-            likes_count: 0, // Esto debería venir del backend
-            is_saved: false, // Esto debería venir del backend
-            comments: [] // Esto debería venir del backend
+          const transformedPosts: Post[] = response.data.posts.map((post: any) => ({
+            post_id: post.post_id,
+            user_id: post.user_id,
+            description: post.description,
+            media: post.media || '',
+            created_at: post.created_at,
+            updated_at: post.updated_at,
+            deleted_at: post.deleted_at,
+            likes_count: post.likes_count,
+            author: post.author,
+            is_saved: false,
+            comments: []
           }));
           setPosts(transformedPosts);
           setNextCursor(response.data.nextCursor);
@@ -209,24 +207,16 @@ export default function InicioPage() {
     try {
       const response = await postService.getPosts(token, nextCursor);
       if (response.success) {
-        const transformedPosts = response.data.posts.map(post => ({
-          ...post,
-          user: {
-            user_id: post.user_id,
-            name: "Usuario",
-            surname: "Demo",
-            username: "usuario",
-            email: "usuario@demo.com",
-            profile_picture_url: null,
-            bio: null,
-            email_verified: false,
-            is_moderator: false,
-            deleted_at: null,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            active_video_call: false
-          },
-          likes_count: 0,
+        const transformedPosts: Post[] = response.data.posts.map((post: any) => ({
+          post_id: post.post_id,
+          user_id: post.user_id,
+          description: post.description,
+          media: post.media || '',
+          created_at: post.created_at,
+          updated_at: post.updated_at,
+          deleted_at: post.deleted_at,
+          likes_count: post.likes_count,
+          author: post.author,
           is_saved: false,
           comments: []
         }));
@@ -334,13 +324,13 @@ export default function InicioPage() {
                 <Post
                   key={post.post_id}
                   post_id={post.post_id}
-                  user={post.user}
+                  user={post.author}
                   description={post.description}
-                  media_url={post.media_url}
-                  comments={post.comments}
+                  media_url={post.media}
+                  comments={post.comments || []}
                   created_at={post.created_at}
                   likes_count={post.likes_count}
-                  is_saved={post.is_saved}
+                  is_saved={post.is_saved || false}
                   onLike={() => handleLike(post.post_id)}
                   onSave={() => handleSave(post.post_id)}
                   currentUserId={token ? JSON.parse(atob(token.split('.')[1])).user_id : undefined}

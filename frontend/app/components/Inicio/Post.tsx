@@ -27,10 +27,11 @@ interface PostProps {
   user: {
     user_id: string;
     username: string;
-    profile_picture_url: string | null;
+    profile_picture: string | null;
+    name: string;
   };
   description: string;
-  media_url: string | null;
+  media_url: string;
   comments: Array<{
     comment_id: string;
     user_id: string;
@@ -39,7 +40,7 @@ interface PostProps {
     created_at: string;
   }>;
   created_at: string;
-  likes_count: number;
+  likes_count: string;
   is_saved: boolean;
   onLike: () => void;
   onSave: () => void;
@@ -74,7 +75,7 @@ export default function Post({
   const [isExpanded, setIsExpanded] = useState(false);
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [showAllComments, setShowAllComments] = useState(false);
-  const [currentLikes, setCurrentLikes] = useState(likes_count);
+  const [currentLikes, setCurrentLikes] = useState(parseInt(likes_count));
   const [newComment, setNewComment] = useState('');
 
   /**
@@ -159,7 +160,7 @@ export default function Post({
             {/* Perfil y nombre del usuario */}
             <div className="relative w-full flex justify-center">
               <img 
-                src={user.profile_picture_url || '/default-avatar.png'} 
+                src={user.profile_picture ? `http://localhost:3000${user.profile_picture}` : '/default-avatar.png'} 
                 alt={user.username} 
                 className="w-12 h-12 rounded-full cursor-pointer object-cover"
                 onClick={() => window.location.href = `/perfil/${user.username}`}
@@ -227,7 +228,7 @@ export default function Post({
             >
               {media_url ? (
                 <img 
-                  src={media_url} 
+                  src={`http://localhost:3000${media_url}`} 
                   alt="Contenido del post"
                   className="w-full h-full object-cover"
                 />
@@ -348,7 +349,7 @@ export default function Post({
               <FaTimes className="text-2xl" />
             </button>
             <img 
-              src={media_url || ''} 
+              src={media_url ? `http://localhost:3000${media_url}` : ''} 
               alt="Contenido expandido"
               className="max-w-full max-h-[90vh] object-contain"
             />
