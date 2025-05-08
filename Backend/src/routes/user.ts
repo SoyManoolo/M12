@@ -17,8 +17,15 @@ router.get('/username', async (req: Request, res: Response, next: NextFunction) 
     await userController.getUser(req, res, next);
 });
 
+router.patch('/username', async (req: Request, res: Response, next: NextFunction) => {
+    await userController.updateUser(req, res, next);
+});
+
+router.delete('/username', async (req: Request, res: Response, next: NextFunction) => {
+    await userController.deleteUser(req, res, next);
+});
+
 router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
-    console.log("He entrado en la ruta")
     await userController.getUser(req, res, next);
 });
 
@@ -26,15 +33,9 @@ router.patch('/:id', async (req: Request, res: Response, next: NextFunction) => 
     await userController.updateUser(req, res, next);
 });
 
-router.patch('/username', async (req: Request, res: Response, next: NextFunction) => {
-    await userController.updateUser(req, res, next);
-});
+
 
 router.delete('/:id', async (req: Request, res: Response, next: NextFunction) => {
-    await userController.deleteUser(req, res, next);
-});
-
-router.delete('/username', async (req: Request, res: Response, next: NextFunction) => {
     await userController.deleteUser(req, res, next);
 });
 

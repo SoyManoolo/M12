@@ -22,16 +22,13 @@ export class UserService {
     // Método para obtener un usuario - LISTO
     public async getUser(filters: UserFilters) {
         try {
-            console.log("He entrado en el servicio");
-            console.log("Filters: ", filters);
-
             if (Object.keys(filters).length === 0) {
                 throw new AppError(400, "");
             };
 
-            const user = await existsUser(filters);
+            console.log("filters", filters);
 
-            console.log("User: ", user);
+            const user = await existsUser(filters);
 
             if (!user) throw new AppError(404, "");
 
@@ -51,10 +48,20 @@ export class UserService {
                 throw new AppError(400, "");
             };
 
+            console.log("filters", filters);
+            console.log("updateData", updateData);
+
             const user = await existsUser(filters);
             if (!user) throw new AppError(404, "");
 
-            return user;
+            console.log("user", user);
+            const newUser = await user.update(updateData);
+
+            if (!newUser) throw new AppError(404, "");
+
+            await user.reload();
+
+            return newUser;
         } catch (error) {
             if (error instanceof AppError) {
                 throw error;

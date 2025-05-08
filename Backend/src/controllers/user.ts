@@ -26,8 +26,6 @@ export class UserController {
     // Método para obtener un usuario
     public async getUser(req: Request, res: Response, next: NextFunction) {
         try {
-            console.log("He entrado en el controlador");
-
             const locale = req.headers['accept-language'] || 'en';
             i18n.setLocale(locale);
 
