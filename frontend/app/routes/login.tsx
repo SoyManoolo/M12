@@ -66,9 +66,8 @@ export const action: ActionFunction = async ({ request }) => {
 export default function LoginPage() {
   const [id, setId] = useState('');
   const [password, setPassword] = useState('');
-  const [searchParams] = useSearchParams();
-  const error = searchParams.get('error') || '';
-  const message = searchParams.get('message') || '';
+  const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
   const { setToken } = useAuth();
 
   /**
@@ -78,6 +77,7 @@ export default function LoginPage() {
    */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(''); // Limpiar error anterior
     console.log('📤 Datos enviados al backend:', { id, password: '****' });
     console.log('🔄 Iniciando proceso de login...');
 
@@ -92,9 +92,21 @@ export default function LoginPage() {
         // Dejamos que el action de Remix maneje la redirección
         const form = e.target as HTMLFormElement;
         form.submit();
+      } else {
+        // Mensajes de error más concisos
+        let userFriendlyMessage = '';
+        if (response.status === 404) {
+          userFriendlyMessage = 'Usuario no encontrado';
+        } else if (response.status === 401) {
+          userFriendlyMessage = 'Contraseña incorrecta';
+        } else {
+          userFriendlyMessage = 'Error al iniciar sesión';
+        }
+        setError(userFriendlyMessage);
       }
     } catch (error) {
       console.error('⚠️ Error al conectar con el servidor:', error);
+      setError('Error de conexión');
     }
   };
 

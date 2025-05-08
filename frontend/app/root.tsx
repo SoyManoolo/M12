@@ -4,13 +4,18 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLocation,
 } from "@remix-run/react";
 import { AuthProvider } from "./hooks/useAuth.tsx";
 import { useState, useEffect } from "react";
 import { json } from "@remix-run/node";
 import type { LoaderFunction } from "@remix-run/node";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
 import "./tailwind.css";
+
+// Rutas públicas que no requieren autenticación
+const publicRoutes = ['/login', '/signup', '/forgot-password'];
 
 // Middleware para manejar rutas específicas
 export const loader: LoaderFunction = async ({ request }) => {
@@ -55,14 +60,25 @@ export function Layout({ children }: { children: React.ReactNode }) {
 // Componente raíz de la aplicación
 export default function App() {
   const [mounted, setMounted] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  const isPublicRoute = publicRoutes.includes(location.pathname);
+
   return (
     <AuthProvider>
-      {mounted ? <Outlet /> : null}
+      {mounted ? (
+        isPublicRoute ? (
+          <Outlet />
+        ) : (
+          <ProtectedRoute>
+            <Outlet />
+          </ProtectedRoute>
+        )
+      ) : null}
     </AuthProvider>
   );
 }
