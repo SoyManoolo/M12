@@ -15,7 +15,7 @@
  */
 
 import { useState } from 'react';
-import { FaHeart, FaRegHeart, FaBookmark, FaRegBookmark, FaShare, FaComment, FaTimes } from 'react-icons/fa';
+import { FaHeart, FaRegHeart, FaBookmark, FaRegBookmark, FaShare, FaComment, FaTimes, FaTrash } from 'react-icons/fa';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -43,6 +43,8 @@ interface PostProps {
   is_saved: boolean;
   onLike: () => void;
   onSave: () => void;
+  currentUserId?: string; // ID del usuario actual
+  onDelete?: (postId: string) => void; // Función para eliminar el post
 }
 
 /**
@@ -61,7 +63,9 @@ export default function Post({
   likes_count,
   is_saved,
   onLike,
-  onSave
+  onSave,
+  currentUserId,
+  onDelete
 }: PostProps) {
   // Estados para controlar las interacciones del usuario
   const [isLiked, setIsLiked] = useState(false);
@@ -139,6 +143,12 @@ export default function Post({
     onSave();
   };
 
+  const handleDelete = async () => {
+    if (window.confirm('¿Estás seguro de que quieres eliminar esta publicación?')) {
+      onDelete?.(post_id);
+    }
+  };
+
   return (
     <>
       {/* Contenedor principal del post */}
@@ -147,12 +157,14 @@ export default function Post({
           {/* Columna izquierda - Acciones y perfil */}
           <div className="w-[80px] flex flex-col items-center space-y-4">
             {/* Perfil y nombre del usuario */}
-            <img 
-              src={user.profile_picture_url || '/default-avatar.png'} 
-              alt={user.username} 
-              className="w-12 h-12 rounded-full cursor-pointer object-cover"
-              onClick={() => window.location.href = `/perfil/${user.username}`}
-            />
+            <div className="relative w-full flex justify-center">
+              <img 
+                src={user.profile_picture_url || '/default-avatar.png'} 
+                alt={user.username} 
+                className="w-12 h-12 rounded-full cursor-pointer object-cover"
+                onClick={() => window.location.href = `/perfil/${user.username}`}
+              />
+            </div>
             <p className="font-semibold text-white cursor-pointer hover:underline text-center text-sm">
               {user.username}
             </p>
@@ -191,6 +203,19 @@ export default function Post({
                   <span className="text-xs">Guardar</span>
                 </button>
               </div>
+              {/* Botón de eliminar (papelera) solo si el post es del usuario actual */}
+              {currentUserId === user.user_id && (
+                <div className="flex flex-col items-center mt-2">
+                  <button
+                    onClick={handleDelete}
+                    title="Eliminar publicación"
+                    className="flex flex-col items-center cursor-pointer text-red-500 hover:text-red-700 focus:outline-none"
+                  >
+                    <FaTrash className="text-xl mb-1" />
+                    <span className="text-xs">Eliminar</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
@@ -200,11 +225,32 @@ export default function Post({
               className="rounded-lg overflow-hidden bg-gray-800 h-full cursor-pointer relative"
               onClick={handleImageClick}
             >
-              <img 
-                src={media_url || '/default-image.jpg'} 
-                alt="Contenido del post"
-                className="w-full h-full object-cover"
-              />
+              {media_url ? (
+                <img 
+                  src={media_url} 
+                  alt="Contenido del post"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gray-800">
+                  <div className="text-center">
+                    <svg
+                      className="mx-auto h-16 w-16 text-gray-600"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                    <p className="mt-2 text-gray-500">Sin imagen</p>
+                  </div>
+                </div>
+              )}
               {/* Fecha de publicación */}
               <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 px-2 py-1 rounded text-xs text-gray-300">
                 {formatDistanceToNow(new Date(created_at), { addSuffix: true, locale: es })}

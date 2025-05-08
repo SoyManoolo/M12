@@ -57,7 +57,7 @@ async function initializeDatabase() {
 
         // Sincroniza los modelos con la base de datos (crea las tablas si no existen con alter: true)
         if (dbUpdate) {
-            await sequelize.sync({ alter: true });
+            await sequelize.sync({ force: true });
             dbLogger.info("All models were synchronized successfully.");
         } else {
             dbLogger.info("Skipping model synchronization (DB_UPDATE is not 'true')");

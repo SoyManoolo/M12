@@ -15,6 +15,7 @@
 // src/components/Navbar.tsx
 import { Link, useNavigate } from "@remix-run/react";
 import { FaVideo, FaUpload, FaBell, FaEnvelope, FaCog, FaUser } from 'react-icons/fa';
+import { useAuth } from "~/hooks/useAuth";
 
 /**
  * Componente principal de la barra de navegación
@@ -23,30 +24,11 @@ import { FaVideo, FaUpload, FaBell, FaEnvelope, FaCog, FaUser } from 'react-icon
  */
 export default function Navbar() {
   const navigate = useNavigate();
+  const { token } = useAuth();
 
   const handleProfileClick = () => {
-    // Mock de usuario basado en la estructura de la base de datos
-    const mockUser = {
-      user_id: "550e8400-e29b-41d4-a716-446655440000",
-      first_name: "Usuario",
-      last_name: "Demo",
-      username: "usuario_demo",
-      email: "demo@example.com",
-      password: "hashed_password",
-      profile_picture_url: "https://i.pravatar.cc/150",
-      bio: "¡Hola! Soy un usuario de prueba de FriendsGo.",
-      email_verified: true,
-      is_moderator: false,
-      id_deleted: false,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
-
-    // Guardar mock en localStorage
-    localStorage.setItem('user', JSON.stringify(mockUser));
-    
-    // Navegar al perfil del usuario mock
-    navigate(`/perfil?username=${mockUser.username}`);
+    // Navegar al perfil sin parámetros
+    navigate('/perfil');
   };
 
   return (
@@ -111,13 +93,13 @@ export default function Navbar() {
         </Link>
 
         {/* Enlace a perfil de usuario */}
-        <div 
-          onClick={handleProfileClick}
+        <Link 
+          to="/perfil"
           className="flex items-center space-x-3 text-gray-400 hover:text-white w-full p-2 rounded hover:bg-gray-800/50 cursor-pointer"
         >
           <FaUser className="text-xl" />
           <span className="tracking-wider">PERFIL</span>
-        </div>
+        </Link>
       </nav>
     </div>
   );

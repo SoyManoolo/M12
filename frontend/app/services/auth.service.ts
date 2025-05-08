@@ -14,10 +14,10 @@ import { environment } from '../config/environment';
 
 /**
  * Interfaz para las credenciales de inicio de sesión
- * El campo 'identifier' puede ser email o nombre de usuario
+ * El campo 'id' puede ser email o nombre de usuario
  */
 interface LoginCredentials {
-    identifier: string;  // Email o nombre de usuario
+    id: string;  // Email o nombre de usuario
     password: string;    // Contraseña del usuario
 }
 
@@ -57,7 +57,7 @@ export const authService = {
     async login(credentials: LoginCredentials): Promise<AuthResponse> {
         try {
             // Validación básica en el frontend
-            if (!credentials.identifier.trim()) {
+            if (!credentials.id.trim()) {
                 return {
                     success: false,
                     status: 400,
@@ -79,7 +79,7 @@ export const authService = {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    id: credentials.identifier,
+                    id: credentials.id,
                     password: credentials.password
                 }),
             });
@@ -167,6 +167,44 @@ export const authService = {
             };
         } catch (error) {
             console.error('Error en registro:', error);
+            return {
+                success: false,
+                status: 500,
+                message: 'Error al conectar con el servidor'
+            };
+        }
+    },
+
+    /**
+     * Cierra la sesión del usuario actual
+     * @returns {Promise<AuthResponse>} Respuesta del servidor
+     */
+    async logout(): Promise<AuthResponse> {
+        try {
+            const response = await fetch(`${environment.apiUrl}${environment.apiEndpoints.auth.logout}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            const data = await response.json();
+            
+            if (!response.ok) {
+                return {
+                    success: false,
+                    status: response.status,
+                    message: data.message || 'Error al cerrar sesión'
+                };
+            }
+
+            return {
+                success: true,
+                status: response.status,
+                message: data.message || 'Sesión cerrada correctamente'
+            };
+        } catch (error) {
+            console.error('Error en logout:', error);
             return {
                 success: false,
                 status: 500,

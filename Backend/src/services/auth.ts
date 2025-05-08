@@ -21,8 +21,9 @@ export class AuthService {
 
             if (!token) throw new AppError(500, 'TokenGenerationError');
 
-            JWT.create({
-                token
+            await JWT.findOrCreate({
+                where: { token },
+                defaults: { token }
             });
 
             return token;
@@ -30,6 +31,7 @@ export class AuthService {
             if (error instanceof AppError) {
                 throw error;
             };
+            console.error("Login error:", error);
             throw new AppError(500, 'InternalServerError');
         };
     };
@@ -67,8 +69,9 @@ export class AuthService {
                  throw new AppError(500, 'TokenGenerationError');
             }
 
-            JWT.create({
-                token
+            await JWT.findOrCreate({
+                where: { token },
+                defaults: { token }
             });
 
             return token;

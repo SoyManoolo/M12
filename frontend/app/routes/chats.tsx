@@ -10,6 +10,7 @@
  */
 
 import { useState } from 'react';
+import { redirect } from '@remix-run/node';
 import type { MetaFunction } from '@remix-run/node';
 import Navbar from '~/components/Inicio/Navbar';
 import ChatItem from '~/components/Chats/ChatItem';
@@ -21,6 +22,13 @@ export const meta: MetaFunction = () => {
     { title: "Chats | FriendsGo" },
     { name: "description", content: "Mensajes y conversaciones en FriendsGo" },
   ];
+};
+
+export const loader = async ({ request }: { request: Request }) => {
+  const cookieHeader = request.headers.get("Cookie");
+  const token = cookieHeader?.split(";").find((c: string) => c.trim().startsWith("token="))?.split("=")[1];
+  if (!token) return redirect("/login");
+  return null;
 };
 
 interface Chat {
@@ -75,32 +83,32 @@ export default function Chats() {
     {
       user_id: '1',
       username: 'usuario1',
-      first_name: 'Usuario',
-      last_name: 'Uno',
+      name: 'Usuario',
+      surname: 'Uno',
       email: 'usuario1@example.com',
       profile_picture_url: 'https://i.pravatar.cc/150?img=1',
       bio: null,
       email_verified: true,
       is_moderator: false,
-      id_deleted: false,
+      deleted_at: null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-      is_online: true
+      active_video_call: false
     },
     {
       user_id: '2',
       username: 'usuario2',
-      first_name: 'Usuario',
-      last_name: 'Dos',
+      name: 'Usuario',
+      surname: 'Dos',
       email: 'usuario2@example.com',
       profile_picture_url: 'https://i.pravatar.cc/150?img=2',
       bio: null,
       email_verified: true,
       is_moderator: false,
-      id_deleted: false,
+      deleted_at: null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-      is_online: true
+      active_video_call: false
     }
   ];
 
@@ -179,7 +187,13 @@ export default function Chats() {
 
       {/* Panel lateral derecho */}
       <RightPanel
-        users={mockOnlineFriends}
+        friends={mockOnlineFriends.map(user => ({
+          friendship_id: user.user_id,
+          user1_id: user.user_id,
+          user2_id: user.user_id,
+          created_at: new Date().toISOString(),
+          user
+        }))}
         mode="online"
       />
     </div>

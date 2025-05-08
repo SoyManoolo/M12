@@ -1,9 +1,11 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { authService } from '../services/auth.service';
 
 interface AuthContextType {
     token: string | null;
     setToken: (token: string | null) => void;
     isAuthenticated: boolean;
+    logout: () => Promise<void>;
 }
 
 interface AuthProviderProps {
@@ -13,32 +15,38 @@ interface AuthProviderProps {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: AuthProviderProps) {
-    const [token, setToken] = useState<string | null>(null);
-    const [isClient, setIsClient] = useState(false);
+    const [token, setToken] = useState<string | null>(() => {
+        // Inicializar el token desde localStorage solo en el cliente
+        if (typeof window !== 'undefined') {
+            return localStorage.getItem('token');
+        }
+        return null;
+    });
 
     useEffect(() => {
-        setIsClient(true);
-        // Solo acceder a localStorage en el cliente
-        const storedToken = localStorage.getItem('token');
-        if (storedToken) {
-            setToken(storedToken);
+        // Sincronizar el token con localStorage
+        if (token) {
+            localStorage.setItem('token', token);
+        } else {
+            localStorage.removeItem('token');
         }
-    }, []);
+    }, [token]);
 
-    useEffect(() => {
-        if (isClient) {
-            if (token) {
-                localStorage.setItem('token', token);
-            } else {
-                localStorage.removeItem('token');
-            }
+    const logout = async () => {
+        try {
+            await authService.logout();
+            setToken(null);
+            localStorage.removeItem('token');
+        } catch (error) {
+            console.error('Error al cerrar sesión:', error);
         }
-    }, [token, isClient]);
+    };
 
     const value: AuthContextType = {
         token,
         setToken,
-        isAuthenticated: !!token
+        isAuthenticated: !!token,
+        logout
     };
 
     return (

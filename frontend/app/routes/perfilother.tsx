@@ -21,18 +21,18 @@ import RightPanel from "~/components/Shared/RightPanel";
 const MOCK_USERS = {
   "carlos123": {
     user_id: "550e8400-e29b-41d4-a716-446655440000",
-    first_name: "Carlos",
-    last_name: "Pérez",
+    name: "Carlos",
+    surname: "Pérez",
     username: "carlos123",
     email: "carlos@example.com",
-    password: "hashed_password",
     profile_picture_url: "https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=400&h=400&fit=crop",
     bio: "¡Hola! Soy Carlos y me encanta la fotografía. 📸 Explorando el mundo a través de mi lente.",
     email_verified: true,
     is_moderator: false,
-    id_deleted: false,
+    deleted_at: null,
     created_at: "2024-01-01T00:00:00Z",
-    updated_at: "2024-01-01T00:00:00Z"
+    updated_at: "2024-01-01T00:00:00Z",
+    active_video_call: false
   }
 };
 
@@ -78,48 +78,48 @@ const MOCK_COMMON_FRIENDS = {
   "carlos123": [
     {
       user_id: "550e8400-e29b-41d4-a716-446655440004",
-      first_name: "Ana",
-      last_name: "López",
+      name: "Ana",
+      surname: "López",
       username: "ana_lopez",
       email: "ana@example.com",
-      password: "hashed_password",
       profile_picture_url: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=400&fit=crop",
       bio: "Amante de la música y los viajes",
       email_verified: true,
       is_moderator: false,
-      id_deleted: false,
+      deleted_at: null,
       created_at: "2024-01-02T00:00:00Z",
-      updated_at: "2024-01-02T00:00:00Z"
+      updated_at: "2024-01-02T00:00:00Z",
+      active_video_call: false
     },
     {
       user_id: "550e8400-e29b-41d4-a716-446655440006",
-      first_name: "Juan",
-      last_name: "Martínez",
+      name: "Juan",
+      surname: "Martínez",
       username: "juan_martinez",
       email: "juan@example.com",
-      password: "hashed_password",
       profile_picture_url: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=400&h=400&fit=crop",
       bio: "Desarrollador web y fotógrafo aficionado",
       email_verified: true,
       is_moderator: false,
-      id_deleted: false,
+      deleted_at: null,
       created_at: "2024-01-03T00:00:00Z",
-      updated_at: "2024-01-03T00:00:00Z"
+      updated_at: "2024-01-03T00:00:00Z",
+      active_video_call: false
     },
     {
       user_id: "550e8400-e29b-41d4-a716-446655440007",
-      first_name: "Laura",
-      last_name: "García",
+      name: "Laura",
+      surname: "García",
       username: "laura_garcia",
       email: "laura@example.com",
-      password: "hashed_password",
       profile_picture_url: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&h=400&fit=crop",
       bio: "Viajera incansable y amante de la naturaleza",
       email_verified: true,
       is_moderator: false,
-      id_deleted: false,
+      deleted_at: null,
       created_at: "2024-01-04T00:00:00Z",
-      updated_at: "2024-01-04T00:00:00Z"
+      updated_at: "2024-01-04T00:00:00Z",
+      active_video_call: false
     }
   ]
 };
@@ -208,7 +208,13 @@ export default function PerfilOther() {
 
       {/* Panel lateral derecho con amigos en común */}
       <RightPanel
-        users={commonFriends}
+        friends={commonFriends.map(user => ({
+          friendship_id: user.user_id,
+          user1_id: user.user_id,
+          user2_id: user.user_id,
+          created_at: new Date().toISOString(),
+          user
+        }))}
         mode="common"
       />
     </div>
