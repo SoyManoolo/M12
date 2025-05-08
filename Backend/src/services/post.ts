@@ -1,8 +1,9 @@
 import { Op, where } from "sequelize";
 import { AppError } from "../middlewares/errors/AppError";
-import { Post } from "../models";
+import { Post, PostLikes, User } from "../models";
 import { existsPost, existsUser } from "../utils/modelExists";
 import { UserFilters } from "../types/custom";
+import { sequelize } from "../config/database";
 
 export class PostService {
     // Guarda la ruta de la carpeta media y las subcarpetas images y videos
@@ -105,7 +106,27 @@ export class PostService {
         try {
             const queryOptions: any = {
                 limit: limit + 1,
-                order: [['created_at', 'DESC']]
+                order: [['created_at', 'DESC']],
+                include: [
+                    {
+                        model: User,
+                        attributes: ['user_id', 'username', 'profile_picture', 'name'],
+                        as: 'author'
+                    }
+                ],
+                attributes: {
+                    include: [
+                        [
+                            sequelize.literal(`(
+                                SELECT COUNT(*)
+                                FROM post_likes
+                                WHERE post_likes.post_id = "Post".post_id
+                            )`),
+                            'likes_count'
+                        ]
+                    ]
+                },
+                subQuery: false
             };
 
             if (cursor) {
@@ -113,7 +134,7 @@ export class PostService {
                 if (lastPost) {
                     queryOptions.where = {
                         created_at: {
-                            [Op.lt]: lastPost.dataValues.created_at // Obtenemos posts más antiguos que el cursor
+                            [Op.lt]: lastPost.dataValues.created_at
                         }
                     };
                 }
@@ -124,27 +145,29 @@ export class PostService {
             // Si no hay posts, lanzamos un error
             if (!posts || posts.length === 0) throw new AppError(404, 'PostNotFound');
 
-            // Si hay más posts, los paginamos
-            const hasNextPage: boolean = posts.length > limit;
+            // Transformamos los posts para el formato esperado por el frontend
+            const postsWithLikes = posts.map(post => {
+                const postData = post.toJSON();
+                return postData; // Ya incluye likes_count
+            });
 
-            // Si hay más posts, eliminamos el último post de la lista
-            const resultPosts: Post[] = hasNextPage ? posts.slice(0, limit) : posts;
-
-            // Obtenemos el cursor del último post
-            const nextCursor = hasNextPage ? resultPosts[resultPosts.length - 1].dataValues.post_id : null;
+            // Paginación
+            const hasNextPage: boolean = postsWithLikes.length > limit;
+            const resultPosts = hasNextPage ? postsWithLikes.slice(0, limit) : postsWithLikes;
+            const nextCursor = hasNextPage ? resultPosts[resultPosts.length - 1].post_id : null;
 
             return {
                 posts: resultPosts,
                 hasNextPage,
                 nextCursor
             };
-        } catch (error) {
+        } catch (error: any) {
             if (error instanceof AppError) {
                 throw error;
             }
             throw new AppError(500, 'InternalServerError');
-        };
-    };
+        }
+    }
 
     // Método para actualizar un post
     public async updatePost(postId: string, description: string) {
