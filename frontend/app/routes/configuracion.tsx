@@ -284,7 +284,7 @@ export default function ConfiguracionPage() {
     <div className="min-h-screen bg-black text-white flex">
       <Navbar />
       
-      <div className="w-2/3 ml-[16.666667%] border-r border-gray-800">
+      <div className="w-5/6 ml-[16.666667%]">
         <div className="p-8">
           <h1 className="text-3xl font-bold mb-8">CONFIGURACIÓN</h1>
           
@@ -338,7 +338,15 @@ export default function ConfiguracionPage() {
                   rows={4}
                 />
               </div>
-              <div className="flex justify-end">
+              <div className="flex justify-between items-center">
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors flex items-center space-x-2"
+                >
+                  <FaSignOutAlt />
+                  <span>Cerrar sesión</span>
+                </button>
                 <button
                   type="submit"
                   className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
@@ -349,18 +357,6 @@ export default function ConfiguracionPage() {
             </div>
           </form>
         </div>
-      </div>
-
-      <div className="w-1/6 p-6">
-        <nav className="space-y-2">
-          <button
-            onClick={handleLogout}
-            className="w-full text-left px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 flex items-center space-x-2 cursor-pointer"
-          >
-            <FaSignOutAlt />
-            <span>Cerrar sesión</span>
-          </button>
-        </nav>
       </div>
     </div>
   );

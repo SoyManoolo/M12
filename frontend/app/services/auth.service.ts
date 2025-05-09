@@ -241,11 +241,21 @@ export const authService = {
      */
     async logout(): Promise<AuthResponse> {
         try {
-            const response = await fetch(`${environment.apiUrl}${environment.apiEndpoints.auth.logout}`, {
-                method: 'POST',
+            const token = localStorage.getItem('token');
+            if (!token) {
+                return {
+                    success: false,
+                    status: 401,
+                    message: 'No hay sesión activa'
+                };
+            }
+
+            const response = await fetch(`${environment.apiUrl}${environment.apiEndpoints.auth.logout}/${token}`, {
+                method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
-                },
+                    'Authorization': `Bearer ${token}`
+                }
             });
 
             const data = await response.json();
@@ -254,10 +264,11 @@ export const authService = {
                 return {
                     success: false,
                     status: response.status,
-                    message: data.message || 'Error al cerrar sesión'
+                    message: data.message || 'No pudimos cerrar tu sesión'
                 };
             }
 
+            localStorage.removeItem('token');
             return {
                 success: true,
                 status: response.status,
@@ -268,7 +279,7 @@ export const authService = {
             return {
                 success: false,
                 status: 500,
-                message: 'Error al conectar con el servidor'
+                message: 'No pudimos conectarnos al servidor. Por favor, verifica tu conexión a internet'
             };
         }
     }
