@@ -74,7 +74,7 @@ export default function RightPanel({
     : 'No hay amigos conectados';
 
   const handleUserClick = (username: string) => {
-    navigate(`/perfilother?username=${username}`);
+    navigate(`/perfil?username=${username}`);
   };
 
   // Convertir users a friends si es necesario
@@ -151,7 +151,7 @@ export default function RightPanel({
                     </button>
                   ) : (
                     <Link 
-                      to={`/perfilother?username=${friend.user.username}`}
+                      to={`/perfil?username=${friend.user.username}`}
                       className="text-blue-500 hover:text-blue-400 text-sm cursor-pointer ml-4 whitespace-nowrap"
                     >
                       Ver perfil
