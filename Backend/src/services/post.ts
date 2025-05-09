@@ -43,7 +43,7 @@ export class PostService {
             if (Object.keys(filters).length === 0) {
                 throw new AppError(400, "");
             };
-
+            console.log(filters);
             const user = await existsUser(filters);
 
             if (!user) throw new AppError(404, "");
@@ -55,7 +55,27 @@ export class PostService {
                 where: {
                     user_id
                 },
-                order: [['created_at', 'DESC']]
+                order: [['created_at', 'DESC']],
+                include: [
+                    {
+                        model: User,
+                        attributes: ['user_id', 'username', 'profile_picture', 'name'],
+                        as: 'author'
+                    }
+                ],
+                attributes: {
+                    include: [
+                        [
+                            sequelize.literal(`(
+                                SELECT COUNT(*)
+                                FROM post_likes
+                                WHERE post_likes.post_id = "Post".post_id
+                            )`),
+                            'likes_count'
+                        ]
+                    ]
+                },
+                subQuery: false
             };
 
             if (cursor) {
@@ -111,12 +131,7 @@ export class PostService {
                     {
                         model: User,
                         attributes: ['user_id', 'username', 'profile_picture', 'name'],
-                        as: 'author',
-                        ...(username && {
-                            where: {
-                                username: username
-                            }
-                        })
+                        as: 'author'
                     }
                 ],
                 attributes: {

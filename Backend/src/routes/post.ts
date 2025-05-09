@@ -9,6 +9,18 @@ const router = express.Router();
 const postService = new PostService();
 const postController = new PostController(postService);
 
+router.get('/username', async (req: Request, res: Response, next: NextFunction) => {
+    await postController.getPostsUser(req, res, next);
+});
+
+router.patch('/username', async (req: Request, res: Response, next: NextFunction) => {
+    await postController.updatePost(req, res, next);
+});
+
+router.delete('/username', async (req: Request, res: Response, next: NextFunction) => {
+    await postController.deletePost(req, res, next);
+});
+
 router.post('/', AuthToken.verifyToken, upload.single('media'), async (req: Request, res: Response, next: NextFunction) => {
     await postController.createPost(req, res, next);
 });
