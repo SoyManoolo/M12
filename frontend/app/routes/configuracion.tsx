@@ -1,4 +1,5 @@
 /**
+ * VERSION CON CONFIGURACION DIVIDIDA EN SECCIONES
  * @file configuracion.tsx
  * @description Página de configuraciones que permite al usuario gestionar su cuenta y seguridad.
  * 
