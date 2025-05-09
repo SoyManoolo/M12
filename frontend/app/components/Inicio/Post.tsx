@@ -163,10 +163,13 @@ export default function Post({
                 src={user.profile_picture ? `http://localhost:3000${user.profile_picture}` : '/default-avatar.png'} 
                 alt={user.username} 
                 className="w-12 h-12 rounded-full cursor-pointer object-cover"
-                onClick={() => window.location.href = `/perfil/${user.username}`}
+                onClick={() => window.location.href = `/perfil?username=${user.username}`}
               />
             </div>
-            <p className="font-semibold text-white cursor-pointer hover:underline text-center text-sm">
+            <p 
+              className="font-semibold text-white cursor-pointer hover:underline text-center text-sm"
+              onClick={() => window.location.href = `/perfil?username=${user.username}`}
+            >
               {user.username}
             </p>
 
