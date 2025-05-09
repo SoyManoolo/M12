@@ -39,6 +39,13 @@ export default defineConfig({
       usePolling: false,
       interval: 1000,
     },
+    proxy: {
+      '/media': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        secure: false,
+      }
+    }
   },
   build: {
     target: 'esnext',
