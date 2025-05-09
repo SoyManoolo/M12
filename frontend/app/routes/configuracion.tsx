@@ -1,5 +1,4 @@
 /**
- * VERSION CON CONFIGURACION DIVIDIDA EN SECCIONES
  * @file configuracion.tsx
  * @description Página de configuraciones que permite al usuario gestionar su cuenta y seguridad.
  * 
@@ -86,14 +85,10 @@ export default function ConfiguracionPage() {
     email: '',
     name: '',
     surname: '',
+    password: '',
     bio: ''
   });
   const [userId, setUserId] = useState<string>('');
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
-  });
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -126,6 +121,7 @@ export default function ConfiguracionPage() {
             email: data.data.email || '',
             name: data.data.name || '',
             surname: data.data.surname || '',
+            password: '',
             bio: data.data.bio || ''
           });
         } else {
@@ -150,14 +146,6 @@ export default function ConfiguracionPage() {
     }));
   };
 
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setPasswordData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -177,6 +165,11 @@ export default function ConfiguracionPage() {
         return;
       }
 
+      if (formData.password && formData.password.trim() === '') {
+        showMessage('error', 'La contraseña no puede estar vacía');
+        return;
+      }
+
       // Solo enviamos los campos que han cambiado y no están vacíos
       const requestBody: Record<string, string> = {};
       
@@ -186,6 +179,10 @@ export default function ConfiguracionPage() {
       
       if (formData.email !== user?.email && formData.email.trim() !== '') {
         requestBody.email = formData.email.trim();
+      }
+
+      if (formData.password && formData.password.trim() !== '') {
+        requestBody.password = formData.password.trim();
       }
       
       if (formData.bio !== user?.bio && formData.bio?.trim() !== '') {
@@ -259,48 +256,6 @@ export default function ConfiguracionPage() {
     }
   };
 
-  const handlePasswordSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      showMessage('error', 'Las contraseñas no coinciden');
-      return;
-    }
-
-    try {
-      if (!userId) {
-        showMessage('error', 'No pudimos obtener tu información de sesión');
-        return;
-      }
-
-      const response = await fetch(`${environment.apiUrl}/users/${userId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          currentPassword: passwordData.currentPassword,
-          newPassword: passwordData.newPassword
-        })
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        showMessage('success', 'Contraseña actualizada correctamente');
-        setPasswordData({
-          currentPassword: '',
-          newPassword: '',
-          confirmPassword: ''
-        });
-      } else {
-        throw new Error(data.message || 'Error al actualizar la contraseña');
-      }
-    } catch (err) {
-      console.error('Error al actualizar contraseña:', err);
-      showMessage('error', err instanceof Error ? err.message : 'Error al actualizar la contraseña');
-    }
-  };
-
   const handleLogout = async () => {
     try {
       const response = await authService.logout();
@@ -341,120 +296,63 @@ export default function ConfiguracionPage() {
             />
           )}
 
-          {activeSection === 'cuenta' && (
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Nombre de usuario</label>
-                  <input
-                    type="text"
-                    name="username"
-                    value={formData.username}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 bg-transparent border border-gray-700 rounded-md focus:outline-none focus:border-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Correo electrónico</label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 bg-transparent border border-gray-700 rounded-md focus:outline-none focus:border-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Biografía</label>
-                  <textarea
-                    name="bio"
-                    value={formData.bio}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 bg-transparent border border-gray-700 rounded-md focus:outline-none focus:border-white"
-                    rows={4}
-                  />
-                </div>
-                <div className="flex justify-end">
-                  <button
-                    type="submit"
-                    className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                  >
-                    Guardar cambios
-                  </button>
-                </div>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Nombre de usuario</label>
+                <input
+                  type="text"
+                  name="username"
+                  value={formData.username}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 bg-transparent border border-gray-700 rounded-md focus:outline-none focus:border-white"
+                />
               </div>
-            </form>
-          )}
-
-          {activeSection === 'seguridad' && (
-            <form onSubmit={handlePasswordSubmit} className="space-y-6">
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Contraseña actual</label>
-                  <input
-                    type="password"
-                    name="currentPassword"
-                    value={passwordData.currentPassword}
-                    onChange={handlePasswordChange}
-                    className="w-full px-3 py-2 bg-transparent border border-gray-700 rounded-md focus:outline-none focus:border-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Nueva contraseña</label>
-                  <input
-                    type="password"
-                    name="newPassword"
-                    value={passwordData.newPassword}
-                    onChange={handlePasswordChange}
-                    className="w-full px-3 py-2 bg-transparent border border-gray-700 rounded-md focus:outline-none focus:border-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Confirmar nueva contraseña</label>
-                  <input
-                    type="password"
-                    name="confirmPassword"
-                    value={passwordData.confirmPassword}
-                    onChange={handlePasswordChange}
-                    className="w-full px-3 py-2 bg-transparent border border-gray-700 rounded-md focus:outline-none focus:border-white"
-                  />
-                </div>
-                <div className="flex justify-end">
-                  <button
-                    type="submit"
-                    className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                  >
-                    Cambiar contraseña
-                  </button>
-                </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Correo electrónico</label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 bg-transparent border border-gray-700 rounded-md focus:outline-none focus:border-white"
+                />
               </div>
-            </form>
-          )}
+              <div>
+                <label className="block text-sm font-medium mb-2">Nueva Contraseña</label>
+                <input
+                  type="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 bg-transparent border border-gray-700 rounded-md focus:outline-none focus:border-white"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Biografía</label>
+                <textarea
+                  name="bio"
+                  value={formData.bio}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 bg-transparent border border-gray-700 rounded-md focus:outline-none focus:border-white"
+                  rows={4}
+                />
+              </div>
+              <div className="flex justify-end">
+                <button
+                  type="submit"
+                  className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  Guardar cambios
+                </button>
+              </div>
+            </div>
+          </form>
         </div>
       </div>
 
       <div className="w-1/6 p-6">
         <nav className="space-y-2">
-          <button
-            onClick={() => setActiveSection('cuenta')}
-            className={`w-full text-left px-4 py-2 rounded-md ${
-              activeSection === 'cuenta'
-                ? 'bg-blue-600 text-white'
-                : 'text-gray-400 hover:text-white hover:bg-gray-800'
-            }`}
-          >
-            Cuenta
-          </button>
-          <button
-            onClick={() => setActiveSection('seguridad')}
-            className={`w-full text-left px-4 py-2 rounded-md ${
-              activeSection === 'seguridad'
-                ? 'bg-blue-600 text-white'
-                : 'text-gray-400 hover:text-white hover:bg-gray-800'
-            }`}
-          >
-            Seguridad
-          </button>
           <button
             onClick={handleLogout}
             className="w-full text-left px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 flex items-center space-x-2 cursor-pointer"
