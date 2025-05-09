@@ -13,7 +13,7 @@
  */
 
 import { json, redirect } from "@remix-run/node";
-import { useLoaderData, useNavigate } from "@remix-run/react";
+import { useLoaderData, useNavigate, useLocation, useFetcher } from "@remix-run/react";
 import { useState, useEffect } from "react";
 import { FaEdit } from "react-icons/fa";
 import Navbar from "~/components/Inicio/Navbar";
@@ -28,21 +28,27 @@ import type { User } from "~/types/user.types";
 interface Post {
   post_id: string;
   user_id: string;
-  user: User;
   description: string;
   media_url: string | null;
+  media?: string | null;
   created_at: string;
   updated_at: string;
+  deleted_at: string | null;
   likes_count: number;
   is_saved: boolean;
   comments: Array<{
     comment_id: string;
     post_id: string;
     user_id: string;
-    username: string;
     content: string;
     created_at: string;
   }>;
+  author: {
+    user_id: string;
+    username: string;
+    profile_picture: string | null;
+    name: string;
+  };
 }
 
 interface Friend {
@@ -102,6 +108,7 @@ export async function loader({ request }: { request: Request }) {
 export default function Perfil() {
   const data = useLoaderData<typeof loader>() as LoaderData;
   const navigate = useNavigate();
+  const location = useLocation();
   const { token } = useAuth();
   const [loading, setLoading] = useState(false);
   const [posts, setPosts] = useState<Post[]>([]);
@@ -109,22 +116,20 @@ export default function Perfil() {
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Efecto para cargar datos cuando cambia la URL o el usuario
   useEffect(() => {
-    const loadInitialData = async () => {
+    const loadData = async () => {
       if (!token || !data.user) return;
       
       try {
+        setLoading(true);
+        setPosts([]); // Limpiar posts actuales
+        setNextCursor(null); // Resetear cursor
+
         // Cargar posts iniciales
         const postsResponse = await postService.getPosts(token, undefined, data.user.username);
         if (postsResponse.success) {
-          const transformedPosts = postsResponse.data.posts.map(post => ({
-            ...post,
-            user: data.user!,
-            likes_count: 0,
-            is_saved: false,
-            comments: []
-          }));
-          setPosts(transformedPosts);
+          setPosts(postsResponse.data.posts as unknown as Post[]);
           setNextCursor(postsResponse.data.nextCursor);
         }
 
@@ -156,11 +161,13 @@ export default function Perfil() {
         }
       } catch (err) {
         setError('Error al cargar los datos iniciales');
+      } finally {
+        setLoading(false);
       }
     };
 
-    loadInitialData();
-  }, [token, data.user]);
+    loadData();
+  }, [token, data.user, location.search]); // Añadido location.search como dependencia
 
   const handleEditProfile = () => {
     navigate('/configuracion?section=cuenta');
@@ -193,14 +200,7 @@ export default function Perfil() {
     try {
       const response = await postService.getPosts(token, nextCursor, data.user.username);
       if (response.success) {
-        const transformedPosts = response.data.posts.map(post => ({
-          ...post,
-          user: data.user!,
-          likes_count: 0,
-          is_saved: false,
-          comments: []
-        }));
-        setPosts(prev => [...prev, ...transformedPosts]);
+        setPosts(prev => [...prev, ...(response.data.posts as unknown as Post[])]);
         setNextCursor(response.data.nextCursor);
       } else {
         throw new Error(response.message || 'Error al cargar más posts');

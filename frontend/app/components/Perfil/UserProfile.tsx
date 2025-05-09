@@ -27,125 +27,43 @@ interface UserProfileProps {
     onEditProfile?: () => void;
 }
 
-export default function UserProfile({ user: userProp, userId, username, isOwnProfile, onEditProfile }: UserProfileProps) {
-    const [user, setUser] = useState<User | null>(userProp || null);
-    const [loading, setLoading] = useState(!userProp);
-    const [error, setError] = useState<string | null>(null);
+export default function UserProfile({ user, isOwnProfile, onEditProfile }: UserProfileProps) {
     const { token } = useAuth();
     const navigate = useNavigate();
-
-    function mapUserProfileToUser(profile: any): User {
-        return {
-            user_id: profile.user_id,
-            username: profile.username,
-            name: profile.name,
-            surname: profile.surname,
-            email: profile.email,
-            profile_picture_url: profile.profile_picture_url ?? null,
-            bio: profile.bio ?? null,
-            email_verified: profile.email_verified,
-            is_moderator: profile.is_moderator,
-            deleted_at: profile.deleted_at ?? null,
-            created_at: profile.created_at,
-            updated_at: profile.updated_at,
-            active_video_call: profile.active_video_call ?? false
-        };
-    }
-
-    useEffect(() => {
-        if (userProp) return;
-        const fetchUserData = async () => {
-            if (!token) {
-                setError('No hay token de autenticación');
-                setLoading(false);
-                return;
-            }
-            try {
-                let response;
-                if (userId) {
-                    response = await userService.getUserById(userId, token);
-                } else if (username) {
-                    response = await userService.getUserByUsername(username, token);
-                } else {
-                    throw new Error('Se requiere userId o username');
-                }
-                if (response.success && response.data) {
-                    setUser(mapUserProfileToUser(response.data));
-                } else {
-                    setError(response.message || 'Error al cargar el perfil');
-                }
-            } catch (err) {
-                setError('Error al cargar el perfil');
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchUserData();
-    }, [userId, username, token, userProp]);
-
-    const handleUpdateProfile = async (updateData: Partial<User>) => {
-        if (!token || !user) return;
-        const cleanUpdateData: any = { ...updateData };
-        if ('bio' in cleanUpdateData && cleanUpdateData.bio === null) cleanUpdateData.bio = undefined;
-        if ('profile_picture_url' in cleanUpdateData && cleanUpdateData.profile_picture_url === null) cleanUpdateData.profile_picture_url = undefined;
-        try {
-            let response;
-            if (userId) {
-                response = await userService.updateUserById(userId, cleanUpdateData, token);
-            } else if (username) {
-                response = await userService.updateUserByUsername(username, cleanUpdateData, token);
-            }
-            if (response?.success && response.data) {
-                setUser(mapUserProfileToUser(response.data));
-            } else {
-                setError(response?.message || 'Error al actualizar el perfil');
-            }
-        } catch (err) {
-            setError('Error al actualizar el perfil');
-        }
-    };
+    const [error, setError] = useState<string | null>(null);
 
     const handleDeleteProfile = async () => {
         if (!token || !user) return;
 
-        try {
-            let response;
-            if (userId) {
-                response = await userService.deleteUserById(userId, token);
-            } else if (username) {
-                response = await userService.deleteUserByUsername(username, token);
+        if (window.confirm('¿Estás seguro de que quieres eliminar tu cuenta? Esta acción no se puede deshacer.')) {
+            try {
+                const response = await userService.deleteUserById(user.user_id, token);
+                if (response?.success) {
+                    window.location.href = '/login';
+                } else {
+                    setError(response?.message || 'Error al eliminar el perfil');
+                }
+            } catch (err) {
+                setError('Error al eliminar el perfil');
             }
-
-            if (response?.success) {
-                // Redirigir al login o página principal
-                window.location.href = '/login';
-            } else {
-                setError(response?.message || 'Error al eliminar el perfil');
-            }
-        } catch (err) {
-            setError('Error al eliminar el perfil');
         }
     };
 
-    const handleEditProfile = () => {
-        navigate('/configuracion?section=cuenta');
-    };
-
-    if (loading) {
+    if (error) {
         return (
             <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
                 <div className="flex items-center justify-center h-32">
-                    <p className="text-gray-400">Cargando perfil...</p>
+                    <p className="text-red-500">{error}</p>
                 </div>
             </div>
         );
     }
 
-    if (error || !user) {
+    if (!user) {
         return (
             <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
                 <div className="flex items-center justify-center h-32">
-                    <p className="text-red-500">{error || 'Error al cargar el perfil'}</p>
+                    <p className="text-gray-400">Cargando perfil...</p>
                 </div>
             </div>
         );
@@ -182,7 +100,7 @@ export default function UserProfile({ user: userProp, userId, username, isOwnPro
                         {isOwnProfile && (
                             <div className="flex space-x-2">
                                 <button
-                                    onClick={handleEditProfile}
+                                    onClick={onEditProfile}
                                     className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center space-x-2 transition-colors"
                                 >
                                     <FaEdit />

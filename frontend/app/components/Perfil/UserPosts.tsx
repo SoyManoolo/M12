@@ -32,11 +32,12 @@ interface UserPostsProps {
   posts: Array<{
     post_id: string;
     user_id: string;
-    user: User;
     description: string;
     media_url: string | null;
+    media?: string | null;
     created_at: string;
     updated_at: string;
+    deleted_at: string | null;
     likes_count: number;
     is_saved: boolean;
     comments: Array<{
@@ -46,12 +47,18 @@ interface UserPostsProps {
       content: string;
       created_at: string;
     }>;
+    author: {
+      user_id: string;
+      username: string;
+      profile_picture: string | null;
+      name: string;
+    };
   }>;
   onLike: (postId: string) => void;
   onSave: (postId: string) => void;
 }
 
-export default function UserPosts({ posts, onLike, onSave }: UserPostsProps) {
+export default function UserPosts({ posts = [], onLike, onSave }: UserPostsProps) {
   const { token } = useAuth();
   let currentUserId: string | undefined = undefined;
   if (token) {
@@ -62,7 +69,7 @@ export default function UserPosts({ posts, onLike, onSave }: UserPostsProps) {
     }
   }
 
-  if (posts.length === 0) {
+  if (!posts || posts.length === 0) {
     return (
       <div className="bg-gray-900 rounded-lg p-6 text-center border border-gray-800">
         <p className="text-gray-400">No hay publicaciones para mostrar</p>
@@ -77,18 +84,19 @@ export default function UserPosts({ posts, onLike, onSave }: UserPostsProps) {
           key={post.post_id}
           post_id={post.post_id}
           user={{
-            user_id: post.user.user_id,
-            username: post.user.username,
-            profile_picture_url: post.user.profile_picture_url
+            user_id: post.author.user_id,
+            username: post.author.username,
+            profile_picture: post.author.profile_picture,
+            name: post.author.name
           }}
           description={post.description}
-          media_url={post.media_url}
-          comments={post.comments.map(comment => ({
+          media_url={post.media_url || ''}
+          comments={post.comments?.map(comment => ({
             ...comment,
-            username: post.user.username // Usamos el username del usuario del post
-          }))}
+            username: post.author.username
+          })) || []}
           created_at={post.created_at}
-          likes_count={post.likes_count}
+          likes_count={post.likes_count.toString()}
           is_saved={post.is_saved}
           onLike={() => onLike(post.post_id)}
           onSave={() => onSave(post.post_id)}
