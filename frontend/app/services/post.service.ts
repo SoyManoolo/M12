@@ -30,13 +30,16 @@ class PostService {
 
   async getPosts(token: string, cursor?: string, username?: string): Promise<PostsResponse> {
     try {
-      const url = new URL(`${this.baseUrl}/posts`);
-      url.searchParams.append('limit', '10');
-      if (cursor) {
-        url.searchParams.append('cursor', cursor);
-      }
+      let url: URL;
       if (username) {
+        url = new URL(`${this.baseUrl}/posts/username`);
         url.searchParams.append('username', username);
+      } else {
+        url = new URL(`${this.baseUrl}/posts`);
+        url.searchParams.append('limit', '10');
+        if (cursor) {
+          url.searchParams.append('cursor', cursor);
+        }
       }
 
       const response = await fetch(url.toString(), {
