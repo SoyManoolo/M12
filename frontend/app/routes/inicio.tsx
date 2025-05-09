@@ -30,6 +30,7 @@ import { useState, useEffect } from "react";
 import { json } from "@remix-run/node";
 import { useAuth } from "~/hooks/useAuth";
 import { postService } from "~/services/post.service";
+import { userService } from "~/services/user.service";
 
 /**
  * @interface User
@@ -157,9 +158,10 @@ export default function InicioPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [friends, setFriends] = useState<Friend[]>([]);
 
   useEffect(() => {
-    const fetchPosts = async () => {
+    const fetchData = async () => {
       if (!token) {
         setError('No hay token de autenticación');
         setLoading(false);
@@ -167,9 +169,9 @@ export default function InicioPage() {
       }
 
       try {
+        // Cargar posts
         const response = await postService.getPosts(token);
         if (response.success) {
-          // Transformar los posts para incluir la información necesaria para el componente Post
           const transformedPosts: Post[] = response.data.posts.map((post: any) => ({
             post_id: post.post_id,
             user_id: post.user_id,
@@ -185,19 +187,43 @@ export default function InicioPage() {
           }));
           setPosts(transformedPosts);
           setNextCursor(response.data.nextCursor);
-          setError(null); // Limpiamos cualquier error previo
-        } else {
-          setError(response.message || 'Error al obtener los posts');
+        }
+
+        // Cargar amigos
+        const friendsResponse = await userService.getAllUsers(token);
+        if (friendsResponse.success) {
+          const friendsData = friendsResponse.data.map(user => ({
+            friendship_id: user.user_id,
+            user1_id: user.user_id,
+            user2_id: user.user_id,
+            created_at: new Date().toISOString(),
+            user: {
+              user_id: user.user_id,
+              username: user.username,
+              name: user.name,
+              surname: user.surname,
+              email: user.email,
+              profile_picture_url: user.profile_picture_url ?? null,
+              bio: user.bio ?? null,
+              email_verified: user.email_verified,
+              is_moderator: user.is_moderator,
+              deleted_at: null,
+              created_at: user.created_at,
+              updated_at: user.updated_at,
+              active_video_call: false
+            }
+          }));
+          setFriends(friendsData);
         }
       } catch (err) {
-        console.error('Error al obtener los posts:', err);
+        console.error('Error al cargar los datos:', err);
         setError(err instanceof Error ? err.message : 'Error al conectar con el servidor');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchPosts();
+    fetchData();
   }, [token]);
 
   const handleLoadMore = async () => {
@@ -353,7 +379,7 @@ export default function InicioPage() {
           )}
         </div>
       </div>
-      <RightPanel friends={[]} mode="online" />
+      <RightPanel friends={friends} mode="online" />
     </div>
   );
 } 
