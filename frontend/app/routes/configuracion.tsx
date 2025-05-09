@@ -272,26 +272,6 @@ export default function ConfiguracionPage() {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Nombre</label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 bg-transparent border border-gray-700 rounded-md focus:outline-none focus:border-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Apellidos</label>
-                  <input
-                    type="text"
-                    name="surname"
-                    value={formData.surname}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 bg-transparent border border-gray-700 rounded-md focus:outline-none focus:border-white"
-                  />
-                </div>
-                <div>
                   <label className="block text-sm font-medium mb-2">Nombre de usuario</label>
                   <input
                     type="text"
@@ -302,7 +282,7 @@ export default function ConfiguracionPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">Email</label>
+                  <label className="block text-sm font-medium mb-2">Correo electrónico</label>
                   <input
                     type="email"
                     name="email"
