@@ -118,11 +118,17 @@ export default function RightPanel({
                     onClick={() => handleUserClick(friend.user.username)}
                   >
                     <div className="relative">
-                      <img 
-                        src={friend.user.profile_picture_url || 'https://i.pravatar.cc/150'} 
-                        alt={friend.user.username}
-                        className="w-12 h-12 rounded-full object-cover"
-                      />
+                      {friend.user.profile_picture_url ? (
+                        <img 
+                          src={`http://localhost:3000${friend.user.profile_picture_url}`}
+                          alt={friend.user.username}
+                          className="w-12 h-12 rounded-full object-cover border-2 border-gray-800"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-full border-2 border-gray-800 bg-gray-800 flex items-center justify-center">
+                          <span className="text-gray-400 text-sm">{friend.user.username.charAt(0).toUpperCase()}</span>
+                        </div>
+                      )}
                       {mode === 'online' && friend.user.is_online && (
                         <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-black"></div>
                       )}

@@ -159,12 +159,21 @@ export default function Post({
           <div className="w-[80px] flex flex-col items-center space-y-4">
             {/* Perfil y nombre del usuario */}
             <div className="relative w-full flex justify-center">
-              <img 
-                src={user.profile_picture ? `http://localhost:3000${user.profile_picture}` : '/default-avatar.png'} 
-                alt={user.username} 
-                className="w-12 h-12 rounded-full cursor-pointer object-cover"
-                onClick={() => window.location.href = `/perfil?username=${user.username}`}
-              />
+              {user.profile_picture ? (
+                <img 
+                  src={`http://localhost:3000${user.profile_picture}`}
+                  alt={user.username} 
+                  className="w-12 h-12 rounded-full cursor-pointer object-cover border-2 border-gray-800"
+                  onClick={() => window.location.href = `/perfil?username=${user.username}`}
+                />
+              ) : (
+                <div 
+                  className="w-12 h-12 rounded-full border-2 border-gray-800 bg-gray-800 flex items-center justify-center cursor-pointer"
+                  onClick={() => window.location.href = `/perfil?username=${user.username}`}
+                >
+                  <span className="text-gray-400 text-xs">{user.username.charAt(0).toUpperCase()}</span>
+                </div>
+              )}
             </div>
             <p 
               className="font-semibold text-white cursor-pointer hover:underline text-center text-sm"
