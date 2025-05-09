@@ -260,7 +260,6 @@ export default function ConfiguracionPage() {
     try {
       const response = await authService.logout();
       if (response.success) {
-        showMessage('success', 'Sesión cerrada correctamente');
         localStorage.removeItem('token');
         navigate('/login');
       } else {
