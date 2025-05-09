@@ -240,7 +240,7 @@ export default function Post({
             >
               {media_url ? (
                 <img 
-                  src={`http://localhost:3000${media_url}`} 
+                  src={media_url} 
                   alt="Contenido del post"
                   className="w-full h-full object-cover"
                 />
@@ -361,7 +361,7 @@ export default function Post({
               <FaTimes className="text-2xl" />
             </button>
             <img 
-              src={media_url ? `http://localhost:3000${media_url}` : ''} 
+              src={media_url} 
               alt="Contenido expandido"
               className="max-w-full max-h-[90vh] object-contain"
             />
