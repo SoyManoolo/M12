@@ -102,7 +102,7 @@ export class PostService {
     }
 
     // Método para obtener los posts paginados
-    public async getPosts(limit: number = 10, cursor?: string) {
+    public async getPosts(limit: number = 10, cursor?: string, username?: string) {
         try {
             const queryOptions: any = {
                 limit: limit + 1,
@@ -111,7 +111,12 @@ export class PostService {
                     {
                         model: User,
                         attributes: ['user_id', 'username', 'profile_picture', 'name'],
-                        as: 'author'
+                        as: 'author',
+                        ...(username && {
+                            where: {
+                                username: username
+                            }
+                        })
                     }
                 ],
                 attributes: {
