@@ -87,6 +87,7 @@ export default function ConfiguracionPage() {
     surname: '',
     bio: ''
   });
+  const [userId, setUserId] = useState<string>('');
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -118,6 +119,7 @@ export default function ConfiguracionPage() {
         const data = await response.json();
         if (data.success) {
           setUser(data.data);
+          setUserId(data.data.user_id);
           setFormData({
             username: data.data.username || '',
             email: data.data.email || '',
@@ -158,29 +160,100 @@ export default function ConfiguracionPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const username = getUsernameFromToken(token);
-      if (!username) {
+      if (!userId) {
         showMessage('error', 'No pudimos obtener tu información de sesión');
         return;
       }
 
-      const response = await fetch(`${environment.apiUrl}/users/username?username=${username}`, {
+      // Validaciones según el esquema del backend
+      if (formData.username && (formData.username.length < 3 || formData.username.length > 50)) {
+        showMessage('error', 'El nombre de usuario debe tener entre 3 y 50 caracteres');
+        return;
+      }
+
+      if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+        showMessage('error', 'Por favor, introduce un correo electrónico válido');
+        return;
+      }
+
+      // Solo enviamos los campos que han cambiado y no están vacíos
+      const requestBody: Record<string, string> = {};
+      
+      if (formData.username !== user?.username && formData.username.trim() !== '') {
+        requestBody.username = formData.username.trim();
+      }
+      
+      if (formData.email !== user?.email && formData.email.trim() !== '') {
+        requestBody.email = formData.email.trim();
+      }
+      
+      if (formData.bio !== user?.bio && formData.bio?.trim() !== '') {
+        requestBody.bio = formData.bio.trim();
+      }
+
+      // Verificar que al menos un campo ha cambiado y no está vacío
+      if (Object.keys(requestBody).length === 0) {
+        showMessage('error', 'No hay cambios válidos para actualizar');
+        return;
+      }
+
+      // Verificar que ningún campo esté vacío
+      for (const [key, value] of Object.entries(requestBody)) {
+        if (!value || value.trim() === '') {
+          showMessage('error', `El campo ${key} no puede estar vacío`);
+          return;
+        }
+      }
+
+      console.log('📤 Enviando datos:', requestBody);
+      console.log('🔑 Usando ID:', userId);
+
+      const response = await fetch(`${environment.apiUrl}/users/${userId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(requestBody)
       });
 
-      const data = await response.json();
+      console.log('📥 Status:', response.status);
+      console.log('📥 Headers:', Object.fromEntries(response.headers.entries()));
+
+      // Intentar obtener el texto de la respuesta primero
+      const responseText = await response.text();
+      console.log('📥 Respuesta raw:', responseText);
+
+      // Si la respuesta es HTML, probablemente es un error del servidor
+      if (responseText.includes('<!DOCTYPE html>')) {
+        const errorMatch = responseText.match(/Error: ([^<]+)/);
+        const errorMessage = errorMatch ? errorMatch[1] : 'Error del servidor';
+        throw new Error(errorMessage);
+      }
+
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('❌ Error al parsear la respuesta como JSON:', parseError);
+        throw new Error('La respuesta del servidor no es un JSON válido');
+      }
+
+      if (!response.ok) {
+        throw new Error(data.message || `Error del servidor: ${response.status}`);
+      }
+
       if (data.success) {
         showMessage('success', 'Datos actualizados correctamente');
+        // Actualizamos el token si el username cambió
+        if (data.data?.username !== formData.username) {
+          console.log('Username actualizado, considera actualizar el token');
+        }
       } else {
         throw new Error(data.message || 'Error al actualizar los datos');
       }
     } catch (err) {
-      console.error('Error al actualizar datos:', err);
+      console.error('❌ Error al actualizar datos:', err);
       showMessage('error', err instanceof Error ? err.message : 'Error al actualizar los datos');
     }
   };
@@ -193,13 +266,12 @@ export default function ConfiguracionPage() {
     }
 
     try {
-      const username = getUsernameFromToken(token);
-      if (!username) {
+      if (!userId) {
         showMessage('error', 'No pudimos obtener tu información de sesión');
         return;
       }
 
-      const response = await fetch(`${environment.apiUrl}/users/username?username=${username}`, {
+      const response = await fetch(`${environment.apiUrl}/users/${userId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
