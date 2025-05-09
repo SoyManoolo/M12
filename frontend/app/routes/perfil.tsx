@@ -126,7 +126,7 @@ export default function Perfil() {
         setPosts([]); // Limpiar posts actuales
         setNextCursor(null); // Resetear cursor
 
-        // Cargar posts iniciales
+        // Cargar posts iniciales del usuario actual usando el username
         const postsResponse = await postService.getPosts(token, undefined, data.user.username);
         if (postsResponse.success) {
           setPosts(postsResponse.data.posts as unknown as Post[]);
@@ -167,7 +167,7 @@ export default function Perfil() {
     };
 
     loadData();
-  }, [token, data.user, location.search]); // Añadido location.search como dependencia
+  }, [token, data.user, location.search]);
 
   const handleEditProfile = () => {
     navigate('/configuracion?section=cuenta');
