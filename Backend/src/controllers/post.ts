@@ -85,7 +85,7 @@ export class PostController {
             const username = req.query.username as string | undefined;
 
             // Llama al servicio para obtener los posts
-            const posts = await this.postService.getPosts(limit, cursor, username);
+            const posts = await this.postService.getPosts(limit, cursor);
 
             // Si no hay posts, lanza un error
             if (!posts) {

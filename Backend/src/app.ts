@@ -8,11 +8,12 @@ import postRoutes from './routes/post';
 import chatROutes from './routes/chat';
 import { celebrateErrorHandler } from './middlewares/errors/CelebrateErrorHandler';
 import path from 'path';
+import helmet from 'helmet';
 
 export const app = express();
 app.use(express.json());
 app.use(cors());
-
+app.use(helmet());
 app.set('trust proxy', true);
 
 // Configurar middleware para servir archivos estáticos desde la carpeta 'media'
@@ -25,10 +26,10 @@ app.use('/posts', postRoutes);
 app.use('/chat', chatROutes);
 
 // Middleware de manejo de errores
-// app.use((error: any, req: Request, res: Response, next: NextFunction) => {
-//     celebrateErrorHandler(error, req, res, next);
-// });
+app.use((error: any, req: Request, res: Response, next: NextFunction) => {
+    celebrateErrorHandler(error, req, res, next);
+});
 
-// app.use((error: Error, req: Request, res: Response, next: NextFunction): void => {
-//     AppErrorHandler.errorHandler(error, req, res, next);
-// });
+app.use((error: Error, req: Request, res: Response, next: NextFunction): void => {
+    AppErrorHandler.errorHandler(error, req, res, next);
+});

@@ -122,7 +122,7 @@ export class PostService {
     }
 
     // Método para obtener los posts paginados
-    public async getPosts(limit: number = 10, cursor?: string, username?: string) {
+    public async getPosts(limit: number = 10, cursor?: string) {
         try {
             const queryOptions: any = {
                 limit: limit + 1,
@@ -157,8 +157,8 @@ export class PostService {
                             [Op.lt]: lastPost.dataValues.created_at
                         }
                     };
-                }
-            }
+                };
+            };
 
             const posts = await Post.findAll(queryOptions);
 

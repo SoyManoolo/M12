@@ -2,31 +2,74 @@ import { User } from "../models";
 import { AppError } from "../middlewares/errors/AppError";
 import { existsUser } from "../utils/modelExists";
 import { UserFilters, UpdateUserData } from '../types/custom';
+import { Op } from "sequelize";
 
 export class UserService {
 
     // Método para obtener todos los usuarios - LISTO
-    public async getUsers() {
-        try{
-            const users = await User.findAll();
-            if (!users || users.length === 0) throw new AppError(404, 'UserNotFound');
+    public async getUsers(limit: number = 10, cursor?: string) {
+        try {
+            const queryOptions: any = {
+                limit: limit + 1, // +1 para verificar si hay más páginas
+                order: [['created_at', 'DESC']], // Ordenamiento explícito
+                attributes: [
+                    'user_id',
+                    'username',
+                    'name',
+                    'surname',
+                    'profile_picture',
+                    'bio',
+                    'is_moderator',
+                    'created_at'
+                ],
+            };
 
-            return users;
+            if (cursor) {
+                const lastUser = await User.findByPk(cursor);
+                if (lastUser) {
+                    queryOptions.where = {
+                        created_at: {
+                            [Op.lt]: lastUser.dataValues.created_at
+                        }
+                    };
+                }
+            }
+
+            const users = await User.findAll(queryOptions);
+
+            // Verificar si no hay usuarios
+            if (!users || users.length === 0) {
+                throw new AppError(404, 'No se encontraron usuarios');
+            }
+
+            // Determinar si hay más páginas
+            const hasNextPage = users.length > limit;
+
+            // Recortar el array si obtenemos uno extra para determinar hasNextPage
+            const resultUsers = hasNextPage ? users.slice(0, limit) : users;
+
+            // Determinar el próximo cursor
+            const nextCursor = hasNextPage ? resultUsers[resultUsers.length - 1].dataValues.user_id : null;
+
+            return {
+                users: resultUsers,
+                hasNextPage,
+                nextCursor
+            };
         } catch (error) {
             if (error instanceof AppError) {
                 throw error;
             }
-            throw new AppError(500, 'InternalServerError');
+            throw new AppError(500, 'Error interno del servidor');
         }
     }
+
     // Método para obtener un usuario - LISTO
     public async getUser(filters: UserFilters) {
         try {
             if (Object.keys(filters).length === 0) {
                 throw new AppError(400, "");
             };
-
-            console.log("filters", filters);
 
             const user = await existsUser(filters);
 
@@ -62,7 +105,8 @@ export class UserService {
             if (error instanceof AppError) {
                 throw error;
             }
-            throw new AppError(500, 'InternalServerError');        };
+            throw new AppError(500, 'InternalServerError');
+        };
     };
 
     // Método para eliminar un usuario
