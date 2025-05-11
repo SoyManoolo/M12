@@ -150,6 +150,14 @@ export default function Post({
     }
   };
 
+  // Debug para ver los IDs
+  console.log('=== DEBUG POST IDS ===');
+  console.log('Post ID:', post_id);
+  console.log('Current User ID:', currentUserId);
+  console.log('Post Author ID:', user.user_id);
+  console.log('¿Son iguales?:', currentUserId === user.user_id);
+  console.log('====================');
+
   return (
     <>
       {/* Contenedor principal del post */}
@@ -216,7 +224,7 @@ export default function Post({
                   <span className="text-xs">Guardar</span>
                 </button>
               </div>
-              {/* Botón de eliminar (papelera) solo si el post es del usuario actual */}
+              {/* Botón de eliminar (papelera) - solo si el post es del usuario actual */}
               {currentUserId === user.user_id && (
                 <div className="flex flex-col items-center mt-2">
                   <button

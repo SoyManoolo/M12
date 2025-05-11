@@ -12,6 +12,21 @@
 import Post from '~/components/Inicio/Post';
 import { useAuth } from '~/hooks/useAuth';
 
+// Función para decodificar el token JWT
+const decodeToken = (token: string) => {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    console.error('Error decodificando token:', e);
+    return null;
+  }
+};
+
 interface User {
   user_id: string;
   name: string;
@@ -56,17 +71,17 @@ interface UserPostsProps {
   }>;
   onLike: (postId: string) => void;
   onSave: (postId: string) => void;
+  onDelete: (postId: string) => void;
 }
 
-export default function UserPosts({ posts = [], onLike, onSave }: UserPostsProps) {
+export default function UserPosts({ posts = [], onLike, onSave, onDelete }: UserPostsProps) {
   const { token } = useAuth();
   let currentUserId: string | undefined = undefined;
+  
   if (token) {
-    try {
-      currentUserId = JSON.parse(atob(token.split('.')[1])).user_id;
-    } catch (e) {
-      currentUserId = undefined;
-    }
+    const decodedToken = decodeToken(token);
+    currentUserId = decodedToken?.id;
+    console.log('Token decodificado:', decodedToken);
   }
 
   if (!posts || posts.length === 0) {
@@ -100,6 +115,7 @@ export default function UserPosts({ posts = [], onLike, onSave }: UserPostsProps
           is_saved={post.is_saved}
           onLike={() => onLike(post.post_id)}
           onSave={() => onSave(post.post_id)}
+          onDelete={() => onDelete(post.post_id)}
           currentUserId={currentUserId}
         />
       ))}

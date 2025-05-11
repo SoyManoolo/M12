@@ -20,6 +20,8 @@ import Navbar from "~/components/Inicio/Navbar";
 import UserProfile from "~/components/Perfil/UserProfile";
 import UserPosts from "~/components/Perfil/UserPosts";
 import RightPanel from "~/components/Shared/RightPanel";
+import ConfirmModal from "~/components/Shared/ConfirmModal";
+import Notification from "~/components/Shared/Notification";
 import { userService } from "~/services/user.service";
 import { useAuth } from "~/hooks/useAuth";
 import { postService } from "~/services/post.service";
@@ -115,6 +117,12 @@ export default function Perfil() {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [postToDelete, setPostToDelete] = useState<string | null>(null);
+  const [notification, setNotification] = useState<{
+    message: string;
+    type: 'success' | 'error';
+  } | null>(null);
 
   // Efecto para cargar datos cuando cambia la URL o el usuario
   useEffect(() => {
@@ -242,6 +250,40 @@ export default function Perfil() {
     }
   };
 
+  const handleDelete = async (postId: string) => {
+    if (!token) return;
+    setPostToDelete(postId);
+    setDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!token || !postToDelete) return;
+    
+    setLoading(true);
+    try {
+      const response = await postService.deletePost(token, postToDelete);
+      if (response.success) {
+        setPosts(prev => prev.filter(post => post.post_id !== postToDelete));
+        setNotification({
+          message: 'Publicación eliminada correctamente',
+          type: 'success'
+        });
+      } else {
+        throw new Error(response.message || 'Error al eliminar la publicación');
+      }
+    } catch (err) {
+      console.error('Error al eliminar el post:', err);
+      setNotification({
+        message: err instanceof Error ? err.message : 'Error al eliminar la publicación',
+        type: 'error'
+      });
+    } finally {
+      setLoading(false);
+      setDeleteModalOpen(false);
+      setPostToDelete(null);
+    }
+  };
+
   if (data.error) {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
@@ -292,6 +334,7 @@ export default function Perfil() {
                 posts={posts}
                 onLike={handleLike}
                 onSave={handleSave}
+                onDelete={handleDelete}
               />
               
               {/* Botón de cargar más */}
@@ -316,6 +359,27 @@ export default function Perfil() {
         friends={friends}
         mode="online"
       />
+
+      <ConfirmModal
+        isOpen={deleteModalOpen}
+        onClose={() => {
+          setDeleteModalOpen(false);
+          setPostToDelete(null);
+        }}
+        onConfirm={confirmDelete}
+        title="Eliminar publicación"
+        message="¿Estás seguro de que quieres eliminar esta publicación? Esta acción no se puede deshacer."
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+      />
+
+      {notification && (
+        <Notification
+          message={notification.message}
+          type={notification.type}
+          onClose={() => setNotification(null)}
+        />
+      )}
     </div>
   );
 } 

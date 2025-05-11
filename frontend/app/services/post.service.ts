@@ -48,6 +48,12 @@ class PostService {
         }
       });
 
+      // Verificar si la respuesta es JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('Lo sentimos, estamos teniendo algunos problemas técnicos. Por favor, intenta de nuevo en unos minutos.');
+      }
+
       const data = await response.json();
 
       // Si el servidor responde con 404 y el mensaje es "PostNotFound", 
@@ -56,7 +62,7 @@ class PostService {
         return {
           success: true,
           status: 200,
-          message: "No hay posts disponibles",
+          message: "No hay publicaciones para mostrar",
           data: {
             posts: [],
             nextCursor: null
@@ -65,7 +71,7 @@ class PostService {
       }
 
       if (!response.ok) {
-        throw new Error(data.message || 'Error al obtener los posts');
+        throw new Error(data.message || 'No pudimos cargar las publicaciones. Por favor, intenta de nuevo.');
       }
 
       // Transformar las URLs de las imágenes
@@ -77,7 +83,10 @@ class PostService {
       return data;
     } catch (error) {
       console.error('Error en getPosts:', error);
-      throw error;
+      if (error instanceof Error) {
+        throw new Error('No pudimos cargar las publicaciones. Por favor, intenta de nuevo.');
+      }
+      throw new Error('Algo salió mal. Por favor, intenta de nuevo más tarde.');
     }
   }
 
@@ -90,19 +99,28 @@ class PostService {
         }
       });
 
+      // Verificar si la respuesta es JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('Lo sentimos, estamos teniendo algunos problemas técnicos. Por favor, intenta de nuevo en unos minutos.');
+      }
+
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Error al eliminar el post');
+        throw new Error(data.message || 'No pudimos eliminar la publicación. Por favor, intenta de nuevo.');
       }
 
       return {
         success: true,
-        message: 'Post eliminado exitosamente'
+        message: 'Publicación eliminada correctamente'
       };
     } catch (error) {
       console.error('Error en deletePost:', error);
-      throw error;
+      if (error instanceof Error) {
+        throw new Error('No pudimos eliminar la publicación. Por favor, intenta de nuevo.');
+      }
+      throw new Error('Algo salió mal. Por favor, intenta de nuevo más tarde.');
     }
   }
 }
