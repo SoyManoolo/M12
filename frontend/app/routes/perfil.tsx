@@ -248,8 +248,8 @@ export default function Perfil() {
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Usuario no encontrado</h1>
           <p className="text-gray-400 mb-4">El perfil que buscas no existe o ha sido eliminado.</p>
-          <button 
-            onClick={() => navigate('/')}
+          <button
+            onClick={() => navigate('/inicio')}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
           >
             Volver al inicio

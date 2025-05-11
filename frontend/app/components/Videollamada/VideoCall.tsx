@@ -25,6 +25,7 @@ interface VideoCallProps {
   onEndCall: () => void;
 }
 
+
 /**
  * @function VideoCall
  * @description Componente que renderiza la interfaz de videollamada
