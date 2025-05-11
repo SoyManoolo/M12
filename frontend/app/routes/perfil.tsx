@@ -80,6 +80,13 @@ export async function loader({ request }: { request: Request }) {
   }
 
   try {
+    // Primero obtenemos el usuario actual para comparar IDs
+    const currentUserResponse = await userService.getUserById('me', token);
+    if (!currentUserResponse.success) {
+      return redirect("/login");
+    }
+    const currentUserId = currentUserResponse.data.user_id;
+
     let userData;
     if (username) {
       // Si hay username en la URL, cargar ese perfil
@@ -89,17 +96,13 @@ export async function loader({ request }: { request: Request }) {
       }
       userData = response.data;
     } else {
-      // Si no hay username, cargar el perfil del usuario actual
-      const response = await userService.getUserById('me', token);
-      if (!response.success) {
-        return redirect("/login");
-      }
-      userData = response.data;
+      // Si no hay username, usar el usuario actual
+      userData = currentUserResponse.data;
     }
 
     return json({
       user: userData,
-      isOwnProfile: !username || userData.username === username
+      isOwnProfile: userData.user_id === currentUserId
     });
   } catch (error) {
     console.error('Error en loader de perfil:', error);
