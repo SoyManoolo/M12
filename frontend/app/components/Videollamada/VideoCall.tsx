@@ -10,17 +10,18 @@
  * @requires react-icons/fa
  */
 
-import { useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { FaVideo, FaMicrophone, FaMicrophoneSlash, FaVideoSlash } from 'react-icons/fa';
+import { useVideoCall } from '~/hooks/useVideoCall';
 
 /**
  * @interface VideoCallProps
  * @description Propiedades del componente VideoCall
- * @property {boolean} isActive - Indica si la llamada está activa
+ * @property {string} remoteUserId - ID del usuario remoto
  * @property {() => void} onEndCall - Función para finalizar la llamada
  */
 interface VideoCallProps {
-  isActive: boolean;
+  remoteUserId: string;
   onEndCall: () => void;
 }
 
@@ -33,44 +34,65 @@ interface VideoCallProps {
  * @state {boolean} isVideoEnabled - Estado del video
  * @state {boolean} isAudioEnabled - Estado del audio
  */
-export default function VideoCall({ isActive, onEndCall }: VideoCallProps) {
-  const [isVideoEnabled, setIsVideoEnabled] = useState(true);
-  const [isAudioEnabled, setIsAudioEnabled] = useState(true);
+export default function VideoCall({ remoteUserId, onEndCall }: VideoCallProps) {
+  const {
+    state,
+    startCall,
+    endCall,
+    toggleVideo,
+    toggleAudio,
+    handleError,
+    localStream,
+    remoteStream
+  } = useVideoCall();
 
-  /**
-   * @function toggleVideo
-   * @description Alterna el estado del video
-   */
-  const toggleVideo = () => {
-    setIsVideoEnabled(!isVideoEnabled);
-  };
+  const localVideoRef = useRef<HTMLVideoElement>(null);
+  const remoteVideoRef = useRef<HTMLVideoElement>(null);
 
-  /**
-   * @function toggleAudio
-   * @description Alterna el estado del audio
-   */
-  const toggleAudio = () => {
-    setIsAudioEnabled(!isAudioEnabled);
-  };
+  useEffect(() => {
+    if (localStream && localVideoRef.current) {
+      localVideoRef.current.srcObject = localStream;
+    }
+  }, [localStream]);
 
-  if (!isActive) {
+  useEffect(() => {
+    if (remoteStream && remoteVideoRef.current) {
+      remoteVideoRef.current.srcObject = remoteStream;
+    }
+  }, [remoteStream]);
+
+  useEffect(() => {
+    startCall(remoteUserId);
+    return () => {
+      endCall();
+    };
+  }, [remoteUserId]);
+
+  if (!state.isCallActive) {
     return null;
   }
 
   return (
     <div className="relative w-full h-full bg-gray-900 rounded-lg overflow-hidden">
-      {/* Video del usuario remoto */}
+      {/* Video remoto */}
       <div className="absolute inset-0">
-        <div className="w-full h-full bg-gray-800 flex items-center justify-center">
-          <FaVideo className="text-gray-600 text-6xl" />
-        </div>
+        <video
+          ref={remoteVideoRef}
+          autoPlay
+          playsInline
+          className="w-full h-full object-cover"
+        />
       </div>
 
-      {/* Video local (pequeño) */}
+      {/* Video local */}
       <div className="absolute bottom-4 right-4 w-48 h-36 bg-gray-800 rounded-lg overflow-hidden">
-        <div className="w-full h-full flex items-center justify-center">
-          <FaVideo className="text-gray-600 text-3xl" />
-        </div>
+        <video
+          ref={localVideoRef}
+          autoPlay
+          playsInline
+          muted
+          className="w-full h-full object-cover"
+        />
       </div>
 
       {/* Controles */}
@@ -78,28 +100,45 @@ export default function VideoCall({ isActive, onEndCall }: VideoCallProps) {
         <button
           onClick={toggleAudio}
           className={`p-3 rounded-full ${
-            isAudioEnabled ? 'bg-white text-black' : 'bg-red-600 text-white'
+            state.isAudioEnabled ? 'bg-white text-black' : 'bg-red-600 text-white'
           }`}
         >
-          {isAudioEnabled ? <FaMicrophone /> : <FaMicrophoneSlash />}
+          {state.isAudioEnabled ? <FaMicrophone /> : <FaMicrophoneSlash />}
         </button>
         
         <button
           onClick={toggleVideo}
           className={`p-3 rounded-full ${
-            isVideoEnabled ? 'bg-white text-black' : 'bg-red-600 text-white'
+            state.isVideoEnabled ? 'bg-white text-black' : 'bg-red-600 text-white'
           }`}
         >
-          {isVideoEnabled ? <FaVideo /> : <FaVideoSlash />}
+          {state.isVideoEnabled ? <FaVideo /> : <FaVideoSlash />}
         </button>
         
         <button
-          onClick={onEndCall}
+          onClick={() => {
+            endCall();
+            onEndCall();
+          }}
           className="p-3 rounded-full bg-red-600 text-white"
         >
           <FaVideo />
         </button>
       </div>
+
+      {/* Indicador de estado */}
+      {state.isConnecting && (
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-4 py-2 rounded">
+          Conectando...
+        </div>
+      )}
+
+      {/* Mensaje de error */}
+      {state.error && (
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-red-600 text-white px-4 py-2 rounded">
+          {state.error}
+        </div>
+      )}
     </div>
   );
 } 
