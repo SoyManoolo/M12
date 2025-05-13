@@ -151,5 +151,24 @@ export class VideoCallService {
             }
             throw new AppError(500, 'InternalServerError');
         };
+    };
+
+    // Método para dejar la cola de espera
+    public async leaveQueue(user_id: string) {
+        try {
+            const user = await existsUser({ user_id });
+            if (!user) throw new AppError(404, 'UserNotFound');
+
+            if (!VideoCallService.waitingQueue.has(user_id)) return false;
+
+            VideoCallService.waitingQueue.delete(user_id);
+
+            return true;
+        } catch (error) {
+            if (error instanceof AppError) {
+                throw error;
+            }
+            throw new AppError(500, 'InternalServerError');
+        };
     }
 };
