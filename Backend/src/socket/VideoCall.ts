@@ -28,8 +28,36 @@ export function videoCallEvents(socket: Socket, io: Server) {
         if (!user_id) return;
     });
 
+    socket.on("call_connected", async (data) => {
+
+    })
+
     socket.on("end_call", async () => {
         const user_id = socket.data.user_id;
         if (!user_id) return;
     });
+
+    socket.on("send_offer", async (data) => {
+
+    });
+
+    socket.on("send_answer", async (data) => {
+
+    });
+
+    socket.on("send_ice_candidate", async (data) => {
+
+    });
+
+    socket.on("request_match", async () => {
+
+    });
+
+    socket.on("get_ice_servers", async () => {
+
+    })
+
+    socket.on("disconnect", async () => {
+
+    })
 };

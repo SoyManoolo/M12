@@ -5,11 +5,11 @@ import { Op } from "sequelize";
 
 export class VideoCallService {
     private static waitingQueue: Map<string, string> = new Map();
-    private static activeCalls: Map<string, string> = new Map();
+    private static activeCalls: Map<string, { users: { id: string; socketId: string; }[]; startTime: Date; status: string; }> = new Map();
 
     private static instance: VideoCallService;
 
-    private constructor() {}
+    private constructor() { }
 
     public static getInstance(): VideoCallService {
         if (!VideoCallService.instance) {
@@ -71,14 +71,14 @@ export class VideoCallService {
 
             })
 
-            VideoCallService.activeCalls.set(newVideoCall.dataValues.call_id, JSON.stringify({
+            VideoCallService.activeCalls.set(newVideoCall.dataValues.call_id, {
                 users: [
                     { id: user_id, socketId: socket_id1 },
                     { id: user2_id, socketId: socket_id2 }
                 ],
                 startTime: new Date(),
                 status: 'connecting'
-            }));
+            });
 
             return {
                 call_id: newVideoCall.dataValues.call_id,
@@ -140,6 +140,9 @@ export class VideoCallService {
             await call.update({
                 ended_at: new Date(),
                 status: "ended",
+                call_duration: Math.floor(
+                    (new Date().getTime() - new Date(call.dataValues.started_at).getTime()) / 1000
+                )
             });
 
             VideoCallService.activeCalls.delete(call_id);
