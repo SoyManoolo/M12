@@ -236,7 +236,8 @@ export default function InicioPage() {
 
         // Cargar amigos
         const friendsResponse = await userService.getAllUsers(token);
-        if (friendsResponse.success) {
+        console.log('Respuesta del servidor para amigos:', friendsResponse);
+        if (friendsResponse.success && Array.isArray(friendsResponse.data)) {
           const friendsData = friendsResponse.data.map(user => ({
             friendship_id: user.user_id,
             user1_id: user.user_id,
@@ -259,6 +260,9 @@ export default function InicioPage() {
             }
           }));
           setFriends(friendsData);
+        } else {
+          console.error('La respuesta de amigos no tiene el formato esperado:', friendsResponse);
+          setFriends([]);
         }
       } catch (err) {
         console.error('Error al cargar los datos:', err);
