@@ -19,6 +19,7 @@ import { useMessage } from '../hooks/useMessage';
 import Message from '../components/Shared/Message';
 import { authService } from '../services/auth.service';
 import RedirectModal from '~/components/Shared/RedirectModal';
+import Notification from '../components/Shared/Notification';
 
 /**
  * Función auxiliar para obtener el username del token JWT
@@ -82,6 +83,10 @@ export default function ConfiguracionPage() {
   const [searchParams] = useSearchParams();
   const [activeSection, setActiveSection] = useState(searchParams.get('section') || 'cuenta');
   const [showRedirectModal, setShowRedirectModal] = useState(false);
+  const [notification, setNotification] = useState<{
+    message: string;
+    type: 'success' | 'error';
+  } | null>(null);
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -205,7 +210,10 @@ export default function ConfiguracionPage() {
           setShowRedirectModal(true);
         } else {
           // Si solo se actualizó la bio u otros datos no sensibles
-          showMessage('success', 'Datos actualizados correctamente');
+          setNotification({
+            message: 'Datos actualizados correctamente',
+            type: 'success'
+          });
           // Actualizar los datos del usuario en el estado
           if (user) {
             setUser({
@@ -215,11 +223,17 @@ export default function ConfiguracionPage() {
           }
         }
       } else {
-        showMessage('error', response.message || 'Error al actualizar los datos');
+        setNotification({
+          message: response.message || 'Error al actualizar los datos',
+          type: 'error'
+        });
       }
     } catch (error) {
       console.error('Error al actualizar:', error);
-      showMessage('error', 'Error al actualizar los datos');
+      setNotification({
+        message: 'Error al actualizar los datos',
+        type: 'error'
+      });
     }
   };
 
@@ -334,6 +348,14 @@ export default function ConfiguracionPage() {
           window.location.href = '/login';
         }}
       />
+
+      {notification && (
+        <Notification
+          message={notification.message}
+          type={notification.type}
+          onClose={() => setNotification(null)}
+        />
+      )}
     </div>
   );
 } 
