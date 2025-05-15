@@ -118,12 +118,6 @@ export default function Post({
    */
   const handleAddComment = () => {
     if (!newComment.trim()) return;
-    // Aquí iría la llamada a la API cuando la implementemos
-    console.log('Nuevo comentario:', {
-      post_id,
-      content: newComment,
-      user_id: 'current_user_id',
-    });
     setNewComment('');
   };
 
@@ -144,19 +138,9 @@ export default function Post({
     onSave();
   };
 
-  const handleDelete = async () => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar esta publicación?')) {
-      onDelete?.(post_id);
-    }
+  const handleDelete = () => {
+    onDelete?.(post_id);
   };
-
-  // Debug para ver los IDs
-  console.log('=== DEBUG POST IDS ===');
-  console.log('Post ID:', post_id);
-  console.log('Current User ID:', currentUserId);
-  console.log('Post Author ID:', user.user_id);
-  console.log('¿Son iguales?:', currentUserId === user.user_id);
-  console.log('====================');
 
   return (
     <>

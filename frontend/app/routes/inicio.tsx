@@ -12,6 +12,8 @@
  * @requires ~/components/Inicio/Navbar
  * @requires ~/components/Inicio/Post
  * @requires ~/components/Shared/RightPanel
+ * @requires ~/components/Shared/ConfirmModal
+ * @requires ~/components/Shared/Notification
  * 
  * @interface User - Define la estructura de datos de un usuario
  * @interface Post - Define la estructura de datos de una publicación
@@ -26,6 +28,8 @@ import { useLoaderData, redirect } from "@remix-run/react";
 import Navbar from "~/components/Inicio/Navbar";
 import Post from "~/components/Inicio/Post";
 import RightPanel from "~/components/Shared/RightPanel";
+import ConfirmModal from "~/components/Shared/ConfirmModal";
+import Notification from "~/components/Shared/Notification";
 import { useState, useEffect } from "react";
 import { json } from "@remix-run/node";
 import { useAuth } from "~/hooks/useAuth";
@@ -174,6 +178,12 @@ export default function InicioPage() {
   const [loading, setLoading] = useState(true);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [friends, setFriends] = useState<Friend[]>([]);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [postToDelete, setPostToDelete] = useState<string | null>(null);
+  const [notification, setNotification] = useState<{
+    message: string;
+    type: 'success' | 'error';
+  } | null>(null);
   let currentUserId: string | undefined = undefined;
 
   if (token) {
@@ -326,22 +336,37 @@ export default function InicioPage() {
   };
 
   const handleDelete = async (postId: string) => {
-    if (!token) {
-      setError('No hay token de autenticación');
-      return;
-    }
+    setPostToDelete(postId);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!token || !postToDelete) return;
 
     try {
-      const response = await postService.deletePost(token, postId);
+      const response = await postService.deletePost(token, postToDelete);
       if (response.success) {
-        // Eliminar el post de la lista local
-        setPosts(prevPosts => prevPosts.filter(post => post.post_id !== postId));
+        setPosts(prev => prev.filter(post => post.post_id !== postToDelete));
+        setNotification({
+          message: 'Publicación eliminada correctamente',
+          type: 'success'
+        });
       } else {
-        setError(response.message || 'Error al eliminar el post');
+        setError(response.message || 'Error al eliminar la publicación');
+        setNotification({
+          message: response.message || 'Error al eliminar la publicación',
+          type: 'error'
+        });
       }
     } catch (err) {
-      console.error('Error al eliminar el post:', err);
-      setError(err instanceof Error ? err.message : 'Error al conectar con el servidor');
+      setError('Error al eliminar la publicación');
+      setNotification({
+        message: 'Error al eliminar la publicación',
+        type: 'error'
+      });
+    } finally {
+      setShowDeleteModal(false);
+      setPostToDelete(null);
     }
   };
 
@@ -350,18 +375,17 @@ export default function InicioPage() {
       <Navbar />
       <div className="w-2/3 ml-[16.666667%] border-r border-gray-800">
         <div className="p-6 space-y-6">
-          {loading && posts.length === 0 ? (
-            <div className="flex justify-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+          {error ? (
+            <div className="bg-red-500/10 text-red-500 p-4 rounded-lg">
+              {error}
             </div>
-          ) : error ? (
-            <div className="bg-red-900 border border-red-700 rounded-lg p-4 text-center">
-              <p className="text-white">{error}</p>
+          ) : loading ? (
+            <div className="flex justify-center items-center h-32">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
             </div>
           ) : posts.length === 0 ? (
-            <div className="bg-gray-900 rounded-lg p-6 text-center border border-gray-800">
-              <p className="text-gray-400">No hay publicaciones para mostrar</p>
-              <p className="text-gray-500 text-sm mt-2">Sé el primero en publicar algo</p>
+            <div className="text-center text-gray-500">
+              No hay publicaciones para mostrar
             </div>
           ) : (
             <>
@@ -387,13 +411,13 @@ export default function InicioPage() {
                   currentUserId={currentUserId}
                 />
               ))}
-              
+
               {nextCursor && (
                 <div className="flex justify-center mt-6">
                   <button
                     onClick={handleLoadMore}
                     disabled={loading}
-                    className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
                   >
                     {loading ? 'Cargando...' : 'Cargar más'}
                   </button>
@@ -407,6 +431,25 @@ export default function InicioPage() {
         friends={friends}
         mode="online"
       />
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setPostToDelete(null);
+        }}
+        onConfirm={confirmDelete}
+        title="Eliminar publicación"
+        message="¿Estás seguro de que quieres eliminar esta publicación? Esta acción no se puede deshacer."
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+      />
+      {notification && (
+        <Notification
+          message={notification.message}
+          type={notification.type}
+          onClose={() => setNotification(null)}
+        />
+      )}
     </div>
   );
 } 
