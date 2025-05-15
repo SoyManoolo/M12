@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import Navbar from '~/components/Inicio/Navbar';
 import { useAuth } from '~/hooks/useAuth';
 import { redirect } from "@remix-run/node";
+import Notification from '~/components/Shared/Notification';
 
 interface CreatePostResponse {
   success: boolean;
@@ -33,8 +34,10 @@ export default function Publicar() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [description, setDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  const [notification, setNotification] = useState<{
+    message: string;
+    type: 'success' | 'error';
+  } | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -56,24 +59,28 @@ export default function Publicar() {
     setDescription('');
     setSelectedImage(null);
     setSelectedFile(null);
-    setError(null);
-    setSuccess(null);
+    setNotification(null);
   };
 
   const handleSubmit = async () => {
     if (!token) {
-      setError('No hay token de autenticación');
+      setNotification({
+        message: 'No hay token de autenticación',
+        type: 'error'
+      });
       return;
     }
 
     if (!description && !selectedFile) {
-      setError('Debes agregar una descripción o una imagen');
+      setNotification({
+        message: 'Debes agregar una descripción o una imagen',
+        type: 'error'
+      });
       return;
     }
 
     setIsSubmitting(true);
-    setError(null);
-    setSuccess(null);
+    setNotification(null);
 
     try {
       const formData = new FormData();
@@ -82,7 +89,6 @@ export default function Publicar() {
         formData.append('media', selectedFile);
       }
 
-      console.log('Enviando publicación al backend...');
       const response = await fetch('http://localhost:3000/posts', {
         method: 'POST',
         headers: {
@@ -92,14 +98,15 @@ export default function Publicar() {
       });
 
       const data: CreatePostResponse = await response.json();
-      console.log('Respuesta del backend:', data);
 
       if (!response.ok) {
         throw new Error(data.message || 'Error al crear la publicación');
       }
 
-      setSuccess('¡Publicación creada exitosamente!');
-      console.log('Publicación creada:', data.newPost);
+      setNotification({
+        message: '¡Publicación creada exitosamente!',
+        type: 'success'
+      });
       
       // Limpiar el formulario después de 2 segundos
       setTimeout(() => {
@@ -107,8 +114,10 @@ export default function Publicar() {
       }, 2000);
 
     } catch (err) {
-      console.error('Error al crear la publicación:', err);
-      setError(err instanceof Error ? err.message : 'Error al crear la publicación');
+      setNotification({
+        message: err instanceof Error ? err.message : 'Error al crear la publicación',
+        type: 'error'
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -202,35 +211,27 @@ export default function Publicar() {
             </div>
           </div>
 
-          {error && (
-            <div className="mt-4 p-3 bg-red-500/10 border border-red-500 text-red-500 rounded-lg text-center">
-              {error}
-            </div>
-          )}
-
-          {success && (
-            <div className="mt-4 p-3 bg-green-500/10 border border-green-500 text-green-500 rounded-lg text-center">
-              {success}
-            </div>
-          )}
-
           {/* Botón de publicar */}
-          <div className="mt-8 flex justify-center">
+          <div className="mt-8 flex justify-end">
             <button
-              type="button"
               onClick={handleSubmit}
-              disabled={isSubmitting || (!description && !selectedFile)}
-              className={`px-12 py-3 rounded-md text-lg font-medium transition-colors ${
-                isSubmitting || (!description && !selectedFile)
-                  ? 'bg-gray-600 cursor-not-allowed'
-                  : 'bg-blue-600 hover:bg-blue-700 text-white'
-              }`}
+              disabled={isSubmitting}
+              className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-lg font-medium"
             >
               {isSubmitting ? 'Publicando...' : 'Publicar'}
             </button>
           </div>
         </div>
       </div>
+
+      {/* Notificación */}
+      {notification && (
+        <Notification
+          message={notification.message}
+          type={notification.type}
+          onClose={() => setNotification(null)}
+        />
+      )}
     </div>
   );
 } 
