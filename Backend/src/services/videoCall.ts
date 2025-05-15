@@ -2,6 +2,7 @@ import { User, VideoCalls } from "../models";
 import { AppError } from "../middlewares/errors/AppError";
 import { existsUser } from "../utils/modelExists";
 import { Op } from "sequelize";
+import { Server } from "socket.io";
 
 export class VideoCallService {
     private static waitingQueue: Map<string, string> = new Map();
@@ -37,60 +38,14 @@ export class VideoCallService {
     };
 
     // Método para empearejar usuarios
-    public async matchUsers(user_id: string) {
+    public async initiateVideoCall(caller_id: string, friend_id: string) {
         try {
-            const user = await existsUser({ user_id });
-            if (!user) throw new AppError(404, 'UserNotFound');
+            const caller = await existsUser({ user_id: caller_id });
+            const friend = await existsUser({ user_id: friend_id });
+            if (!caller) throw new AppError(404, 'UserNotFound');
+            if (!friend) throw new AppError(404, 'UserNotFound');
 
-            if (!VideoCallService.waitingQueue.has(user_id)) return false;
-
-            const queueArray = Array.from(VideoCallService.waitingQueue);
-
-            const socket_id1 = VideoCallService.waitingQueue.get(user_id);
-            if (!socket_id1) throw new AppError(404, 'UserNotFoundInQueue');
-
-            if (queueArray.length <= 1) return false;
-
-            let randomIndex;
-            let user2;
-
-            do {
-                randomIndex = Math.floor(Math.random() * queueArray.length);
-                user2 = queueArray[randomIndex];
-            } while (user2[0] === user_id);
-
-            const user2_id = user2[0];
-            const socket_id2 = user2[1];
-
-            VideoCallService.waitingQueue.delete(user_id);
-            VideoCallService.waitingQueue.delete(user2_id);
-
-            const newVideoCall = await VideoCalls.create({
-                user1_id: user_id,
-                user2_id,
-
-            })
-
-            VideoCallService.activeCalls.set(newVideoCall.dataValues.call_id, {
-                users: [
-                    { id: user_id, socketId: socket_id1 },
-                    { id: user2_id, socketId: socket_id2 }
-                ],
-                startTime: new Date(),
-                status: 'connecting'
-            });
-
-            return {
-                call_id: newVideoCall.dataValues.call_id,
-                match: {
-                    id: user2_id,
-                    socketId: socket_id2,
-                },
-                self: {
-                    id: user_id,
-                    socketId: socket_id1,
-                }
-            };
+            // TODO: hacer verificacion de si son amigos y crear la llamada
         } catch (error) {
             if (error instanceof AppError) {
                 throw error;
@@ -99,7 +54,74 @@ export class VideoCallService {
         };
     };
 
-    // Método para que usuarios se envien solicitud de amistad
+    // Añadir este método a tu clase VideoCallService
+    public static async performMatchingRound(io: Server) {
+        try {
+            // Si no hay suficientes usuarios en la cola, salir
+            if (VideoCallService.waitingQueue.size < 2) return;
+
+            // Crear un array de los usuarios en cola y mezclarlos aleatoriamente
+            const queueEntries = Array.from(VideoCallService.waitingQueue.entries());
+            queueEntries.sort(() => Math.random() - 0.5);
+
+            // Número de pares a procesar
+            const pairsCount = Math.floor(queueEntries.length / 2);
+
+            for (let i = 0; i < pairsCount; i++) {
+                const [user1_id, socket_id1] = queueEntries[i * 2];
+                const [user2_id, socket_id2] = queueEntries[i * 2 + 1];
+
+                // Verificar que ambos usuarios sigan en la cola
+                if (!VideoCallService.waitingQueue.has(user1_id) ||
+                    !VideoCallService.waitingQueue.has(user2_id)) {
+                    continue;
+                }
+
+                // Eliminar usuarios de la cola
+                VideoCallService.waitingQueue.delete(user1_id);
+                VideoCallService.waitingQueue.delete(user2_id);
+
+                // Crear una nueva llamada en la base de datos
+                const newVideoCall = await VideoCalls.create({
+                    user1_id: user1_id,
+                    user2_id: user2_id
+                });
+
+                // Almacenar información en memoria
+                VideoCallService.activeCalls.set(newVideoCall.dataValues.call_id, {
+                    users: [
+                        { id: user1_id, socketId: socket_id1 },
+                        { id: user2_id, socketId: socket_id2 }
+                    ],
+                    startTime: new Date(),
+                    status: 'connecting'
+                });
+
+                // Notificar a ambos usuarios del emparejamiento
+                io.to(socket_id1).emit("match_found", {
+                    call_id: newVideoCall.dataValues.call_id,
+                    match: { id: user2_id, socketId: socket_id2 },
+                    self: { id: user1_id, socketId: socket_id1 }
+                });
+
+                io.to(socket_id2).emit("match_found", {
+                    call_id: newVideoCall.dataValues.call_id,
+                    match: { id: user1_id, socketId: socket_id1 },
+                    self: { id: user2_id, socketId: socket_id2 }
+                });
+            };
+
+            return {
+                matchedPairs: pairsCount,
+                remainingUsers: VideoCallService.waitingQueue.size
+            };
+        } catch (error) {
+            console.error("Error during bulk matching process:", error);
+            throw error;
+        };
+    };
+
+    // Método para que usuarios se envien solicitud de amistad dentro de la llamada
     public async sendFriendRequest(user_id: string, user_id2: string) {
         try {
             const user = await existsUser({ user_id });
@@ -117,7 +139,7 @@ export class VideoCallService {
             }
             throw new AppError(500, 'InternalServerError');
         };
-    }
+    };
 
     // Método para terminar la llamada
     public async endCall(user_id: string, call_id: string) {
@@ -151,7 +173,7 @@ export class VideoCallService {
         } catch (error) {
             if (error instanceof AppError) {
                 throw error;
-            }
+            };
             throw new AppError(500, 'InternalServerError');
         };
     };
@@ -173,5 +195,40 @@ export class VideoCallService {
             }
             throw new AppError(500, 'InternalServerError');
         };
+    }
+
+    public async updateCallStatus(call_id: string, user_id: string, status: string) {
+        try {
+            // Verificar que el usuario es parte de esta llamada
+            const call = await VideoCalls.findOne({
+                where: {
+                    call_id,
+                    [Op.or]: [
+                        { user1_id: user_id },
+                        { user2_id: user_id }
+                    ]
+                }
+            });
+
+            if (!call) throw new AppError(404, 'CallNotFound');
+
+            // Actualizar el estado de la llamada en la base de datos
+            await call.update({ status });
+
+            // También actualizar en la memoria
+            if (VideoCallService.activeCalls.has(call_id)) {
+                const callData = VideoCallService.activeCalls.get(call_id);
+                if (!callData) throw new AppError(404, 'CallNotFound');
+                callData.status = status;
+                VideoCallService.activeCalls.set(call_id, callData);
+            }
+
+            return true;
+        } catch (error) {
+            if (error instanceof AppError) {
+                throw error;
+            }
+            throw new AppError(500, 'InternalServerError');
+        }
     }
 };

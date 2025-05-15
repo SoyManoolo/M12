@@ -1,6 +1,6 @@
 import { Op } from "sequelize";
 import { AppError } from "../middlewares/errors/AppError";
-import { User, Post } from "../models";
+import { User, Post, Friends } from "../models";
 import { UserFilters } from "../types/custom";
 
 // Método para comprobar si existe un usuario
@@ -33,7 +33,8 @@ export async function existsUser(filters: UserFilters) {
         if (error instanceof AppError) {
             throw error;
         }
-        throw new AppError(500, 'InternalServerError');    };
+        throw new AppError(500, 'InternalServerError');
+    };
 };
 
 // Método para comprobar si existe un post
@@ -49,7 +50,8 @@ export async function existsPost(id: string) {
         if (error instanceof AppError) {
             throw error;
         }
-        throw new AppError(500, 'InternalServerError');    };
+        throw new AppError(500, 'InternalServerError');
+    };
 };
 
 // Método para comprobar si existe un comentario
@@ -65,5 +67,27 @@ export async function existCommentChat(id: string) {
         if (error instanceof AppError) {
             throw error;
         }
-        throw new AppError(500, 'InternalServerError');    };
+        throw new AppError(500, 'InternalServerError');
+    };
+}
+
+// Método para comprobar si existe una amistad
+export async function verifyFriendship(user1_id: string, user2_id: string): Promise<boolean> {
+    try {
+        const friendship = await Friends.findOne({
+            where: {
+                [Op.or]: [
+                    { user1_id, user2_id },
+                    { user1_id: user2_id, user2_id: user1_id }
+                ]
+            }
+        });
+
+        return !!friendship;
+    } catch (error) {
+        if (error instanceof AppError) {
+            throw error;
+        }
+        throw new AppError(500, 'InternalServerError');
+    }
 }
