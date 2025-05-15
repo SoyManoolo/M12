@@ -44,6 +44,7 @@ VideoCalls.init(
     match_status: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
+      allowNull: false,
     },
   },
   {
