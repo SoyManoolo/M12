@@ -18,6 +18,7 @@ import { redirect } from "@remix-run/node";
 import { useMessage } from '../hooks/useMessage';
 import Message from '../components/Shared/Message';
 import { authService } from '../services/auth.service';
+import RedirectModal from '~/components/Shared/RedirectModal';
 
 /**
  * Función auxiliar para obtener el username del token JWT
@@ -80,6 +81,7 @@ export default function ConfiguracionPage() {
   const [loading, setLoading] = useState(true);
   const [searchParams] = useSearchParams();
   const [activeSection, setActiveSection] = useState(searchParams.get('section') || 'cuenta');
+  const [showRedirectModal, setShowRedirectModal] = useState(false);
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -149,7 +151,7 @@ export default function ConfiguracionPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      if (!userId) {
+      if (!token || !userId) {
         showMessage('error', 'No pudimos obtener tu información de sesión');
         return;
       }
@@ -195,64 +197,29 @@ export default function ConfiguracionPage() {
         return;
       }
 
-      // Verificar que ningún campo esté vacío
-      for (const [key, value] of Object.entries(requestBody)) {
-        if (!value || value.trim() === '') {
-          showMessage('error', `El campo ${key} no puede estar vacío`);
-          return;
-        }
-      }
+      const response = await userService.updateUserById(userId, requestBody, token);
 
-      console.log('📤 Enviando datos:', requestBody);
-      console.log('🔑 Usando ID:', userId);
-
-      const response = await fetch(`${environment.apiUrl}/users/${userId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(requestBody)
-      });
-
-      console.log('📥 Status:', response.status);
-      console.log('📥 Headers:', Object.fromEntries(response.headers.entries()));
-
-      // Intentar obtener el texto de la respuesta primero
-      const responseText = await response.text();
-      console.log('📥 Respuesta raw:', responseText);
-
-      // Si la respuesta es HTML, probablemente es un error del servidor
-      if (responseText.includes('<!DOCTYPE html>')) {
-        const errorMatch = responseText.match(/Error: ([^<]+)/);
-        const errorMessage = errorMatch ? errorMatch[1] : 'Error del servidor';
-        throw new Error(errorMessage);
-      }
-
-      let data;
-      try {
-        data = JSON.parse(responseText);
-      } catch (parseError) {
-        console.error('❌ Error al parsear la respuesta como JSON:', parseError);
-        throw new Error('La respuesta del servidor no es un JSON válido');
-      }
-
-      if (!response.ok) {
-        throw new Error(data.message || `Error del servidor: ${response.status}`);
-      }
-
-      if (data.success) {
-        showMessage('success', 'Datos actualizados correctamente');
-        // Actualizamos el token si el username cambió
-        if (data.data?.username !== formData.username) {
-          console.log('Username actualizado, considera actualizar el token');
+      if (response.success) {
+        // Si se actualizaron datos sensibles (email, username o password)
+        if (requestBody.email || requestBody.username || requestBody.password) {
+          setShowRedirectModal(true);
+        } else {
+          // Si solo se actualizó la bio u otros datos no sensibles
+          showMessage('success', 'Datos actualizados correctamente');
+          // Actualizar los datos del usuario en el estado
+          if (user) {
+            setUser({
+              ...user,
+              ...requestBody
+            });
+          }
         }
       } else {
-        throw new Error(data.message || 'Error al actualizar los datos');
+        showMessage('error', response.message || 'Error al actualizar los datos');
       }
-    } catch (err) {
-      console.error('❌ Error al actualizar datos:', err);
-      showMessage('error', err instanceof Error ? err.message : 'Error al actualizar los datos');
+    } catch (error) {
+      console.error('Error al actualizar:', error);
+      showMessage('error', 'Error al actualizar los datos');
     }
   };
 
@@ -357,6 +324,16 @@ export default function ConfiguracionPage() {
           </form>
         </div>
       </div>
+
+      <RedirectModal
+        isOpen={showRedirectModal}
+        message="Datos actualizados correctamente"
+        onRedirect={() => {
+          // Limpiar el token y redirigir al login
+          document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+          window.location.href = '/login';
+        }}
+      />
     </div>
   );
 } 
