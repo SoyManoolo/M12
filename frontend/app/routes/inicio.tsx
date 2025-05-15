@@ -35,6 +35,15 @@ import { json } from "@remix-run/node";
 import { useAuth } from "~/hooks/useAuth";
 import { postService } from "~/services/post.service";
 import { userService } from "~/services/user.service";
+import { useNavigate, useSearchParams } from "@remix-run/react";
+import { environment } from "~/config/environment";
+import { FaSignOutAlt } from 'react-icons/fa';
+import type { UserProfile } from "~/types/user.types";
+import { useMessage } from '../hooks/useMessage';
+import Message from '../components/Shared/Message';
+import { authService } from '../services/auth.service';
+import RedirectModal from '~/components/Shared/RedirectModal';
+import EditPostModal from '~/components/Shared/EditPostModal';
 
 /**
  * @interface User
@@ -180,6 +189,8 @@ export default function InicioPage() {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [postToEdit, setPostToEdit] = useState<Post | null>(null);
   const [notification, setNotification] = useState<{
     message: string;
     type: 'success' | 'error';
@@ -340,6 +351,43 @@ export default function InicioPage() {
     setShowDeleteModal(true);
   };
 
+  const handleEdit = (postId: string) => {
+    const post = posts.find(p => p.post_id === postId);
+    if (post) {
+      setPostToEdit(post);
+      setShowEditModal(true);
+    }
+  };
+
+  const handleUpdatePost = async (newDescription: string) => {
+    if (!token || !postToEdit) return;
+
+    try {
+      const response = await postService.updatePost(token, postToEdit.post_id, newDescription);
+      if (response.success) {
+        setPosts(prev => prev.map(post => 
+          post.post_id === postToEdit.post_id
+            ? { ...post, description: newDescription }
+            : post
+        ));
+        setNotification({
+          message: 'Publicación actualizada correctamente',
+          type: 'success'
+        });
+      } else {
+        throw new Error(response.message);
+      }
+    } catch (err) {
+      setNotification({
+        message: err instanceof Error ? err.message : 'Error al actualizar la publicación',
+        type: 'error'
+      });
+    } finally {
+      setShowEditModal(false);
+      setPostToEdit(null);
+    }
+  };
+
   const confirmDelete = async () => {
     if (!token || !postToDelete) return;
 
@@ -394,10 +442,10 @@ export default function InicioPage() {
                   key={post.post_id}
                   post_id={post.post_id}
                   user={{
-                    user_id: post.author.user_id,
-                    username: post.author.username,
-                    profile_picture: post.author.profile_picture,
-                    name: post.author.name
+                    user_id: post.author?.user_id || post.user_id,
+                    username: post.author?.username || 'Usuario desconocido',
+                    profile_picture: post.author?.profile_picture || null,
+                    name: post.author?.name || 'Usuario'
                   }}
                   description={post.description}
                   media_url={post.media || ''}
@@ -408,6 +456,7 @@ export default function InicioPage() {
                   onLike={() => handleLike(post.post_id)}
                   onSave={() => handleSave(post.post_id)}
                   onDelete={() => handleDelete(post.post_id)}
+                  onEdit={() => handleEdit(post.post_id)}
                   currentUserId={currentUserId}
                 />
               ))}
@@ -442,6 +491,15 @@ export default function InicioPage() {
         message="¿Estás seguro de que quieres eliminar esta publicación? Esta acción no se puede deshacer."
         confirmText="Eliminar"
         cancelText="Cancelar"
+      />
+      <EditPostModal
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setPostToEdit(null);
+        }}
+        onConfirm={handleUpdatePost}
+        currentDescription={postToEdit?.description || ''}
       />
       {notification && (
         <Notification

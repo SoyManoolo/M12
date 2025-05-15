@@ -15,7 +15,7 @@
  */
 
 import { useState } from 'react';
-import { FaHeart, FaRegHeart, FaBookmark, FaRegBookmark, FaShare, FaComment, FaTimes, FaTrash } from 'react-icons/fa';
+import { FaHeart, FaRegHeart, FaBookmark, FaRegBookmark, FaShare, FaComment, FaTimes, FaTrash, FaPencilAlt } from 'react-icons/fa';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -46,6 +46,7 @@ interface PostProps {
   onSave: () => void;
   currentUserId?: string; // ID del usuario actual
   onDelete?: (postId: string) => void; // Función para eliminar el post
+  onEdit?: (postId: string) => void; // Nueva prop para manejar la edición
 }
 
 /**
@@ -66,7 +67,8 @@ export default function Post({
   onLike,
   onSave,
   currentUserId,
-  onDelete
+  onDelete,
+  onEdit
 }: PostProps) {
   // Estados para controlar las interacciones del usuario
   const [isLiked, setIsLiked] = useState(false);
@@ -208,18 +210,30 @@ export default function Post({
                   <span className="text-xs">Guardar</span>
                 </button>
               </div>
-              {/* Botón de eliminar (papelera) - solo si el post es del usuario actual */}
+              {/* Botones de editar y eliminar - solo si el post es del usuario actual */}
               {currentUserId === user.user_id && (
-                <div className="flex flex-col items-center mt-2">
-                  <button
-                    onClick={handleDelete}
-                    title="Eliminar publicación"
-                    className="flex flex-col items-center cursor-pointer text-red-500 hover:text-red-700 focus:outline-none"
-                  >
-                    <FaTrash className="text-xl mb-1" />
-                    <span className="text-xs">Eliminar</span>
-                  </button>
-                </div>
+                <>
+                  <div className="flex flex-col items-center mt-2">
+                    <button
+                      onClick={() => onEdit?.(post_id)}
+                      title="Editar publicación"
+                      className="flex flex-col items-center cursor-pointer text-blue-500 hover:text-blue-700 focus:outline-none"
+                    >
+                      <FaPencilAlt className="text-xl mb-1" />
+                      <span className="text-xs">Editar</span>
+                    </button>
+                  </div>
+                  <div className="flex flex-col items-center mt-2">
+                    <button
+                      onClick={handleDelete}
+                      title="Eliminar publicación"
+                      className="flex flex-col items-center cursor-pointer text-red-500 hover:text-red-700 focus:outline-none"
+                    >
+                      <FaTrash className="text-xl mb-1" />
+                      <span className="text-xs">Eliminar</span>
+                    </button>
+                  </div>
+                </>
               )}
             </div>
           </div>

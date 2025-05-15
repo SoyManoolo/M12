@@ -22,6 +22,7 @@ import UserPosts from "~/components/Perfil/UserPosts";
 import RightPanel from "~/components/Shared/RightPanel";
 import ConfirmModal from "~/components/Shared/ConfirmModal";
 import Notification from "~/components/Shared/Notification";
+import EditPostModal from "~/components/Shared/EditPostModal";
 import { userService } from "~/services/user.service";
 import { useAuth } from "~/hooks/useAuth";
 import { postService } from "~/services/post.service";
@@ -112,16 +113,18 @@ export async function loader({ request }: { request: Request }) {
 
 export default function Perfil() {
   const data = useLoaderData<typeof loader>() as LoaderData;
+  const { token } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const { token } = useAuth();
-  const [loading, setLoading] = useState(false);
   const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(false);
   const [friends, setFriends] = useState<Friend[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [postToEdit, setPostToEdit] = useState<Post | null>(null);
   const [notification, setNotification] = useState<{
     message: string;
     type: 'success' | 'error';
@@ -259,6 +262,43 @@ export default function Perfil() {
     setDeleteModalOpen(true);
   };
 
+  const handleEdit = (postId: string) => {
+    const post = posts.find(p => p.post_id === postId);
+    if (post) {
+      setPostToEdit(post);
+      setShowEditModal(true);
+    }
+  };
+
+  const handleUpdatePost = async (newDescription: string) => {
+    if (!token || !postToEdit) return;
+
+    try {
+      const response = await postService.updatePost(token, postToEdit.post_id, newDescription);
+      if (response.success) {
+        setPosts(prev => prev.map(post => 
+          post.post_id === postToEdit.post_id
+            ? { ...post, description: newDescription }
+            : post
+        ));
+        setNotification({
+          message: 'Publicación actualizada correctamente',
+          type: 'success'
+        });
+      } else {
+        throw new Error(response.message);
+      }
+    } catch (err) {
+      setNotification({
+        message: err instanceof Error ? err.message : 'Error al actualizar la publicación',
+        type: 'error'
+      });
+    } finally {
+      setShowEditModal(false);
+      setPostToEdit(null);
+    }
+  };
+
   const confirmDelete = async () => {
     if (!token || !postToDelete) return;
     
@@ -338,6 +378,7 @@ export default function Perfil() {
                 onLike={handleLike}
                 onSave={handleSave}
                 onDelete={handleDelete}
+                onEdit={handleEdit}
               />
               
               {/* Botón de cargar más */}
@@ -374,6 +415,16 @@ export default function Perfil() {
         message="¿Estás seguro de que quieres eliminar esta publicación? Esta acción no se puede deshacer."
         confirmText="Eliminar"
         cancelText="Cancelar"
+      />
+
+      <EditPostModal
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setPostToEdit(null);
+        }}
+        onConfirm={handleUpdatePost}
+        currentDescription={postToEdit?.description || ''}
       />
 
       {notification && (

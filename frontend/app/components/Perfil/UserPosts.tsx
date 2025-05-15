@@ -72,9 +72,10 @@ interface UserPostsProps {
   onLike: (postId: string) => void;
   onSave: (postId: string) => void;
   onDelete: (postId: string) => void;
+  onEdit: (postId: string) => void;
 }
 
-export default function UserPosts({ posts = [], onLike, onSave, onDelete }: UserPostsProps) {
+export default function UserPosts({ posts = [], onLike, onSave, onDelete, onEdit }: UserPostsProps) {
   const { token } = useAuth();
   let currentUserId: string | undefined = undefined;
   
@@ -116,6 +117,7 @@ export default function UserPosts({ posts = [], onLike, onSave, onDelete }: User
           onLike={() => onLike(post.post_id)}
           onSave={() => onSave(post.post_id)}
           onDelete={() => onDelete(post.post_id)}
+          onEdit={() => onEdit(post.post_id)}
           currentUserId={currentUserId}
         />
       ))}

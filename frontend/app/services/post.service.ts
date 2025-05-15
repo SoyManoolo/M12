@@ -123,6 +123,37 @@ class PostService {
       throw new Error('Algo salió mal. Por favor, intenta de nuevo más tarde.');
     }
   }
+
+  async updatePost(token: string, postId: string, description: string): Promise<{ success: boolean; message: string; data?: any }> {
+    try {
+      const response = await fetch(`${this.baseUrl}/posts/${postId}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ description })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'No pudimos actualizar la publicación');
+      }
+
+      return {
+        success: true,
+        message: 'Publicación actualizada correctamente',
+        data: data.data
+      };
+    } catch (error) {
+      console.error('Error en updatePost:', error);
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error('Algo salió mal al actualizar la publicación');
+    }
+  }
 }
 
 export const postService = new PostService(); 

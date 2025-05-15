@@ -34,6 +34,7 @@ export default defineConfig({
     tailwindcss()
   ],
   server: {
+    host: true,
     hmr: false,
     watch: {
       usePolling: false,
