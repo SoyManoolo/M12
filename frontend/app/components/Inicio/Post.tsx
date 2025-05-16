@@ -241,8 +241,8 @@ export default function Post({
           {/* Columna central - Contenido multimedia */}
           <div className="w-[500px] px-4">
             <div 
-              className="rounded-lg overflow-hidden bg-gray-800 h-full cursor-pointer relative"
-              onClick={handleImageClick}
+              className={`rounded-lg overflow-hidden bg-gray-800 h-full ${media_url ? 'cursor-pointer' : ''} relative`}
+              onClick={media_url ? handleImageClick : undefined}
             >
               {media_url ? (
                 <img 
