@@ -237,8 +237,8 @@ export default function InicioPage() {
         // Cargar amigos
         const friendsResponse = await userService.getAllUsers(token);
         console.log('Respuesta del servidor para amigos:', friendsResponse);
-        if (friendsResponse.success && Array.isArray(friendsResponse.data)) {
-          const friendsData = friendsResponse.data.map(user => ({
+        if (friendsResponse.success && friendsResponse.data && Array.isArray(friendsResponse.data.users)) {
+          const friendsData = friendsResponse.data.users.map(user => ({
             friendship_id: user.user_id,
             user1_id: user.user_id,
             user2_id: user.user_id,

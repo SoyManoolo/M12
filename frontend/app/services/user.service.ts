@@ -1,11 +1,11 @@
 import { environment } from '../config/environment';
-import type { UserProfile, ApiResponse } from '../types/user.types';
+import type { UserProfile, ApiResponse, PaginatedUsersResponse } from '../types/user.types';
 
 export const userService = {
     /**
      * Obtiene todos los usuarios
      */
-    async getAllUsers(token: string): Promise<ApiResponse<UserProfile[]>> {
+    async getAllUsers(token: string): Promise<ApiResponse<PaginatedUsersResponse>> {
         try {
             const response = await fetch(`${environment.apiUrl}/users`, {
                 method: 'GET',
@@ -23,7 +23,7 @@ export const userService = {
                 success: false,
                 status: 500,
                 message: 'Error al conectar con el servidor',
-                data: [] as UserProfile[]
+                data: {} as PaginatedUsersResponse
             };
         }
     },

@@ -62,4 +62,10 @@ export interface Friend {
   user2_id: string;
   created_at: string;
   user: User;
+}
+
+export interface PaginatedUsersResponse {
+  users: User[];
+  hasNextPage: boolean;
+  nextCursor: string | null;
 } 
