@@ -155,7 +155,7 @@ export default function Post({
             <div className="relative w-full flex justify-center">
               {user.profile_picture ? (
                 <img 
-                  src={`http://localhost:3000${user.profile_picture}`}
+                  src={user.profile_picture}
                   alt={user.username} 
                   className="w-12 h-12 rounded-full cursor-pointer object-cover border-2 border-gray-800"
                   onClick={() => window.location.href = `/perfil?username=${user.username}`}
@@ -246,7 +246,7 @@ export default function Post({
             >
               {media_url ? (
                 <img 
-                  src={media_url} 
+                  src={media_url}
                   alt="Contenido del post"
                   className="w-full h-full object-cover"
                 />
@@ -367,7 +367,7 @@ export default function Post({
               <FaTimes className="text-2xl" />
             </button>
             <img 
-              src={media_url} 
+              src={media_url}
               alt="Contenido expandido"
               className="max-w-full max-h-[90vh] object-contain"
             />

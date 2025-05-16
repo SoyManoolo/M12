@@ -41,10 +41,20 @@ export default defineConfig({
       interval: 1000,
     },
     proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api/, '')
+      },
       '/media': {
         target: 'http://localhost:3000',
         changeOrigin: true,
         secure: false,
+        ws: true,
+        headers: {
+          'Access-Control-Allow-Origin': '*'
+        }
       }
     }
   },
