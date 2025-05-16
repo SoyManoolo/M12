@@ -11,7 +11,7 @@ import { useNavigate, useSearchParams } from "@remix-run/react";
 import Navbar from "~/components/Inicio/Navbar";
 import { useAuth } from "~/hooks/useAuth";
 import { environment } from "~/config/environment";
-import { FaSignOutAlt } from 'react-icons/fa';
+import { FaSignOutAlt, FaTrash } from 'react-icons/fa';
 import { userService } from "~/services/user.service";
 import type { UserProfile } from "~/types/user.types";
 import { redirect } from "@remix-run/node";
@@ -20,6 +20,7 @@ import Message from '../components/Shared/Message';
 import { authService } from '../services/auth.service';
 import RedirectModal from '~/components/Shared/RedirectModal';
 import Notification from '../components/Shared/Notification';
+import ConfirmModal from '../components/Shared/ConfirmModal';
 
 /**
  * Función auxiliar para obtener el username del token JWT
@@ -96,6 +97,7 @@ export default function ConfiguracionPage() {
     bio: ''
   });
   const [userId, setUserId] = useState<string>('');
+  const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -252,6 +254,38 @@ export default function ConfiguracionPage() {
     }
   };
 
+  const handleDeleteProfile = () => {
+    setShowDeleteAccountModal(true);
+  };
+
+  const confirmDeleteAccount = async () => {
+    if (!token || !userId) return;
+    
+    try {
+      const response = await userService.deleteUserById(userId, token);
+      
+      if (response.success) {
+        localStorage.clear();
+        sessionStorage.clear();
+        document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        window.location.href = '/login';
+      } else {
+        setNotification({
+          message: 'Error al eliminar la cuenta',
+          type: 'error'
+        });
+        setShowDeleteAccountModal(false);
+      }
+    } catch (error) {
+      console.error('Error al eliminar cuenta:', error);
+      setNotification({
+        message: 'Error al eliminar la cuenta',
+        type: 'error'
+      });
+      setShowDeleteAccountModal(false);
+    }
+  };
+
   if (loading || !user) {
     return (
       <div className="min-h-screen bg-black text-white flex justify-center items-center">
@@ -319,17 +353,27 @@ export default function ConfiguracionPage() {
                 />
               </div>
               <div className="flex justify-between items-center">
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors flex items-center space-x-2"
-                >
-                  <FaSignOutAlt />
-                  <span>Cerrar sesión</span>
-                </button>
+                <div className="flex space-x-4">
+                  <button
+                    type="button"
+                    onClick={handleDeleteProfile}
+                    className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors flex items-center space-x-2 cursor-pointer"
+                  >
+                    <FaTrash />
+                    <span>Eliminar cuenta</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors flex items-center space-x-2 cursor-pointer"
+                  >
+                    <FaSignOutAlt />
+                    <span>Cerrar sesión</span>
+                  </button>
+                </div>
                 <button
                   type="submit"
-                  className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                  className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors cursor-pointer"
                 >
                   Guardar cambios
                 </button>
@@ -347,6 +391,16 @@ export default function ConfiguracionPage() {
           document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
           window.location.href = '/login';
         }}
+      />
+
+      <ConfirmModal
+        isOpen={showDeleteAccountModal}
+        onClose={() => setShowDeleteAccountModal(false)}
+        onConfirm={confirmDeleteAccount}
+        title="Eliminar cuenta"
+        message="¿Estás seguro de que quieres eliminar tu cuenta? Esta acción es irreversible y perderás todo tu contenido y datos."
+        confirmText="Eliminar cuenta"
+        cancelText="Cancelar"
       />
 
       {notification && (

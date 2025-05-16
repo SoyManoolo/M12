@@ -12,6 +12,7 @@
     "analyze": "vite build --mode analyze"
   },
   "dependencies": {
+    "@headlessui/react": "^1.7.18",
     "@remix-run/node": "^2.16.2",
     "@remix-run/react": "^2.16.2",
     "@remix-run/serve": "^2.16.2",

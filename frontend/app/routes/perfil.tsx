@@ -187,26 +187,6 @@ export default function Perfil() {
     navigate('/configuracion?section=cuenta');
   };
 
-  const handleDeleteProfile = async () => {
-    if (!token || !data.user) return;
-    
-    if (window.confirm('¿Estás seguro de que quieres eliminar tu cuenta? Esta acción no se puede deshacer.')) {
-      setLoading(true);
-      try {
-        const response = await userService.deleteUserById(data.user.user_id, token);
-        if (response.success) {
-          window.location.href = '/login';
-        } else {
-          alert('Error al eliminar la cuenta');
-        }
-      } catch (err) {
-        alert('Error al eliminar la cuenta');
-      } finally {
-        setLoading(false);
-      }
-    }
-  };
-
   const handleLoadMore = async () => {
     if (!token || !nextCursor || loading || !data.user) return;
 
