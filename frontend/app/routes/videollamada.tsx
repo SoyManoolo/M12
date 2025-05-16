@@ -12,15 +12,14 @@
  */
 
 import { useState, useEffect } from 'react';
-import { FaVideo, FaArrowRight, FaClock } from 'react-icons/fa';
+import { FaVideo, FaArrowRight, FaClock, FaMicrophone, FaMicrophoneSlash, FaVideoSlash } from 'react-icons/fa';
 import ChatVideollamada from '~/components/Videollamada/ChatVideollamada';
-import VideoCall from '~/components/Videollamada/VideoCall';
-import RatingModal from '~/components/Videollamada/RatingModal';
 import { useNavigate, useParams } from '@remix-run/react';
 import { redirect } from "@remix-run/node";
 import { useVideoCall } from '~/hooks/useVideoCall';
 import { VideoCallEvent } from '~/types/videocall.types';
 import SocketService from '~/services/socket.service';
+import RatingModal from '~/components/Videollamada/RatingModal';
 
 /**
  * @interface Message
@@ -37,6 +36,19 @@ interface Message {
   sender: string;
   timestamp: string;
   isOwn: boolean;
+}
+
+/**
+ * @interface RemoteUser
+ * @description Define la estructura de un usuario remoto
+ * @property {string} name - Nombre del usuario
+ * @property {string} username - Nombre de usuario
+ * @property {string | null} profilePictureUrl - URL de la imagen de perfil del usuario
+ */
+interface RemoteUser {
+  name: string;
+  username: string;
+  profilePictureUrl: string | null;
 }
 
 /**
@@ -57,23 +69,17 @@ export default function VideollamadaPage() {
     endCall,
     toggleVideo,
     toggleAudio,
-    handleError,
     localStream,
     remoteStream
   } = useVideoCall();
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [showRatingModal, setShowRatingModal] = useState(false);
-  const [remoteUser, setRemoteUser] = useState<{
-    name: string;
-    username: string;
-    profilePictureUrl: string | null;
-  } | null>(null);
 
   // Iniciar la llamada cuando se monta el componente
   useEffect(() => {
     if (userId) {
-      startCall(userId);
+      startCall();
     }
     return () => {
       endCall();
@@ -124,7 +130,6 @@ export default function VideollamadaPage() {
 
   const handleNextCall = () => {
     endCall();
-    // Aquí iría la lógica para conectar con la siguiente videollamada
     navigate('/inicio');
   };
 
@@ -199,15 +204,6 @@ export default function VideollamadaPage() {
                 playsInline
                 className="w-full h-full object-cover"
               />
-              
-              {remoteUser && (
-                <div className="absolute top-4 left-4">
-                  <div className="bg-black bg-opacity-50 backdrop-blur-sm border border-gray-700 rounded-lg p-3">
-                    <p className="text-lg font-semibold">{remoteUser.name}</p>
-                    <p className="text-sm text-gray-400">@{remoteUser.username}</p>
-                  </div>
-                </div>
-              )}
 
               {/* Indicador de estado */}
               {videoCallState.isConnecting && (
@@ -222,6 +218,30 @@ export default function VideollamadaPage() {
                   {videoCallState.error}
                 </div>
               )}
+
+              {/* Controles de video/audio */}
+              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-4 bg-gray-900/50 p-3 rounded-full backdrop-blur-sm">
+                <button
+                  onClick={toggleAudio}
+                  className={`p-3 rounded-full transition-all duration-200 hover:bg-gray-700 ${
+                    videoCallState.isAudioEnabled 
+                      ? 'bg-gray-800 text-white hover:text-gray-300' 
+                      : 'bg-red-600/80 text-white hover:bg-red-700'
+                  }`}
+                >
+                  {videoCallState.isAudioEnabled ? <FaMicrophone size={20} /> : <FaMicrophoneSlash size={20} />}
+                </button>
+                <button
+                  onClick={toggleVideo}
+                  className={`p-3 rounded-full transition-all duration-200 hover:bg-gray-700 ${
+                    videoCallState.isVideoEnabled 
+                      ? 'bg-gray-800 text-white hover:text-gray-300' 
+                      : 'bg-red-600/80 text-white hover:bg-red-700'
+                  }`}
+                >
+                  {videoCallState.isVideoEnabled ? <FaVideo size={20} /> : <FaVideoSlash size={20} />}
+                </button>
+              </div>
             </div>
 
             {/* Right section - Chat */}

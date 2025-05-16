@@ -1,13 +1,34 @@
 export enum VideoCallEvent {
-  OFFER = 'video:offer',
-  ANSWER = 'video:answer',
-  ICE_CANDIDATE = 'video:ice-candidate',
-  CALL_STARTED = 'video:call-started',
-  CALL_ENDED = 'video:call-ended',
-  CALL_REJECTED = 'video:call-rejected',
-  CALL_ACCEPTED = 'video:call-accepted',
-  CALL_MISSED = 'video:call-missed',
-  CALL_ERROR = 'video:call-error',
+  // Eventos de cola
+  ADD_TO_QUEUE = 'add_to_queue',
+  QUEUE_RESULT = 'queue_result',
+  LEAVE_QUEUE = 'leave_queue',
+  LEAVE_QUEUE_RESULT = 'leave_queue_result',
+  
+  // Eventos de llamada
+  CALL_CONNECTED = 'call_connected',
+  CALL_CONNECTED_RESULT = 'call_connected_result',
+  END_CALL = 'end_call',
+  END_CALL_RESULT = 'end_call_result',
+  
+  // Eventos WebRTC
+  SEND_OFFER = 'send_offer',
+  SEND_OFFER_RESULT = 'send_offer_result',
+  SEND_ANSWER = 'send_answer',
+  SEND_ANSWER_RESULT = 'send_answer_result',
+  SEND_ICE_CANDIDATE = 'send_ice_candidate',
+  SEND_ICE_CANDIDATE_RESULT = 'send_ice_candidate_result',
+  
+  // Eventos de emparejamiento
+  REQUEST_MATCH = 'request_match',
+  REQUEST_MATCH_RESULT = 'request_match_result',
+  MATCH_FOUND = 'match_found',
+  
+  // Eventos de configuración
+  GET_ICE_SERVERS = 'get_ice_servers',
+  GET_ICE_SERVERS_RESULT = 'get_ice_servers_result',
+  
+  // Eventos de chat y calificación
   CHAT_MESSAGE = 'video:chat-message',
   CALL_RATING = 'video:call-rating'
 }
@@ -19,12 +40,25 @@ export interface VideoCallState {
   isConnecting: boolean;
   error: string | null;
   callDuration: number;
-  remoteUser: {
-    userId: string;
-    username: string;
-    name: string;
-    profilePictureUrl: string | null;
-  } | null;
+  inQueue: boolean;
+  callId: string | null;
+}
+
+export interface QueueResult {
+  success: boolean;
+  message: string;
+}
+
+export interface MatchFoundData {
+  call_id: string;
+  match: {
+    id: string;
+    socketId: string;
+  };
+  self: {
+    id: string;
+    socketId: string;
+  };
 }
 
 export interface VideoCallOffer {
@@ -46,7 +80,6 @@ export interface VideoCallIceCandidate {
 }
 
 export interface VideoCallError {
-  code: string;
+  success: boolean;
   message: string;
-  details?: any;
 } 

@@ -97,23 +97,27 @@ export default function VideoCall({ remoteUserId, onEndCall }: VideoCallProps) {
       </div>
 
       {/* Controles */}
-      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-4">
+      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-4 bg-gray-900/50 p-3 rounded-full backdrop-blur-sm">
         <button
           onClick={toggleAudio}
-          className={`p-3 rounded-full ${
-            state.isAudioEnabled ? 'bg-white text-black' : 'bg-red-600 text-white'
+          className={`p-3 rounded-full transition-all duration-200 hover:bg-gray-700 ${
+            state.isAudioEnabled 
+              ? 'bg-gray-800 text-white hover:text-gray-300' 
+              : 'bg-red-600/80 text-white hover:bg-red-700'
           }`}
         >
-          {state.isAudioEnabled ? <FaMicrophone /> : <FaMicrophoneSlash />}
+          {state.isAudioEnabled ? <FaMicrophone size={20} /> : <FaMicrophoneSlash size={20} />}
         </button>
         
         <button
           onClick={toggleVideo}
-          className={`p-3 rounded-full ${
-            state.isVideoEnabled ? 'bg-white text-black' : 'bg-red-600 text-white'
+          className={`p-3 rounded-full transition-all duration-200 hover:bg-gray-700 ${
+            state.isVideoEnabled 
+              ? 'bg-gray-800 text-white hover:text-gray-300' 
+              : 'bg-red-600/80 text-white hover:bg-red-700'
           }`}
         >
-          {state.isVideoEnabled ? <FaVideo /> : <FaVideoSlash />}
+          {state.isVideoEnabled ? <FaVideo size={20} /> : <FaVideoSlash size={20} />}
         </button>
         
         <button
@@ -121,9 +125,9 @@ export default function VideoCall({ remoteUserId, onEndCall }: VideoCallProps) {
             endCall();
             onEndCall();
           }}
-          className="p-3 rounded-full bg-red-600 text-white"
+          className="p-3 rounded-full bg-red-600/80 text-white hover:bg-red-700 transition-all duration-200"
         >
-          <FaVideo />
+          <FaVideo size={20} />
         </button>
       </div>
 

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from './useAuth';
 import WebRTCService from '~/services/webrtc.service';
 import SocketService from '~/services/socket.service';
-import { VideoCallEvent, VideoCallState, VideoCallError } from '~/types/videocall.types';
+import { VideoCallEvent, VideoCallState, QueueResult } from '~/types/videocall.types';
 
 const initialState: VideoCallState = {
   isCallActive: false,
@@ -11,7 +11,8 @@ const initialState: VideoCallState = {
   isConnecting: false,
   error: null,
   callDuration: 0,
-  remoteUser: null,
+  inQueue: false,
+  callId: null
 };
 
 export function useVideoCall() {
@@ -20,40 +21,90 @@ export function useVideoCall() {
   const webRTCService = WebRTCService.getInstance();
   const socketService = SocketService.getInstance();
 
+  // Contador de tiempo de llamada
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (state.isCallActive) {
+      interval = setInterval(() => {
+        setState(prev => ({
+          ...prev,
+          callDuration: prev.callDuration + 1
+        }));
+      }, 1000);
+    }
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [state.isCallActive]);
+
   useEffect(() => {
     if (token) {
       socketService.connect(token);
+      setupQueueListeners();
     }
     return () => {
       socketService.disconnect();
     };
   }, [token]);
 
-  useEffect(() => {
-    if (state.isCallActive) {
-      const interval = setInterval(() => {
+  const setupQueueListeners = useCallback(() => {
+    socketService.on(VideoCallEvent.QUEUE_RESULT, (result: QueueResult) => {
+      setState(prev => ({
+        ...prev,
+        inQueue: result.success,
+        error: result.success ? null : result.message
+      }));
+    });
+
+    socketService.on(VideoCallEvent.MATCH_FOUND, (data) => {
+      setState(prev => ({
+        ...prev,
+        isConnecting: true,
+        inQueue: false,
+        callId: data.call_id
+      }));
+    });
+
+    socketService.on(VideoCallEvent.CALL_CONNECTED_RESULT, (result: QueueResult) => {
+      setState(prev => ({
+        ...prev,
+        isCallActive: result.success,
+        isConnecting: false,
+        error: result.success ? null : result.message
+      }));
+    });
+
+    socketService.on(VideoCallEvent.END_CALL_RESULT, (result: QueueResult) => {
+      if (result.success) {
+        setState(initialState);
+      } else {
         setState(prev => ({
           ...prev,
-          callDuration: prev.callDuration + 1
+          error: result.message
         }));
-      }, 1000);
+      }
+    });
+  }, []);
 
-      return () => clearInterval(interval);
-    }
-  }, [state.isCallActive]);
+  const joinQueue = useCallback(async () => {
+    if (!token) return;
+    setState(prev => ({ ...prev, isConnecting: true, error: null }));
+    await webRTCService.joinQueue(token);
+  }, [token]);
 
-  const startCall = useCallback(async (remoteUserId: string) => {
+  const leaveQueue = useCallback(async () => {
+    await webRTCService.leaveQueue();
+    setState(prev => ({ ...prev, inQueue: false }));
+  }, []);
+
+  const startCall = useCallback(async () => {
     try {
       setState(prev => ({ ...prev, isConnecting: true, error: null }));
       
       await webRTCService.initializePeerConnection();
       await webRTCService.getUserMedia();
-      
-      const offer = await webRTCService.createOffer();
-      socketService.emit(VideoCallEvent.OFFER, {
-        offer,
-        to: remoteUserId
-      });
 
       setState(prev => ({
         ...prev,
@@ -61,24 +112,25 @@ export function useVideoCall() {
         isConnecting: false
       }));
     } catch (error) {
-      setState(prev => ({
-        ...prev,
-        isConnecting: false,
-        error: (error as Error).message
-      }));
+      handleError(error as Error);
     }
   }, []);
 
-  const endCall = useCallback(async () => {
+  const endCall = useCallback(() => {
     try {
-      await webRTCService.closeConnection();
+      webRTCService.endCall();
       setState(initialState);
     } catch (error) {
-      setState(prev => ({
-        ...prev,
-        error: (error as Error).message
-      }));
+      handleError(error as Error);
     }
+  }, []);
+
+  const handleError = useCallback((error: Error) => {
+    setState(prev => ({
+      ...prev,
+      isConnecting: false,
+      error: error.message
+    }));
   }, []);
 
   const toggleVideo = useCallback(() => {
@@ -109,16 +161,10 @@ export function useVideoCall() {
     }
   }, []);
 
-  const handleError = useCallback((error: VideoCallError) => {
-    setState(prev => ({
-      ...prev,
-      error: error.message,
-      isConnecting: false
-    }));
-  }, []);
-
   return {
     state,
+    joinQueue,
+    leaveQueue,
     startCall,
     endCall,
     toggleVideo,

@@ -1,9 +1,9 @@
 import { io, Socket } from 'socket.io-client';
-import { VideoCallEvent } from '~/types/videocall.types';
+import { environment } from '~/config/environment';
 
 class SocketService {
-  private socket: Socket | null = null;
   private static instance: SocketService;
+  private socket: Socket | null = null;
 
   private constructor() {}
 
@@ -14,26 +14,35 @@ class SocketService {
     return SocketService.instance;
   }
 
-  public connect(token: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      try {
-        this.socket = io(import.meta.env.VITE_API_URL || 'http://localhost:3000', {
-          auth: { token },
-          transports: ['websocket'],
-        });
+  public connect(token: string): void {
+    if (this.socket?.connected) return;
 
-        this.socket.on('connect', () => {
-          console.log('Socket conectado');
-          resolve();
-        });
+    this.socket = io(environment.apiUrl, {
+      auth: {
+        token
+      },
+      transports: ['websocket'],
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000
+    });
 
-        this.socket.on('connect_error', (error) => {
-          console.error('Error de conexión:', error);
-          reject(error);
-        });
-      } catch (error) {
-        reject(error);
-      }
+    this.setupConnectionHandlers();
+  }
+
+  private setupConnectionHandlers(): void {
+    if (!this.socket) return;
+
+    this.socket.on('connect', () => {
+      console.log('Conectado al servidor de Socket.IO');
+    });
+
+    this.socket.on('disconnect', (reason) => {
+      console.log('Desconectado del servidor:', reason);
+    });
+
+    this.socket.on('connect_error', (error) => {
+      console.error('Error de conexión:', error);
     });
   }
 
@@ -44,26 +53,28 @@ class SocketService {
     }
   }
 
-  public emit(event: VideoCallEvent, data: any): void {
-    if (this.socket) {
-      this.socket.emit(event, data);
+  public emit(event: string, data: any): void {
+    if (!this.socket?.connected) {
+      console.error('No hay conexión con el servidor');
+      return;
     }
+    this.socket.emit(event, data);
   }
 
-  public on(event: VideoCallEvent, callback: (data: any) => void): void {
-    if (this.socket) {
-      this.socket.on(event, callback);
+  public on(event: string, callback: (data: any) => void): void {
+    if (!this.socket) {
+      console.error('Socket no inicializado');
+      return;
     }
+    this.socket.on(event, callback);
   }
 
-  public off(event: VideoCallEvent): void {
-    if (this.socket) {
-      this.socket.off(event);
+  public off(event: string, callback?: (data: any) => void): void {
+    if (!this.socket) {
+      console.error('Socket no inicializado');
+      return;
     }
-  }
-
-  public isConnected(): boolean {
-    return this.socket?.connected || false;
+    this.socket.off(event, callback);
   }
 }
 
