@@ -3,6 +3,7 @@ import { AppError } from "../middlewares/errors/AppError";
 import { existsUser } from "../utils/modelExists";
 import { UserFilters, UpdateUserData } from '../types/custom';
 import { Op } from "sequelize";
+import FileManagementService from './FileManagementService';
 
 export class UserService {
 
@@ -115,6 +116,9 @@ export class UserService {
             const user = await existsUser(filters);
 
             if (!user) throw new AppError(404, "");
+
+            // Eliminar el directorio del usuario y todos sus archivos
+            await FileManagementService.deleteUserDirectory(user.dataValues.user_id);
 
             await user.destroy();
 

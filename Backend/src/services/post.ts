@@ -4,6 +4,7 @@ import { Post, PostLikes, User } from "../models";
 import { existsPost, existsUser } from "../utils/modelExists";
 import { UserFilters } from "../types/custom";
 import { sequelize } from "../config/database";
+import FileManagementService from './FileManagementService';
 
 export class PostService {
     // Guarda la ruta de la carpeta media y las subcarpetas images y videos
@@ -17,16 +18,29 @@ export class PostService {
                 description
             }
 
+            const post = await Post.create(postData);
+
             if (media) {
-                const basePath = media.mimetype.startsWith('image/')
-                    ? this.imageBasePath
-                    : this.videoBasePath;
-
-                const mediaUrl = `${basePath}/${media.filename}`;
-                postData.media = mediaUrl;
+                // Guardar la imagen en el directorio del usuario
+                const fileName = await FileManagementService.savePostImage(user_id, post.dataValues.post_id, media);
+                await post.update({ media: fileName });
+                
+                // Registrar la acción en el log del post
+                await FileManagementService.logPostAction(
+                    user_id,
+                    post.dataValues.post_id,
+                    'CREATE',
+                    `Post created with image: ${fileName}`
+                );
+            } else {
+                // Registrar la acción en el log del post
+                await FileManagementService.logPostAction(
+                    user_id,
+                    post.dataValues.post_id,
+                    'CREATE',
+                    'Post created without image'
+                );
             }
-
-            const post = await Post.create(postData)
 
             return post;
         } catch (error) {
@@ -83,7 +97,7 @@ export class PostService {
                 if (lastPost) {
                     queryOptions.where = {
                         [Op.and]: [
-                            { user_id },  // Mantener la condición de user_id
+                            { user_id },
                             {
                                 created_at: {
                                     [Op.lt]: lastPost.dataValues.created_at
@@ -96,16 +110,10 @@ export class PostService {
 
             const posts = await Post.findAll(queryOptions)
 
-            // Si no hay posts, lanzamos un error
             if (!posts || posts.length === 0) throw new AppError(404, 'PostNotFound');
 
-            // Si hay más posts, los paginamos
             const hasNextPage: boolean = posts.length > limit;
-
-            // Si hay más posts, eliminamos el último post de la lista
             const resultPosts: Post[] = hasNextPage ? posts.slice(0, limit) : posts;
-
-            // Obtenemos el cursor del último post
             const nextCursor = hasNextPage ? resultPosts[resultPosts.length - 1].dataValues.post_id : null;
 
             return {
@@ -162,16 +170,13 @@ export class PostService {
 
             const posts = await Post.findAll(queryOptions);
 
-            // Si no hay posts, lanzamos un error
             if (!posts || posts.length === 0) throw new AppError(404, 'PostNotFound');
 
-            // Transformamos los posts para el formato esperado por el frontend
             const postsWithLikes = posts.map(post => {
                 const postData = post.toJSON();
-                return postData; // Ya incluye likes_count
+                return postData;
             });
 
-            // Paginación
             const hasNextPage: boolean = postsWithLikes.length > limit;
             const resultPosts = hasNextPage ? postsWithLikes.slice(0, limit) : postsWithLikes;
             const nextCursor = hasNextPage ? resultPosts[resultPosts.length - 1].post_id : null;
@@ -198,17 +203,22 @@ export class PostService {
 
             await post.update({ description });
 
-            await post.reload();
+            // Registrar la acción en el log del post
+            await FileManagementService.logPostAction(
+                post.dataValues.user_id,
+                postId,
+                'UPDATE',
+                'Post description updated'
+            );
 
             return post;
-
         } catch (error) {
             if (error instanceof AppError) {
                 throw error;
             }
             throw new AppError(500, 'InternalServerError');
-        };
-    };
+        }
+    }
 
     // Método para eliminar un post
     public async deletePost(postId: string) {
@@ -216,6 +226,19 @@ export class PostService {
             const post = await existsPost(postId);
 
             if (!post) throw new AppError(404, "");
+
+            // Si el post tiene una imagen, la eliminamos
+            if (post.dataValues.media) {
+                await FileManagementService.deletePostImage(post.dataValues.user_id, post.dataValues.media);
+            }
+
+            // Registrar la acción en el log del post
+            await FileManagementService.logPostAction(
+                post.dataValues.user_id,
+                postId,
+                'DELETE',
+                'Post deleted'
+            );
 
             await post.destroy();
 
@@ -225,6 +248,6 @@ export class PostService {
                 throw error;
             }
             throw new AppError(500, 'InternalServerError');
-        };
-    };
+        }
+    }
 }

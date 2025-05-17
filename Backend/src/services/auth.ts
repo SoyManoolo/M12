@@ -3,6 +3,7 @@ import { User, JWT } from "../models";
 import { compare, hash } from "bcryptjs";
 import { AuthToken } from "../middlewares/validation/authentication/jwt";
 import { Op } from "sequelize";
+import FileManagementService from './FileManagementService';
 
 export class AuthService {
 
@@ -44,7 +45,7 @@ export class AuthService {
                 if (existingUser.dataValues.email === email) {
                     throw new AppError(409, 'UserEmailAlreadyExists');
                 } else {
-                    throw new AppError(409, 'UserUsernameAlreadyExists'); // Usar un código/mensaje diferente
+                    throw new AppError(409, 'UserUsernameAlreadyExists');
                 }
             }
 
@@ -59,9 +60,12 @@ export class AuthService {
             });
 
             if (!newUser) {
-                 console.error("User creation failed unexpectedly."); // Log para depuración
+                 console.error("User creation failed unexpectedly.");
                  throw new AppError(500, 'UserCreationError');
             }
+
+            // Crear directorio para el usuario
+            await FileManagementService.createUserDirectory(newUser.dataValues.user_id);
 
             const token = new AuthToken().generateToken(newUser);
 
