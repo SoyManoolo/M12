@@ -307,16 +307,21 @@ export default function ConfiguracionPage() {
 
           {/* Bloque circular para la foto de perfil */}
           <div className="flex flex-col items-center mb-8">
-            <div className="relative w-32 h-32 mb-4">
+            <div className="relative w-48 h-48 mb-4">
               <img
-                src={user?.profile_picture_url ? `${environment.apiUrl}${user.profile_picture_url}` : "/ruta-a-imagen-por-defecto.jpg"}
+                src={user?.profile_picture || "/default-avatar.png"}
                 alt="Foto de perfil"
                 className="w-full h-full rounded-full object-cover border-2 border-gray-700"
+                onError={(e) => {
+                  // Si hay error al cargar la imagen, mostrar la imagen por defecto
+                  const target = e.target as HTMLImageElement;
+                  target.src = "/default-avatar.png";
+                }}
               />
               {/* Overlay con botones (visible al hover) */}
               <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 hover:opacity-100 transition-opacity rounded-full">
                 <div className="flex flex-col space-y-2">
-                  <label className="px-4 py-2 bg-blue-600 text-white rounded cursor-pointer hover:bg-blue-700 transition-colors">
+                  <label className="px-4 py-2 bg-blue-600 text-white rounded cursor-pointer hover:bg-blue-700 transition-colors text-sm">
                     Cambiar foto
                     <input
                       type="file"
@@ -334,6 +339,11 @@ export default function ConfiguracionPage() {
                                 const updatedUser = await userService.getUser({ user_id: userId }, t);
                                 if (updatedUser.success) {
                                   setUser(updatedUser.data);
+                                  // Forzar la recarga de la imagen
+                                  const img = document.querySelector('img[alt="Foto de perfil"]') as HTMLImageElement;
+                                  if (img) {
+                                    img.src = `http://localhost:3000${updatedUser.data.profile_picture}?t=${new Date().getTime()}`;
+                                  }
                                 }
                               } else {
                                 setNotification({ message: res.message || "Error al actualizar la foto de perfil", type: "error" });
@@ -358,6 +368,11 @@ export default function ConfiguracionPage() {
                             const updatedUser = await userService.getUser({ user_id: userId }, t);
                             if (updatedUser.success) {
                               setUser(updatedUser.data);
+                              // Forzar la recarga de la imagen
+                              const img = document.querySelector('img[alt="Foto de perfil"]') as HTMLImageElement;
+                              if (img) {
+                                img.src = "/default-avatar.png";
+                              }
                             }
                           } else {
                             setNotification({ message: res.message || "Error al eliminar la foto de perfil", type: "error" });
@@ -368,7 +383,7 @@ export default function ConfiguracionPage() {
                         }
                       })();
                     }}
-                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-sm"
                   >
                     Eliminar foto
                   </button>

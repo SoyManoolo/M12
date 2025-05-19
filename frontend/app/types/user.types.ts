@@ -10,7 +10,7 @@ export interface UserProfile {
   name: string;
   surname: string;
   bio?: string;
-  profile_picture_url?: string;
+  profile_picture?: string;
   email_verified: boolean;
   is_moderator: boolean;
   id_deleted: boolean;
