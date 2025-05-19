@@ -293,9 +293,13 @@ export default function ConfiguracionPage() {
     <div className="min-h-screen bg-black text-white flex">
       <Navbar />
       
-      <div className="w-5/6 ml-[16.666667%]">
-        <div className="p-8">
-          <h1 className="text-3xl font-bold mb-8">CONFIGURACIÓN</h1>
+      <div className="w-5/6 ml-[16.666667%] p-8">
+        {/* Encabezado con título y mensajes */}
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-4xl font-bold mb-2 text-center bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Configuración
+          </h1>
+          <p className="text-gray-400 text-center mb-8">Gestiona tu cuenta y personaliza tu perfil</p>
           
           {message && (
             <Message
@@ -305,163 +309,182 @@ export default function ConfiguracionPage() {
             />
           )}
 
-          {/* Bloque circular para la foto de perfil */}
-          <div className="flex flex-col items-center mb-8">
-            <div className="relative w-48 h-48 mb-4">
-              <img
-                src={user?.profile_picture || "/default-avatar.png"}
-                alt="Foto de perfil"
-                className="w-full h-full rounded-full object-cover border-2 border-gray-700"
-                onError={(e) => {
-                  // Si hay error al cargar la imagen, mostrar la imagen por defecto
-                  const target = e.target as HTMLImageElement;
-                  target.src = "/default-avatar.png";
-                }}
-              />
-              {/* Overlay con botones (visible al hover) */}
-              <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 hover:opacity-100 transition-opacity rounded-full">
-                <div className="flex flex-col space-y-2">
-                  <label className="px-4 py-2 bg-blue-600 text-white rounded cursor-pointer hover:bg-blue-700 transition-colors text-sm">
-                    Cambiar foto
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          (async () => {
-                            try {
-                              const t = ensureToken();
-                              const res = await userService.updateProfilePicture(userId, file, t);
-                              if (res.success) {
-                                // Actualizar el estado (por ejemplo, recargar el usuario) para que la UI se actualice
-                                const updatedUser = await userService.getUser({ user_id: userId }, t);
-                                if (updatedUser.success) {
-                                  setUser(updatedUser.data);
-                                  // Forzar la recarga de la imagen
-                                  const img = document.querySelector('img[alt="Foto de perfil"]') as HTMLImageElement;
-                                  if (img) {
-                                    img.src = `http://localhost:3000${updatedUser.data.profile_picture}?t=${new Date().getTime()}`;
-                                  }
-                                }
-                              } else {
-                                setNotification({ message: res.message || "Error al actualizar la foto de perfil", type: "error" });
-                              }
-                            } catch (err) {
-                              console.error("Error al actualizar foto de perfil:", err);
-                              setNotification({ message: (err instanceof Error) ? err.message : "Error al actualizar la foto de perfil", type: "error" });
-                            }
-                          })();
-                        }
+          {/* Contenedor principal con grid de dos columnas */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Columna izquierda - Foto de perfil y biografía */}
+            <div className="space-y-6">
+              {/* Bloque circular para la foto de perfil */}
+              <div className="bg-gray-900 rounded-xl p-6 shadow-lg border border-gray-800">
+                <h2 className="text-xl font-semibold mb-4 text-center">Foto de Perfil</h2>
+                <div className="flex flex-col items-center">
+                  <div className="relative w-48 h-48 mb-4 group">
+                    <img
+                      src={user?.profile_picture || "/default-avatar.png"}
+                      alt="Foto de perfil"
+                      className="w-full h-full rounded-full object-cover border-4 border-gray-700 shadow-lg transition-transform duration-300 group-hover:scale-105"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = "/default-avatar.png";
                       }}
                     />
-                  </label>
-                  <button
-                    onClick={() => {
-                      (async () => {
-                        try {
-                          const t = ensureToken();
-                          const res = await userService.deleteProfilePicture(userId, t);
-                          if (res.success) {
-                            // Actualizar el estado (por ejemplo, recargar el usuario) para que la UI se actualice
-                            const updatedUser = await userService.getUser({ user_id: userId }, t);
-                            if (updatedUser.success) {
-                              setUser(updatedUser.data);
-                              // Forzar la recarga de la imagen
-                              const img = document.querySelector('img[alt="Foto de perfil"]') as HTMLImageElement;
-                              if (img) {
-                                img.src = "/default-avatar.png";
+                    {/* Overlay con botones (visible al hover) */}
+                    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
+                      <div className="flex flex-col space-y-3">
+                        <label className="px-4 py-2 bg-blue-600 text-white rounded-lg cursor-pointer hover:bg-blue-700 transition-colors text-sm shadow-lg transform hover:scale-105">
+                          Cambiar foto
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                (async () => {
+                                  try {
+                                    const t = ensureToken();
+                                    const res = await userService.updateProfilePicture(userId, file, t);
+                                    if (res.success) {
+                                      const updatedUser = await userService.getUser({ user_id: userId }, t);
+                                      if (updatedUser.success) {
+                                        setUser(updatedUser.data);
+                                        const img = document.querySelector('img[alt="Foto de perfil"]') as HTMLImageElement;
+                                        if (img) {
+                                          img.src = `${updatedUser.data.profile_picture}?t=${new Date().getTime()}`;
+                                        }
+                                      }
+                                    } else {
+                                      setNotification({ message: res.message || "Error al actualizar la foto de perfil", type: "error" });
+                                    }
+                                  } catch (err) {
+                                    console.error("Error al actualizar foto de perfil:", err);
+                                    setNotification({ message: (err instanceof Error) ? err.message : "Error al actualizar la foto de perfil", type: "error" });
+                                  }
+                                })();
                               }
-                            }
-                          } else {
-                            setNotification({ message: res.message || "Error al eliminar la foto de perfil", type: "error" });
-                          }
-                        } catch (err) {
-                          console.error("Error al eliminar foto de perfil:", err);
-                          setNotification({ message: (err instanceof Error) ? err.message : "Error al eliminar la foto de perfil", type: "error" });
-                        }
-                      })();
-                    }}
-                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-sm"
-                  >
-                    Eliminar foto
-                  </button>
+                            }}
+                          />
+                        </label>
+                        <button
+                          onClick={() => {
+                            (async () => {
+                              try {
+                                const t = ensureToken();
+                                const res = await userService.deleteProfilePicture(userId, t);
+                                if (res.success) {
+                                  const updatedUser = await userService.getUser({ user_id: userId }, t);
+                                  if (updatedUser.success) {
+                                    setUser(updatedUser.data);
+                                    const img = document.querySelector('img[alt="Foto de perfil"]') as HTMLImageElement;
+                                    if (img) {
+                                      img.src = "/default-avatar.png";
+                                    }
+                                  }
+                                } else {
+                                  setNotification({ message: res.message || "Error al eliminar la foto de perfil", type: "error" });
+                                }
+                              } catch (err) {
+                                console.error("Error al eliminar foto de perfil:", err);
+                                setNotification({ message: (err instanceof Error) ? err.message : "Error al eliminar la foto de perfil", type: "error" });
+                              }
+                            })();
+                          }}
+                          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm shadow-lg transform hover:scale-105"
+                        >
+                          Eliminar foto
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">Nombre de usuario</label>
-                <input
-                  type="text"
-                  name="username"
-                  value={formData.username}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 bg-transparent border border-gray-700 rounded-md focus:outline-none focus:border-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Correo electrónico</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 bg-transparent border border-gray-700 rounded-md focus:outline-none focus:border-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Nueva Contraseña</label>
-                <input
-                  type="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 bg-transparent border border-gray-700 rounded-md focus:outline-none focus:border-white"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">Biografía</label>
+              {/* Biografía */}
+              <div className="bg-gray-900 rounded-xl p-6 shadow-lg border border-gray-800">
+                <h2 className="text-xl font-semibold mb-4">Biografía</h2>
                 <textarea
                   name="bio"
                   value={formData.bio}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 bg-transparent border border-gray-700 rounded-md focus:outline-none focus:border-white"
-                  rows={4}
+                  className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none min-h-[150px]"
+                  placeholder="Cuéntanos algo sobre ti..."
                 />
               </div>
-              <div className="flex justify-between items-center">
-                <div className="flex space-x-4">
+            </div>
+
+            {/* Columna derecha - Información de la cuenta */}
+            <div className="space-y-6">
+              <div className="bg-gray-900 rounded-xl p-6 shadow-lg border border-gray-800">
+                <h2 className="text-xl font-semibold mb-6">Información de la Cuenta</h2>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-gray-300">Nombre de usuario</label>
+                    <input
+                      type="text"
+                      name="username"
+                      value={formData.username}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Tu nombre de usuario"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-gray-300">Correo electrónico</label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="tu@email.com"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-gray-300">Nueva Contraseña</label>
+                    <input
+                      type="password"
+                      name="password"
+                      value={formData.password}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="••••••••"
+                    />
+                  </div>
+                </form>
+              </div>
+
+              {/* Botones de acción */}
+              <div className="bg-gray-900 rounded-xl p-6 shadow-lg border border-gray-800">
+                <h2 className="text-xl font-semibold mb-6">Acciones de Cuenta</h2>
+                <div className="flex flex-col space-y-4">
                   <button
-                    type="button"
-                    onClick={handleDeleteProfile}
-                    className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors flex items-center space-x-2 cursor-pointer"
+                    type="submit"
+                    onClick={handleSubmit}
+                    className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-lg transform hover:scale-105"
                   >
-                    <FaTrash />
-                    <span>Eliminar cuenta</span>
+                    Guardar cambios
                   </button>
-                  <button
-                    type="button"
-                    onClick={handleLogout}
-                    className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors flex items-center space-x-2 cursor-pointer"
-                  >
-                    <FaSignOutAlt />
-                    <span>Cerrar sesión</span>
-                  </button>
+                  <div className="flex space-x-4">
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      className="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors shadow-lg transform hover:scale-105 flex items-center justify-center space-x-2"
+                    >
+                      <FaSignOutAlt />
+                      <span>Cerrar sesión</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleDeleteProfile}
+                      className="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors shadow-lg transform hover:scale-105 flex items-center justify-center space-x-2"
+                    >
+                      <FaTrash />
+                      <span>Eliminar cuenta</span>
+                    </button>
+                  </div>
                 </div>
-                <button
-                  type="submit"
-                  className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors cursor-pointer"
-                >
-                  Guardar cambios
-                </button>
               </div>
             </div>
-          </form>
+          </div>
         </div>
       </div>
 
