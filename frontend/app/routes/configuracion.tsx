@@ -262,27 +262,14 @@ export default function ConfiguracionPage() {
     if (!token || !userId) return;
     
     try {
-      const response = await userService.deleteUserById(userId, token);
-      
-      if (response.success) {
-        localStorage.clear();
-        sessionStorage.clear();
-        document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-        window.location.href = '/login';
-      } else {
-        setNotification({
-          message: 'Error al eliminar la cuenta',
-          type: 'error'
-        });
-        setShowDeleteAccountModal(false);
-      }
+      await userService.deleteUserById(userId, token);
+      localStorage.clear();
+      sessionStorage.clear();
+      document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      window.location.href = '/login';
     } catch (error) {
       console.error('Error al eliminar cuenta:', error);
-      setNotification({
-        message: 'Error al eliminar la cuenta',
-        type: 'error'
-      });
-      setShowDeleteAccountModal(false);
+      window.location.href = '/login';
     }
   };
 
@@ -382,16 +369,6 @@ export default function ConfiguracionPage() {
           </form>
         </div>
       </div>
-
-      <RedirectModal
-        isOpen={showRedirectModal}
-        message="Datos actualizados correctamente"
-        onRedirect={() => {
-          // Limpiar el token y redirigir al login
-          document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-          window.location.href = '/login';
-        }}
-      />
 
       <ConfirmModal
         isOpen={showDeleteAccountModal}
