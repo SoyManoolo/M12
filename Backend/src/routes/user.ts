@@ -4,6 +4,8 @@ import { UserService } from "../services/user";
 import { UserController } from "../controllers/user";
 import { UpdateValidation } from "../middlewares/validation/updates/UpdateValidation";
 import { UserValidator } from "../middlewares/validation/user/UserValidator";
+import { AuthToken } from "../middlewares/validation/authentication/jwt";
+import upload from "../middlewares/multer";
 
 const router = express.Router();
 const userService = new UserService();
@@ -41,6 +43,21 @@ router.patch('/:id', IdValidator, updateUserValidator, async (req: Request, res:
 
 router.delete('/:id', async (req: Request, res: Response, next: NextFunction) => {
     await userController.deleteUser(req, res, next);
+});
+
+// Ruta para actualizar la foto de perfil
+router.post('/profile-picture', upload.single('media'), async (req: Request, res: Response, next: NextFunction) => {
+    await userController.updateProfilePicture(req, res, next);
+});
+
+// Ruta para eliminar la foto de perfil
+router.delete('/:id/profile-picture', async (req: Request, res: Response, next: NextFunction) => {
+    await userController.deleteProfilePicture(req, res, next);
+});
+
+// Ruta para actualizar la foto de perfil por id
+router.post('/:id/profile-picture', upload.single('media'), async (req: Request, res: Response, next: NextFunction) => {
+    await userController.updateProfilePicture(req, res, next);
 });
 
 export default router

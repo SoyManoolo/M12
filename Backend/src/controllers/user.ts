@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import i18n from '../config/i18n';
 import { UserService } from '../services/user';
+import { AppError } from '../middlewares/errors/AppError';
 
 export class UserController {
     constructor(private userService: UserService) { }
@@ -89,5 +90,49 @@ export class UserController {
             next (error);
         }
     };
+
+    // Método para actualizar la foto de perfil
+    public async updateProfilePicture(req: Request, res: Response, next: NextFunction) {
+        try {
+            const locale = req.headers['accept-language'] || 'en';
+            i18n.setLocale(locale);
+
+            if (!req.file) {
+                throw new AppError(400, 'NoFileUploaded');
+            }
+
+            const userId = req.params.id;
+            const user = await this.userService.updateProfilePicture(userId, req.file);
+
+            res.status(200).json({
+                success: true,
+                status: 200,
+                message: i18n.__('success.user.profilePictureUpdated'),
+                data: user
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    // Método para eliminar la foto de perfil
+    public async deleteProfilePicture(req: Request, res: Response, next: NextFunction) {
+        try {
+            const locale = req.headers['accept-language'] || 'en';
+            i18n.setLocale(locale);
+
+            const userId = req.params.id;
+            const user = await this.userService.deleteProfilePicture(userId);
+
+            res.status(200).json({
+                success: true,
+                status: 200,
+                message: i18n.__('success.user.profilePictureDeleted'),
+                data: user
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
 
 };
