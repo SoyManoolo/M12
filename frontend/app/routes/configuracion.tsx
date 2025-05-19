@@ -273,6 +273,14 @@ export default function ConfiguracionPage() {
     }
   };
 
+  // Agregar una función auxiliar para verificar el token
+  const ensureToken = (): string => {
+    if (!token) {
+      throw new Error("No hay token de autenticación");
+    }
+    return token;
+  };
+
   if (loading || !user) {
     return (
       <div className="min-h-screen bg-black text-white flex justify-center items-center">
@@ -296,6 +304,78 @@ export default function ConfiguracionPage() {
               onClose={clearMessage}
             />
           )}
+
+          {/* Bloque circular para la foto de perfil */}
+          <div className="flex flex-col items-center mb-8">
+            <div className="relative w-32 h-32 mb-4">
+              <img
+                src={user?.profile_picture_url ? `${environment.apiUrl}${user.profile_picture_url}` : "/ruta-a-imagen-por-defecto.jpg"}
+                alt="Foto de perfil"
+                className="w-full h-full rounded-full object-cover border-2 border-gray-700"
+              />
+              {/* Overlay con botones (visible al hover) */}
+              <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 hover:opacity-100 transition-opacity rounded-full">
+                <div className="flex flex-col space-y-2">
+                  <label className="px-4 py-2 bg-blue-600 text-white rounded cursor-pointer hover:bg-blue-700 transition-colors">
+                    Cambiar foto
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          (async () => {
+                            try {
+                              const t = ensureToken();
+                              const res = await userService.updateProfilePicture(userId, file, t);
+                              if (res.success) {
+                                // Actualizar el estado (por ejemplo, recargar el usuario) para que la UI se actualice
+                                const updatedUser = await userService.getUser({ user_id: userId }, t);
+                                if (updatedUser.success) {
+                                  setUser(updatedUser.data);
+                                }
+                              } else {
+                                setNotification({ message: res.message || "Error al actualizar la foto de perfil", type: "error" });
+                              }
+                            } catch (err) {
+                              console.error("Error al actualizar foto de perfil:", err);
+                              setNotification({ message: (err instanceof Error) ? err.message : "Error al actualizar la foto de perfil", type: "error" });
+                            }
+                          })();
+                        }
+                      }}
+                    />
+                  </label>
+                  <button
+                    onClick={() => {
+                      (async () => {
+                        try {
+                          const t = ensureToken();
+                          const res = await userService.deleteProfilePicture(userId, t);
+                          if (res.success) {
+                            // Actualizar el estado (por ejemplo, recargar el usuario) para que la UI se actualice
+                            const updatedUser = await userService.getUser({ user_id: userId }, t);
+                            if (updatedUser.success) {
+                              setUser(updatedUser.data);
+                            }
+                          } else {
+                            setNotification({ message: res.message || "Error al eliminar la foto de perfil", type: "error" });
+                          }
+                        } catch (err) {
+                          console.error("Error al eliminar foto de perfil:", err);
+                          setNotification({ message: (err instanceof Error) ? err.message : "Error al eliminar la foto de perfil", type: "error" });
+                        }
+                      })();
+                    }}
+                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                  >
+                    Eliminar foto
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-4">

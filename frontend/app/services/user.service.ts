@@ -197,5 +197,95 @@ export const userService = {
                 data: undefined
             };
         }
+    },
+
+    /**
+     * Actualiza la foto de perfil del usuario
+     */
+    async updateProfilePicture(userId: string, file: File, token: string): Promise<ApiResponse<UserProfile>> {
+        try {
+            const formData = new FormData();
+            formData.append('media', file);
+
+            const response = await fetch(`${environment.apiUrl}/users/${userId}/profile-picture`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: formData,
+            });
+
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Error al actualizar la foto de perfil:', error);
+            return {
+                success: false,
+                status: 500,
+                message: 'Error al conectar con el servidor',
+                data: {} as UserProfile
+            };
+        }
+    },
+
+    /**
+     * Elimina la foto de perfil del usuario
+     */
+    async deleteProfilePicture(userId: string, token: string): Promise<ApiResponse<void>> {
+        try {
+            const response = await fetch(`${environment.apiUrl}/users/${userId}/profile-picture`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Error al eliminar la foto de perfil:', error);
+            return {
+                success: false,
+                status: 500,
+                message: 'Error al conectar con el servidor',
+                data: undefined
+            };
+        }
+    },
+
+    /**
+     * Obtiene un usuario por ID o username
+     */
+    async getUser(params: { user_id?: string; username?: string }, token: string): Promise<ApiResponse<UserProfile>> {
+        try {
+            let url = `${environment.apiUrl}/users`;
+            if (params.user_id) {
+                url += `/${params.user_id}`;
+            } else if (params.username) {
+                url += `/username?username=${params.username}`;
+            } else {
+                throw new Error('Se requiere user_id o username');
+            }
+
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Error al obtener el usuario:', error);
+            return {
+                success: false,
+                status: 500,
+                message: 'Error al conectar con el servidor',
+                data: {} as UserProfile
+            };
+        }
     }
 }; 
