@@ -120,6 +120,7 @@ export class UserController {
                 success: true,
                 status: 200,
                 message: "hola",
+                data: user
             });
         } catch (error) {
             next(error);
@@ -148,6 +149,7 @@ export class UserController {
                 success: true,
                 status: 200,
                 message: "hola",
+                data: user
             });
         } catch (error) {
             next(error);
