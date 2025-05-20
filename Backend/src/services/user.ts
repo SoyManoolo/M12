@@ -157,7 +157,7 @@ export class UserService {
                     }
                 } catch (err) {
                     // Log del error pero continúa con la actualización
-                    dbLogger.error('Error al eliminar la imagen de perfil antigua:', {err});
+                    dbLogger.error('Error al eliminar la imagen de perfil antigua:', { err });
                 }
             }
 
@@ -189,6 +189,25 @@ export class UserService {
             await user.update({ profile_picture: null });
 
             await user.reload();
+
+            const actualImage = user.dataValues.profile_picture;
+
+            // Si el usuario ya tiene una imagen de perfil, la eliminamos
+            if (actualImage) {
+                try {
+                    // Obtener la ruta completa del archivo
+                    const filePath = path.join(process.cwd(), actualImage);
+
+                    // Comprobar si el archivo existe antes de intentar eliminarlo
+                    if (fs.existsSync(filePath)) {
+                        // Eliminar el archivo
+                        fs.unlinkSync(filePath);
+                    }
+                } catch (err) {
+                    // Log del error pero continúa con la actualización
+                    dbLogger.error('Error al eliminar la imagen de perfil antigua:', { err });
+                }
+            }
 
             return user;
 
