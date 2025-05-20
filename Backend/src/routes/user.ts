@@ -31,6 +31,14 @@ router.delete('/username', UsernameValidator, async (req: Request, res: Response
     await userController.deleteUser(req, res, next);
 });
 
+router.post('/username/profile-picture', UsernameValidator, async (req: Request, res: Response, next: NextFunction) => {
+
+});
+
+router.delete('/username/profile-picture', UsernameValidator, async (req: Request, res: Response, next: NextFunction) => {
+
+});
+
 router.get('/:id', IdValidator, async (req: Request, res: Response, next: NextFunction) => {
     await userController.getUser(req, res, next);
 });
@@ -41,6 +49,14 @@ router.patch('/:id', IdValidator, updateUserValidator, async (req: Request, res:
 
 router.delete('/:id', async (req: Request, res: Response, next: NextFunction) => {
     await userController.deleteUser(req, res, next);
+});
+
+router.post('/:id/profile-picture', IdValidator, async (req: Request, res: Response, next: NextFunction) => {
+
+});
+
+router.delete('/:id/profile-picture', IdValidator, async (req: Request, res: Response, next: NextFunction) => {
+
 });
 
 export default router

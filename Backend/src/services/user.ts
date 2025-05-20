@@ -5,6 +5,7 @@ import { UserFilters, UpdateUserData } from '../types/custom';
 import { Op } from "sequelize";
 
 export class UserService {
+    private readonly imageBasePath: string = '/media/images';
 
     // Método para obtener todos los usuarios - LISTO
     public async getUsers(limit: number = 10, cursor?: string) {
@@ -119,6 +120,56 @@ export class UserService {
             await user.destroy();
 
             return user;
+        } catch (error) {
+            if (error instanceof AppError) {
+                throw error;
+            };
+            throw new AppError(500, 'InternalServerError');
+        };
+    };
+
+    // Método para actualizar la foto de perfil de un usuario
+    public async updateProfilePicture(filters: UserFilters, profilePicture: Express.Multer.File) {
+        try {
+            if (Object.keys(filters).length === 0) {
+                throw new AppError(400, "");
+            };
+
+            const user = await existsUser(filters);
+
+            if (!user) throw new AppError(404, "");
+
+            const imagePath = `${this.imageBasePath}/${profilePicture.filename}`;
+
+            await user.update({ profile_picture: imagePath });
+
+            await user.reload();
+
+            return user;
+        } catch (error) {
+            if (error instanceof AppError) {
+                throw error;
+            };
+            throw new AppError(500, 'InternalServerError');
+        };
+    };
+
+    public async deleteProfilePicture(filters: UserFilters) {
+        try {
+            if (Object.keys(filters).length === 0) {
+                throw new AppError(400, "");
+            };
+
+            const user = await existsUser(filters);
+
+            if (!user) throw new AppError(404, "");
+
+            await user.update({ profile_picture: null });
+
+            await user.reload();
+
+            return user;
+
         } catch (error) {
             if (error instanceof AppError) {
                 throw error;

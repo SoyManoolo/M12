@@ -9,14 +9,17 @@ export class PostService {
     // Guarda la ruta de la carpeta media y las subcarpetas images y videos
     private readonly imageBasePath: string = '/media/images';
     private readonly videoBasePath: string = '/media/videos';
+
     // Método para crear un nuevo post
     public async createPost(user_id: string, description: string, media?: Express.Multer.File) {
         try {
+
             const postData: any = {
                 user_id,
                 description
             }
 
+            // Si hay un archivo multimedia, guardamos la ruta en la base de datos
             if (media) {
                 const basePath = media.mimetype.startsWith('image/')
                     ? this.imageBasePath
@@ -43,7 +46,7 @@ export class PostService {
             if (Object.keys(filters).length === 0) {
                 throw new AppError(400, "");
             };
-            console.log(filters);
+
             const user = await existsUser(filters);
 
             if (!user) throw new AppError(404, "");
