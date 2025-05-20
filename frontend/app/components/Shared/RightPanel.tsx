@@ -23,7 +23,7 @@ interface User {
   name: string;
   surname: string;
   email: string;
-  profile_picture_url: string | null;
+  profile_picture: string | null;
   bio: string | null;
   email_verified: boolean;
   is_moderator: boolean;
@@ -111,60 +111,77 @@ export default function RightPanel({
             <p className="text-gray-400 text-center">{emptyMessage}</p>
           ) : (
             <div className="space-y-2">
-              {displayFriends.map((friend) => (
-                <div key={friend.friendship_id} className="flex items-center justify-between py-2">
-                  <div 
-                    className="flex items-center cursor-pointer hover:bg-gray-800/50 p-2 rounded-lg transition-colors w-full"
-                    onClick={() => handleUserClick(friend.user.username)}
-                  >
-                    <div className="relative">
-                      {friend.user.profile_picture_url ? (
-                        <img 
-                          src={`http://localhost:3000${friend.user.profile_picture_url}`}
-                          alt={friend.user.username}
-                          className="w-12 h-12 rounded-full object-cover border-2 border-gray-800"
-                        />
-                      ) : (
-                        <div className="w-12 h-12 rounded-full border-2 border-gray-800 bg-gray-800 flex items-center justify-center">
-                          <span className="text-gray-400 text-sm">{friend.user.username.charAt(0).toUpperCase()}</span>
-                        </div>
-                      )}
-                      {mode === 'online' && friend.user.is_online && (
-                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-black"></div>
-                      )}
-                    </div>
-                    <div className="ml-4 flex flex-col">
-                      <p className="font-semibold text-white hover:text-blue-400 text-base">{friend.user.username}</p>
-                      <p className="text-sm text-gray-400 hover:text-gray-300">
-                        {friend.user.name} {friend.user.surname}
-                      </p>
-                      {mode === 'suggested' && friend.user.common_friends_count !== undefined && (
-                        <p className="text-xs text-gray-500 mt-1">
-                          {friend.user.common_friends_count} {friend.user.common_friends_count === 1 ? 'amigo' : 'amigos'} en común
+              {displayFriends.map((friend) => {
+                // Debug logs
+                console.log('Friend data:', {
+                  username: friend.user.username,
+                  profile_picture: friend.user.profile_picture,
+                  raw_user: friend.user
+                });
+
+                const imageUrl = friend.user.profile_picture;
+                console.log('Image URL being used:', imageUrl);
+
+                return (
+                  <div key={friend.friendship_id} className="flex items-center justify-between py-2">
+                    <div 
+                      className="flex items-center cursor-pointer hover:bg-gray-800/50 p-2 rounded-lg transition-colors w-full"
+                      onClick={() => handleUserClick(friend.user.username)}
+                    >
+                      <div className="relative">
+                        {imageUrl ? (
+                          <img 
+                            src={imageUrl}
+                            alt={friend.user.username}
+                            className="w-12 h-12 rounded-full object-cover border-2 border-gray-800"
+                            onError={(e) => {
+                              console.error('Error loading image:', imageUrl);
+                              const target = e.target as HTMLImageElement;
+                              target.src = "/default-avatar.png";
+                            }}
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded-full border-2 border-gray-800 bg-gray-800 flex items-center justify-center">
+                            <span className="text-gray-400 text-sm">{friend.user.username.charAt(0).toUpperCase()}</span>
+                          </div>
+                        )}
+                        {mode === 'online' && friend.user.is_online && (
+                          <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-black"></div>
+                        )}
+                      </div>
+                      <div className="ml-4 flex flex-col">
+                        <p className="font-semibold text-white hover:text-blue-400 text-base">{friend.user.username}</p>
+                        <p className="text-sm text-gray-400 hover:text-gray-300">
+                          {friend.user.name} {friend.user.surname}
                         </p>
-                      )}
-                      {mode === 'online' && friend.user.is_online && (
-                        <p className="text-xs text-green-500 mt-1">En línea</p>
-                      )}
+                        {mode === 'suggested' && friend.user.common_friends_count !== undefined && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            {friend.user.common_friends_count} {friend.user.common_friends_count === 1 ? 'amigo' : 'amigos'} en común
+                          </p>
+                        )}
+                        {mode === 'online' && friend.user.is_online && (
+                          <p className="text-xs text-green-500 mt-1">En línea</p>
+                        )}
+                      </div>
                     </div>
+                    {mode === 'suggested' ? (
+                      <button 
+                        onClick={() => onFollow?.(friend.user.user_id)}
+                        className="px-4 py-1.5 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors text-sm cursor-pointer ml-4"
+                      >
+                        Seguir
+                      </button>
+                    ) : (
+                      <Link 
+                        to={`/perfil?username=${friend.user.username}`}
+                        className="text-blue-500 hover:text-blue-400 text-sm cursor-pointer ml-4 whitespace-nowrap"
+                      >
+                        Ver perfil
+                      </Link>
+                    )}
                   </div>
-                  {mode === 'suggested' ? (
-                    <button 
-                      onClick={() => onFollow?.(friend.user.user_id)}
-                      className="px-4 py-1.5 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors text-sm cursor-pointer ml-4"
-                    >
-                      Seguir
-                    </button>
-                  ) : (
-                    <Link 
-                      to={`/perfil?username=${friend.user.username}`}
-                      className="text-blue-500 hover:text-blue-400 text-sm cursor-pointer ml-4 whitespace-nowrap"
-                    >
-                      Ver perfil
-                    </Link>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

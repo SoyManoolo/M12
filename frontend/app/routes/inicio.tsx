@@ -24,7 +24,7 @@
  */
 
 import React from 'react';
-import { useLoaderData, redirect } from "@remix-run/react";
+import { redirect } from "@remix-run/react";
 import Navbar from "~/components/Inicio/Navbar";
 import Post from "~/components/Inicio/Post";
 import RightPanel from "~/components/Shared/RightPanel";
@@ -36,13 +36,6 @@ import { useAuth } from "~/hooks/useAuth";
 import { postService } from "~/services/post.service";
 import { userService } from "~/services/user.service";
 import { useNavigate, useSearchParams } from "@remix-run/react";
-import { environment } from "~/config/environment";
-import { FaSignOutAlt } from 'react-icons/fa';
-import type { UserProfile } from "~/types/user.types";
-import { useMessage } from '../hooks/useMessage';
-import Message from '../components/Shared/Message';
-import { authService } from '../services/auth.service';
-import RedirectModal from '~/components/Shared/RedirectModal';
 import EditPostModal from '~/components/Shared/EditPostModal';
 
 /**
@@ -53,7 +46,7 @@ import EditPostModal from '~/components/Shared/EditPostModal';
  * @property {string} surname - Apellido del usuario
  * @property {string} username - Nombre de usuario único
  * @property {string} email - Correo electrónico del usuario
- * @property {string} profile_picture_url - URL de la imagen de perfil
+ * @property {string} profile_picture - URL de la imagen de perfil
  * @property {string} bio - Biografía del usuario
  * @property {boolean} email_verified - Estado de verificación del email
  * @property {boolean} is_moderator - Indica si el usuario es moderador
@@ -69,7 +62,7 @@ interface User {
   surname: string;
   username: string;
   email: string;
-  profile_picture_url: string | null;
+  profile_picture: string | null;
   bio: string | null;
   email_verified: boolean;
   is_moderator: boolean;
@@ -244,21 +237,14 @@ export default function InicioPage() {
             user2_id: user.user_id,
             created_at: new Date().toISOString(),
             user: {
-              user_id: user.user_id,
-              username: user.username,
-              name: user.name,
-              surname: user.surname,
-              email: user.email,
-              profile_picture_url: user.profile_picture_url ?? null,
+              ...user,
+              profile_picture: user.profile_picture || null,
               bio: user.bio ?? null,
-              email_verified: user.email_verified,
-              is_moderator: user.is_moderator,
               deleted_at: null,
-              created_at: user.created_at,
-              updated_at: user.updated_at,
               active_video_call: false
             }
           }));
+          console.log('Datos transformados de amigos:', friendsData);
           setFriends(friendsData);
         } else {
           console.error('La respuesta de amigos no tiene el formato esperado:', friendsResponse);

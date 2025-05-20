@@ -46,7 +46,7 @@ export interface User {
   name: string;
   surname: string;
   email: string;
-  profile_picture_url: string | null;
+  profile_picture: string | null;
   bio: string | null;
   email_verified: boolean;
   is_moderator: boolean;

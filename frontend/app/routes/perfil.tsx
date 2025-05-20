@@ -161,7 +161,7 @@ export default function Perfil() {
               name: user.name,
               surname: user.surname,
               email: user.email,
-              profile_picture_url: user.profile_picture_url ?? null,
+              profile_picture: user.profile_picture ?? null,
               bio: user.bio ?? null,
               email_verified: user.email_verified,
               is_moderator: user.is_moderator,
