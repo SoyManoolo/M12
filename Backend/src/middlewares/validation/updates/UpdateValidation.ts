@@ -9,8 +9,6 @@ export class UpdateValidation {
                 email: Joi.string().email(),
                 password: Joi.string().min(6),
                 bio: Joi.string(),
-                profile_picture: Joi.string().uri(),
-                // No incluimos name ni surname para que no se puedan actualizar
             }).min(1) // Requiere al menos un campo
         }) (req, res, next);
     }
