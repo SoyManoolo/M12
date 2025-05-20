@@ -18,6 +18,7 @@ import { userService } from '../../services/user.service';
 import { useAuth } from '../../hooks/useAuth.tsx';
 import { useNavigate } from 'react-router-dom';
 import type { User } from '~/types/user.types';
+import ImageZoomModal from '../Shared/ImageZoomModal';
 
 interface UserProfileProps {
     user?: User;
@@ -29,39 +30,21 @@ interface UserProfileProps {
 
 export default function UserProfile({ user, isOwnProfile, onEditProfile }: UserProfileProps) {
     const { token } = useAuth();
-    const navigate = useNavigate();
-    const [error, setError] = useState<string | null>(null);
+    const [showZoomModal, setShowZoomModal] = useState(false);
 
-    if (error) {
-        return (
-            <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
-                <div className="flex items-center justify-center h-32">
-                    <p className="text-red-500">{error}</p>
-                </div>
-            </div>
-        );
-    }
-
-    if (!user) {
-        return (
-            <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
-                <div className="flex items-center justify-center h-32">
-                    <p className="text-gray-400">Cargando perfil...</p>
-                </div>
-            </div>
-        );
-    }
+    if (!user) return null;
 
     return (
         <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
             <div className="flex items-start space-x-6">
                 {/* Foto de perfil */}
                 <div className="relative">
-                    {(user.profile_picture_url || (user as any).profile_picture) ? (
+                    {user.profile_picture ? (
                         <img
-                            src={user.profile_picture_url || (user as any).profile_picture}
+                            src={user.profile_picture}
                             alt={`${user.username} profile`}
-                            className="w-32 h-32 rounded-full object-cover border-4 border-gray-800"
+                            className="w-32 h-32 rounded-full object-cover border-4 border-gray-800 cursor-pointer hover:opacity-90 transition-opacity"
+                            onClick={() => setShowZoomModal(true)}
                             onError={(e) => {
                                 const target = e.target as HTMLImageElement;
                                 target.src = "/default-avatar.png";
@@ -103,6 +86,16 @@ export default function UserProfile({ user, isOwnProfile, onEditProfile }: UserP
                     </div>
                 </div>
             </div>
+
+            {/* Modal de zoom para la imagen de perfil */}
+            {user.profile_picture && (
+                <ImageZoomModal
+                    isOpen={showZoomModal}
+                    onClose={() => setShowZoomModal(false)}
+                    imageUrl={user.profile_picture}
+                    alt={`Foto de perfil de ${user.username}`}
+                />
+            )}
         </div>
     );
 } 
