@@ -131,40 +131,49 @@ export class UserService {
         };
     };
 
+    private deletionLogic(profilePicturePath: string | null) {
+        if (!profilePicturePath) return;
+
+        const rutas = [
+            path.join(process.cwd(), 'Backend', profilePicturePath),
+            path.join(process.cwd(), profilePicturePath),
+            path.join(process.cwd(), 'Backend', 'media', 'images', path.basename(profilePicturePath)),
+            path.join(process.cwd(), 'media', 'images', path.basename(profilePicturePath)),
+        ];
+
+        for (const ruta of rutas) {
+            try {
+                if (fs.existsSync(ruta)) {
+                    fs.unlinkSync(ruta);
+                    dbLogger.info('Archivo eliminado exitosamente en:', { ruta });
+                    break;
+                }
+            } catch (err) {
+                dbLogger.error('Error al eliminar imagen de perfil:', { ruta, err });
+            }
+        }
+    }
+
     // Método para actualizar la foto de perfil de un usuario
     public async updateProfilePicture(filters: UserFilters, profilePicture: Express.Multer.File) {
         try {
             if (Object.keys(filters).length === 0) {
-                throw new AppError(400, "");
+                throw new AppError(400, "Se requieren filtros para identificar al usuario");
             };
 
             const user = await existsUser(filters);
 
-            if (!user) throw new AppError(404, "");
+            if (!user) throw new AppError(404, "Usuario no encontrado");
 
-            const actualImage = user.dataValues.profile_picture;
-
-            // Si el usuario ya tiene una imagen de perfil, la eliminamos
-            if (actualImage) {
-                try {
-                    // Obtener la ruta completa del archivo
-                    const filePath = path.join(process.cwd(), actualImage);
-
-                    // Comprobar si el archivo existe antes de intentar eliminarlo
-                    if (fs.existsSync(filePath)) {
-                        // Eliminar el archivo
-                        fs.unlinkSync(filePath);
-                    }
-                } catch (err) {
-                    // Log del error pero continúa con la actualización
-                    dbLogger.error('Error al eliminar la imagen de perfil antigua:', { err });
-                }
+            // Eliminar la imagen anterior si existe
+            const userData = user.toJSON();
+            if (userData.profile_picture) {
+                this.deletionLogic(userData.profile_picture);
             }
 
+            // Actualizar con la nueva imagen
             const imagePath = `${this.imageBasePath}/${profilePicture.filename}`;
-
             await user.update({ profile_picture: imagePath });
-
             await user.reload();
 
             return user;
@@ -172,50 +181,41 @@ export class UserService {
             if (error instanceof AppError) {
                 throw error;
             };
-            throw new AppError(500, 'InternalServerError');
+            throw new AppError(500, 'Error interno del servidor');
         };
     };
 
+    // Método para eliminar la foto de perfil
     public async deleteProfilePicture(filters: UserFilters) {
         try {
             if (Object.keys(filters).length === 0) {
-                throw new AppError(400, "");
+                throw new AppError(400, "Se requieren filtros para identificar al usuario");
             };
 
             const user = await existsUser(filters);
 
-            if (!user) throw new AppError(404, "");
+            if (!user) throw new AppError(404, "Usuario no encontrado");
 
+            // Guardamos la ruta antes de actualizar
+            const userData = user.toJSON();
+            const oldProfilePicture = userData.profile_picture;
+
+            // Primero eliminamos la referencia en la base de datos
             await user.update({ profile_picture: null });
+
+            // Después eliminamos el archivo físico si existía
+            if (oldProfilePicture) {
+                this.deletionLogic(oldProfilePicture);
+            }
 
             await user.reload();
 
-            const actualImage = user.dataValues.profile_picture;
-
-            // Si el usuario ya tiene una imagen de perfil, la eliminamos
-            if (actualImage) {
-                try {
-                    // Obtener la ruta completa del archivo
-                    const filePath = path.join(process.cwd(), actualImage);
-
-                    // Comprobar si el archivo existe antes de intentar eliminarlo
-                    if (fs.existsSync(filePath)) {
-                        // Eliminar el archivo
-                        fs.unlinkSync(filePath);
-                    }
-                } catch (err) {
-                    // Log del error pero continúa con la actualización
-                    dbLogger.error('Error al eliminar la imagen de perfil antigua:', { err });
-                }
-            }
-
             return user;
-
         } catch (error) {
             if (error instanceof AppError) {
                 throw error;
             };
-            throw new AppError(500, 'InternalServerError');
+            throw new AppError(500, 'Error interno del servidor');
         };
     };
 };
