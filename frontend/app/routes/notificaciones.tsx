@@ -20,10 +20,11 @@ import type { User, Friend } from "~/types/user.types";
 import Navbar from "~/components/Inicio/Navbar";
 import RightPanel from "~/components/Shared/RightPanel";
 import { FaUserFriends, FaComment, FaHeart, FaVideo, FaCheck, FaTimes } from 'react-icons/fa';
+import { useAuth } from "~/hooks/useAuth";
+import { userService } from "~/services/user.service";
 
 interface LoaderData {
   notifications: (Notification & { user: User })[];
-  friends: Friend[];
   currentUser: User;
 }
 
@@ -39,7 +40,7 @@ export const loader = async ({ request }: { request: Request }) => {
       name: "María",
       surname: "García",
       email: "maria@example.com",
-      profile_picture_url: "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg",
+      profile_picture: "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg",
       bio: "¡Hola! Me encanta compartir momentos especiales",
       email_verified: true,
       is_moderator: false,
@@ -47,28 +48,6 @@ export const loader = async ({ request }: { request: Request }) => {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       active_video_call: false
-    };
-
-    const mockFriend: Friend = {
-      friendship_id: "1",
-      user1_id: "1",
-      user2_id: "2",
-      created_at: new Date().toISOString(),
-      user: {
-        user_id: "2",
-        username: "carlos123",
-        name: "Carlos",
-        surname: "Pérez",
-        email: "carlos@example.com",
-        profile_picture_url: "https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg",
-        bio: "Amante de la música",
-        email_verified: true,
-        is_moderator: false,
-        deleted_at: null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        active_video_call: false
-      }
     };
 
     const mockNotifications: (Notification & { user: User })[] = [
@@ -81,7 +60,21 @@ export const loader = async ({ request }: { request: Request }) => {
         is_read: false,
         severity: "info",
         created_at: new Date().toISOString(),
-        user: mockFriend.user
+        user: {
+          user_id: "2",
+          username: "carlos123",
+          name: "Carlos",
+          surname: "Pérez",
+          email: "carlos@example.com",
+          profile_picture: "https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg",
+          bio: "Amante de la música",
+          email_verified: true,
+          is_moderator: false,
+          deleted_at: null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          active_video_call: false
+        }
       },
       {
         notification_id: "2",
@@ -98,7 +91,7 @@ export const loader = async ({ request }: { request: Request }) => {
           name: "Ana",
           surname: "López",
           email: "ana@example.com",
-          profile_picture_url: "https://images.pexels.com/photos/733872/pexels-photo-733872.jpeg",
+          profile_picture: "https://images.pexels.com/photos/733872/pexels-photo-733872.jpeg",
           bio: "Viajera y fotógrafa",
           email_verified: true,
           is_moderator: false,
@@ -112,7 +105,6 @@ export const loader = async ({ request }: { request: Request }) => {
 
     return json<LoaderData>({
       notifications: mockNotifications,
-      friends: [mockFriend],
       currentUser: mockUser
     });
   } catch (error) {
@@ -121,14 +113,59 @@ export const loader = async ({ request }: { request: Request }) => {
 };
 
 export default function Notificaciones(): React.ReactElement {
-  const { notifications, friends } = useLoaderData<LoaderData>();
+  const { notifications, currentUser } = useLoaderData<LoaderData>();
+  const { token } = useAuth();
   const [currentNotifications, setCurrentNotifications] = useState<Notification[]>(notifications);
-  const [currentFriends, setCurrentFriends] = useState<Friend[]>(friends);
+  const [friends, setFriends] = useState<Friend[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchFriends = async () => {
+      if (!token) {
+        setError('Por favor, inicia sesión para ver las notificaciones');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const friendsResponse = await userService.getAllUsers(token);
+        console.log('Respuesta del servidor para amigos:', friendsResponse);
+        if (friendsResponse.success && friendsResponse.data && Array.isArray(friendsResponse.data.users)) {
+          const friendsData = friendsResponse.data.users.map(user => ({
+            friendship_id: user.user_id,
+            user1_id: user.user_id,
+            user2_id: user.user_id,
+            created_at: new Date().toISOString(),
+            user: {
+              ...user,
+              profile_picture: user.profile_picture || null,
+              bio: user.bio ?? null,
+              deleted_at: null,
+              active_video_call: false
+            }
+          }));
+          console.log('Datos transformados de amigos:', friendsData);
+          setFriends(friendsData);
+        } else {
+          console.error('La respuesta de amigos no tiene el formato esperado:', friendsResponse);
+          setFriends([]);
+        }
+      } catch (err) {
+        console.error('Error al cargar los amigos:', err);
+        setError('Error al cargar la lista de amigos');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFriends();
+  }, [token]);
 
   const handleAcceptFriend = async (friendshipId: string) => {
     try {
       console.log('Aceptando solicitud de amistad:', friendshipId);
-      setCurrentFriends(prev =>
+      setFriends(prev =>
         prev.map(friend =>
           friend.friendship_id === friendshipId
             ? { ...friend, status: 'accepted' }
@@ -143,7 +180,7 @@ export default function Notificaciones(): React.ReactElement {
   const handleRejectFriend = async (friendshipId: string) => {
     try {
       console.log('Rechazando solicitud de amistad:', friendshipId);
-      setCurrentFriends(prev =>
+      setFriends(prev =>
         prev.filter(friend => friend.friendship_id !== friendshipId)
       );
     } catch (error) {

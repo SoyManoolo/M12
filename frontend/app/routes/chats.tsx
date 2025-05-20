@@ -9,13 +9,15 @@
  * @module Chats
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { redirect } from '@remix-run/node';
 import type { MetaFunction } from '@remix-run/node';
 import Navbar from '~/components/Inicio/Navbar';
 import ChatItem from '~/components/Chats/ChatItem';
 import RightPanel from '~/components/Shared/RightPanel';
 import { FaSearch, FaEnvelope } from 'react-icons/fa';
+import { useAuth } from "~/hooks/useAuth";
+import { userService } from "~/services/user.service";
 
 export const meta: MetaFunction = () => {
   return [
@@ -45,8 +47,34 @@ interface Chat {
   unread_count: number;
 }
 
+interface Friend {
+  friendship_id: string;
+  user1_id: string;
+  user2_id: string;
+  created_at: string;
+  user: {
+    user_id: string;
+    username: string;
+    name: string;
+    surname: string;
+    email: string;
+    profile_picture: string | null;
+    bio: string | null;
+    email_verified: boolean;
+    is_moderator: boolean;
+    deleted_at: string | null;
+    created_at: string;
+    updated_at: string;
+    active_video_call: boolean;
+  };
+}
+
 export default function Chats() {
+  const { token } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
+  const [friends, setFriends] = useState<Friend[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   
   // Mock de datos de chats para la interfaz
   const mockChats: Chat[] = [
@@ -78,39 +106,47 @@ export default function Chats() {
     }
   ];
 
-  // Mock de datos de amigos en línea
-  const mockOnlineFriends = [
-    {
-      user_id: '1',
-      username: 'usuario1',
-      name: 'Usuario',
-      surname: 'Uno',
-      email: 'usuario1@example.com',
-      profile_picture_url: 'https://i.pravatar.cc/150?img=1',
-      bio: null,
-      email_verified: true,
-      is_moderator: false,
-      deleted_at: null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      active_video_call: false
-    },
-    {
-      user_id: '2',
-      username: 'usuario2',
-      name: 'Usuario',
-      surname: 'Dos',
-      email: 'usuario2@example.com',
-      profile_picture_url: 'https://i.pravatar.cc/150?img=2',
-      bio: null,
-      email_verified: true,
-      is_moderator: false,
-      deleted_at: null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      active_video_call: false
-    }
-  ];
+  useEffect(() => {
+    const fetchFriends = async () => {
+      if (!token) {
+        setError('Por favor, inicia sesión para ver los chats');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const friendsResponse = await userService.getAllUsers(token);
+        console.log('Respuesta del servidor para amigos:', friendsResponse);
+        if (friendsResponse.success && friendsResponse.data && Array.isArray(friendsResponse.data.users)) {
+          const friendsData = friendsResponse.data.users.map(user => ({
+            friendship_id: user.user_id,
+            user1_id: user.user_id,
+            user2_id: user.user_id,
+            created_at: new Date().toISOString(),
+            user: {
+              ...user,
+              profile_picture: user.profile_picture || null,
+              bio: user.bio ?? null,
+              deleted_at: null,
+              active_video_call: false
+            }
+          }));
+          console.log('Datos transformados de amigos:', friendsData);
+          setFriends(friendsData);
+        } else {
+          console.error('La respuesta de amigos no tiene el formato esperado:', friendsResponse);
+          setFriends([]);
+        }
+      } catch (err) {
+        console.error('Error al cargar los amigos:', err);
+        setError('Error al cargar la lista de amigos');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFriends();
+  }, [token]);
 
   // Filtrar chats basado en la búsqueda
   const filteredChats = mockChats.filter(chat =>
@@ -187,13 +223,7 @@ export default function Chats() {
 
       {/* Panel lateral derecho */}
       <RightPanel
-        friends={mockOnlineFriends.map(user => ({
-          friendship_id: user.user_id,
-          user1_id: user.user_id,
-          user2_id: user.user_id,
-          created_at: new Date().toISOString(),
-          user
-        }))}
+        friends={friends}
         mode="online"
       />
     </div>
