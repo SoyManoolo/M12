@@ -23,20 +23,18 @@
  * @constant MOCK_SUGGESTED_USERS - Array de usuarios sugeridos de ejemplo
  */
 
-import React from 'react';
-import { redirect } from "@remix-run/react";
+import { useState, useEffect } from "react";
+import { redirect, useNavigate, useSearchParams } from "@remix-run/react";
+import { json } from "@remix-run/node";
 import Navbar from "~/components/Inicio/Navbar";
 import Post from "~/components/Inicio/Post";
 import RightPanel from "~/components/Shared/RightPanel";
 import ConfirmModal from "~/components/Shared/ConfirmModal";
 import Notification from "~/components/Shared/Notification";
-import { useState, useEffect } from "react";
-import { json } from "@remix-run/node";
+import EditPostModal from '~/components/Shared/EditPostModal';
 import { useAuth } from "~/hooks/useAuth";
 import { postService } from "~/services/post.service";
 import { userService } from "~/services/user.service";
-import { useNavigate, useSearchParams } from "@remix-run/react";
-import EditPostModal from '~/components/Shared/EditPostModal';
 
 /**
  * @interface User
