@@ -321,14 +321,14 @@ export default function ConfiguracionPage() {
                     <img
                       src={user?.profile_picture || "/default-avatar.png"}
                       alt="Foto de perfil"
-                      className="w-full h-full rounded-full object-cover border-4 border-gray-700 shadow-lg transition-transform duration-300 group-hover:scale-105"
+                      className="w-full h-full rounded-full object-cover border-4 border-gray-700 shadow-lg transition-all duration-300 group-hover:blur-sm"
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
                         target.src = "/default-avatar.png";
                       }}
                     />
                     {/* Overlay con botones (visible al hover) */}
-                    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
                       <div className="flex flex-col space-y-3">
                         <label className="px-4 py-2 bg-blue-600 text-white rounded-lg cursor-pointer hover:bg-blue-700 transition-colors text-sm shadow-lg transform hover:scale-105">
                           Cambiar foto
