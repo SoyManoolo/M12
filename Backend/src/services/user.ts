@@ -3,6 +3,9 @@ import { AppError } from "../middlewares/errors/AppError";
 import { existsUser } from "../utils/modelExists";
 import { UserFilters, UpdateUserData } from '../types/custom';
 import { Op } from "sequelize";
+import path from "path";
+import fs from "fs";
+import dbLogger from "../config/logger";
 
 export class UserService {
     private readonly imageBasePath: string = '/media/images';
@@ -138,6 +141,25 @@ export class UserService {
             const user = await existsUser(filters);
 
             if (!user) throw new AppError(404, "");
+
+            const actualImage = user.dataValues.profile_picture;
+
+            // Si el usuario ya tiene una imagen de perfil, la eliminamos
+            if (actualImage) {
+                try {
+                    // Obtener la ruta completa del archivo
+                    const filePath = path.join(process.cwd(), actualImage);
+
+                    // Comprobar si el archivo existe antes de intentar eliminarlo
+                    if (fs.existsSync(filePath)) {
+                        // Eliminar el archivo
+                        fs.unlinkSync(filePath);
+                    }
+                } catch (err) {
+                    // Log del error pero continúa con la actualización
+                    dbLogger.error('Error al eliminar la imagen de perfil antigua:', {err});
+                }
+            }
 
             const imagePath = `${this.imageBasePath}/${profilePicture.filename}`;
 
