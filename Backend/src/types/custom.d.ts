@@ -19,7 +19,6 @@ export interface UpdateUserData {
     email?: string;
     password?: string;
     bio?: string;
-    profile_picture?: string;
 }
 
 export {};

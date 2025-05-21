@@ -3,8 +3,9 @@ import { AppError } from "../middlewares/errors/AppError";
 import { existsUser } from "../utils/modelExists";
 import { UserFilters, UpdateUserData } from '../types/custom';
 import { Op } from "sequelize";
-import fs from 'fs';
-import path from 'path';
+import path from "path";
+import fs from "fs";
+import dbLogger from "../config/logger";
 
 export class UserService {
     private readonly imageBasePath: string = '/media/images';
@@ -130,81 +131,91 @@ export class UserService {
         };
     };
 
-    // Función privada para eliminar la foto de perfil física
-    private eliminarFotoPerfil(profile_picture: string) {
-        if (!profile_picture) return;
+    private deletionLogic(profilePicturePath: string | null) {
+        if (!profilePicturePath) return;
+
         const rutas = [
-            path.join(process.cwd(), 'Backend', profile_picture),
-            path.join(process.cwd(), profile_picture),
-            path.join(process.cwd(), 'Backend', 'media', 'images', path.basename(profile_picture)),
-            path.join(process.cwd(), 'media', 'images', path.basename(profile_picture)),
+            path.join(process.cwd(), 'Backend', profilePicturePath),
+            path.join(process.cwd(), profilePicturePath),
+            path.join(process.cwd(), 'Backend', 'media', 'images', path.basename(profilePicturePath)),
+            path.join(process.cwd(), 'media', 'images', path.basename(profilePicturePath)),
         ];
+
         for (const ruta of rutas) {
             try {
                 if (fs.existsSync(ruta)) {
                     fs.unlinkSync(ruta);
-                    console.log('Archivo eliminado exitosamente en:', ruta);
+                    dbLogger.info('Archivo eliminado exitosamente en:', { ruta });
                     break;
-                } else {
-                    console.log('No existe archivo en:', ruta);
                 }
-            } catch (error) {
-                console.error('Error al intentar eliminar en', ruta, error);
+            } catch (err) {
+                dbLogger.error('Error al eliminar imagen de perfil:', { ruta, err });
             }
         }
     }
 
-    // Método para actualizar la foto de perfil
-    public async updateProfilePicture(user_id: string, file: Express.Multer.File) {
+    // Método para actualizar la foto de perfil de un usuario
+    public async updateProfilePicture(filters: UserFilters, profilePicture: Express.Multer.File) {
         try {
-            console.log('Buscando usuario:', user_id);
-            const user = await existsUser({ user_id });
-            if (!user) throw new AppError(404, "UserNotFound");
+            if (Object.keys(filters).length === 0) {
+                throw new AppError(400, "Se requieren filtros para identificar al usuario");
+            };
 
+            const user = await existsUser(filters);
+
+            if (!user) throw new AppError(404, "Usuario no encontrado");
+
+            // Eliminar la imagen anterior si existe
             const userData = user.toJSON();
-            console.log('Usuario encontrado:', userData);
-            console.log('Tipo de profile_picture:', typeof userData.profile_picture);
-            console.log('Valor de profile_picture:', userData.profile_picture);
-
-            // Eliminar la foto anterior si existe
             if (userData.profile_picture) {
-                this.eliminarFotoPerfil(userData.profile_picture);
+                this.deletionLogic(userData.profile_picture);
             }
 
-            // Actualizar la ruta de la nueva foto de perfil
-            const profilePicturePath = `${this.imageBasePath}/${file.filename}`;
-            console.log('Nueva foto:', profilePicturePath);
-            await user.update({ profile_picture: profilePicturePath });
-            await user.reload(); // Recargar el usuario para obtener los datos actualizados
+            // Actualizar con la nueva imagen
+            const imagePath = `${this.imageBasePath}/${profilePicture.filename}`;
+            await user.update({ profile_picture: imagePath });
+            await user.reload();
 
             return user;
         } catch (error) {
-            console.error('Error en updateProfilePicture:', error);
             if (error instanceof AppError) {
                 throw error;
-            }
-            throw new AppError(500, 'InternalServerError');
-        }
-    }
+            };
+            throw new AppError(500, 'Error interno del servidor');
+        };
+    };
 
     // Método para eliminar la foto de perfil
-    public async deleteProfilePicture(user_id: string) {
+    public async deleteProfilePicture(filters: UserFilters) {
         try {
-            const user = await existsUser({ user_id });
-            if (!user) throw new AppError(404, "UserNotFound");
+            if (Object.keys(filters).length === 0) {
+                throw new AppError(400, "Se requieren filtros para identificar al usuario");
+            };
 
+            const user = await existsUser(filters);
+
+            if (!user) throw new AppError(404, "Usuario no encontrado");
+
+            // Guardamos la ruta antes de actualizar
             const userData = user.toJSON();
-            if (userData.profile_picture) {
-                this.eliminarFotoPerfil(userData.profile_picture);
-                await user.update({ profile_picture: null });
+            const oldProfilePicture = userData.profile_picture;
+
+            // Primero eliminamos la referencia en la base de datos
+            await user.update({ profile_picture: null });
+
+            // Después eliminamos el archivo físico si existía
+            if (oldProfilePicture) {
+                this.deletionLogic(oldProfilePicture);
             }
+
+            await user.reload();
 
             return user;
         } catch (error) {
             if (error instanceof AppError) {
                 throw error;
-            }
-            throw new AppError(500, 'InternalServerError');
-        }
-    }
+            };
+            throw new AppError(500, 'Error interno del servidor');
+        };
+    };
 };
