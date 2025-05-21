@@ -4,6 +4,8 @@ import { UserService } from "../services/user";
 import { UserController } from "../controllers/user";
 import { UpdateValidation } from "../middlewares/validation/updates/UpdateValidation";
 import { UserValidator } from "../middlewares/validation/user/UserValidator";
+import { AuthToken } from "../middlewares/validation/authentication/jwt";
+import upload from "../middlewares/multer";
 
 const router = express.Router();
 const userService = new UserService();
@@ -31,12 +33,12 @@ router.delete('/username', UsernameValidator, async (req: Request, res: Response
     await userController.deleteUser(req, res, next);
 });
 
-router.post('/username/profile-picture', UsernameValidator, async (req: Request, res: Response, next: NextFunction) => {
-
+router.post('/username/profile-picture', AuthToken.verifyToken, UsernameValidator, upload.single('media'), async (req: Request, res: Response, next: NextFunction) => {
+    await userController.uploadProfilePicture(req, res, next);
 });
 
-router.delete('/username/profile-picture', UsernameValidator, async (req: Request, res: Response, next: NextFunction) => {
-
+router.delete('/username/profile-picture', AuthToken.verifyToken, UsernameValidator, async (req: Request, res: Response, next: NextFunction) => {
+    await userController.deleteProfilePicture(req, res, next);
 });
 
 router.get('/:id', IdValidator, async (req: Request, res: Response, next: NextFunction) => {
@@ -51,12 +53,12 @@ router.delete('/:id', async (req: Request, res: Response, next: NextFunction) =>
     await userController.deleteUser(req, res, next);
 });
 
-router.post('/:id/profile-picture', IdValidator, async (req: Request, res: Response, next: NextFunction) => {
-
+router.post('/:id/profile-picture', AuthToken.verifyToken, IdValidator, upload.single('media'), async (req: Request, res: Response, next: NextFunction) => {
+    await userController.uploadProfilePicture(req, res, next);
 });
 
-router.delete('/:id/profile-picture', IdValidator, async (req: Request, res: Response, next: NextFunction) => {
-
+router.delete('/:id/profile-picture', AuthToken.verifyToken, IdValidator, async (req: Request, res: Response, next: NextFunction) => {
+    await userController.deleteProfilePicture(req, res, next);
 });
 
 export default router
