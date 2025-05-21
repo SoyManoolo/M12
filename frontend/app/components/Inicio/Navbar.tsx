@@ -14,8 +14,9 @@
 
 // src/components/Navbar.tsx
 import { Link, useNavigate } from "@remix-run/react";
-import { FaVideo, FaUpload, FaBell, FaEnvelope, FaCog, FaUser } from 'react-icons/fa';
+import { FaVideo, FaUpload, FaBell, FaEnvelope, FaCog, FaUser, FaShieldAlt, FaNewspaper, FaUsers, FaChartBar, FaChevronDown } from 'react-icons/fa';
 import { useAuth } from "~/hooks/useAuth";
+import { useState } from 'react';
 
 /**
  * Componente principal de la barra de navegación
@@ -25,6 +26,7 @@ import { useAuth } from "~/hooks/useAuth";
 export default function Navbar() {
   const navigate = useNavigate();
   const { token } = useAuth();
+  const [isAdminOpen, setIsAdminOpen] = useState(false);
 
   const handleProfileClick = () => {
     // Navegar al perfil sin parámetros
@@ -100,6 +102,50 @@ export default function Navbar() {
           <FaUser className="text-xl" />
           <span className="tracking-wider">PERFIL</span>
         </Link>
+
+        {/* Menú de administración */}
+        <div className="mt-auto">
+          {/* Botón principal de administración */}
+          <button
+            onClick={() => setIsAdminOpen(!isAdminOpen)}
+            className="flex items-center justify-between w-full p-2 rounded hover:bg-gray-800/50 cursor-pointer text-gray-400 hover:text-white group"
+          >
+            <div className="flex items-center space-x-3">
+              <FaShieldAlt className="text-xl" />
+              <span className="tracking-wider">ADMINISTRACIÓN</span>
+            </div>
+            <FaChevronDown className={`text-sm transition-transform ${isAdminOpen ? 'rotate-180' : ''}`} />
+          </button>
+
+          {/* Submenú de administración */}
+          {isAdminOpen && (
+            <div className="mt-2 ml-4 space-y-2 border-l border-gray-800 pl-4">
+              <Link 
+                to="/admin/publicaciones"
+                className="flex items-center space-x-3 text-gray-400 hover:text-white w-full p-2 rounded hover:bg-gray-800/50 cursor-pointer"
+              >
+                <FaNewspaper className="text-lg" />
+                <span className="tracking-wider text-sm">Publicaciones</span>
+              </Link>
+
+              <Link 
+                to="/admin/usuarios"
+                className="flex items-center space-x-3 text-gray-400 hover:text-white w-full p-2 rounded hover:bg-gray-800/50 cursor-pointer"
+              >
+                <FaUsers className="text-lg" />
+                <span className="tracking-wider text-sm">Usuarios</span>
+              </Link>
+
+              <Link 
+                to="/admin/estadisticas"
+                className="flex items-center space-x-3 text-gray-400 hover:text-white w-full p-2 rounded hover:bg-gray-800/50 cursor-pointer"
+              >
+                <FaChartBar className="text-lg" />
+                <span className="tracking-wider text-sm">Estadísticas</span>
+              </Link>
+            </div>
+          )}
+        </div>
       </nav>
     </div>
   );
