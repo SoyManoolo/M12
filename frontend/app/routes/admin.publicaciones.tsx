@@ -67,7 +67,7 @@ function PostDetailModal({ isOpen, onClose, post, onImageClick }: PostDetailModa
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={onClose}>
       <div className="bg-gray-900 rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] mx-4 p-0 relative overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
         <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl z-10">&times;</button>
-        <div className="flex items-center gap-3 p-6 border-b border-gray-800 bg-gray-900">
+        <div className="flex items-center gap-3 p-6 border-b border-gray-800 bg-gray-900 cursor-pointer" onClick={() => { window.location.href = `/perfil?username=${post.author.username}`; }}>
           <img src={post.author.profile_picture || '/images/default-avatar.png'} alt={post.author.username} className="w-12 h-12 rounded-full" />
           <div className="flex flex-col">
             <span className="font-semibold text-lg">{post.author.name}</span>
