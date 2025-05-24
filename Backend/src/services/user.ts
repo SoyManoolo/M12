@@ -6,6 +6,7 @@ import { Op } from "sequelize";
 import path from "path";
 import fs from "fs";
 import dbLogger from "../config/logger";
+import { hash } from "bcryptjs";
 
 export class UserService {
     private readonly imageBasePath: string = '/media/images';
@@ -97,6 +98,11 @@ export class UserService {
 
             const user = await existsUser(filters);
             if (!user) throw new AppError(404, "");
+
+            // Si se va a actualizar la contraseña, hashearla antes de guardar
+            if (updateData.password) {
+                updateData.password = await hash(updateData.password, 10);
+            }
 
             const newUser = await user.update(updateData);
 

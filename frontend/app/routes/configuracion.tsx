@@ -98,6 +98,8 @@ export default function ConfiguracionPage() {
   });
   const [userId, setUserId] = useState<string>('');
   const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
+  const [showCountdownModal, setShowCountdownModal] = useState(false);
+  const [countdown, setCountdown] = useState(3);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -146,6 +148,18 @@ export default function ConfiguracionPage() {
 
     fetchUserData();
   }, [token, navigate]);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (showCountdownModal && countdown > 0) {
+      timer = setTimeout(() => {
+        setCountdown(countdown - 1);
+      }, 1000);
+    } else if (countdown === 0) {
+      handleLogout();
+    }
+    return () => clearTimeout(timer);
+  }, [showCountdownModal, countdown]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -209,7 +223,7 @@ export default function ConfiguracionPage() {
       if (response.success) {
         // Si se actualizaron datos sensibles (email, username o password)
         if (requestBody.email || requestBody.username || requestBody.password) {
-          setShowRedirectModal(true);
+          setShowCountdownModal(true);
         } else {
           // Si solo se actualizó la bio u otros datos no sensibles
           setNotification({
@@ -459,7 +473,7 @@ export default function ConfiguracionPage() {
                   <button
                     type="submit"
                     onClick={handleSubmit}
-                    className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-lg transform hover:scale-105"
+                    className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-lg transform hover:scale-105 cursor-pointer"
                   >
                     Guardar cambios
                   </button>
@@ -467,7 +481,7 @@ export default function ConfiguracionPage() {
                     <button
                       type="button"
                       onClick={handleLogout}
-                      className="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors shadow-lg transform hover:scale-105 flex items-center justify-center space-x-2"
+                      className="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors shadow-lg transform hover:scale-105 flex items-center justify-center space-x-2 cursor-pointer"
                     >
                       <FaSignOutAlt />
                       <span>Cerrar sesión</span>
@@ -475,7 +489,7 @@ export default function ConfiguracionPage() {
                     <button
                       type="button"
                       onClick={handleDeleteProfile}
-                      className="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors shadow-lg transform hover:scale-105 flex items-center justify-center space-x-2"
+                      className="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors shadow-lg transform hover:scale-105 flex items-center justify-center space-x-2 cursor-pointer"
                     >
                       <FaTrash />
                       <span>Eliminar cuenta</span>
@@ -504,6 +518,15 @@ export default function ConfiguracionPage() {
           type={notification.type}
           onClose={() => setNotification(null)}
         />
+      )}
+
+      {showCountdownModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-gray-900 p-6 rounded-lg shadow-lg text-center">
+            <h2 className="text-2xl font-bold mb-4">Cambio exitoso</h2>
+            <p className="text-xl mb-4">Serás redirigido a la página de login en {countdown} segundos...</p>
+          </div>
+        </div>
       )}
     </div>
   );
