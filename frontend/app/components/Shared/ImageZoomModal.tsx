@@ -41,7 +41,16 @@ export default function ImageZoomModal({
     if (isOpen) {
       setZoom(1);
       setPosition({ x: 0, y: 0 });
+      // Deshabilitar scroll en el body cuando el modal está abierto
+      document.body.style.overflow = 'hidden';
+    } else {
+      // Habilitar scroll en el body cuando el modal está cerrado
+      document.body.style.overflow = '';
     }
+    // Limpiar el efecto cuando el componente se desmonte
+    return () => {
+      document.body.style.overflow = '';
+    };
   }, [isOpen]);
 
   const handleZoomIn = () => {
