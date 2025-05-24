@@ -18,6 +18,7 @@ import { useState } from 'react';
 import { FaHeart, FaRegHeart, FaBookmark, FaRegBookmark, FaShare, FaComment, FaTimes, FaTrash, FaPencilAlt } from 'react-icons/fa';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
+import ImageZoomModal from '~/components/Shared/ImageZoomModal';
 
 /**
  * Interfaz que define la estructura de datos de una publicación
@@ -47,6 +48,7 @@ interface PostProps {
   currentUserId?: string; // ID del usuario actual
   onDelete?: (postId: string) => void; // Función para eliminar el post
   onEdit?: (postId: string) => void; // Nueva prop para manejar la edición
+  onImageClick: (imageUrl: string) => void; // Nueva prop para abrir el modal de zoom
 }
 
 /**
@@ -68,7 +70,8 @@ export default function Post({
   onSave,
   currentUserId,
   onDelete,
-  onEdit
+  onEdit,
+  onImageClick
 }: PostProps) {
   // Estados para controlar las interacciones del usuario
   const [isLiked, setIsLiked] = useState(false);
@@ -97,14 +100,19 @@ export default function Post({
    */
   const handleImageClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    setIsExpanded(true);
+    if (media_url) {
+      onImageClick(media_url);
+    }
   };
 
   /**
    * Manejador para cerrar el modal de imagen expandida
    */
   const handleCloseModal = () => {
-    setIsExpanded(false);
+    // Eliminar lógica antigua de modal local
+    // setIsExpanded(false);
+    // setShowImageZoomModal(false);
+    // onClose(); // Si onClose es una prop relevante del modal anterior
   };
 
   /**
@@ -351,29 +359,17 @@ export default function Post({
       </div>
 
       {/* Modal para imagen expandida */}
-      {isExpanded && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
-          onClick={handleCloseModal}
-        >
-          <div 
-            className="relative max-w-4xl max-h-[90vh]"
-            onClick={e => e.stopPropagation()}
-          >
-            <button 
-              onClick={handleCloseModal}
-              className="absolute top-4 right-4 text-white hover:text-gray-300 z-50"
-            >
-              <FaTimes className="text-2xl" />
-            </button>
-            <img 
-              src={media_url}
-              alt="Contenido expandido"
-              className="max-w-full max-h-[90vh] object-contain"
-            />
-          </div>
-        </div>
+      {/* Eliminar completamente el modal local */}
+      {/*
+      {media_url && (
+        <ImageZoomModal
+          isOpen={showImageZoomModal}
+          onClose={handleCloseModal}
+          imageUrl={media_url}
+          alt="Contenido del post"
+        />
       )}
+      */}
     </>
   );
 } 

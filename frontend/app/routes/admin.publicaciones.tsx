@@ -43,6 +43,72 @@ interface Post {
   }>;
 }
 
+interface PostDetailModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  post: Post | null;
+  onImageClick: (imageUrl: string) => void;
+}
+
+function PostDetailModal({ isOpen, onClose, post, onImageClick }: PostDetailModalProps) {
+  if (!isOpen || !post) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-gray-900 rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] mx-4 p-0 relative overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
+        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl z-10">&times;</button>
+        <div className="flex items-center gap-3 p-6 border-b border-gray-800 bg-gray-900">
+          <img src={post.author.profile_picture || '/images/default-avatar.png'} alt={post.author.username} className="w-12 h-12 rounded-full" />
+          <div className="flex flex-col">
+            <span className="font-semibold text-lg">{post.author.name}</span>
+            <span className="text-xs text-gray-400">@{post.author.username}</span>
+          </div>
+        </div>
+        {post.media && (
+          <div 
+            className="w-full flex items-center justify-center bg-black cursor-zoom-in" 
+            style={{minHeight: '400px', maxHeight: '50vh'}} 
+            onClick={() => {
+              onClose();
+              onImageClick(post.media);
+            }}
+          >
+            <img src={post.media} alt="Imagen publicación" className="max-h-[50vh] w-auto object-contain" />
+          </div>
+        )}
+        <div className="flex-1 overflow-y-auto p-6 bg-gray-900">
+          <p className="text-gray-200 whitespace-pre-line mb-4 text-base break-words">{post.description}</p>
+          <div className="flex items-center justify-between text-xs text-gray-400 mb-2">
+            <div className="flex gap-3">
+              <span>❤️ {post.likes_count}</span>
+              <span>💬 {post.comments?.length || 0}</span>
+            </div>
+            <span className="text-gray-500">
+              {new Date(post.created_at).toLocaleDateString('es-ES', {
+                day: '2-digit',
+                month: '2-digit',
+                year: '2-digit'
+              })}
+            </span>
+          </div>
+          {post.comments && post.comments.length > 0 && (
+            <div className="mt-4">
+              <h4 className="text-sm font-semibold text-gray-300 mb-2">Comentarios</h4>
+              <ul className="max-h-40 overflow-y-auto pr-2">
+                {post.comments.map((c) => (
+                  <li key={c.comment_id} className="mb-2 border-b border-gray-800 pb-2">
+                    <span className="font-semibold text-gray-200">@{c.username}: </span>
+                    <span className="text-gray-300">{c.content}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminPublicaciones() {
   const { token } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
@@ -60,6 +126,8 @@ export default function AdminPublicaciones() {
   } | null>(null);
   const [showPostModal, setShowPostModal] = useState(false);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+  const [showGlobalImageZoomModal, setShowGlobalImageZoomModal] = useState(false);
+  const [globalZoomImageUrl, setGlobalZoomImageUrl] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -375,7 +443,22 @@ export default function AdminPublicaciones() {
         currentDescription={postToEdit?.description || ''}
       />
 
-      <PostDetailModal isOpen={showPostModal} onClose={() => setShowPostModal(false)} post={selectedPost} />
+      <PostDetailModal 
+        isOpen={showPostModal} 
+        onClose={() => setShowPostModal(false)} 
+        post={selectedPost} 
+        onImageClick={(imageUrl) => {
+          setGlobalZoomImageUrl(imageUrl);
+          setShowGlobalImageZoomModal(true);
+        }}
+      />
+
+      <ImageZoomModal
+        isOpen={showGlobalImageZoomModal}
+        onClose={() => setShowGlobalImageZoomModal(false)}
+        imageUrl={globalZoomImageUrl}
+        alt="Imagen de la publicación ampliada"
+      />
 
       {notification && (
         <Notification
@@ -384,66 +467,6 @@ export default function AdminPublicaciones() {
           onClose={() => setNotification(null)}
         />
       )}
-    </div>
-  );
-}
-
-// Nuevo componente Modal para ver publicación completa
-function PostDetailModal({ isOpen, onClose, post }: { isOpen: boolean, onClose: () => void, post: Post | null }) {
-  const [showZoom, setShowZoom] = useState(false);
-  if (!isOpen || !post) return null;
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-gray-900 rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] mx-4 p-0 relative overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
-        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl z-10">&times;</button>
-        {/* Cabecera */}
-        <div className="flex items-center gap-3 p-6 border-b border-gray-800 bg-gray-900">
-          <img src={post.author.profile_picture || '/images/default-avatar.png'} alt={post.author.username} className="w-12 h-12 rounded-full" />
-          <div className="flex flex-col">
-            <span className="font-semibold text-lg">{post.author.name}</span>
-            <span className="text-xs text-gray-400">@{post.author.username}</span>
-          </div>
-        </div>
-        {/* Imagen grande con opción de zoom */}
-        {post.media && (
-          <div className="w-full flex items-center justify-center bg-black cursor-zoom-in" style={{minHeight: '400px', maxHeight: '50vh'}} onClick={() => setShowZoom(true)}>
-            <img src={post.media} alt="Imagen publicación" className="max-h-[50vh] w-auto object-contain" />
-          </div>
-        )}
-        {/* Descripción y pie, scrollable si es necesario */}
-        <div className="flex-1 overflow-y-auto p-6 bg-gray-900">
-          <p className="text-gray-200 whitespace-pre-line mb-4 text-base break-words">{post.description}</p>
-          <div className="flex items-center justify-between text-xs text-gray-400 mb-2">
-            <div className="flex gap-3">
-              <span>❤️ {post.likes_count}</span>
-              <span>💬 {post.comments?.length || 0}</span>
-            </div>
-            <span className="text-gray-500">
-              {new Date(post.created_at).toLocaleDateString('es-ES', {
-                day: '2-digit',
-                month: '2-digit',
-                year: '2-digit'
-              })}
-            </span>
-          </div>
-          {/* Comentarios (si existen) */}
-          {post.comments && post.comments.length > 0 && (
-            <div className="mt-4">
-              <h4 className="text-sm font-semibold text-gray-300 mb-2">Comentarios</h4>
-              <ul className="max-h-40 overflow-y-auto pr-2">
-                {post.comments.map((c) => (
-                  <li key={c.comment_id} className="mb-2 border-b border-gray-800 pb-2">
-                    <span className="font-semibold text-gray-200">@{c.username}: </span>
-                    <span className="text-gray-300">{c.content}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-        {/* Modal de zoom de imagen */}
-        <ImageZoomModal isOpen={showZoom} onClose={() => setShowZoom(false)} imageUrl={post.media} alt="Imagen publicación" />
-      </div>
     </div>
   );
 } 

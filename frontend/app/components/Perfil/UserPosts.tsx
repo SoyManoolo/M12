@@ -11,6 +11,8 @@
 
 import Post from '~/components/Inicio/Post';
 import { useAuth } from '~/hooks/useAuth';
+import ImageZoomModal from '~/components/Shared/ImageZoomModal';
+import { useState } from 'react';
 
 // Función para decodificar el token JWT
 const decodeToken = (token: string) => {
@@ -79,6 +81,10 @@ export default function UserPosts({ posts = [], onLike, onSave, onDelete, onEdit
   const { token } = useAuth();
   let currentUserId: string | undefined = undefined;
   
+  // Estados para el ImageZoomModal global
+  const [showImageZoomModal, setShowImageZoomModal] = useState(false);
+  const [zoomImageUrl, setZoomImageUrl] = useState('');
+
   if (token) {
     const decodedToken = decodeToken(token);
     currentUserId = decodedToken?.id;
@@ -119,8 +125,18 @@ export default function UserPosts({ posts = [], onLike, onSave, onDelete, onEdit
           onDelete={() => onDelete(post.post_id)}
           onEdit={() => onEdit(post.post_id)}
           currentUserId={currentUserId}
+          onImageClick={(imageUrl) => {
+            setZoomImageUrl(imageUrl);
+            setShowImageZoomModal(true);
+          }}
         />
       ))}
+      <ImageZoomModal
+        isOpen={showImageZoomModal}
+        onClose={() => setShowImageZoomModal(false)}
+        imageUrl={zoomImageUrl}
+        alt="Imagen de la publicación ampliada"
+      />
     </div>
   );
 } 

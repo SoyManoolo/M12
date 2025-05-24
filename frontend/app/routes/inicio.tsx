@@ -32,6 +32,7 @@ import RightPanel from "~/components/Shared/RightPanel";
 import ConfirmModal from "~/components/Shared/ConfirmModal";
 import Notification from "~/components/Shared/Notification";
 import EditPostModal from '~/components/Shared/EditPostModal';
+import ImageZoomModal from '~/components/Shared/ImageZoomModal';
 import { useAuth } from "~/hooks/useAuth";
 import { postService } from "~/services/post.service";
 import { userService } from "~/services/user.service";
@@ -187,6 +188,10 @@ export default function InicioPage() {
     type: 'success' | 'error';
   } | null>(null);
   let currentUserId: string | undefined = undefined;
+
+  // Estados para el ImageZoomModal global
+  const [showImageZoomModal, setShowImageZoomModal] = useState(false);
+  const [zoomImageUrl, setZoomImageUrl] = useState('');
 
   if (token) {
     const decodedToken = decodeToken(token);
@@ -446,6 +451,10 @@ export default function InicioPage() {
                   onDelete={() => handleDelete(post.post_id)}
                   onEdit={() => handleEdit(post.post_id)}
                   currentUserId={currentUserId}
+                  onImageClick={(imageUrl) => {
+                    setZoomImageUrl(imageUrl);
+                    setShowImageZoomModal(true);
+                  }}
                 />
               ))}
 
@@ -488,6 +497,12 @@ export default function InicioPage() {
         }}
         onConfirm={handleUpdatePost}
         currentDescription={postToEdit?.description || ''}
+      />
+      <ImageZoomModal
+        isOpen={showImageZoomModal}
+        onClose={() => setShowImageZoomModal(false)}
+        imageUrl={zoomImageUrl}
+        alt="Imagen de la publicación ampliada"
       />
       {notification && (
         <Notification
