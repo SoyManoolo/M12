@@ -27,6 +27,7 @@ interface Post {
   updated_at: string;
   deleted_at: string | null;
   likes_count: string;
+  comments_count: string;
   author: {
     user_id: string;
     username: string;
@@ -96,7 +97,7 @@ function PostDetailModal({ isOpen, onClose, post, onImageClick }: PostDetailModa
           <div className="flex items-center justify-between text-xs text-gray-400 mb-2">
             <div className="flex gap-3">
               <span>❤️ {post.likes_count}</span>
-              <span>💬 {post.comments?.length || 0}</span>
+              <span>💬 {post.comments_count}</span>
             </div>
             <span className="text-gray-500">
               {new Date(post.created_at).toLocaleDateString('es-ES', {
@@ -165,6 +166,7 @@ export default function AdminPublicaciones() {
             updated_at: post.updated_at,
             deleted_at: post.deleted_at,
             likes_count: post.likes_count,
+            comments_count: post.comments_count,
             author: post.author,
             is_saved: false,
             comments: []
@@ -200,6 +202,7 @@ export default function AdminPublicaciones() {
           updated_at: post.updated_at,
           deleted_at: post.deleted_at,
           likes_count: post.likes_count,
+          comments_count: post.comments_count,
           author: post.author,
           is_saved: false,
           comments: []
@@ -405,7 +408,7 @@ export default function AdminPublicaciones() {
                       <div className="flex items-center justify-between text-xs text-gray-400">
                         <div className="flex gap-3">
                           <span>❤️ {post.likes_count}</span>
-                          <span>💬 {post.comments?.length || 0}</span>
+                          <span>💬 {post.comments_count}</span>
                         </div>
                         <span className="text-gray-500">
                           {new Date(post.created_at).toLocaleDateString('es-ES', {
