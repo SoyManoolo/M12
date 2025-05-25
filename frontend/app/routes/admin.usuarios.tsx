@@ -10,7 +10,7 @@
 
 import { useState, useEffect } from 'react';
 import Navbar from '~/components/Inicio/Navbar';
-import { FaSearch, FaEdit, FaTrash, FaFilter, FaUserShield, FaUserSlash } from 'react-icons/fa';
+import { FaSearch, FaEdit, FaTrash, FaFilter, FaUserShield } from 'react-icons/fa';
 
 interface User {
   user_id: string;
@@ -126,9 +126,6 @@ export default function AdminUsuarios() {
                 Administradores
               </button>
               <button className="px-4 py-2 rounded-lg bg-gray-800 text-white hover:bg-gray-700 transition-colors">
-                Bloqueados
-              </button>
-              <button className="px-4 py-2 rounded-lg bg-gray-800 text-white hover:bg-gray-700 transition-colors">
                 Nuevos
               </button>
             </div>
@@ -167,9 +164,6 @@ export default function AdminUsuarios() {
                       </button>
                       <button className="p-2 text-yellow-500 hover:bg-yellow-500/10 rounded-lg transition-colors" title="Cambiar rol">
                         <FaUserShield />
-                      </button>
-                      <button className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors" title="Bloquear usuario">
-                        <FaUserSlash />
                       </button>
                       <button className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors" title="Eliminar usuario">
                         <FaTrash />
