@@ -79,8 +79,8 @@ export class PostService {
                         [
                             sequelize.literal(`(
                                 SELECT COUNT(*)
-                                FROM comments
-                                WHERE comments.post_id = "Post".post_id
+                                FROM post_comments
+                                WHERE post_comments.post_id = "Post".post_id
                             )`),
                             'comments_count'
                         ]
@@ -158,8 +158,8 @@ export class PostService {
                         [
                             sequelize.literal(`(
                                 SELECT COUNT(*)
-                                FROM comments
-                                WHERE comments.post_id = "Post".post_id
+                                FROM post_comments
+                                WHERE post_comments.post_id = "Post".post_id
                             )`),
                             'comments_count'
                         ]
