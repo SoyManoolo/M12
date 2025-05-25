@@ -171,6 +171,86 @@ class PostService {
       throw new Error('Algo salió mal al actualizar la publicación');
     }
   }
+
+  async likePost(token: string, postId: string): Promise<{ success: boolean; message: string }> {
+    try {
+      const response = await fetch(`${this.baseUrl}/posts/${postId}/like`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'No pudimos dar like a la publicación');
+      }
+
+      return {
+        success: true,
+        message: 'Like agregado correctamente'
+      };
+    } catch (error) {
+      console.error('Error en likePost:', error);
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error('Algo salió mal al dar like a la publicación');
+    }
+  }
+
+  async unlikePost(token: string, postId: string): Promise<{ success: boolean; message: string }> {
+    try {
+      const response = await fetch(`${this.baseUrl}/posts/${postId}/like`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'No pudimos quitar el like de la publicación');
+      }
+
+      return {
+        success: true,
+        message: 'Like quitado correctamente'
+      };
+    } catch (error) {
+      console.error('Error en unlikePost:', error);
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error('Algo salió mal al quitar el like de la publicación');
+    }
+  }
+
+  async checkUserLike(token: string, postId: string): Promise<{ hasLiked: boolean }> {
+    try {
+      const response = await fetch(`${this.baseUrl}/posts/${postId}/like`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'No pudimos verificar el like');
+      }
+
+      return data.data;
+    } catch (error) {
+      console.error('Error en checkUserLike:', error);
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error('Algo salió mal al verificar el like');
+    }
+  }
 }
 
 export const postService = new PostService(); 

@@ -14,11 +14,12 @@
  * @requires date-fns
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FaHeart, FaRegHeart, FaBookmark, FaRegBookmark, FaShare, FaComment, FaTimes, FaTrash, FaPencilAlt } from 'react-icons/fa';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import ImageZoomModal from '~/components/Shared/ImageZoomModal';
+import { postService } from '~/services/post.service';
 
 /**
  * Interfaz que define la estructura de datos de una publicación
@@ -82,6 +83,24 @@ export default function Post({
   const [showAllComments, setShowAllComments] = useState(false);
   const [currentLikes, setCurrentLikes] = useState(parseInt(likes_count));
   const [newComment, setNewComment] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Verificar si el usuario ha dado like al post al cargar el componente
+  useEffect(() => {
+    const checkLikeStatus = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        const { hasLiked } = await postService.checkUserLike(token, post_id);
+        setIsLiked(hasLiked);
+      } catch (error) {
+        console.error('Error al verificar el estado del like:', error);
+      }
+    };
+
+    checkLikeStatus();
+  }, [post_id]);
 
   /**
    * Función auxiliar para truncar texto largo
@@ -134,10 +153,32 @@ export default function Post({
   /**
    * Manejador para la acción de "me gusta"
    */
-  const handleLike = () => {
-    setIsLiked(!isLiked);
-    setCurrentLikes(prev => isLiked ? prev - 1 : prev + 1);
-    onLike();
+  const handleLike = async () => {
+    try {
+      setIsLoading(true);
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No hay token de autenticación');
+      }
+
+      if (isLiked) {
+        await postService.unlikePost(token, post_id);
+        setCurrentLikes(prev => prev - 1);
+      } else {
+        await postService.likePost(token, post_id);
+        setCurrentLikes(prev => prev + 1);
+      }
+
+      setIsLiked(!isLiked);
+      onLike();
+    } catch (error) {
+      console.error('Error al manejar el like:', error);
+      // Revertir el estado en caso de error
+      setIsLiked(!isLiked);
+      setCurrentLikes(prev => isLiked ? prev + 1 : prev - 1);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   /**
@@ -190,10 +231,11 @@ export default function Post({
               <div className="flex flex-col items-center">
                 <button 
                   onClick={handleLike}
-                  className={`flex flex-col items-center cursor-pointer ${isLiked ? 'text-red-500' : 'text-gray-400 hover:text-white'}`}
+                  disabled={isLoading}
+                  className={`flex flex-col items-center cursor-pointer ${isLiked ? 'text-red-500' : 'text-gray-400 hover:text-white'} ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   {isLiked ? <FaHeart className="text-xl mb-1" /> : <FaRegHeart className="text-xl mb-1" />}
-                  <span className="text-xs">Like</span>
+                  <span className="text-xs">{currentLikes}</span>
                 </button>
               </div>
               
