@@ -31,35 +31,35 @@ class ChatMessages extends Model<IChatMessages> implements IChatMessages {
 }
 
 ChatMessages.init(
-    {
+  {
         id: {
-            type: DataTypes.UUID,
-            defaultValue: DataTypes.UUIDV4,
-            primaryKey: true,
-        },
-        sender_id: {
-            type: DataTypes.UUID,
-            allowNull: false,
-            references: {
-                model: User,
-                key: "user_id",
-            },
-        },
-        receiver_id: {
-            type: DataTypes.UUID,
-            allowNull: false,
-            references: {
-                model: User,
-                key: "user_id",
-            },
-        },
-        content: {
-            type: DataTypes.TEXT,
-            allowNull: false,
-        },
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true,
+    },
+    sender_id: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      references: {
+        model: User,
+        key: "user_id",
+      },
+    },
+    receiver_id: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      references: {
+        model: User,
+        key: "user_id",
+      },
+    },
+    content: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+    },
         is_delivered: {
-            type: DataTypes.BOOLEAN,
-            defaultValue: false,
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
         },
         delivered_at: {
             type: DataTypes.DATE,
@@ -76,21 +76,21 @@ ChatMessages.init(
         updated_at: {
             type: DataTypes.DATE,
             defaultValue: DataTypes.NOW,
-        },
     },
-    {
-        sequelize,
-        tableName: "chat_messages",
-        timestamps: true,
-        createdAt: "created_at",
-        updatedAt: "updated_at",
-        indexes: [
-            {
-                fields: ["sender_id", "receiver_id"],
-                name: "idx_chat_messages_sender_receiver",
-            },
-        ],
-    }
+  },
+  {
+    sequelize,
+    tableName: "chat_messages",
+    timestamps: true,
+    createdAt: "created_at",
+    updatedAt: "updated_at",
+    indexes: [
+      {
+        fields: ["sender_id", "receiver_id"],
+        name: "idx_chat_messages_sender_receiver",
+      },
+    ],
+  }
 );
 
 export default ChatMessages;

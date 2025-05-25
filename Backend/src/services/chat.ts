@@ -135,7 +135,11 @@ export class ChatService {
     public async markMessagesAsRead(sender_id: string, receiver_id: string) {
         try {
             await ChatMessages.update(
-                { read_at: new Date() },
+                { 
+                    read_at: new Date(),
+                    is_delivered: true,
+                    delivered_at: new Date()
+                },
                 {
                     where: {
                         sender_id,
@@ -201,56 +205,56 @@ export class ChatService {
                 nextCursor
             };
         } catch (error) {
-            if (error instanceof AppError) {
-                throw error;
-            }
-            throw new AppError(500, 'InternalServerError');
+        if (error instanceof AppError) {
+            throw error;
         }
+        throw new AppError(500, 'InternalServerError');
     }
+}
 
     // Método para editar un mensaje
     public async updateMessage(message_id: string, content: string) {
-        try {
-            const message = await ChatMessages.findByPk(message_id);
+    try {
+        const message = await ChatMessages.findByPk(message_id);
 
-            if (!message) throw new AppError(404, 'MessageNotFound');
+        if (!message) throw new AppError(404, 'MessageNotFound');
 
             const created_at = message.getDataValue('created_at');
             if (!created_at || created_at < new Date(Date.now() - 1000 * 60 * 5)) {
                 throw new AppError(403, 'MessageTooOld');
-            }
-
-            await message.update({ content });
-
-            await message.reload();
-
-            return { result: true, message_id };
-        } catch (error) {
-            if (error instanceof AppError) {
-                throw error;
-            }
-            throw new AppError(500, 'InternalServerError');
         }
+
+        await message.update({ content });
+
+        await message.reload();
+
+        return { result: true, message_id };
+    } catch (error) {
+        if (error instanceof AppError) {
+            throw error;
+        }
+        throw new AppError(500, 'InternalServerError');
     }
+}
 
     // Método para eliminar un mensaje
     public async deleteMessage(message_id: string) {
-        try {
-            const messageExist = await existCommentChat(message_id);
+    try {
+        const messageExist = await existCommentChat(message_id);
 
-            if (!messageExist) throw new AppError(404, 'MessageNotFound');
+        if (!messageExist) throw new AppError(404, 'MessageNotFound');
 
-            await messageExist.destroy()
+        await messageExist.destroy()
 
-            return { result: true, message_id };
+        return { result: true, message_id };
 
-        } catch (error) {
-            if (error instanceof AppError) {
-                throw error;
-            }
-            throw new AppError(500, 'InternalServerError');
+    } catch (error) {
+        if (error instanceof AppError) {
+            throw error;
         }
+        throw new AppError(500, 'InternalServerError');
     }
+}
 
     // Método para marcar mensaje como entregado
     public async markMessageAsDelivered(message_id: string) {
@@ -283,7 +287,9 @@ export class ChatService {
             }
 
             await message.update({
-                read_at: new Date()
+                read_at: new Date(),
+                is_delivered: true,
+                delivered_at: message.delivered_at || new Date()
             });
 
             return message;

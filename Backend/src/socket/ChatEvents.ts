@@ -16,9 +16,10 @@ const userStatus = new Map<string, {
 
 export function chatEvents(socket: Socket, io: Server) {
     // Autenticación del socket
+    /*
     socket.use(async (packet, next) => {
         try {
-            const token = packet[1].token;
+            const token = packet[1]?.token || packet[1]?.data?.token;
             if (!token) {
                 throw new AppError(401, 'TokenRequired');
             }
@@ -33,19 +34,35 @@ export function chatEvents(socket: Socket, io: Server) {
             socket.data.user = user;
             next();
         } catch (error) {
+            console.error("[SOCKET] Error de autenticación:", error);
             next(new Error('Authentication error'));
         }
     });
+    */
 
     // Unirse a la sala del usuario
-    socket.on("join-user", (userId: string) => {
+    socket.on("join-user", async (data) => {
+        // Permitir tanto string como objeto { userId, token }
+        const userId = typeof data === "string" ? data : data.userId;
+        // Autenticación manual aquí
+        const token = typeof data === "object" ? data.token : undefined;
+        if (token) {
+            try {
+                const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
+                const user = await User.findByPk(decoded.id);
+                if (user) {
+                    socket.data.user = user;
+                }
+            } catch (e) {
+                console.error("[SOCKET] Error autenticando en join-user:", e);
+            }
+        }
         socket.join(userId);
         userStatus.set(userId, {
             isOnline: true,
             lastSeen: new Date(),
             typingTo: null
         });
-        
         // Notificar a los contactos que el usuario está en línea
         io.emit("user-status-change", {
             userId,
@@ -76,10 +93,16 @@ export function chatEvents(socket: Socket, io: Server) {
     // Enviar mensaje
     socket.on("chat-message", async (data) => {
         try {
-            const { receiver_id, content } = data;
-            const sender_id = socket.data.user.user_id;
+            console.log("[SOCKET] Evento 'chat-message' recibido:", data);
+            const { receiver_id, content } = data.data;
+            // Extraer sender_id del token
+            const token = data.token;
+            const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
+            const sender_id = decoded.id;
+            console.log("[SOCKET] Enviando mensaje de", sender_id, "a", receiver_id);
 
             const result = await chatService.createMessage(sender_id, receiver_id, content);
+            console.log("[SOCKET] Mensaje creado:", result);
 
             // Notificar al remitente
             io.to(sender_id).emit("chat-message-sent", {
@@ -99,6 +122,7 @@ export function chatEvents(socket: Socket, io: Server) {
             });
 
         } catch (error) {
+            console.error("[SOCKET] Error en 'chat-message':", error);
             socket.emit("send-message-error", {
                 success: false,
                 message: error instanceof AppError ? error.message : "Error sending message",
@@ -111,8 +135,9 @@ export function chatEvents(socket: Socket, io: Server) {
         try {
             console.log("[SOCKET] Evento 'message-delivered' recibido:", data);
             const { message_id } = data;
+            console.log("[SOCKET] Marcando mensaje como entregado:", message_id);
             const message = await chatService.markMessageAsDelivered(message_id);
-            console.log("[SOCKET] Mensaje marcado como entregado:", message_id);
+            console.log("[SOCKET] Mensaje marcado como entregado:", message);
             // Notificar al remitente que el mensaje fue entregado
             io.to(message.sender_id).emit("message-delivery-status", {
                 message_id,
@@ -133,8 +158,9 @@ export function chatEvents(socket: Socket, io: Server) {
         try {
             console.log("[SOCKET] Evento 'message-read' recibido:", data);
             const { message_id } = data;
+            console.log("[SOCKET] Marcando mensaje como leído:", message_id);
             const message = await chatService.markMessageAsRead(message_id);
-            console.log("[SOCKET] Mensaje marcado como leído:", message_id);
+            console.log("[SOCKET] Mensaje marcado como leído:", message);
             // Notificar al remitente que el mensaje fue leído
             io.to(message.sender_id).emit("message-read-status", {
                 message_id,
