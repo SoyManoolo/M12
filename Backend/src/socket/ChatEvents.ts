@@ -109,17 +109,18 @@ export function chatEvents(socket: Socket, io: Server) {
     // Marcar mensaje como entregado
     socket.on("message-delivered", async (data) => {
         try {
+            console.log("[SOCKET] Evento 'message-delivered' recibido:", data);
             const { message_id } = data;
             const message = await chatService.markMessageAsDelivered(message_id);
-
+            console.log("[SOCKET] Mensaje marcado como entregado:", message_id);
             // Notificar al remitente que el mensaje fue entregado
             io.to(message.sender_id).emit("message-delivery-status", {
                 message_id,
                 status: 'delivered',
                 delivered_at: message.delivered_at
             });
-
         } catch (error) {
+            console.error("[SOCKET] Error en 'message-delivered':", error);
             socket.emit("delivery-status-error", {
                 success: false,
                 message: error instanceof AppError ? error.message : "Error updating delivery status",
@@ -130,17 +131,18 @@ export function chatEvents(socket: Socket, io: Server) {
     // Marcar mensaje como leído
     socket.on("message-read", async (data) => {
         try {
+            console.log("[SOCKET] Evento 'message-read' recibido:", data);
             const { message_id } = data;
             const message = await chatService.markMessageAsRead(message_id);
-
+            console.log("[SOCKET] Mensaje marcado como leído:", message_id);
             // Notificar al remitente que el mensaje fue leído
             io.to(message.sender_id).emit("message-read-status", {
                 message_id,
                 status: 'read',
                 read_at: message.read_at
             });
-
         } catch (error) {
+            console.error("[SOCKET] Error en 'message-read':", error);
             socket.emit("read-status-error", {
                 success: false,
                 message: error instanceof AppError ? error.message : "Error updating read status",
@@ -207,5 +209,10 @@ export function chatEvents(socket: Socket, io: Server) {
                 ...status
             });
         }
+    });
+
+    // Listener global para depuración de eventos
+    socket.onAny((event, ...args) => {
+        console.log(`[SOCKET][DEBUG] Evento recibido:`, event, args);
     });
 }

@@ -3,7 +3,7 @@ import { AppError } from "../middlewares/errors/AppError";
 import dbLogger from "./logger";
 import { Client } from "pg"; // Importar el cliente de PostgreSQL
 import { User } from "../models";
-import * as bcrypt from "bcrypt";
+import { hash } from "bcryptjs";
 import { Op } from "sequelize";
 
 const isTestEnv = process.env.NODE_ENV === "test";
@@ -34,7 +34,7 @@ async function createDefaultAdmin() {
 
         if (!existingAdmin) {
             // Crear el usuario administrador
-            const hashedPassword = await bcrypt.hash(DEFAULT_ADMIN.password, 10);
+            const hashedPassword = await hash(DEFAULT_ADMIN.password, 10);
             await User.create({
                 ...DEFAULT_ADMIN,
                 password: hashedPassword
