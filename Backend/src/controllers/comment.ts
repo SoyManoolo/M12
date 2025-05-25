@@ -36,19 +36,47 @@ export class CommentController {
             i18n.setLocale(locale);
 
             const { commentId } = req.params;
-            const comment = await this.commentService.deleteComment(commentId);
+            const user_id = req.user?.id;
 
-            if (!comment) {
-                throw new AppError(404, 'CommentNotFound');
+            if (!user_id) {
+                throw new AppError(401, 'Unauthorized');
             }
+
+            await this.commentService.deleteComment(commentId, user_id);
 
             res.status(200).json({
                 success: true,
                 status: 200,
-                message: "hola"
+                message: i18n.__('CommentDeleted')
             });
         } catch (error) {
             next(error);
         };
     };
+
+    public async createComment(req: Request, res: Response, next: NextFunction) {
+        try {
+            const locale = req.headers['accept-language'] || 'en';
+            i18n.setLocale(locale);
+
+            const { post_id, content } = req.body;
+            const user_id = req.user?.id;
+
+            if (!user_id) {
+                throw new AppError(401, 'Unauthorized');
+            }
+
+            const comment = await this.commentService.createComment(post_id, user_id, content);
+
+            res.status(201).json({
+                success: true,
+                status: 201,
+                data: {
+                    comment
+                }
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
 };

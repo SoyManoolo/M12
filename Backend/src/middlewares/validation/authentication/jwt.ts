@@ -28,7 +28,7 @@ export class AuthToken {
         );
     };
 
-    public static verifyToken(req: Request, res: Response, next: NextFunction): void {
+    public static async verifyToken(req: Request, res: Response, next: NextFunction): Promise<void> {
         // Comprobamos si existe el token
         const authHeader = req.headers['authorization'];
 
@@ -46,7 +46,7 @@ export class AuthToken {
             req.user = jwt.verify(token, AuthToken.secretKey) as jwt.JwtPayload;
 
             // Verificamos si el token existe en la base de datos
-            const tokenExist = JWT.findOne({ where: { token } });
+            const tokenExist = await JWT.findOne({ where: { token } });
 
             // Si el token no existe en la base de datos devolvemos un error
             if (!tokenExist) throw new AppError(403, "TokenNotFound");
