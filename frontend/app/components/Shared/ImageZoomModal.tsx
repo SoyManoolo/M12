@@ -97,7 +97,7 @@ export default function ImageZoomModal({
 
   return (
     <div 
-      className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50"
+      className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 cursor-pointer"
       onClick={onClose}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
@@ -109,7 +109,7 @@ export default function ImageZoomModal({
             e.stopPropagation();
             handleZoomOut();
           }}
-          className="p-2 bg-gray-800 rounded-full text-white hover:bg-gray-700 transition-colors"
+          className="p-2 bg-gray-800 rounded-full text-white hover:bg-gray-700 transition-colors cursor-pointer"
           disabled={zoom <= minZoom}
         >
           <FaSearchMinus />
@@ -119,14 +119,14 @@ export default function ImageZoomModal({
             e.stopPropagation();
             handleZoomIn();
           }}
-          className="p-2 bg-gray-800 rounded-full text-white hover:bg-gray-700 transition-colors"
+          className="p-2 bg-gray-800 rounded-full text-white hover:bg-gray-700 transition-colors cursor-pointer"
           disabled={zoom >= maxZoom}
         >
           <FaSearchPlus />
         </button>
         <button
           onClick={onClose}
-          className="p-2 bg-gray-800 rounded-full text-white hover:bg-gray-700 transition-colors ml-2"
+          className="p-2 bg-gray-800 rounded-full text-white hover:bg-gray-700 transition-colors ml-2 cursor-pointer"
         >
           <FaTimes />
         </button>
