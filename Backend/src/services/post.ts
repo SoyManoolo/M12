@@ -81,6 +81,7 @@ export class PostService {
                                 SELECT COUNT(*)
                                 FROM post_comments
                                 WHERE post_comments.post_id = "Post".post_id
+                                AND post_comments.deleted_at IS NULL
                             )`),
                             'comments_count'
                         ]
@@ -160,6 +161,7 @@ export class PostService {
                                 SELECT COUNT(*)
                                 FROM post_comments
                                 WHERE post_comments.post_id = "Post".post_id
+                                AND post_comments.deleted_at IS NULL
                             )`),
                             'comments_count'
                         ]
