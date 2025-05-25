@@ -20,6 +20,26 @@ const DEFAULT_ADMIN = {
     surname: "System"
 };
 
+// Datos de los usuarios por defecto
+const DEFAULT_USERS = [
+    {
+        username: "Jaider",
+        email: "jaider@example.com",
+        password: "Jaider123",
+        is_mod: false,
+        name: "Jaider",
+        surname: "User"
+    },
+    {
+        username: "Erik",
+        email: "erik@example.com",
+        password: "Erik123",
+        is_mod: false,
+        name: "Erik",
+        surname: "User"
+    }
+];
+
 async function createDefaultAdmin() {
     try {
         // Verificar si ya existe un usuario administrador
@@ -45,6 +65,36 @@ async function createDefaultAdmin() {
         }
     } catch (error) {
         dbLogger.error("Error creating default admin user.", { error });
+    }
+}
+
+async function createDefaultUsers() {
+    try {
+        for (const userData of DEFAULT_USERS) {
+            // Verificar si ya existe el usuario
+            const existingUser = await User.findOne({
+                where: {
+                    [Op.or]: [
+                        { username: userData.username },
+                        { email: userData.email }
+                    ]
+                }
+            });
+
+            if (!existingUser) {
+                // Crear el usuario
+                const hashedPassword = await hash(userData.password, 10);
+                await User.create({
+                    ...userData,
+                    password: hashedPassword
+                });
+                dbLogger.info(`Default user ${userData.username} created successfully.`);
+            } else {
+                dbLogger.info(`Default user ${userData.username} already exists.`);
+            }
+        }
+    } catch (error) {
+        dbLogger.error("Error creating default users.", { error });
     }
 }
 
@@ -99,8 +149,9 @@ async function initializeDatabase() {
         if (dbUpdate) {
             await sequelize.sync({ alter: true });
             dbLogger.info("All models were synchronized successfully.");
-            // Crear usuario administrador después de sincronizar
+            // Crear usuarios por defecto después de sincronizar
             await createDefaultAdmin();
+            await createDefaultUsers();
         } else {
             dbLogger.info("Skipping model synchronization (DB_UPDATE is not 'true')");
         }
