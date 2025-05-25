@@ -15,7 +15,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { FaHeart, FaRegHeart, FaBookmark, FaRegBookmark, FaShare, FaComment, FaTimes, FaTrash, FaPencilAlt } from 'react-icons/fa';
+import { FaHeart, FaRegHeart, FaComment, FaTrash, FaPencilAlt } from 'react-icons/fa';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import ImageZoomModal from '~/components/Shared/ImageZoomModal';
@@ -43,9 +43,7 @@ interface PostProps {
   }>;
   created_at: string;
   likes_count: string;
-  is_saved: boolean;
   onLike: () => void;
-  onSave: () => void;
   currentUserId?: string; // ID del usuario actual
   onDelete?: (postId: string) => void; // Función para eliminar el post
   onEdit?: (postId: string) => void; // Nueva prop para manejar la edición
@@ -66,9 +64,7 @@ export default function Post({
   comments,
   created_at,
   likes_count,
-  is_saved,
   onLike,
-  onSave,
   currentUserId,
   onDelete,
   onEdit,
@@ -76,8 +72,6 @@ export default function Post({
 }: PostProps) {
   // Estados para controlar las interacciones del usuario
   const [isLiked, setIsLiked] = useState(false);
-  const [isSaved, setIsSaved] = useState(is_saved);
-  const [isShared, setIsShared] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [showAllComments, setShowAllComments] = useState(false);
@@ -181,14 +175,6 @@ export default function Post({
     }
   };
 
-  /**
-   * Manejador para guardar la publicación
-   */
-  const handleSave = () => {
-    setIsSaved(!isSaved);
-    onSave();
-  };
-
   const handleDelete = () => {
     onDelete?.(post_id);
   };
@@ -238,28 +224,7 @@ export default function Post({
                   <span className="text-xs">{currentLikes}</span>
                 </button>
               </div>
-              
-              {/* Botón de compartir */}
-              <div className="flex flex-col items-center">
-                <button 
-                  onClick={() => setIsShared(!isShared)}
-                  className={`flex flex-col items-center cursor-pointer ${isShared ? 'text-blue-500' : 'text-gray-400 hover:text-white'}`}
-                >
-                  <FaShare className="text-xl mb-1" />
-                  <span className="text-xs">Compartir</span>
-                </button>
-              </div>
-              
-              {/* Botón de guardar */}
-              <div className="flex flex-col items-center">
-                <button 
-                  onClick={handleSave}
-                  className={`flex flex-col items-center cursor-pointer ${isSaved ? 'text-yellow-500' : 'text-gray-400 hover:text-white'}`}
-                >
-                  {isSaved ? <FaBookmark className="text-xl mb-1" /> : <FaRegBookmark className="text-xl mb-1" />}
-                  <span className="text-xs">Guardar</span>
-                </button>
-              </div>
+
               {/* Botones de editar y eliminar - solo si el post es del usuario actual */}
               {currentUserId === user.user_id && (
                 <>
