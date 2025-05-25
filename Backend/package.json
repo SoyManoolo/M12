@@ -42,6 +42,8 @@
         "test:reset-db": "cross-env NODE_ENV=test ts-node src/config/resetDB.ts"
     },
     "dependencies": {
+        "@types/bcrypt": "^5.0.2",
+        "bcrypt": "^6.0.0",
         "bcryptjs": "^2.4.3",
         "celebrate": "^15.0.3",
         "cors": "^2.8.5",

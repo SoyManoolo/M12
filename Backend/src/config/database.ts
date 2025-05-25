@@ -2,11 +2,51 @@ import { Sequelize } from "sequelize";
 import { AppError } from "../middlewares/errors/AppError";
 import dbLogger from "./logger";
 import { Client } from "pg"; // Importar el cliente de PostgreSQL
+import { User } from "../models";
+import * as bcrypt from "bcrypt";
+import { Op } from "sequelize";
 
 const isTestEnv = process.env.NODE_ENV === "test";
 const dbName = isTestEnv ? process.env.DB_NAME_TEST : process.env.DB_NAME;
 const dbUpdate: boolean = process.env.DB_UPDATE === "true" || false;
 
+// Datos del usuario administrador por defecto
+const DEFAULT_ADMIN = {
+    username: "admin",
+    email: "admin@example.com",
+    password: "admin123",
+    is_mod: true,
+    name: "Admin",
+    surname: "System"
+};
+
+async function createDefaultAdmin() {
+    try {
+        // Verificar si ya existe un usuario administrador
+        const existingAdmin = await User.findOne({
+            where: {
+                [Op.or]: [
+                    { username: DEFAULT_ADMIN.username },
+                    { email: DEFAULT_ADMIN.email }
+                ]
+            }
+        });
+
+        if (!existingAdmin) {
+            // Crear el usuario administrador
+            const hashedPassword = await bcrypt.hash(DEFAULT_ADMIN.password, 10);
+            await User.create({
+                ...DEFAULT_ADMIN,
+                password: hashedPassword
+            });
+            dbLogger.info("Default admin user created successfully.");
+        } else {
+            dbLogger.info("Default admin user already exists.");
+        }
+    } catch (error) {
+        dbLogger.error("Error creating default admin user.", { error });
+    }
+}
 
 async function createDatabase(): Promise<boolean> {
     try {
@@ -59,6 +99,8 @@ async function initializeDatabase() {
         if (dbUpdate) {
             await sequelize.sync({ alter: true });
             dbLogger.info("All models were synchronized successfully.");
+            // Crear usuario administrador después de sincronizar
+            await createDefaultAdmin();
         } else {
             dbLogger.info("Skipping model synchronization (DB_UPDATE is not 'true')");
         }
