@@ -41,4 +41,17 @@ router.delete('/:id', async (req: Request, res: Response, next: NextFunction) =>
     await postController.deletePost(req, res, next);
 });
 
+// Rutas para likes
+router.post('/:id/like', AuthToken.verifyToken, async (req: Request, res: Response, next: NextFunction) => {
+    await postController.likePost(req, res, next);
+});
+
+router.delete('/:id/like', AuthToken.verifyToken, async (req: Request, res: Response, next: NextFunction) => {
+    await postController.unlikePost(req, res, next);
+});
+
+router.get('/:id/like', AuthToken.verifyToken, async (req: Request, res: Response, next: NextFunction) => {
+    await postController.checkUserLike(req, res, next);
+});
+
 export default router

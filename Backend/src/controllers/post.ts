@@ -160,4 +160,78 @@ export class PostController {
             next(error);
         };
     };
+
+    public async likePost(req: Request, res: Response, next: NextFunction) {
+        try {
+            const locale = req.headers['accept-language'] || 'en';
+            i18n.setLocale(locale);
+
+            if (!req.user?.id) {
+                throw new AppError(401, 'Unauthorized');
+            }
+
+            const postId = req.params.id;
+            const userId = req.user.id;
+
+            const result = await this.postService.likePost(postId, userId);
+
+            res.status(200).json({
+                success: true,
+                status: 200,
+                message: i18n.__('LikeAdded'),
+                data: result
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    public async unlikePost(req: Request, res: Response, next: NextFunction) {
+        try {
+            const locale = req.headers['accept-language'] || 'en';
+            i18n.setLocale(locale);
+
+            if (!req.user?.id) {
+                throw new AppError(401, 'Unauthorized');
+            }
+
+            const postId = req.params.id;
+            const userId = req.user.id;
+
+            const result = await this.postService.unlikePost(postId, userId);
+
+            res.status(200).json({
+                success: true,
+                status: 200,
+                message: i18n.__('LikeRemoved'),
+                data: result
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    public async checkUserLike(req: Request, res: Response, next: NextFunction) {
+        try {
+            const locale = req.headers['accept-language'] || 'en';
+            i18n.setLocale(locale);
+
+            if (!req.user?.id) {
+                throw new AppError(401, 'Unauthorized');
+            }
+
+            const postId = req.params.id;
+            const userId = req.user.id;
+
+            const result = await this.postService.checkUserLike(postId, userId);
+
+            res.status(200).json({
+                success: true,
+                status: 200,
+                data: result
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
 };

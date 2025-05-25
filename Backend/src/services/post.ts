@@ -230,4 +230,89 @@ export class PostService {
             throw new AppError(500, 'InternalServerError');
         };
     };
+
+    // Método para dar like a un post
+    public async likePost(postId: string, userId: string) {
+        try {
+            const post = await existsPost(postId);
+            if (!post) throw new AppError(404, 'PostNotFound');
+
+            // Verificar si el usuario ya dio like
+            const existingLike = await PostLikes.findOne({
+                where: {
+                    post_id: postId,
+                    user_id: userId
+                }
+            });
+
+            if (existingLike) {
+                throw new AppError(400, 'PostAlreadyLiked');
+            }
+
+            // Crear el like
+            await PostLikes.create({
+                post_id: postId,
+                user_id: userId
+            });
+
+            return { success: true, message: 'Like added successfully' };
+        } catch (error) {
+            if (error instanceof AppError) {
+                throw error;
+            }
+            throw new AppError(500, 'InternalServerError');
+        }
+    }
+
+    // Método para quitar like de un post
+    public async unlikePost(postId: string, userId: string) {
+        try {
+            const post = await existsPost(postId);
+            if (!post) throw new AppError(404, 'PostNotFound');
+
+            // Verificar si el usuario dio like
+            const existingLike = await PostLikes.findOne({
+                where: {
+                    post_id: postId,
+                    user_id: userId
+                }
+            });
+
+            if (!existingLike) {
+                throw new AppError(400, 'PostNotLiked');
+            }
+
+            // Eliminar el like
+            await existingLike.destroy();
+
+            return { success: true, message: 'Like removed successfully' };
+        } catch (error) {
+            if (error instanceof AppError) {
+                throw error;
+            }
+            throw new AppError(500, 'InternalServerError');
+        }
+    }
+
+    // Método para verificar si un usuario dio like a un post
+    public async checkUserLike(postId: string, userId: string) {
+        try {
+            const post = await existsPost(postId);
+            if (!post) throw new AppError(404, 'PostNotFound');
+
+            const like = await PostLikes.findOne({
+                where: {
+                    post_id: postId,
+                    user_id: userId
+                }
+            });
+
+            return { hasLiked: !!like };
+        } catch (error) {
+            if (error instanceof AppError) {
+                throw error;
+            }
+            throw new AppError(500, 'InternalServerError');
+        }
+    }
 }
