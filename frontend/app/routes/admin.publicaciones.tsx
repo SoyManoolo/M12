@@ -195,7 +195,10 @@ function PostDetailModal({ isOpen, onClose, post, onImageClick }: PostDetailModa
                   {comments.map((comment) => (
                     <div key={comment.comment_id} className="bg-gray-800/50 rounded-xl p-4 hover:bg-gray-800/70 transition-colors duration-200">
                       <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
+                        <div 
+                          className="flex items-center gap-2 cursor-pointer hover:bg-gray-700/50 p-1 rounded-lg transition-colors duration-200"
+                          onClick={() => { window.location.href = `/perfil?username=${comment.author.username}`; }}
+                        >
                           <img 
                             src={comment.author.profile_picture || '/images/default-avatar.png'} 
                             alt={comment.author.username} 
