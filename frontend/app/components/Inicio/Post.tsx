@@ -16,10 +16,11 @@
 
 import { useState, useEffect } from 'react';
 import { FaHeart, FaRegHeart, FaComment, FaTrash, FaPencilAlt } from 'react-icons/fa';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, differenceInSeconds, differenceInMinutes, differenceInHours, differenceInDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 import ImageZoomModal from '~/components/Shared/ImageZoomModal';
 import { postService } from '~/services/post.service';
+import { commentService } from '~/services/comment.service';
 
 /**
  * Interfaz que define la estructura de datos de una publicación
@@ -61,7 +62,7 @@ export default function Post({
   user,
   description,
   media_url,
-  comments,
+  comments: initialComments,
   created_at,
   likes_count,
   onLike,
@@ -78,6 +79,27 @@ export default function Post({
   const [currentLikes, setCurrentLikes] = useState(parseInt(likes_count));
   const [newComment, setNewComment] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [comments, setComments] = useState(initialComments);
+  const [isCommenting, setIsCommenting] = useState(false);
+
+  // Cargar comentarios al montar el componente
+  useEffect(() => {
+    const loadComments = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        const response = await commentService.getComments(token, post_id);
+        if (response.success && response.data.comments) {
+          setComments(response.data.comments);
+        }
+      } catch (error) {
+        console.error('Error al cargar comentarios:', error);
+      }
+    };
+
+    loadComments();
+  }, [post_id]);
 
   // Verificar si el usuario ha dado like al post al cargar el componente
   useEffect(() => {
@@ -139,9 +161,47 @@ export default function Post({
   /**
    * Manejador para agregar un nuevo comentario
    */
-  const handleAddComment = () => {
+  const handleAddComment = async () => {
     if (!newComment.trim()) return;
-    setNewComment('');
+    
+    try {
+      setIsCommenting(true);
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No hay token de autenticación');
+      }
+
+      const response = await commentService.createComment(token, post_id, newComment.trim());
+      
+      // Agregar el nuevo comentario a la lista
+      setComments(prevComments => [...prevComments, response.data.comment]);
+      setNewComment('');
+    } catch (error) {
+      console.error('Error al agregar comentario:', error);
+      // Aquí podrías mostrar un mensaje de error al usuario
+    } finally {
+      setIsCommenting(false);
+    }
+  };
+
+  /**
+   * Manejador para eliminar un comentario
+   */
+  const handleDeleteComment = async (commentId: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No hay token de autenticación');
+      }
+
+      await commentService.deleteComment(token, post_id, commentId);
+      
+      // Eliminar el comentario de la lista
+      setComments(prevComments => prevComments.filter(comment => comment.comment_id !== commentId));
+    } catch (error) {
+      console.error('Error al eliminar comentario:', error);
+      // Aquí podrías mostrar un mensaje de error al usuario
+    }
   };
 
   /**
@@ -177,6 +237,29 @@ export default function Post({
 
   const handleDelete = () => {
     onDelete?.(post_id);
+  };
+
+  /**
+   * Función para formatear el tiempo de manera más detallada
+   */
+  const formatTimeAgo = (date: string) => {
+    const now = new Date();
+    const past = new Date(date);
+    
+    const seconds = differenceInSeconds(now, past);
+    const minutes = differenceInMinutes(now, past);
+    const hours = differenceInHours(now, past);
+    const days = differenceInDays(now, past);
+
+    if (days > 0) {
+      return `${days} ${days === 1 ? 'día' : 'días'}`;
+    } else if (hours > 0) {
+      return `${hours} ${hours === 1 ? 'hora' : 'horas'}`;
+    } else if (minutes > 0) {
+      return `${minutes} ${minutes === 1 ? 'minuto' : 'minutos'}`;
+    } else {
+      return `${seconds} ${seconds === 1 ? 'segundo' : 'segundos'}`;
+    }
   };
 
   return (
@@ -324,11 +407,25 @@ export default function Post({
                 </div>
                 <div className="space-y-2">
                   {(showAllComments ? comments : comments.slice(0, 3)).map(comment => (
-                    <div key={comment.comment_id} className="text-sm text-gray-300">
-                      <span className="font-semibold text-white">{comment.username}</span>
-                      <span className="inline">
-                        {" "}{truncateText(comment.content, 100)}
-                      </span>
+                    <div key={comment.comment_id} className="text-sm text-gray-300 flex justify-between items-start">
+                      <div>
+                        <span className="font-semibold text-white">{comment.username}</span>
+                        <span className="inline">
+                          {" "}{truncateText(comment.content, 100)}
+                        </span>
+                        <span className="text-xs text-gray-500 ml-2">
+                          {formatTimeAgo(comment.created_at)}
+                        </span>
+                      </div>
+                      {currentUserId === comment.user_id && (
+                        <button
+                          onClick={() => handleDeleteComment(comment.comment_id)}
+                          className="text-red-500 hover:text-red-700 focus:outline-none"
+                          title="Eliminar comentario"
+                        >
+                          <FaTrash className="text-sm" />
+                        </button>
+                      )}
                     </div>
                   ))}
                   {comments.length > 3 && (
@@ -345,7 +442,6 @@ export default function Post({
               </div>
             </div>
 
-
             {/* Input para nuevos comentarios */}
             <div className="mt-auto pt-4 border-t border-gray-800">
               <div className="flex items-center bg-gray-800 rounded-lg p-2">
@@ -355,8 +451,18 @@ export default function Post({
                   className="flex-1 bg-transparent border-none text-white placeholder-gray-500 focus:outline-none text-sm"
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter' && !isCommenting) {
+                      handleAddComment();
+                    }
+                  }}
+                  disabled={isCommenting}
                 />
-                <button className="ml-2 text-gray-400 hover:text-white" onClick={handleAddComment}>
+                <button 
+                  className={`ml-2 ${isCommenting ? 'text-gray-600' : 'text-gray-400 hover:text-white'}`}
+                  onClick={handleAddComment}
+                  disabled={isCommenting}
+                >
                   <FaComment className="text-xl" />
                 </button>
               </div>

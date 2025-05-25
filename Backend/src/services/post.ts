@@ -75,6 +75,14 @@ export class PostService {
                                 WHERE post_likes.post_id = "Post".post_id
                             )`),
                             'likes_count'
+                        ],
+                        [
+                            sequelize.literal(`(
+                                SELECT COUNT(*)
+                                FROM comments
+                                WHERE comments.post_id = "Post".post_id
+                            )`),
+                            'comments_count'
                         ]
                     ]
                 },
@@ -146,6 +154,14 @@ export class PostService {
                                 WHERE post_likes.post_id = "Post".post_id
                             )`),
                             'likes_count'
+                        ],
+                        [
+                            sequelize.literal(`(
+                                SELECT COUNT(*)
+                                FROM comments
+                                WHERE comments.post_id = "Post".post_id
+                            )`),
+                            'comments_count'
                         ]
                     ]
                 },
