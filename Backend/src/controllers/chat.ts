@@ -107,4 +107,46 @@ export class ChatController {
             next(error);
         }
     }
+
+    public async markMessageAsDelivered(req: Request, res: Response, next: NextFunction) {
+        try {
+            const locale = req.headers['accept-language'] || 'en';
+            i18n.setLocale(locale);
+
+            if (!req.user?.id) {
+                throw new AppError(401, 'Unauthorized');
+            }
+
+            const { message_id } = req.params;
+            const message = await this.chatService.markMessageAsDelivered(message_id);
+
+            res.status(200).json({
+                success: true,
+                data: message
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    public async markMessageAsRead(req: Request, res: Response, next: NextFunction) {
+        try {
+            const locale = req.headers['accept-language'] || 'en';
+            i18n.setLocale(locale);
+
+            if (!req.user?.id) {
+                throw new AppError(401, 'Unauthorized');
+            }
+
+            const { message_id } = req.params;
+            const message = await this.chatService.markMessageAsRead(message_id);
+
+            res.status(200).json({
+                success: true,
+                data: message
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
 }

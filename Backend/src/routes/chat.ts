@@ -28,4 +28,14 @@ router.delete('/:message_id', AuthToken.verifyToken, async (req: Request, res: R
     await chatController.deleteMessage(req, res, next);
 });
 
+// Marcar mensaje como entregado
+router.post('/:message_id/delivered', AuthToken.verifyToken, async (req: Request, res: Response, next: NextFunction) => {
+    await chatController.markMessageAsDelivered(req, res, next);
+});
+
+// Marcar mensaje como leído
+router.post('/:message_id/read', AuthToken.verifyToken, async (req: Request, res: Response, next: NextFunction) => {
+    await chatController.markMessageAsRead(req, res, next);
+});
+
 export default router;
