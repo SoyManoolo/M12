@@ -1,79 +1,211 @@
 import { Socket, Server } from "socket.io";
 import { ChatService } from "../services/chat";
+import { AppError } from "../middlewares/errors/AppError";
+import jwt from "jsonwebtoken";
+import { User } from "../models";
 
 const chatService = new ChatService();
+const JWT_SECRET = process.env.JWT_SECRET as string;
+
+// Mapa para mantener el estado de los usuarios
+const userStatus = new Map<string, {
+    isOnline: boolean,
+    lastSeen: Date,
+    typingTo: string | null
+}>();
 
 export function chatEvents(socket: Socket, io: Server) {
-    socket.on("join-user", (userId: string) => {
-        socket.join(userId);
+    // Autenticación del socket
+    socket.use(async (packet, next) => {
+        try {
+            const token = packet[1].token;
+            if (!token) {
+                throw new AppError(401, 'TokenRequired');
+            }
+
+            const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
+            const user = await User.findByPk(decoded.id);
+            
+            if (!user) {
+                throw new AppError(401, 'UserNotFound');
+            }
+
+            socket.data.user = user;
+            next();
+        } catch (error) {
+            next(new Error('Authentication error'));
+        }
     });
 
+    // Unirse a la sala del usuario
+    socket.on("join-user", (userId: string) => {
+        socket.join(userId);
+        userStatus.set(userId, {
+            isOnline: true,
+            lastSeen: new Date(),
+            typingTo: null
+        });
+        
+        // Notificar a los contactos que el usuario está en línea
+        io.emit("user-status-change", {
+            userId,
+            isOnline: true,
+            lastSeen: new Date()
+        });
+    });
+
+    // Manejar desconexión
+    socket.on("disconnect", () => {
+        const userId = socket.data.user?.user_id;
+        if (userId) {
+            userStatus.set(userId, {
+                isOnline: false,
+                lastSeen: new Date(),
+                typingTo: null
+            });
+            
+            // Notificar a los contactos que el usuario está desconectado
+            io.emit("user-status-change", {
+                userId,
+                isOnline: false,
+                lastSeen: new Date()
+            });
+        }
+    });
+
+    // Enviar mensaje
     socket.on("chat-message", async (data) => {
         try {
-            const { sender_id, receiver_id, content } = data;
+            const { receiver_id, content } = data;
+            const sender_id = socket.data.user.user_id;
 
             const result = await chatService.createMessage(sender_id, receiver_id, content);
 
+            // Notificar al remitente
             io.to(sender_id).emit("chat-message-sent", {
                 success: true,
                 message: result,
             });
 
+            // Notificar al receptor
             io.to(receiver_id).emit("new-message", {
                 message: result,
                 sender_id
+            });
+
+            // Notificar a todos los usuarios en la sala del chat
+            io.to(`${sender_id}-${receiver_id}`).emit("message-received", {
+                message: result
             });
 
         } catch (error) {
             socket.emit("send-message-error", {
                 success: false,
-                message: "Error sending message",
+                message: error instanceof AppError ? error.message : "Error sending message",
             });
-        };
+        }
     });
 
-    socket.on("message-update", async (data) => {
+    // Marcar mensaje como entregado
+    socket.on("message-delivered", async (data) => {
         try {
-            const { sender_id, receiver_id, message_id, content } = data;
+            const { message_id } = data;
+            const message = await chatService.markMessageAsDelivered(message_id);
 
-            const result = await chatService.updateMessage(message_id, content);
-
-            io.to(sender_id).emit("chat-message-sent", {
-                success: true,
-                message: result,
+            // Notificar al remitente que el mensaje fue entregado
+            io.to(message.sender_id).emit("message-delivery-status", {
+                message_id,
+                status: 'delivered',
+                delivered_at: message.delivered_at
             });
 
-            io.to(receiver_id).emit("new-message", {
-                message: result,
-                sender_id
-            });
         } catch (error) {
-            socket.emit("update-error", {
+            socket.emit("delivery-status-error", {
                 success: false,
-                message: "Error updating message",
+                message: error instanceof AppError ? error.message : "Error updating delivery status",
             });
-        };
+        }
     });
 
+    // Marcar mensaje como leído
+    socket.on("message-read", async (data) => {
+        try {
+            const { message_id } = data;
+            const message = await chatService.markMessageAsRead(message_id);
+
+            // Notificar al remitente que el mensaje fue leído
+            io.to(message.sender_id).emit("message-read-status", {
+                message_id,
+                status: 'read',
+                read_at: message.read_at
+            });
+
+        } catch (error) {
+            socket.emit("read-status-error", {
+                success: false,
+                message: error instanceof AppError ? error.message : "Error updating read status",
+            });
+        }
+    });
+
+    // Indicador de "escribiendo..."
+    socket.on("typing", (data) => {
+        const { receiver_id, isTyping } = data;
+        const sender_id = socket.data.user.user_id;
+
+        if (isTyping) {
+            userStatus.set(sender_id, {
+                ...userStatus.get(sender_id)!,
+                typingTo: receiver_id
+            });
+        } else {
+            userStatus.set(sender_id, {
+                ...userStatus.get(sender_id)!,
+                typingTo: null
+            });
+        }
+
+        io.to(receiver_id).emit("user-typing", {
+            userId: sender_id,
+            isTyping
+        });
+    });
+
+    // Eliminar mensaje
     socket.on("message-delete", async (data) => {
         try {
-            const { message_id, sender_id, receiver_id } = data;
+            const { message_id, receiver_id } = data;
+            const sender_id = socket.data.user.user_id;
 
             const result = await chatService.deleteMessage(message_id);
 
+            // Notificar al remitente
             io.to(sender_id).emit("message-deleted", {
                 success: true,
                 message_id
             });
 
+            // Notificar al receptor
             io.to(receiver_id).emit("message-deleted", {
                 message_id
             });
+
         } catch (error) {
-            socket.emit("update-error", {
+            socket.emit("delete-error", {
                 success: false,
-                message: "Error deleting message",
+                message: error instanceof AppError ? error.message : "Error deleting message",
             });
-        };
+        }
     });
-};
+
+    // Obtener estado de usuario
+    socket.on("get-user-status", (userId: string) => {
+        const status = userStatus.get(userId);
+        if (status) {
+            socket.emit("user-status", {
+                userId,
+                ...status
+            });
+        }
+    });
+}

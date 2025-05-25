@@ -6,18 +6,36 @@ import { AppError } from '../middlewares/errors/AppError';
 export class ChatController {
     constructor(private readonly chatService: ChatService) {};
 
-    public async getMessages(req: Request, res: Response, next: NextFunction) {
+    public async getUserChats(req: Request, res: Response, next: NextFunction) {
         try {
-            // Guarda el idioma en la variable locale y lo asigna a i18n
             const locale = req.headers['accept-language'] || 'en';
             i18n.setLocale(locale);
 
-            // Verifica si el usuario está autenticado
             if (!req.user?.id) {
                 throw new AppError(401, 'Unauthorized');
             }
 
-            // Guarda la informacion de los usuarios del chat
+            const user_id = req.user.id;
+            const chats = await this.chatService.getUserChats(user_id);
+
+            res.status(200).json({
+                success: true,
+                data: chats
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    public async getMessages(req: Request, res: Response, next: NextFunction) {
+        try {
+            const locale = req.headers['accept-language'] || 'en';
+            i18n.setLocale(locale);
+
+            if (!req.user?.id) {
+                throw new AppError(401, 'Unauthorized');
+            }
+
             const sender_id = req.user.id;
             const { receiver_id } = req.query;
             const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
@@ -27,8 +45,10 @@ export class ChatController {
                 throw new AppError(400, 'ReceiverIdRequired');
             }
 
-            // Llama al servicio para obtener los mensajes del chat
             const messages = await this.chatService.getMessages(sender_id, receiver_id as string, limit, cursor);
+
+            // Marcar mensajes como leídos
+            await this.chatService.markMessagesAsRead(receiver_id as string, sender_id);
 
             res.status(200).json({
                 success: true,

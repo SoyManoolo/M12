@@ -5,7 +5,7 @@ import { PostComments } from './PostComments';
 import { VideoCalls } from './VideoCalls';
 import { FriendRequest } from './FriendRequest';
 import { Friends } from './Friends';
-import { ChatMessages } from './ChatMessages';
+import ChatMessages from './ChatMessages';
 import { UserBlocks } from './UserBlocks';
 import { VideoCallRatings } from './VideoCallRatings';
 import { Reports } from './Reports';
@@ -158,25 +158,21 @@ Friends.belongsTo(User, {
 // User & ChatMessages relationships
 User.hasMany(ChatMessages, {
   foreignKey: 'sender_id',
-  sourceKey: 'user_id',
   as: 'sentMessages'
 });
 
 User.hasMany(ChatMessages, {
   foreignKey: 'receiver_id',
-  sourceKey: 'user_id',
   as: 'receivedMessages'
 });
 
 ChatMessages.belongsTo(User, {
   foreignKey: 'sender_id',
-  targetKey: 'user_id',
   as: 'sender'
 });
 
 ChatMessages.belongsTo(User, {
   foreignKey: 'receiver_id',
-  targetKey: 'user_id',
   as: 'receiver'
 });
 

@@ -8,6 +8,11 @@ const router = express.Router();
 const chatService = new ChatService();
 const chatController = new ChatController(chatService);
 
+// Obtener lista de chats del usuario
+router.get('/list', AuthToken.verifyToken, async (req: Request, res: Response, next: NextFunction) => {
+    await chatController.getUserChats(req, res, next);
+});
+
 // Obtener mensajes entre dos usuarios
 router.get('/', AuthToken.verifyToken, async (req: Request, res: Response, next: NextFunction) => {
     await chatController.getMessages(req, res, next);
