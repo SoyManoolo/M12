@@ -1,10 +1,14 @@
-interface Comment {
+export interface Comment {
   comment_id: string;
   post_id: string;
   user_id: string;
-  username: string;
   content: string;
   created_at: string;
+  deleted_at: string | null;
+  author: {
+    username: string;
+    profile_picture: string | null;
+  };
 }
 
 interface CommentResponse {

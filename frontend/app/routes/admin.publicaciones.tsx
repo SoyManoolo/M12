@@ -13,6 +13,8 @@ import { useAuth } from '~/hooks/useAuth';
 import Navbar from '~/components/Inicio/Navbar';
 import { FaSearch, FaEdit, FaTrash, FaFilter } from 'react-icons/fa';
 import { postService } from '~/services/post.service';
+import { commentService } from '~/services/comment.service';
+import type { Comment } from '~/services/comment.service';
 import Notification from '~/components/Shared/Notification';
 import ConfirmModal from '~/components/Shared/ConfirmModal';
 import EditPostModal from '~/components/Shared/EditPostModal';
@@ -44,6 +46,19 @@ interface Post {
   }>;
 }
 
+interface PostComment {
+  comment_id: string;
+  post_id: string;
+  user_id: string;
+  content: string;
+  created_at: string;
+  deleted_at: string | null;
+  author: {
+    username: string;
+    profile_picture: string | null;
+  };
+}
+
 interface PostDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -52,6 +67,8 @@ interface PostDetailModalProps {
 }
 
 function PostDetailModal({ isOpen, onClose, post, onImageClick }: PostDetailModalProps) {
+  const [comments, setComments] = useState<Comment[]>([]);
+
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -63,63 +80,144 @@ function PostDetailModal({ isOpen, onClose, post, onImageClick }: PostDetailModa
     };
   }, [isOpen]);
 
+  // Cargar comentarios cuando se abre el modal
+  useEffect(() => {
+    const loadComments = async () => {
+      if (!isOpen || !post) return;
+      
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+
+        const response = await commentService.getComments(token, post.post_id);
+        if (response.success && response.data.comments) {
+          setComments(response.data.comments);
+        }
+      } catch (error) {
+        console.error('Error al cargar comentarios:', error);
+      }
+    };
+
+    loadComments();
+  }, [isOpen, post]);
+
   if (!isOpen || !post) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-gray-900 rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] mx-4 p-0 relative overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
-        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl z-10 cursor-pointer">&times;</button>
-        <div className="flex items-center gap-3 p-6 border-b border-gray-800 bg-gray-900">
-          <div 
-            className="flex items-center gap-3 cursor-pointer" 
-            onClick={() => { window.location.href = `/perfil?username=${post.author.username}`; }}
-          >
-            <img src={post.author.profile_picture || '/images/default-avatar.png'} alt={post.author.username} className="w-12 h-12 rounded-full" />
-            <div className="flex flex-col">
-              <span className="font-semibold text-lg">{post.author.name}</span>
-              <span className="text-xs text-gray-400">@{post.author.username}</span>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={onClose}>
+      <div className="bg-gray-900 rounded-2xl shadow-2xl max-w-7xl w-[95%] h-[90vh] mx-4 p-0 relative overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
+        <button 
+          onClick={onClose} 
+          className="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl z-10 cursor-pointer bg-gray-800/50 hover:bg-gray-800 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200"
+        >
+          ×
+        </button>
+        
+        <div className="flex h-full">
+          {/* Lado izquierdo - Imagen */}
+          <div className="w-1/2 bg-black flex items-center justify-center relative">
+            {post.media && (
+              <div 
+                className="w-full h-full flex items-center justify-center cursor-zoom-in group" 
+                onClick={() => {
+                  onClose();
+                  onImageClick(post.media);
+                }}
+              >
+                <img 
+                  src={post.media} 
+                  alt="Imagen publicación" 
+                  className="max-h-[90vh] w-auto object-contain transition-transform duration-300 group-hover:scale-105" 
+                />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center">
+                  <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    Click para ampliar
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Lado derecho - Contenido y comentarios */}
+          <div className="w-1/2 flex flex-col h-full bg-gray-900">
+            {/* Cabecera con información del usuario */}
+            <div className="p-6 border-b border-gray-800 bg-gray-900/95 backdrop-blur-sm">
+              <div 
+                className="flex items-center gap-3 cursor-pointer hover:bg-gray-800/50 p-2 rounded-lg transition-colors duration-200" 
+                onClick={() => { window.location.href = `/perfil?username=${post.author.username}`; }}
+              >
+                <img 
+                  src={post.author.profile_picture || '/images/default-avatar.png'} 
+                  alt={post.author.username} 
+                  className="w-12 h-12 rounded-full ring-2 ring-blue-500/50" 
+                />
+                <div className="flex flex-col">
+                  <span className="font-semibold text-lg text-white">{post.author.name}</span>
+                  <span className="text-sm text-gray-400">@{post.author.username}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Descripción del post */}
+            <div className="p-6 border-b border-gray-800 bg-gray-900/95 backdrop-blur-sm">
+              <p className="text-gray-200 whitespace-pre-line text-base break-words leading-relaxed">{post.description}</p>
+              <div className="flex items-center justify-between text-sm text-gray-400 mt-4">
+                <div className="flex gap-4">
+                  <span className="flex items-center gap-1">
+                    <span className="text-red-500">❤️</span> {post.likes_count}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="text-blue-500">💬</span> {post.comments_count}
+                  </span>
+                </div>
+                <span className="text-gray-500 bg-gray-800/50 px-3 py-1 rounded-full text-xs">
+                  {new Date(post.created_at).toLocaleDateString('es-ES', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: '2-digit'
+                  })}
+                </span>
+              </div>
+            </div>
+
+            {/* Sección de comentarios */}
+            <div className="flex-1 overflow-y-auto p-6 bg-gray-900/95 backdrop-blur-sm">
+              <h4 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+                <span className="text-blue-500">💬</span> Comentarios
+              </h4>
+              {comments.length === 0 ? (
+                <div className="text-center text-gray-400 py-12 bg-gray-800/30 rounded-xl">
+                  <span className="text-4xl mb-4 block">💭</span>
+                  <p className="text-lg">No hay comentarios aún</p>
+                  <p className="text-sm mt-2">Sé el primero en comentar</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {comments.map((comment) => (
+                    <div key={comment.comment_id} className="bg-gray-800/50 rounded-xl p-4 hover:bg-gray-800/70 transition-colors duration-200">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <img 
+                            src={comment.author.profile_picture || '/images/default-avatar.png'} 
+                            alt={comment.author.username} 
+                            className="w-6 h-6 rounded-full"
+                          />
+                          <span className="font-semibold text-white">@{comment.author.username}</span>
+                        </div>
+                        <span className="text-xs text-gray-400 bg-gray-900/50 px-2 py-1 rounded-full">
+                          {new Date(comment.created_at).toLocaleDateString('es-ES', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: '2-digit'
+                          })}
+                        </span>
+                      </div>
+                      <p className="text-gray-300 leading-relaxed">{comment.content}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
-        </div>
-        {post.media && (
-          <div 
-            className="w-full flex items-center justify-center bg-black cursor-zoom-in" 
-            style={{minHeight: '400px', maxHeight: '50vh'}} 
-            onClick={() => {
-              onClose();
-              onImageClick(post.media);
-            }}
-          >
-            <img src={post.media} alt="Imagen publicación" className="max-h-[50vh] w-auto object-contain" />
-          </div>
-        )}
-        <div className="flex-1 overflow-y-auto p-6 bg-gray-900">
-          <p className="text-gray-200 whitespace-pre-line mb-4 text-base break-words">{post.description}</p>
-          <div className="flex items-center justify-between text-xs text-gray-400 mb-2">
-            <div className="flex gap-3">
-              <span>❤️ {post.likes_count}</span>
-              <span>💬 {post.comments_count}</span>
-            </div>
-            <span className="text-gray-500">
-              {new Date(post.created_at).toLocaleDateString('es-ES', {
-                day: '2-digit',
-                month: '2-digit',
-                year: '2-digit'
-              })}
-            </span>
-          </div>
-          {post.comments && post.comments.length > 0 && (
-            <div className="mt-4">
-              <h4 className="text-sm font-semibold text-gray-300 mb-2">Comentarios</h4>
-              <ul className="max-h-40 overflow-y-auto pr-2">
-                {post.comments.map((c) => (
-                  <li key={c.comment_id} className="mb-2 border-b border-gray-800 pb-2">
-                    <span className="font-semibold text-gray-200">@{c.username}: </span>
-                    <span className="text-gray-300">{c.content}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
         </div>
       </div>
     </div>

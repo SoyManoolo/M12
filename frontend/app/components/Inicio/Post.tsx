@@ -406,37 +406,47 @@ export default function Post({
                   <span className="text-sm text-gray-400">({comments.length})</span>
                 </div>
                 <div className="space-y-2">
-                  {(showAllComments ? comments : comments.slice(0, 3)).map(comment => (
-                    <div key={comment.comment_id} className="text-sm text-gray-300 flex justify-between items-start">
-                      <div>
-                        <span className="font-semibold text-white">{comment.username}</span>
-                        <span className="inline">
-                          {" "}{truncateText(comment.content, 100)}
-                        </span>
-                        <span className="text-xs text-gray-500 ml-2">
-                          {formatTimeAgo(comment.created_at)}
-                        </span>
-                      </div>
-                      {currentUserId === comment.user_id && (
+                  {comments.length === 0 ? (
+                    <div className="text-center text-gray-400 py-8 bg-gray-800/30 rounded-xl">
+                      <span className="text-4xl mb-4 block">💭</span>
+                      <p className="text-lg">No hay comentarios aún</p>
+                      <p className="text-sm mt-2">Sé el primero en comentar</p>
+                    </div>
+                  ) : (
+                    <>
+                      {(showAllComments ? comments : comments.slice(0, 3)).map(comment => (
+                        <div key={comment.comment_id} className="text-sm text-gray-300 flex justify-between items-start">
+                          <div>
+                            <span className="font-semibold text-white">{comment.username}</span>
+                            <span className="inline">
+                              {" "}{truncateText(comment.content, 100)}
+                            </span>
+                            <span className="text-xs text-gray-500 ml-2">
+                              {formatTimeAgo(comment.created_at)}
+                            </span>
+                          </div>
+                          {currentUserId === comment.user_id && (
+                            <button
+                              onClick={() => handleDeleteComment(comment.comment_id)}
+                              className="text-red-500 hover:text-red-700 focus:outline-none"
+                              title="Eliminar comentario"
+                            >
+                              <FaTrash className="text-sm" />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      {comments.length > 3 && (
                         <button
-                          onClick={() => handleDeleteComment(comment.comment_id)}
-                          className="text-red-500 hover:text-red-700 focus:outline-none"
-                          title="Eliminar comentario"
+                          onClick={() => setShowAllComments(!showAllComments)}
+                          className="text-blue-400 hover:text-blue-300 text-sm font-medium block mt-2"
                         >
-                          <FaTrash className="text-sm" />
+                          {showAllComments 
+                            ? 'Ver menos comentarios' 
+                            : `Ver todos los ${comments.length} comentarios`}
                         </button>
                       )}
-                    </div>
-                  ))}
-                  {comments.length > 3 && (
-                    <button
-                      onClick={() => setShowAllComments(!showAllComments)}
-                      className="text-blue-400 hover:text-blue-300 text-sm font-medium block mt-2"
-                    >
-                      {showAllComments 
-                        ? 'Ver menos comentarios' 
-                        : `Ver todos los ${comments.length} comentarios`}
-                    </button>
+                    </>
                   )}
                 </div>
               </div>
