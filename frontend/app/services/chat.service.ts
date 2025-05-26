@@ -32,10 +32,15 @@ class ChatService {
   private readHandlers: ((data: { message_id: string; status: string }) => void)[] = [];
   private typingHandlers: ((data: { userId: string; isTyping: boolean }) => void)[] = [];
   private baseUrl = 'http://localhost:3000';
+  private isConnecting = false;
 
   constructor() {
     this.socket = io(this.baseUrl, {
-      autoConnect: false
+      autoConnect: false,
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      transports: ['websocket', 'polling']
     });
 
     this.setupSocketListeners();
@@ -44,33 +49,27 @@ class ChatService {
   private setupSocketListeners() {
     if (!this.socket) return;
 
+    this.socket.on('connect', () => {
+      console.log('Socket conectado');
+      this.isConnecting = false;
+    });
+
+    this.socket.on('disconnect', () => {
+      console.log('Socket desconectado');
+    });
+
     this.socket.on('new-message', (data: { message: Message }) => {
+      console.log('Nuevo mensaje recibido:', data.message);
       this.messageHandlers.forEach(handler => handler(data.message));
     });
 
-    this.socket.on('message-delivery-status', (data) => {
-      this.deliveryHandlers.forEach(handler => handler(data));
+    this.socket.on('chat-message-sent', (data: { success: boolean; message: Message }) => {
+      console.log('Mensaje enviado:', data.message);
+      this.messageHandlers.forEach(handler => handler(data.message));
     });
 
-    this.socket.on('message-read-status', (data) => {
-      this.readHandlers.forEach(handler => handler(data));
-    });
-
-    this.socket.on('user-typing', (data) => {
-      this.typingHandlers.forEach(handler => handler(data));
-    });
-  }
-
-  public connect(token: string, userId: string) {
-    if (!this.socket) return;
-
-    this.socket.auth = { token };
-    this.socket.connect();
-    this.socket.emit('join-user', { userId, token });
-
-    // Configurar listeners de eventos
-    this.socket.on('new-message', (data: { message: Message }) => {
-      console.log('Nuevo mensaje recibido:', data.message);
+    this.socket.on('message-received', (data: { message: Message }) => {
+      console.log('Mensaje recibido:', data.message);
       this.messageHandlers.forEach(handler => handler(data.message));
     });
 
@@ -89,24 +88,58 @@ class ChatService {
       this.typingHandlers.forEach(handler => handler(data));
     });
 
-    // Manejar errores de conexión
-    this.socket.on('connect_error', (error) => {
-      console.error('Error de conexión:', error);
-    });
-
     this.socket.on('error', (error) => {
       console.error('Error del socket:', error);
+      this.isConnecting = false;
+    });
+  }
+
+  public connect(token: string, userId: string) {
+    if (!this.socket || this.isConnecting) return;
+
+    this.isConnecting = true;
+
+    // Limpiar listeners existentes
+    this.socket.off('connect');
+    this.socket.off('disconnect');
+    this.socket.off('new-message');
+    this.socket.off('chat-message-sent');
+    this.socket.off('message-received');
+    this.socket.off('message-delivery-status');
+    this.socket.off('message-read-status');
+    this.socket.off('user-typing');
+    this.socket.off('error');
+
+    // Configurar listeners
+    this.setupSocketListeners();
+
+    // Configurar autenticación y conectar
+    this.socket.auth = { token };
+    this.socket.connect();
+
+    // Esperar a que el socket esté conectado antes de unirse
+    this.socket.on('connect', () => {
+      console.log('Socket conectado, uniéndose como usuario:', userId);
+      // Unirse a la sala del usuario
+      this.socket?.emit('join-user', { userId, token });
     });
   }
 
   public disconnect() {
     if (!this.socket) return;
     
+    this.isConnecting = false;
+    
     // Remover todos los listeners
+    this.socket.off('connect');
+    this.socket.off('disconnect');
     this.socket.off('new-message');
+    this.socket.off('chat-message-sent');
+    this.socket.off('message-received');
     this.socket.off('message-delivery-status');
     this.socket.off('message-read-status');
     this.socket.off('user-typing');
+    this.socket.off('error');
     
     this.socket.disconnect();
   }
@@ -287,6 +320,18 @@ class ChatService {
 
   public async createMessage(receiverId: string, content: string, token: string): Promise<Message> {
     try {
+      // Enviar el mensaje por socket
+      if (this.socket?.connected) {
+        this.socket.emit('chat-message', {
+          data: {
+            receiver_id: receiverId,
+            content
+          },
+          token
+        });
+      }
+
+      // También guardar en el backend por HTTP
       const response = await fetch(`${this.baseUrl}/chat`, {
         method: 'POST',
         headers: {
@@ -304,18 +349,6 @@ class ChatService {
       }
 
       const data = await response.json();
-      
-      // Emitir el mensaje a través del socket
-      if (this.socket) {
-        this.socket.emit('chat-message', {
-          data: {
-            receiver_id: receiverId,
-            content
-          },
-          token
-        });
-      }
-
       return data.data;
     } catch (error) {
       console.error('Error al crear mensaje:', error);

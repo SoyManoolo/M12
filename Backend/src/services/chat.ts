@@ -77,8 +77,15 @@ export class ChatService {
                 ],
                 order: [['created_at', 'DESC']],
                 group: [
+                    'ChatMessages.id',
                     'ChatMessages.sender_id',
                     'ChatMessages.receiver_id',
+                    'ChatMessages.content',
+                    'ChatMessages.is_delivered',
+                    'ChatMessages.delivered_at',
+                    'ChatMessages.read_at',
+                    'ChatMessages.created_at',
+                    'ChatMessages.updated_at',
                     'sender.user_id',
                     'receiver.user_id'
                 ]
@@ -94,7 +101,6 @@ export class ChatService {
                 const otherUser = chat.sender_id === user_id ? chat.receiver : chat.sender;
 
                 if (!otherUser) {
-                    // Si no hay usuario relacionado, salta este chat
                     return null;
                 }
 

@@ -116,13 +116,15 @@ export default function Chat() {
           is_own: msg.sender_id !== userId
         })));
 
-        // Conectar al WebSocket
-        chatService.connect(token, userId);
-
         // Definir los handlers de eventos
         const handleNewMessage = (message: Message) => {
           console.log('Manejando nuevo mensaje:', message);
-          setMessages(prev => [...prev, { ...message, is_own: message.sender_id !== userId }]);
+          // Verificar si el mensaje ya existe en el estado
+          setMessages(prev => {
+            const messageExists = prev.some(msg => msg.id === message.id);
+            if (messageExists) return prev;
+            return [...prev, { ...message, is_own: message.sender_id !== userId }];
+          });
           scrollToBottom();
         };
 
@@ -157,6 +159,9 @@ export default function Chat() {
         chatService.onReadStatus(handleReadStatus);
         chatService.onTyping(handleTyping);
 
+        // Conectar al WebSocket
+        chatService.connect(token, userId);
+
         // Marcar mensajes como leídos
         chatMessages
           .filter(msg => msg.sender_id === userId && !msg.read_at)
@@ -185,28 +190,21 @@ export default function Chat() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim() || !token || !chatUser) return;
 
-    // Enviar el mensaje al backend primero
-    chatService.createMessage(chatUser.user_id, newMessage, token)
-      .then(message => {
-        // Agregar el mensaje al estado local solo después de que se haya creado en el backend
-        setMessages(prev => [
-          ...prev,
-          {
-            ...message,
-            is_own: true
-          }
-        ]);
-        setNewMessage('');
-        scrollToBottom();
-      })
-      .catch(error => {
-        console.error('Error al enviar mensaje:', error);
-        // Aquí podrías mostrar un mensaje de error al usuario
-      });
+    try {
+      // Enviar el mensaje
+      const message = await chatService.createMessage(chatUser.user_id, newMessage, token);
+      
+      // Agregar el mensaje al estado local
+      setMessages(prev => [...prev, { ...message, is_own: true }]);
+      setNewMessage('');
+      scrollToBottom();
+    } catch (error) {
+      console.error('Error al enviar mensaje:', error);
+    }
   };
 
   const handleTyping = () => {

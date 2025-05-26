@@ -1,8 +1,11 @@
 import { Socket, Server } from "socket.io";
 import { ChatService } from "../services/chat";
 import { AppError } from "../middlewares/errors/AppError";
-import jwt from "jsonwebtoken";
+import jwt, { JwtPayload } from "jsonwebtoken";
 import { User } from "../models";
+
+// Mapa para mantener un registro de los sockets de usuario
+const userSockets = new Map<string, Socket>();
 
 const chatService = new ChatService();
 const JWT_SECRET = process.env.JWT_SECRET as string;
@@ -41,93 +44,102 @@ export function chatEvents(socket: Socket, io: Server) {
     */
 
     // Unirse a la sala del usuario
-    socket.on("join-user", async (data) => {
-        // Permitir tanto string como objeto { userId, token }
-        const userId = typeof data === "string" ? data : data.userId;
-        // Autenticación manual aquí
-        const token = typeof data === "object" ? data.token : undefined;
-        if (token) {
-            try {
-                const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
-                const user = await User.findByPk(decoded.id);
-                if (user) {
-                    socket.data.user = user;
-                }
-            } catch (e) {
-                console.error("[SOCKET] Error autenticando en join-user:", e);
+    socket.on("join-user", async (data: { userId: string; token: string }) => {
+        try {
+            console.log("[SOCKET][DEBUG] Evento recibido: join-user", [data]);
+            const { userId, token } = data;
+
+            // Verificar el token
+            const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as JwtPayload;
+            
+            // Verificar que el ID del token coincide con el userId proporcionado
+            if (decoded.id !== userId) {
+                console.error("[SOCKET] Token ID no coincide con userId:", { tokenId: decoded.id, userId });
+                throw new AppError(401, 'InvalidToken');
             }
+
+            // Verificar que el usuario existe
+            const user = await User.findByPk(userId);
+            if (!user) {
+                throw new AppError(401, 'UserNotFound');
+            }
+
+            // Registrar el socket del usuario
+            userSockets.set(userId, socket);
+
+            // Unirse a la sala personal
+            socket.join(userId);
+
+            // Notificar a otros usuarios que este usuario está en línea
+            socket.broadcast.emit("user-status", {
+                userId,
+                status: "online"
+            });
+
+        } catch (error) {
+            console.error("[SOCKET] Error en join-user:", error);
+            socket.emit("error", {
+                type: error instanceof AppError ? error.type : 'InternalServerError',
+                message: error instanceof Error ? error.message : 'Error interno del servidor'
+            });
         }
-        socket.join(userId);
-        userStatus.set(userId, {
-            isOnline: true,
-            lastSeen: new Date(),
-            typingTo: null
-        });
-        // Notificar a los contactos que el usuario está en línea
-        io.emit("user-status-change", {
-            userId,
-            isOnline: true,
-            lastSeen: new Date()
-        });
     });
 
     // Manejar desconexión
     socket.on("disconnect", () => {
-        if (!socket.data.user) return;
-        const userId = socket.data.user.user_id;
-        if (userId) {
-            userStatus.set(userId, {
-                isOnline: false,
-                lastSeen: new Date(),
-                typingTo: null
-            });
-            
-            // Notificar a los contactos que el usuario está desconectado
-            io.emit("user-status-change", {
-                userId,
-                isOnline: false,
-                lastSeen: new Date()
-            });
+        // Encontrar y eliminar el socket del usuario
+        for (const [userId, userSocket] of userSockets.entries()) {
+            if (userSocket === socket) {
+                userSockets.delete(userId);
+                // Notificar a otros usuarios que este usuario está desconectado
+                socket.broadcast.emit("user-status", {
+                    userId,
+                    status: "offline"
+                });
+                break;
+            }
         }
     });
 
     // Enviar mensaje
-    socket.on("chat-message", async (data) => {
+    socket.on('chat-message', async (data: { data: { receiver_id: string; content: string }, token: string }) => {
         try {
-            console.log("[SOCKET] Evento 'chat-message' recibido:", data);
-            const { receiver_id, content } = data.data;
-            // Extraer sender_id del token
-            const token = data.token;
-            const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
-            if (!socket.data.user) return;
-            const sender_id = socket.data.user.user_id;
-            console.log("[SOCKET] Enviando mensaje de", sender_id, "a", receiver_id);
+            console.log('[SOCKET] Evento \'chat-message\' recibido:', data);
+            
+            // Verificar el token y obtener el usuario
+            const decoded = jwt.verify(data.token, process.env.JWT_SECRET || 'your-secret-key') as JwtPayload;
+            const sender = await User.findByPk(decoded.id);
+            
+            if (!sender) {
+                throw new AppError(401, 'UserNotFound');
+            }
 
-            const result = await chatService.createMessage(sender_id, receiver_id, content);
-            console.log("[SOCKET] Mensaje creado:", result);
+            console.log(`[SOCKET] Enviando mensaje de ${sender.user_id} a ${data.data.receiver_id}`);
+            
+            // Crear el mensaje
+            const message = await chatService.createMessage(
+                sender.user_id,
+                data.data.receiver_id,
+                data.data.content
+            );
 
-            // Notificar al remitente
-            io.to(sender_id).emit("chat-message-sent", {
+            // Emitir el mensaje al receptor
+            const receiverSocket = userSockets.get(data.data.receiver_id);
+            if (receiverSocket) {
+                receiverSocket.emit('new-message', { message });
+            }
+
+            // Emitir confirmación al remitente
+            socket.emit('chat-message-sent', {
                 success: true,
-                message: result,
-            });
-
-            // Notificar al receptor
-            io.to(receiver_id).emit("new-message", {
-                message: result,
-                sender_id
-            });
-
-            // Notificar a todos los usuarios en la sala del chat
-            io.to(`${sender_id}-${receiver_id}`).emit("message-received", {
-                message: result
+                message
             });
 
         } catch (error) {
-            console.error("[SOCKET] Error en 'chat-message':", error);
-            socket.emit("send-message-error", {
-                success: false,
-                message: error instanceof AppError ? error.message : "Error sending message",
+            console.error('[SOCKET] Error en \'chat-message\':', error);
+            socket.emit('error', {
+                type: error instanceof AppError ? error.type : 'InternalServerError',
+                message: error instanceof Error ? error.message : 'Error interno del servidor'
             });
         }
     });
