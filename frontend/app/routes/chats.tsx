@@ -18,6 +18,7 @@ import RightPanel from '~/components/Shared/RightPanel';
 import { FaSearch, FaEnvelope } from 'react-icons/fa';
 import { useAuth } from "~/hooks/useAuth";
 import { userService } from "~/services/user.service";
+import { chatService } from '~/services/chat.service';
 
 export const meta: MetaFunction = () => {
   return [
@@ -38,11 +39,24 @@ interface Chat {
   user: {
     user_id: string;
     username: string;
-    profile_picture_url: string | null;
+    profile_picture: string | null;
   };
   last_message: {
     content: string;
     timestamp: string;
+  };
+  unread_count: number;
+}
+
+interface ChatResponse {
+  other_user: {
+    user_id: string;
+    username: string;
+    profile_picture: string | null;
+  };
+  last_message: {
+    content: string;
+    created_at: string;
   };
   unread_count: number;
 }
@@ -70,53 +84,40 @@ interface Friend {
 }
 
 export default function Chats() {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [friends, setFriends] = useState<Friend[]>([]);
+  const [chats, setChats] = useState<Chat[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  
-  // Mock de datos de chats para la interfaz
-  const mockChats: Chat[] = [
-    {
-      chat_id: '1',
-      user: {
-        user_id: '1',
-        username: 'usuario1',
-        profile_picture_url: 'https://i.pravatar.cc/150?img=1'
-      },
-      last_message: {
-        content: 'Hola, ¿cómo estás? Espero que todo esté bien por allá...',
-        timestamp: new Date().toISOString()
-      },
-      unread_count: 2
-    },
-    {
-      chat_id: '2',
-      user: {
-        user_id: '2',
-        username: 'usuario2',
-        profile_picture_url: 'https://i.pravatar.cc/150?img=2'
-      },
-      last_message: {
-        content: '¡Nos vemos mañana en la videollamada!',
-        timestamp: new Date().toISOString()
-      },
-      unread_count: 0
-    }
-  ];
 
   useEffect(() => {
-    const fetchFriends = async () => {
-      if (!token) {
-        setError('Por favor, inicia sesión para ver los chats');
-        setLoading(false);
-        return;
-      }
+    if (!token || !user) return;
 
+    // Conectar al WebSocket
+    chatService.connect(token, user.user_id);
+
+    const fetchData = async () => {
       try {
+        // Cargar chats activos
+        const activeChats = await chatService.getActiveChats(token);
+        const formattedChats: Chat[] = activeChats.map((chat: ChatResponse) => ({
+          chat_id: `${user.user_id}-${chat.other_user.user_id}`,
+          user: {
+            user_id: chat.other_user.user_id,
+            username: chat.other_user.username,
+            profile_picture: chat.other_user.profile_picture
+          },
+          last_message: {
+            content: chat.last_message.content,
+            timestamp: chat.last_message.created_at
+          },
+          unread_count: chat.unread_count
+        }));
+        setChats(formattedChats);
+
+        // Cargar amigos
         const friendsResponse = await userService.getAllUsers(token);
-        console.log('Respuesta del servidor para amigos:', friendsResponse);
         if (friendsResponse.success && friendsResponse.data && Array.isArray(friendsResponse.data.users)) {
           const friendsData = friendsResponse.data.users.map(user => ({
             friendship_id: user.user_id,
@@ -131,31 +132,85 @@ export default function Chats() {
               active_video_call: false
             }
           }));
-          console.log('Datos transformados de amigos:', friendsData);
           setFriends(friendsData);
         } else {
-          console.error('La respuesta de amigos no tiene el formato esperado:', friendsResponse);
           setFriends([]);
         }
       } catch (err) {
-        console.error('Error al cargar los amigos:', err);
-        setError('Error al cargar la lista de amigos');
+        console.error('Error al cargar datos:', err);
+        setError('Error al cargar los datos');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchFriends();
-  }, [token]);
+    const handleNewMessage = (message: any) => {
+      setChats(prevChats => {
+        const existingChatIndex = prevChats.findIndex(
+          chat => chat.user.user_id === message.sender_id || chat.user.user_id === message.receiver_id
+        );
+
+        if (existingChatIndex >= 0) {
+          const updatedChats = [...prevChats];
+          updatedChats[existingChatIndex] = {
+            ...updatedChats[existingChatIndex],
+            last_message: {
+              content: message.content,
+              timestamp: message.created_at
+            },
+            unread_count: message.sender_id !== user.user_id 
+              ? updatedChats[existingChatIndex].unread_count + 1 
+              : updatedChats[existingChatIndex].unread_count
+          };
+          return updatedChats;
+        }
+
+        // Si es un nuevo chat, necesitamos obtener la información del usuario
+        const otherUserId = message.sender_id === user.user_id ? message.receiver_id : message.sender_id;
+        const otherUser = friends.find(f => f.user.user_id === otherUserId)?.user;
+
+        if (otherUser) {
+          return [...prevChats, {
+            chat_id: `${user.user_id}-${otherUserId}`,
+            user: {
+              user_id: otherUser.user_id,
+              username: otherUser.username,
+              profile_picture: otherUser.profile_picture
+            },
+            last_message: {
+              content: message.content,
+              timestamp: message.created_at
+            },
+            unread_count: message.sender_id !== user.user_id ? 1 : 0
+          }];
+        }
+
+        return prevChats;
+      });
+    };
+
+    chatService.onNewMessage(handleNewMessage);
+
+    fetchData();
+
+    return () => {
+      chatService.removeMessageHandler(handleNewMessage);
+      chatService.disconnect();
+    };
+  }, [token, user]);
 
   // Filtrar chats basado en la búsqueda
-  const filteredChats = mockChats.filter(chat =>
+  const filteredChats = chats.filter(chat =>
     chat.user.username.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleChatClick = (chatId: string) => {
-    // Redirigir a la página de chat individual
     window.location.href = `/chat?chatId=${chatId}`;
+  };
+
+  const handleStartNewChat = () => {
+    // Redirigir a la página de búsqueda de usuarios
+    window.location.href = '/buscar';
   };
 
   return (
@@ -211,7 +266,7 @@ export default function Chats() {
                 </p>
                 <button 
                   className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                  onClick={() => {/* Aquí iría la lógica para iniciar nuevo chat */}}
+                  onClick={handleStartNewChat}
                 >
                   Iniciar nuevo chat
                 </button>

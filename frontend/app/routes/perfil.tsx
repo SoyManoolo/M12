@@ -113,7 +113,7 @@ export async function loader({ request }: { request: Request }) {
 
 export default function Perfil() {
   const data = useLoaderData<typeof loader>() as LoaderData;
-  const { token } = useAuth();
+  const { token, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [posts, setPosts] = useState<Post[]>([]);
@@ -129,6 +129,13 @@ export default function Perfil() {
     message: string;
     type: 'success' | 'error';
   } | null>(null);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/login');
+      return;
+    }
+  }, [isAuthenticated, navigate]);
 
   // Efecto para cargar datos cuando cambia la URL o el usuario
   useEffect(() => {

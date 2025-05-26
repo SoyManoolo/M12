@@ -38,25 +38,6 @@ export const meta = () => {
   ];
 };
 
-// Componente Layout que proporciona la estructura HTML base
-export function Layout({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="es" className="h-full">
-      <head>
-        <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <Meta />
-        <Links />
-      </head>
-      <body className="h-full">
-        {children}
-        <ScrollRestoration />
-        <Scripts />
-      </body>
-    </html>
-  );
-}
-
 // Componente raíz de la aplicación
 export default function App() {
   const [mounted, setMounted] = useState(false);
@@ -69,6 +50,14 @@ export default function App() {
   const isPublicRoute = publicRoutes.includes(location.pathname);
 
   return (
+    <html lang="es" className="h-full">
+      <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <Meta />
+        <Links />
+      </head>
+      <body className="h-full">
     <AuthProvider>
       {mounted ? (
         isPublicRoute ? (
@@ -80,5 +69,9 @@ export default function App() {
         )
       ) : null}
     </AuthProvider>
+        <ScrollRestoration />
+        <Scripts />
+      </body>
+    </html>
   );
 }

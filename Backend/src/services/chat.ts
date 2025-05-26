@@ -89,6 +89,11 @@ export class ChatService {
                 const otherUserId = chat.sender_id === user_id ? chat.receiver_id : chat.sender_id;
                 const otherUser = chat.sender_id === user_id ? chat.receiver : chat.sender;
 
+                if (!otherUser) {
+                    // Si no hay usuario relacionado, salta este chat
+                    return null;
+                }
+
                 // Obtener el último mensaje
                 const lastMessage = await ChatMessages.findOne({
                     where: {
@@ -122,7 +127,7 @@ export class ChatService {
                 };
             }));
 
-            return processedChats;
+            return processedChats.filter(Boolean);
         } catch (error) {
             if (error instanceof AppError) {
                 throw error;

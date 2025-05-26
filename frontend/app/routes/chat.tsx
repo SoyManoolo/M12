@@ -10,13 +10,16 @@
  * @module Chat
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from '@remix-run/react';
 import Navbar from '~/components/Inicio/Navbar';
 import ChatUserInfo from '~/components/Chats/ChatUserInfo';
 import { FaPaperPlane } from 'react-icons/fa';
 import { redirect } from "@remix-run/node";
 import type { User } from '~/types/user.types';
+import { chatService } from '~/services/chat.service';
+import { useAuth } from '~/hooks/useAuth';
+import { userService } from '~/services/user.service';
 
 interface Message {
   id: string;
@@ -24,7 +27,26 @@ interface Message {
   sender_id: string;
   receiver_id: string;
   created_at: string;
-  is_own: boolean;
+  is_delivered: boolean;
+  delivered_at: string | null;
+  read_at: string | null;
+  is_own?: boolean;
+}
+
+interface ChatUser {
+  user_id: string;
+  username: string;
+  name: string;
+  surname: string;
+  profile_picture: string | null;
+  email: string;
+  bio: string | null;
+  email_verified: boolean;
+  is_moderator: boolean;
+  deleted_at: string | null;
+  created_at: string;
+  updated_at: string;
+  active_video_call: boolean;
 }
 
 export const loader = async ({ request }: { request: Request }) => {
@@ -38,72 +60,164 @@ export default function Chat() {
   const [searchParams] = useSearchParams();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
-  const [chatUser, setChatUser] = useState<User | null>(null);
-
-  // Mock de datos del usuario con quien se chatea
-  const mockChatUser: User = {
-    user_id: '1',
-    username: 'usuario1',
-    name: 'Usuario',
-    surname: 'Uno',
-    email: 'usuario1@example.com',
-    profile_picture_url: 'https://i.pravatar.cc/150?img=1',
-    bio: '¡Hola! Me encanta compartir momentos especiales',
-    email_verified: true,
-    is_moderator: false,
-    deleted_at: null,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    active_video_call: false
-  };
-
-  // Mock de mensajes
-  const mockMessages: Message[] = [
-    {
-      id: '1',
-      content: '¡Hola! ¿Cómo estás?',
-      sender_id: '1',
-      receiver_id: '2',
-      created_at: new Date().toISOString(),
-      is_own: false
-    },
-    {
-      id: '2',
-      content: '¡Hola! Todo bien, ¿y tú?',
-      sender_id: '2',
-      receiver_id: '1',
-      created_at: new Date().toISOString(),
-      is_own: true
-    }
-  ];
+  const [chatUser, setChatUser] = useState<ChatUser | null>(null);
+  const [isTyping, setIsTyping] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { token } = useAuth();
+  const typingTimeoutRef = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
-    // Aquí iría la lógica para cargar los datos del usuario y los mensajes
-    setChatUser(mockChatUser);
-    setMessages(mockMessages);
-  }, []);
+    if (!token) return;
+
+    const loadChat = async () => {
+      try {
+        setLoading(true);
+        const userId = searchParams.get('userId');
+        
+        if (!userId) {
+          // Si no hay userId, cargar la lista de chats activos
+          const chats = await chatService.getActiveChats(token);
+          if (chats.length > 0) {
+            // Redirigir al primer chat
+            window.location.href = `/chat?userId=${chats[0].other_user.user_id}`;
+            return;
+          }
+          setLoading(false);
+          return;
+        }
+
+        // Cargar información del usuario del chat
+        const userResponse = await userService.getUserById(userId, token);
+        if (userResponse.success && userResponse.data) {
+          setChatUser({
+            user_id: userResponse.data.user_id,
+            username: userResponse.data.username,
+            name: userResponse.data.name,
+            surname: userResponse.data.surname,
+            profile_picture: userResponse.data.profile_picture ?? null,
+            email: userResponse.data.email || '',
+            bio: userResponse.data.bio ?? null,
+            email_verified: userResponse.data.email_verified || false,
+            is_moderator: userResponse.data.is_moderator || false,
+            deleted_at: null,
+            created_at: userResponse.data.created_at || '',
+            updated_at: userResponse.data.updated_at || '',
+            active_video_call: false
+          });
+        } else {
+          setChatUser(null);
+        }
+
+        // Cargar mensajes del chat
+        const { messages: chatMessages } = await chatService.getMessages(userId, token);
+        setMessages(chatMessages.map(msg => ({
+          ...msg,
+          is_own: msg.sender_id === userId
+        })));
+
+        // Conectar al WebSocket
+        chatService.connect(token, userId);
+
+        // Configurar manejadores de eventos
+        const handleNewMessage = (message: Message) => {
+          setMessages(prev => [...prev, { ...message, is_own: message.sender_id === userId }]);
+          scrollToBottom();
+        };
+
+        const handleDeliveryStatus = (data: { message_id: string; status: string }) => {
+          setMessages(prev => prev.map(msg => 
+            msg.id === data.message_id 
+              ? { ...msg, is_delivered: true, delivered_at: new Date().toISOString() }
+              : msg
+          ));
+        };
+
+        const handleReadStatus = (data: { message_id: string; status: string }) => {
+          setMessages(prev => prev.map(msg => 
+            msg.id === data.message_id 
+              ? { ...msg, read_at: new Date().toISOString() }
+              : msg
+          ));
+        };
+
+        const handleTyping = (data: { userId: string; isTyping: boolean }) => {
+          if (data.userId === userId) {
+            setIsTyping(data.isTyping);
+          }
+        };
+
+        chatService.onNewMessage(handleNewMessage);
+        chatService.onDeliveryStatus(handleDeliveryStatus);
+        chatService.onReadStatus(handleReadStatus);
+        chatService.onTyping(handleTyping);
+
+        // Marcar mensajes como leídos
+        chatMessages
+          .filter(msg => msg.sender_id === userId && !msg.read_at)
+          .forEach(msg => chatService.markMessageAsRead(msg.id, token));
+
+      } catch (error) {
+        console.error('Error al cargar el chat:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadChat();
+
+    return () => {
+      chatService.disconnect();
+    };
+  }, [token, searchParams]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() || !token || !chatUser) return;
 
-    const message: Message = {
-      id: Date.now().toString(),
-      content: newMessage,
-      sender_id: '2', // ID del usuario actual
-      receiver_id: chatUser?.user_id || '',
-      created_at: new Date().toISOString(),
-      is_own: true
-    };
-
-    setMessages(prev => [...prev, message]);
+    chatService.sendMessage(chatUser.user_id, newMessage, token);
     setNewMessage('');
   };
+
+  const handleTyping = () => {
+    if (!chatUser) return;
+
+    chatService.setTyping(chatUser.user_id, true);
+
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    typingTimeoutRef.current = setTimeout(() => {
+      chatService.setTyping(chatUser.user_id, false);
+    }, 2000);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
 
   if (!chatUser) {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
-        <p>Cargando chat...</p>
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">No tienes chats activos</h1>
+          <p className="text-gray-400 mb-4">Busca usuarios para comenzar una conversación</p>
+          <button
+            onClick={() => window.location.href = '/buscar'}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+          >
+            Buscar usuarios
+          </button>
+        </div>
       </div>
     );
   }
@@ -120,30 +234,45 @@ export default function Chat() {
           {/* Encabezado del chat */}
           <div className="p-4 border-b border-gray-800">
             <h1 className="text-xl font-bold">{chatUser.name} {chatUser.surname}</h1>
+            {isTyping && (
+              <p className="text-sm text-gray-400">Escribiendo...</p>
+            )}
           </div>
 
           {/* Mensajes */}
           <div className="flex-1 p-4 overflow-y-auto">
             <div className="space-y-4">
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex ${message.is_own ? 'justify-end' : 'justify-start'}`}
-                >
+              {messages.length === 0 ? (
+                <p className="text-gray-400 text-center mt-8">Aún no hay mensajes. ¡Escribe el primero!</p>
+              ) : (
+                messages.map((message) => (
                   <div
-                    className={`max-w-[70%] p-3 rounded-lg ${
-                      message.is_own
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-800 text-white'
-                    }`}
+                    key={message.id}
+                    className={`flex ${message.is_own ? 'justify-end' : 'justify-start'}`}
                   >
-                    <p>{message.content}</p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      {new Date(message.created_at).toLocaleTimeString()}
-                    </p>
+                    <div
+                      className={`max-w-[70%] p-3 rounded-lg ${
+                        message.is_own
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-800 text-white'
+                      }`}
+                    >
+                      <p>{message.content}</p>
+                      <div className="flex items-center justify-end space-x-2 mt-1">
+                        <p className="text-xs text-gray-400">
+                        {new Date(message.created_at).toLocaleTimeString()}
+                      </p>
+                        {message.is_own && (
+                          <span className="text-xs">
+                            {message.read_at ? '✓✓' : message.is_delivered ? '✓' : ''}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
+              <div ref={messagesEndRef} />
             </div>
           </div>
 
@@ -154,6 +283,7 @@ export default function Chat() {
                 type="text"
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
+                onKeyPress={handleTyping}
                 placeholder="Escribe un mensaje..."
                 className="flex-1 bg-gray-900 rounded-lg py-2 px-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
