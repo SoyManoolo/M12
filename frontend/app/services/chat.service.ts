@@ -67,10 +67,47 @@ class ChatService {
     this.socket.auth = { token };
     this.socket.connect();
     this.socket.emit('join-user', { userId, token });
+
+    // Configurar listeners de eventos
+    this.socket.on('new-message', (data: { message: Message }) => {
+      console.log('Nuevo mensaje recibido:', data.message);
+      this.messageHandlers.forEach(handler => handler(data.message));
+    });
+
+    this.socket.on('message-delivery-status', (data) => {
+      console.log('Estado de entrega actualizado:', data);
+      this.deliveryHandlers.forEach(handler => handler(data));
+    });
+
+    this.socket.on('message-read-status', (data) => {
+      console.log('Estado de lectura actualizado:', data);
+      this.readHandlers.forEach(handler => handler(data));
+    });
+
+    this.socket.on('user-typing', (data) => {
+      console.log('Estado de escritura actualizado:', data);
+      this.typingHandlers.forEach(handler => handler(data));
+    });
+
+    // Manejar errores de conexión
+    this.socket.on('connect_error', (error) => {
+      console.error('Error de conexión:', error);
+    });
+
+    this.socket.on('error', (error) => {
+      console.error('Error del socket:', error);
+    });
   }
 
   public disconnect() {
     if (!this.socket) return;
+    
+    // Remover todos los listeners
+    this.socket.off('new-message');
+    this.socket.off('message-delivery-status');
+    this.socket.off('message-read-status');
+    this.socket.off('user-typing');
+    
     this.socket.disconnect();
   }
 
@@ -267,6 +304,18 @@ class ChatService {
       }
 
       const data = await response.json();
+      
+      // Emitir el mensaje a través del socket
+      if (this.socket) {
+        this.socket.emit('chat-message', {
+          data: {
+            receiver_id: receiverId,
+            content
+          },
+          token
+        });
+      }
+
       return data.data;
     } catch (error) {
       console.error('Error al crear mensaje:', error);

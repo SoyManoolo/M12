@@ -84,6 +84,10 @@ export class ChatService {
                 ]
             });
 
+            if (!chats || chats.length === 0) {
+                return [];
+            }
+
             // Procesar los chats para obtener el último mensaje y la información del otro usuario
             const processedChats = await Promise.all(chats.map(async (chat: ChatMessages & { sender?: User, receiver?: User }) => {
                 const otherUserId = chat.sender_id === user_id ? chat.receiver_id : chat.sender_id;
@@ -129,10 +133,8 @@ export class ChatService {
 
             return processedChats.filter(Boolean);
         } catch (error) {
-            if (error instanceof AppError) {
-                throw error;
-            }
-            throw new AppError(500, 'InternalServerError');
+            console.error('Error en getUserChats:', error);
+            return [];
         }
     }
 
@@ -198,7 +200,13 @@ export class ChatService {
                 }
             });
 
-            if (!messages || messages.length === 0) throw new AppError(404, 'NoMessagesFound');
+            if (!messages || messages.length === 0) {
+                return {
+                    messages: [],
+                    hasNextPage: false,
+                    nextCursor: null
+                };
+            }
 
             const hasNextPage: boolean = messages.length > limit;
             const resultMessages = hasNextPage ? messages.slice(0, limit) : messages;
@@ -210,56 +218,56 @@ export class ChatService {
                 nextCursor
             };
         } catch (error) {
-        if (error instanceof AppError) {
-            throw error;
+            if (error instanceof AppError) {
+                throw error;
+            }
+            throw new AppError(500, 'InternalServerError');
         }
-        throw new AppError(500, 'InternalServerError');
     }
-}
 
     // Método para editar un mensaje
     public async updateMessage(message_id: string, content: string) {
-    try {
-        const message = await ChatMessages.findByPk(message_id);
+        try {
+            const message = await ChatMessages.findByPk(message_id);
 
-        if (!message) throw new AppError(404, 'MessageNotFound');
+            if (!message) throw new AppError(404, 'MessageNotFound');
 
             const created_at = message.getDataValue('created_at');
             if (!created_at || created_at < new Date(Date.now() - 1000 * 60 * 5)) {
                 throw new AppError(403, 'MessageTooOld');
+            }
+
+            await message.update({ content });
+
+            await message.reload();
+
+            return { result: true, message_id };
+        } catch (error) {
+            if (error instanceof AppError) {
+                throw error;
+            }
+            throw new AppError(500, 'InternalServerError');
         }
-
-        await message.update({ content });
-
-        await message.reload();
-
-        return { result: true, message_id };
-    } catch (error) {
-        if (error instanceof AppError) {
-            throw error;
-        }
-        throw new AppError(500, 'InternalServerError');
     }
-}
 
     // Método para eliminar un mensaje
     public async deleteMessage(message_id: string) {
-    try {
-        const messageExist = await existCommentChat(message_id);
+        try {
+            const messageExist = await existCommentChat(message_id);
 
-        if (!messageExist) throw new AppError(404, 'MessageNotFound');
+            if (!messageExist) throw new AppError(404, 'MessageNotFound');
 
-        await messageExist.destroy()
+            await messageExist.destroy()
 
-        return { result: true, message_id };
+            return { result: true, message_id };
 
-    } catch (error) {
-        if (error instanceof AppError) {
-            throw error;
+        } catch (error) {
+            if (error instanceof AppError) {
+                throw error;
+            }
+            throw new AppError(500, 'InternalServerError');
         }
-        throw new AppError(500, 'InternalServerError');
     }
-}
 
     // Método para marcar mensaje como entregado
     public async markMessageAsDelivered(message_id: string) {

@@ -73,7 +73,8 @@ export function chatEvents(socket: Socket, io: Server) {
 
     // Manejar desconexión
     socket.on("disconnect", () => {
-        const userId = socket.data.user?.user_id;
+        if (!socket.data.user) return;
+        const userId = socket.data.user.user_id;
         if (userId) {
             userStatus.set(userId, {
                 isOnline: false,
@@ -98,7 +99,8 @@ export function chatEvents(socket: Socket, io: Server) {
             // Extraer sender_id del token
             const token = data.token;
             const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
-            const sender_id = decoded.id;
+            if (!socket.data.user) return;
+            const sender_id = socket.data.user.user_id;
             console.log("[SOCKET] Enviando mensaje de", sender_id, "a", receiver_id);
 
             const result = await chatService.createMessage(sender_id, receiver_id, content);
@@ -136,6 +138,7 @@ export function chatEvents(socket: Socket, io: Server) {
             console.log("[SOCKET] Evento 'message-delivered' recibido:", data);
             const { message_id } = data;
             console.log("[SOCKET] Marcando mensaje como entregado:", message_id);
+            if (!socket.data.user) return;
             const message = await chatService.markMessageAsDelivered(message_id);
             console.log("[SOCKET] Mensaje marcado como entregado:", message);
             // Notificar al remitente que el mensaje fue entregado
@@ -159,6 +162,7 @@ export function chatEvents(socket: Socket, io: Server) {
             console.log("[SOCKET] Evento 'message-read' recibido:", data);
             const { message_id } = data;
             console.log("[SOCKET] Marcando mensaje como leído:", message_id);
+            if (!socket.data.user) return;
             const message = await chatService.markMessageAsRead(message_id);
             console.log("[SOCKET] Mensaje marcado como leído:", message);
             // Notificar al remitente que el mensaje fue leído
@@ -179,6 +183,7 @@ export function chatEvents(socket: Socket, io: Server) {
     // Indicador de "escribiendo..."
     socket.on("typing", (data) => {
         const { receiver_id, isTyping } = data;
+        if (!socket.data.user) return;
         const sender_id = socket.data.user.user_id;
 
         if (isTyping) {
@@ -203,6 +208,7 @@ export function chatEvents(socket: Socket, io: Server) {
     socket.on("message-delete", async (data) => {
         try {
             const { message_id, receiver_id } = data;
+            if (!socket.data.user) return;
             const sender_id = socket.data.user.user_id;
 
             const result = await chatService.deleteMessage(message_id);

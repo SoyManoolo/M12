@@ -204,8 +204,8 @@ export default function Chats() {
     chat.user.username.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleChatClick = (chatId: string) => {
-    window.location.href = `/chat?chatId=${chatId}`;
+  const handleChatClick = (userId: string) => {
+    window.location.href = `/chat?userId=${userId}`;
   };
 
   const handleStartNewChat = () => {
@@ -246,7 +246,7 @@ export default function Chats() {
               <ChatItem
                 key={chat.chat_id}
                 chat={chat}
-                onClick={() => handleChatClick(chat.chat_id)}
+                onClick={() => handleChatClick(chat.user.user_id)}
               />
             ))}
 

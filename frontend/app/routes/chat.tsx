@@ -111,21 +111,23 @@ export default function Chat() {
 
         // Cargar mensajes del chat
         const { messages: chatMessages } = await chatService.getMessages(userId, token);
-        setMessages(chatMessages.map(msg => ({
+        setMessages(chatMessages.reverse().map(msg => ({
           ...msg,
-          is_own: msg.sender_id === userId
+          is_own: msg.sender_id !== userId
         })));
 
         // Conectar al WebSocket
         chatService.connect(token, userId);
 
-        // Configurar manejadores de eventos
+        // Definir los handlers de eventos
         const handleNewMessage = (message: Message) => {
-          setMessages(prev => [...prev, { ...message, is_own: message.sender_id === userId }]);
+          console.log('Manejando nuevo mensaje:', message);
+          setMessages(prev => [...prev, { ...message, is_own: message.sender_id !== userId }]);
           scrollToBottom();
         };
 
         const handleDeliveryStatus = (data: { message_id: string; status: string }) => {
+          console.log('Manejando estado de entrega:', data);
           setMessages(prev => prev.map(msg => 
             msg.id === data.message_id 
               ? { ...msg, is_delivered: true, delivered_at: new Date().toISOString() }
@@ -134,6 +136,7 @@ export default function Chat() {
         };
 
         const handleReadStatus = (data: { message_id: string; status: string }) => {
+          console.log('Manejando estado de lectura:', data);
           setMessages(prev => prev.map(msg => 
             msg.id === data.message_id 
               ? { ...msg, read_at: new Date().toISOString() }
@@ -142,11 +145,13 @@ export default function Chat() {
         };
 
         const handleTyping = (data: { userId: string; isTyping: boolean }) => {
+          console.log('Manejando estado de escritura:', data);
           if (data.userId === userId) {
             setIsTyping(data.isTyping);
           }
         };
 
+        // Suscribirse a los eventos del socket
         chatService.onNewMessage(handleNewMessage);
         chatService.onDeliveryStatus(handleDeliveryStatus);
         chatService.onReadStatus(handleReadStatus);
@@ -157,6 +162,15 @@ export default function Chat() {
           .filter(msg => msg.sender_id === userId && !msg.read_at)
           .forEach(msg => chatService.markMessageAsRead(msg.id, token));
 
+        // Limpiar suscripciones al desmontar
+        return () => {
+          chatService.removeMessageHandler(handleNewMessage);
+          chatService.removeDeliveryHandler(handleDeliveryStatus);
+          chatService.removeReadHandler(handleReadStatus);
+          chatService.removeTypingHandler(handleTyping);
+          chatService.disconnect();
+        };
+
       } catch (error) {
         console.error('Error al cargar el chat:', error);
       } finally {
@@ -165,10 +179,6 @@ export default function Chat() {
     };
 
     loadChat();
-
-    return () => {
-      chatService.disconnect();
-    };
   }, [token, searchParams]);
 
   const scrollToBottom = () => {
@@ -179,8 +189,24 @@ export default function Chat() {
     e.preventDefault();
     if (!newMessage.trim() || !token || !chatUser) return;
 
-    chatService.sendMessage(chatUser.user_id, newMessage, token);
-    setNewMessage('');
+    // Enviar el mensaje al backend primero
+    chatService.createMessage(chatUser.user_id, newMessage, token)
+      .then(message => {
+        // Agregar el mensaje al estado local solo después de que se haya creado en el backend
+        setMessages(prev => [
+          ...prev,
+          {
+            ...message,
+            is_own: true
+          }
+        ]);
+        setNewMessage('');
+        scrollToBottom();
+      })
+      .catch(error => {
+        console.error('Error al enviar mensaje:', error);
+        // Aquí podrías mostrar un mensaje de error al usuario
+      });
   };
 
   const handleTyping = () => {
