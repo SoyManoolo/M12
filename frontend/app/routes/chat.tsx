@@ -266,7 +266,7 @@ export default function Chat() {
           </div>
 
           {/* Mensajes */}
-          <div className="flex-1 p-4 overflow-y-auto">
+          <div className="flex-1 p-4 overflow-y-auto custom-scrollbar">
             <div className="space-y-4">
               {messages.length === 0 ? (
                 <p className="text-gray-400 text-center mt-8">Aún no hay mensajes. ¡Escribe el primero!</p>
@@ -283,11 +283,11 @@ export default function Chat() {
                           : 'bg-gray-800 text-white'
                       }`}
                     >
-                      <p>{message.content}</p>
+                      <p className="break-words">{message.content}</p>
                       <div className="flex items-center justify-end space-x-2 mt-1">
                         <p className="text-xs text-gray-400">
-                        {new Date(message.created_at).toLocaleTimeString()}
-                      </p>
+                          {new Date(message.created_at).toLocaleTimeString()}
+                        </p>
                         {message.is_own && (
                           <span className="text-xs">
                             {message.read_at ? '✓✓' : message.is_delivered ? '✓' : ''}
@@ -301,6 +301,28 @@ export default function Chat() {
               <div ref={messagesEndRef} />
             </div>
           </div>
+
+          <style>
+            {`
+              .custom-scrollbar::-webkit-scrollbar {
+                width: 6px;
+              }
+              
+              .custom-scrollbar::-webkit-scrollbar-track {
+                background: #1f2937;
+                border-radius: 3px;
+              }
+              
+              .custom-scrollbar::-webkit-scrollbar-thumb {
+                background: #4b5563;
+                border-radius: 3px;
+              }
+              
+              .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                background: #6b7280;
+              }
+            `}
+          </style>
 
           {/* Input de mensaje */}
           <form onSubmit={handleSendMessage} className="p-4 border-t border-gray-800">
