@@ -179,6 +179,16 @@ export function chatEvents(socket: Socket, io: Server) {
     // Indicador de "escribiendo..."
     socket.on("typing", (data) => {
         const { receiver_id, isTyping } = data;
+
+        // Verificar si el usuario está autenticado
+        if (!socket.data.user) {
+            console.error("[SOCKET] Error: Usuario no autenticado en evento 'typing'");
+            socket.emit("typing_error", {
+                success: false,
+                message: "Usuario no autenticado"
+            });
+            return;
+        }
         const sender_id = socket.data.user.user_id;
 
         if (isTyping) {

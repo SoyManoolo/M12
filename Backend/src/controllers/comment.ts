@@ -36,7 +36,7 @@ export class CommentController {
             i18n.setLocale(locale);
 
             const { commentId } = req.params;
-            const user_id = req.user?.id;
+            const user_id = req.user?.user_id;
 
             if (!user_id) {
                 throw new AppError(401, 'Unauthorized');
@@ -60,7 +60,7 @@ export class CommentController {
             i18n.setLocale(locale);
 
             const { post_id, content } = req.body;
-            const user_id = req.user?.id;
+            const user_id = req.user?.user_id;
 
             if (!user_id) {
                 throw new AppError(401, 'Unauthorized');

@@ -15,8 +15,10 @@ export class AuthService {
             // Si no se encuentra el usuario, lanzar un error
             if (!user) throw new AppError(404, 'UserNotFound');
 
+            console.log(user.password)
+
             // Verificar si la contraseña es correcta
-            const correctPassword = await compare(password, user.password);
+            const correctPassword = await compare(password, user.getDataValue("password"));
 
             // Si la contraseña es incorrecta, lanzar un error
             if (!correctPassword) throw new AppError(401, 'IncorrectPassword');

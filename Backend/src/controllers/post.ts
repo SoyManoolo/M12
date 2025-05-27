@@ -50,13 +50,13 @@ export class PostController {
             i18n.setLocale(locale);
 
             // Verifica si el usuario está autenticado
-            if (!req.user?.id) {
+            if (!req.user?.user_id) {
                 throw new AppError(401, 'Unauthorized');
             };
 
             // Guarda toda la informacion del post
             const media = req.file || undefined;
-            const user_id = req.user.id;
+            const user_id = req.user.user_id;
             const description = req.body.description;
 
             // Llama al servicio para crear el post
@@ -166,12 +166,12 @@ export class PostController {
             const locale = req.headers['accept-language'] || 'en';
             i18n.setLocale(locale);
 
-            if (!req.user?.id) {
+            if (!req.user?.user_id) {
                 throw new AppError(401, 'Unauthorized');
             };
 
             const postId = req.params.id;
-            const userId = req.user.id;
+            const userId = req.user.user_id;
 
             const result = await this.postService.likePost(postId, userId);
 
@@ -191,12 +191,12 @@ export class PostController {
             const locale = req.headers['accept-language'] || 'en';
             i18n.setLocale(locale);
 
-            if (!req.user?.id) {
+            if (!req.user?.user_id) {
                 throw new AppError(401, 'Unauthorized');
             };
 
             const postId = req.params.id;
-            const userId = req.user.id;
+            const userId = req.user.user_id;
 
             const result = await this.postService.unlikePost(postId, userId);
 
@@ -216,12 +216,12 @@ export class PostController {
             const locale = req.headers['accept-language'] || 'en';
             i18n.setLocale(locale);
 
-            if (!req.user?.id) {
+            if (!req.user?.user_id) {
                 throw new AppError(401, 'Unauthorized');
             };
 
             const postId = req.params.id;
-            const userId = req.user.id;
+            const userId = req.user.user_id;
 
             const result = await this.postService.checkUserLike(postId, userId);
 

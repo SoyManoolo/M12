@@ -11,11 +11,11 @@ export class ChatController {
             const locale = req.headers['accept-language'] || 'en';
             i18n.setLocale(locale);
 
-            if (!req.user?.id) {
+            if (!req.user?.user_id) {
                 throw new AppError(401, 'Unauthorized');
             }
 
-            const user_id = req.user.id;
+            const user_id = req.user.user_id;
             const chats = await this.chatService.getUserChats(user_id);
 
             res.status(200).json({
@@ -32,11 +32,11 @@ export class ChatController {
             const locale = req.headers['accept-language'] || 'en';
             i18n.setLocale(locale);
 
-            if (!req.user?.id) {
+            if (!req.user?.user_id) {
                 throw new AppError(401, 'Unauthorized');
             }
 
-            const sender_id = req.user.id;
+            const sender_id = req.user.user_id;
             const { receiver_id } = req.query;
             const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
             const cursor = req.query.cursor as string | undefined;
@@ -64,11 +64,11 @@ export class ChatController {
             const locale = req.headers['accept-language'] || 'en';
             i18n.setLocale(locale);
 
-            if (!req.user?.id) {
+            if (!req.user?.user_id) {
                 throw new AppError(401, 'Unauthorized');
             }
 
-            const sender_id = req.user.id;
+            const sender_id = req.user.user_id;
             const { receiver_id, content } = req.body;
 
             if (!receiver_id || !content) {
@@ -91,7 +91,7 @@ export class ChatController {
             const locale = req.headers['accept-language'] || 'en';
             i18n.setLocale(locale);
 
-            if (!req.user?.id) {
+            if (!req.user?.user_id) {
                 throw new AppError(401, 'Unauthorized');
             }
 
@@ -113,7 +113,7 @@ export class ChatController {
             const locale = req.headers['accept-language'] || 'en';
             i18n.setLocale(locale);
 
-            if (!req.user?.id) {
+            if (!req.user?.user_id) {
                 throw new AppError(401, 'Unauthorized');
             }
 
@@ -134,7 +134,7 @@ export class ChatController {
             const locale = req.headers['accept-language'] || 'en';
             i18n.setLocale(locale);
 
-            if (!req.user?.id) {
+            if (!req.user?.user_id) {
                 throw new AppError(401, 'Unauthorized');
             }
 
