@@ -16,19 +16,28 @@ export class AuthService {
             const user = await User.findOne({ where: { [Op.or]: [{ username: id }, { email: id }] } });
 
             // Si no se encuentra el usuario, lanzar un error
-            if (!user) throw new AppError(404, 'UserNotFound');
+            if (!user) {
+                dbLogger.error(`[AuthService] User not found for ID: ${id}`);
+                throw new AppError(404, 'UserNotFound')
+            };
 
             // Verificar si la contraseña es correcta
             const correctPassword = await compare(password, user.getDataValue("password"));
 
             // Si la contraseña es incorrecta, lanzar un error
-            if (!correctPassword) throw new AppError(401, 'IncorrectPassword');
+            if (!correctPassword) {
+                dbLogger.error(`[AuthService] Incorrect password for user ID: ${id}`);
+                throw new AppError(401, 'IncorrectPassword')
+            };
 
             // Generar el token de autenticación
             const token: string = new AuthToken().generateToken(user);
 
             // Verificar si el token fue generado correctamente
-            if (!token) throw new AppError(500, 'TokenGenerationError');
+            if (!token) {
+                dbLogger.error(`[AuthService] Token generation failed for user ID: ${id}`);
+                throw new AppError(500, 'TokenGenerationError')
+            };
 
             // Guardar el token en la base de datos
             await JWT.findOrCreate({
@@ -39,10 +48,10 @@ export class AuthService {
             return token;
         } catch (error) {
             if (error instanceof AppError) {
-                dbLogger.error(`[AuthService] Error during login: ${error.message}`);
+                dbLogger.error("[AuthService] Error during login:", {error});
                 throw error;
             };
-            dbLogger.error(`[AuthService] Unexpected error during login: ${error}`);
+            dbLogger.error("[AuthService] Unexpected error during login:", {error});
             throw new AppError(500, 'InternalServerError');
         };
     };
@@ -56,8 +65,10 @@ export class AuthService {
             const existingUser = await User.findOne({ where: { [Op.or]: [{ username }, { email }] } });
             if (existingUser) {
                 if (existingUser.email === email) {
+                    dbLogger.error(`[AuthService] User with email already exists: ${email}`);
                     throw new AppError(409, 'UserEmailAlreadyExists');
                 } else {
+                    dbLogger.error(`[AuthService] User with username already exists: ${username}`);
                     throw new AppError(409, 'UserUsernameAlreadyExists');
                 }
             }
@@ -76,8 +87,8 @@ export class AuthService {
 
             // Verificar si la creación del usuario fue exitosa
             if (!newUser) {
-                 console.error("User creation failed unexpectedly."); // Log para depuración
-                 throw new AppError(500, 'UserCreationError');
+                dbLogger.error("User creation failed unexpectedly."); // Log para depuración
+                throw new AppError(500, 'UserCreationError');
             }
 
             // Generar el token de autenticación
@@ -85,7 +96,8 @@ export class AuthService {
 
             // Verificar si el token fue generado correctamente
             if (!token) {
-                 throw new AppError(500, 'TokenGenerationError');
+                dbLogger.error(`[AuthService] Token generation failed for new user: ${email}`);
+                throw new AppError(500, 'TokenGenerationError');
             }
 
             // Guardar el token en la base de datos
@@ -100,7 +112,7 @@ export class AuthService {
                 dbLogger.error(`[AuthService] Error during registration: ${error.message}`);
                 throw error;
             };
-            dbLogger.error(`[AuthService] Unexpected error during registration: ${error}`);
+            dbLogger.error("[AuthService] Unexpected error during registration:", {error});
             throw new AppError(500, 'InternalServerError');
         };
     };
@@ -121,10 +133,10 @@ export class AuthService {
             return true;
         } catch (error) {
             if (error instanceof AppError) {
-                dbLogger.error(`[AuthService] Error during logout: ${error.message}`);
+                dbLogger.error("[AuthService] Error during logout:", {error});
                 throw error;
             };
-            dbLogger.error(`[AuthService] Unexpected error during logout: ${error}`);
+            dbLogger.error("[AuthService] Unexpected error during logout:", {error});
             throw new AppError(500, 'InternalServerError');
         };
     }
