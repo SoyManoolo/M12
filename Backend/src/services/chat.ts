@@ -1,28 +1,30 @@
 import { ChatMessages, PostComments, User } from "../models";
 import { AppError } from "../middlewares/errors/AppError";
 import { Op } from "sequelize";
-import { existCommentChat } from "../utils/modelExists";
+import { existCommentChat, existsUser } from "../utils/modelExists";
 import { CreateMessageAttributes } from "../types/custom";
+import dbLogger from "../config/logger";
 
 export class ChatService {
     // Método para crear un nuevo mensaje
     public async createMessage(sender_id: string, receiver_id: string, content: string) {
         try {
+            dbLogger.info(`[ChatService] Creando mensaje de ${sender_id} a ${receiver_id}`);
+
+            // Verificar que el usuario remitente existe
+            const sender: User | null = await existsUser({user_id: sender_id});
+            if (!sender) throw new AppError(404, 'UserNotFound');
+
             // Verificar que el usuario receptor existe
-            const receiver: User | null = await User.findByPk(receiver_id);
-            if (!receiver) {
-                throw new AppError(404, 'UserNotFound');
-            }
+            const receiver: User | null = await existsUser({user_id: receiver_id});
+            if (!receiver) throw new AppError(404, 'UserNotFound');
 
             // Validar contenido del mensaje
-            if (!content.trim()) {
-                throw new AppError(400, 'EmptyMessage');
-            }
+            if (!content.trim()) throw new AppError(400, 'EmptyMessage');
 
-            if (content.length > 1000) {
-                throw new AppError(400, 'MessageTooLong');
-            }
+            if (content.length > 1000) throw new AppError(400, 'MessageTooLong');
 
+            // Crear el mensaje
             const messageData: CreateMessageAttributes = {
                 sender_id,
                 receiver_id,
@@ -31,14 +33,17 @@ export class ChatService {
 
             const message: ChatMessages = await ChatMessages.create(messageData);
 
+            // Verificar si el mensaje fue creado correctamente
             if (!message) throw new AppError(400, 'MessageNotCreated');
 
             return message;
 
         } catch (error) {
             if (error instanceof AppError) {
+                dbLogger.error(`[ChatService] Error al crear mensaje: ${error.message}`);
                 throw error;
             }
+            dbLogger.error(`[ChatService] Error inesperado al crear mensaje: ${error}`);
             throw new AppError(500, 'InternalServerError');
         }
     }
@@ -46,6 +51,12 @@ export class ChatService {
     // Método para obtener la lista de chats de un usuario
     public async getUserChats(user_id: string) {
         try {
+            dbLogger.info(`[ChatService] Obteniendo chats para el usuario: ${user_id}`);
+
+            // Verificar que el usuario existe
+            const user: User | null = await existsUser({user_id});
+            if (!user) throw new AppError(404, 'UserNotFound');
+
             // Obtener todos los chats donde el usuario es remitente o receptor
             const chats: ChatMessages[] = await ChatMessages.findAll({
                 where: {
@@ -138,6 +149,19 @@ export class ChatService {
     // Método para marcar mensajes como leídos
     public async markMessagesAsRead(sender_id: string, receiver_id: string) {
         try {
+            dbLogger.info(`[ChatService] Marcando mensajes como leídos de ${sender_id} a ${receiver_id}`);
+
+            // Verificar que el usuario remitente existe
+            const sender: User | null = await existsUser({user_id: sender_id})
+
+            if (!sender) throw new AppError(404, 'UserNotFound');
+
+            // Verificar que el usuario receptor existe
+            const receiver: User | null = await existsUser({user_id: receiver_id})
+
+            if (!receiver) throw new AppError(404, 'UserNotFound');
+
+            // Actualizar los mensajes no leídos
             await ChatMessages.update(
                 {
                     read_at: new Date(),
@@ -165,6 +189,16 @@ export class ChatService {
     // Método para obtener los mensajes de un chat
     public async getMessages(sender_id: string, receiver_id: string, limit: number = 20, cursor?: string) {
         try {
+            dbLogger.info(`[ChatService] Obteniendo mensajes entre ${sender_id} y ${receiver_id}`);
+
+            // Verificar que el usuario remitente existe
+            const sender: User | null = await existsUser({user_id: sender_id});
+            if (!sender) throw new AppError(404, 'UserNotFound');
+
+            // Verificar que el usuario receptor existe
+            const receiver: User | null = await existsUser({user_id: receiver_id});
+            if (!receiver) throw new AppError(404, 'UserNotFound');
+
             const queryOptions: any = {
                 limit: limit + 1,
                 order: [['created_at', 'DESC']]
@@ -250,10 +284,14 @@ export class ChatService {
     // Método para eliminar un mensaje
     public async deleteMessage(message_id: string) {
         try {
-            const messageExist: PostComments | null = await existCommentChat(message_id);
+            dbLogger.info(`[ChatService] Eliminando mensaje con ID: ${message_id}`);
+
+            // Verificar que el mensaje existe
+            const messageExist: ChatMessages | null = await ChatMessages.findByPk(message_id);
 
             if (!messageExist) throw new AppError(404, 'MessageNotFound');
 
+            // Eliminar el mensaje
             await messageExist.destroy()
 
             return {
@@ -263,8 +301,10 @@ export class ChatService {
 
         } catch (error) {
             if (error instanceof AppError) {
+                dbLogger.error(`[ChatService] Error al eliminar mensaje: ${error.message}`);
                 throw error;
             }
+            dbLogger.error(`[ChatService] Error inesperado al eliminar mensaje: ${error}`);
             throw new AppError(500, 'InternalServerError');
         }
     }
@@ -272,11 +312,15 @@ export class ChatService {
     // Método para marcar mensaje como entregado
     public async markMessageAsDelivered(message_id: string) {
         try {
+            dbLogger.info(`[ChatService] Marcando mensaje como entregado con ID: ${message_id}`);
+
+            // Verificar que el mensaje existe
             const message: ChatMessages | null = await ChatMessages.findByPk(message_id);
             if (!message) {
                 throw new AppError(404, 'MessageNotFound');
             }
 
+            // Actualizar el mensaje como entregado
             await message.update({
                 is_delivered: true,
                 delivered_at: new Date()
@@ -285,8 +329,10 @@ export class ChatService {
             return message;
         } catch (error) {
             if (error instanceof AppError) {
+                dbLogger.error(`[ChatService] Error al marcar mensaje como entregado: ${error.message}`);
                 throw error;
             }
+            dbLogger.error(`[ChatService] Error inesperado al marcar mensaje como entregado: ${error}`);
             throw new AppError(500, 'InternalServerError');
         }
     }
@@ -294,11 +340,15 @@ export class ChatService {
     // Método para marcar mensaje como leído
     public async markMessageAsRead(message_id: string) {
         try {
+            dbLogger.info(`[ChatService] Marcando mensaje como leído con ID: ${message_id}`);
+
+            // Verificar que el mensaje existe
             const message: ChatMessages | null = await ChatMessages.findByPk(message_id);
             if (!message) {
                 throw new AppError(404, 'MessageNotFound');
             }
 
+            // Actualizar el mensaje como leído
             await message.update({
                 read_at: new Date(),
                 is_delivered: true,
@@ -308,8 +358,10 @@ export class ChatService {
             return message;
         } catch (error) {
             if (error instanceof AppError) {
+                dbLogger.error(`[ChatService] Error al marcar mensaje como leído: ${error.message}`);
                 throw error;
             }
+            dbLogger.error(`[ChatService] Error inesperado al marcar mensaje como leído: ${error}`);
             throw new AppError(500, 'InternalServerError');
         }
     }

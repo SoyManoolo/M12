@@ -108,7 +108,7 @@ async function main() {
             // Marcar mensaje como entregado y leído si Jaider es el receptor
             if (data.message.receiver_id === jaiderId) {
                 logMessage('🔄', 'Jaider marcando mensaje como entregado y leído...', { message_id: data.message.id });
-                
+
                 // Enviar eventos con el formato correcto
                 jaiderSocket.emit("message-delivered", {
                     message_id: data.message.id,
@@ -116,7 +116,7 @@ async function main() {
                     delivered_at: new Date().toISOString(),
                     token: jaiderToken
                 });
-                
+
                 jaiderSocket.emit("message-read", {
                     message_id: data.message.id,
                     status: 'read',
@@ -175,19 +175,20 @@ async function main() {
             // Marcar mensaje como entregado y leído si Erik es el receptor
             if (data.message.receiver_id === erikId) {
                 logMessage('🔄', 'Erik marcando mensaje como entregado y leído...', { message_id: data.message.id });
-            
-            // Enviar eventos con el formato correcto
+
+                // Enviar eventos con el formato correcto
                 erikSocket.emit("message-delivered", {
-                message_id: data.message.id,
-                status: 'delivered',
-                delivered_at: new Date().toISOString(),
+                    message_id: data.message.id,
+                    status: 'delivered',
+                    delivered_at: new Date().toISOString(),
                     token: erikToken
-            });
-            
+                });
+
                 erikSocket.emit("message-read", {
-                message_id: data.message.id,
-                status: 'read',
-                read_at: new Date().toISOString(),
+
+                    message_id: data.message.id,
+                    status: 'read',
+                    read_at: new Date().toISOString(),
                     token: erikToken
                 });
             }
@@ -287,7 +288,7 @@ async function main() {
         logMessage('🔌', 'Cerrando conexiones...');
         jaiderSocket.disconnect();
         erikSocket.disconnect();
-            process.exit(0);
+        process.exit(0);
 
     } catch (error) {
         console.error("Error en la ejecución:", error);
