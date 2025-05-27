@@ -3,6 +3,7 @@ import { AppError } from "../middlewares/errors/AppError";
 import { existsUser } from "../utils/modelExists";
 import { Op } from "sequelize";
 import { Server } from "socket.io";
+import dbLogger from "../config/logger";
 
 export class VideoCallService {
     private static waitingQueue: Map<string, string> = new Map();
@@ -23,7 +24,10 @@ export class VideoCallService {
     public async QueueVideoCall(user_id: string, socket_id: string) {
         try {
             const user: User | null = await existsUser({ user_id });
-            if (!user) throw new AppError(404, 'UserNotFound');
+            if (!user) {
+                dbLogger.error(`[VideoCallService] User not found for ID: ${user_id}`);
+                throw new AppError(404, 'UserNotFound')
+            };
 
             if (VideoCallService.waitingQueue.has(user_id)) return false;
 
@@ -32,8 +36,10 @@ export class VideoCallService {
             return true;
         } catch (error) {
             if (error instanceof AppError) {
+                dbLogger.error("[VideoCallService] Error in QueueVideoCall:", { error });
                 throw error;
             }
+            dbLogger.error("[VideoCallService] Unexpected error in QueueVideoCall:", { error });
             throw new AppError(500, 'InternalServerError');
         };
     };
@@ -43,14 +49,22 @@ export class VideoCallService {
         try {
             const caller: User | null = await existsUser({ user_id: caller_id });
             const friend: User | null = await existsUser({ user_id: friend_id });
-            if (!caller) throw new AppError(404, 'UserNotFound');
-            if (!friend) throw new AppError(404, 'UserNotFound');
+            if (!caller) {
+                dbLogger.error(`[VideoCallService] Caller not found for ID: ${caller_id}`);
+                throw new AppError(404, 'UserNotFound')
+            };
+            if (!friend) {
+                dbLogger.error(`[VideoCallService] Friend not found for ID: ${friend_id}`);
+                throw new AppError(404, 'UserNotFound')
+            };
 
             // TODO: hacer verificacion de si son amigos y crear la llamada
         } catch (error) {
             if (error instanceof AppError) {
+                dbLogger.error("[VideoCallService] Error in initiateVideoCall:", { error });
                 throw error;
             }
+            dbLogger.error("[VideoCallService] Unexpected error in initiateVideoCall:", { error });
             throw new AppError(500, 'InternalServerError');
         };
     };
@@ -117,8 +131,12 @@ export class VideoCallService {
                 remainingUsers: VideoCallService.waitingQueue.size
             };
         } catch (error) {
-            console.error("Error during bulk matching process:", error);
-            throw error;
+            if (error instanceof AppError) {
+                dbLogger.error("[VideoCallService] Error in performMatchingRound:", { error });
+                throw error;
+            }
+            dbLogger.error("[VideoCallService] Unexpected error in performMatchingRound:", { error });
+            throw new AppError(500, 'InternalServerError');
         };
     };
 
@@ -128,16 +146,24 @@ export class VideoCallService {
             const user: User | null = await existsUser({ user_id });
             const user2: User | null = await existsUser({ user_id: user_id2 });
 
-            if (!user) throw new AppError(404, 'UserNotFound');
-            if (!user2) throw new AppError(404, 'UserNotFound');
+            if (!user) {
+                dbLogger.error(`[VideoCallService] User not found for ID: ${user_id}`);
+                throw new AppError(404, 'UserNotFound')
+            };
+            if (!user2) {
+                dbLogger.error(`[VideoCallService] User not found for ID: ${user_id2}`);
+                throw new AppError(404, 'UserNotFound')
+            };
 
             // TODO
 
             return user;
         } catch (error) {
             if (error instanceof AppError) {
+                dbLogger.error("[VideoCallService] Error in sendFriendRequest:", { error });
                 throw error;
             }
+            dbLogger.error("[VideoCallService] Unexpected error in sendFriendRequest:", { error });
             throw new AppError(500, 'InternalServerError');
         };
     };
@@ -145,9 +171,16 @@ export class VideoCallService {
     // Método para terminar la llamada
     public async endCall(user_id: string, call_id: string) {
         try {
-            const user: User | null = await existsUser({ user_id });
-            if (!user) throw new AppError(404, 'UserNotFound');
+            dbLogger.info(`[VideoCallService] User ${user_id} is ending the call with ID: ${call_id}`);
 
+            // Verificar que el usuario existe
+            const user: User | null = await existsUser({ user_id });
+            if (!user) {
+                dbLogger.error(`[VideoCallService] User not found for ID: ${user_id}`);
+                throw new AppError(404, 'UserNotFound')
+            };
+
+            // Verificar que la llamada existe y el usuario es parte de ella
             const call: VideoCalls | null = await VideoCalls.findOne({
                 where: {
                     call_id,
@@ -158,8 +191,12 @@ export class VideoCallService {
                 },
             });
 
-            if (!call) throw new AppError(404, 'CallNotFound');
+            if (!call) {
+                dbLogger.error(`[VideoCallService] Call not found for ID: ${call_id} and user ID: ${user_id}`);
+                throw new AppError(404, 'CallNotFound')
+            };
 
+            // Actualizar el estado de la llamada a "ended" y registrar la duración
             await call.update({
                 ended_at: new Date(),
                 status: "ended",
@@ -173,8 +210,10 @@ export class VideoCallService {
             return call;
         } catch (error) {
             if (error instanceof AppError) {
+                dbLogger.error("[VideoCallService] Error in endCall:", { error });
                 throw error;
             };
+            dbLogger.error("[VideoCallService] Unexpected error in endCall:", { error });
             throw new AppError(500, 'InternalServerError');
         };
     };
@@ -182,8 +221,14 @@ export class VideoCallService {
     // Método para dejar la cola de espera
     public async leaveQueue(user_id: string) {
         try {
+            dbLogger.info(`[VideoCallService] User ${user_id} is leaving the waiting queue`);
+
+            // Verificar que el usuario existe
             const user: User | null = await existsUser({ user_id });
-            if (!user) throw new AppError(404, 'UserNotFound');
+            if (!user) {
+                dbLogger.error(`[VideoCallService] User not found for ID: ${user_id}`);
+                throw new AppError(404, 'UserNotFound')
+            };
 
             if (!VideoCallService.waitingQueue.has(user_id)) return false;
 
@@ -192,14 +237,18 @@ export class VideoCallService {
             return true;
         } catch (error) {
             if (error instanceof AppError) {
+                dbLogger.error("[VideoCallService] Error in leaveQueue:", { error });
                 throw error;
             }
+            dbLogger.error("[VideoCallService] Unexpected error in leaveQueue:", { error });
             throw new AppError(500, 'InternalServerError');
         };
     }
 
     public async updateCallStatus(call_id: string, user_id: string, status: string) {
         try {
+            dbLogger.info(`[VideoCallService] User ${user_id} is updating the call status for call ID: ${call_id} to ${status}`);
+
             // Verificar que el usuario es parte de esta llamada
             const call: VideoCalls | null = await VideoCalls.findOne({
                 where: {
@@ -211,7 +260,10 @@ export class VideoCallService {
                 }
             });
 
-            if (!call) throw new AppError(404, 'CallNotFound');
+            if (!call) {
+                dbLogger.error(`[VideoCallService] Call not found for ID: ${call_id} and user ID: ${user_id}`);
+                throw new AppError(404, 'CallNotFound')
+            };
 
             // Actualizar el estado de la llamada en la base de datos
             await call.update({ status });
@@ -219,7 +271,11 @@ export class VideoCallService {
             // También actualizar en la memoria
             if (VideoCallService.activeCalls.has(call_id)) {
                 const callData = VideoCallService.activeCalls.get(call_id);
-                if (!callData) throw new AppError(404, 'CallNotFound');
+                if (!callData) {
+                    dbLogger.error(`[VideoCallService] Call data not found in memory for call ID: ${call_id}`);
+                    throw new AppError(404, 'CallNotFound')
+                };
+
                 callData.status = status;
                 VideoCallService.activeCalls.set(call_id, callData);
             }
@@ -227,8 +283,10 @@ export class VideoCallService {
             return true;
         } catch (error) {
             if (error instanceof AppError) {
+                dbLogger.error("[VideoCallService] Error in updateCallStatus:", { error });
                 throw error;
             }
+            dbLogger.error("[VideoCallService] Unexpected error in updateCallStatus:", { error });
             throw new AppError(500, 'InternalServerError');
         }
     }

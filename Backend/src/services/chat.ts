@@ -13,16 +13,26 @@ export class ChatService {
 
             // Verificar que el usuario remitente existe
             const sender: User | null = await existsUser({user_id: sender_id});
-            if (!sender) throw new AppError(404, 'UserNotFound');
+            if (!sender) {
+                dbLogger.error(`[ChatService] Usuario remitente no encontrado: ${sender_id}`);
+                throw new AppError(404, 'UserNotFound')};
 
             // Verificar que el usuario receptor existe
             const receiver: User | null = await existsUser({user_id: receiver_id});
-            if (!receiver) throw new AppError(404, 'UserNotFound');
+            if (!receiver) {
+                dbLogger.error(`[ChatService] Usuario receptor no encontrado: ${receiver_id}`);
+                throw new AppError(404, 'UserNotFound')};
 
             // Validar contenido del mensaje
-            if (!content.trim()) throw new AppError(400, 'EmptyMessage');
+            if (!content.trim()) {
+                dbLogger.error("[ChatService] Mensaje vacío");
+                throw new AppError(400, 'EmptyMessage')
+            };
 
-            if (content.length > 1000) throw new AppError(400, 'MessageTooLong');
+            if (content.length > 1000) {
+                dbLogger.error("[ChatService] Mensaje demasiado largo");
+                throw new AppError(400, 'MessageTooLong')
+            };
 
             // Crear el mensaje
             const messageData: CreateMessageAttributes = {
@@ -40,10 +50,10 @@ export class ChatService {
 
         } catch (error) {
             if (error instanceof AppError) {
-                dbLogger.error(`[ChatService] Error al crear mensaje: ${error.message}`);
+                dbLogger.error("[ChatService] Error al crear mensaje:", {error});
                 throw error;
             }
-            dbLogger.error(`[ChatService] Error inesperado al crear mensaje: ${error}`);
+            dbLogger.error("[ChatService] Error inesperado al crear mensaje:", {error});
             throw new AppError(500, 'InternalServerError');
         }
     }
@@ -55,7 +65,10 @@ export class ChatService {
 
             // Verificar que el usuario existe
             const user: User | null = await existsUser({user_id});
-            if (!user) throw new AppError(404, 'UserNotFound');
+            if (!user) {
+                dbLogger.error(`[ChatService] Usuario no encontrado: ${user_id}`);
+                throw new AppError(404, 'UserNotFound')
+            };
 
             // Obtener todos los chats donde el usuario es remitente o receptor
             const chats: ChatMessages[] = await ChatMessages.findAll({
@@ -141,8 +154,9 @@ export class ChatService {
 
             return processedChats.filter(Boolean);
         } catch (error) {
-            console.error('Error en getUserChats:', error);
+            dbLogger.error('Error en getUserChats:', {error});
             return [];
+
         }
     }
 
@@ -180,8 +194,10 @@ export class ChatService {
             return { success: true };
         } catch (error) {
             if (error instanceof AppError) {
+                dbLogger.error("[ChatService] Error al marcar mensajes como leídos:", {error});
                 throw error;
             }
+            dbLogger.error("[ChatService] Error inesperado al marcar mensajes como leídos:", {error});
             throw new AppError(500, 'InternalServerError');
         }
     }
@@ -193,11 +209,17 @@ export class ChatService {
 
             // Verificar que el usuario remitente existe
             const sender: User | null = await existsUser({user_id: sender_id});
-            if (!sender) throw new AppError(404, 'UserNotFound');
+            if (!sender) {
+                dbLogger.error(`[ChatService] Usuario remitente no encontrado: ${sender_id}`);
+                throw new AppError(404, 'UserNotFound')
+            };
 
             // Verificar que el usuario receptor existe
             const receiver: User | null = await existsUser({user_id: receiver_id});
-            if (!receiver) throw new AppError(404, 'UserNotFound');
+            if (!receiver) {
+                dbLogger.error(`[ChatService] Usuario receptor no encontrado: ${receiver_id}`);
+                throw new AppError(404, 'UserNotFound')
+            };
 
             const queryOptions: any = {
                 limit: limit + 1,
@@ -241,7 +263,7 @@ export class ChatService {
 
             const hasNextPage: boolean = messages.length > limit;
             const resultMessages: ChatMessages[] = hasNextPage ? messages.slice(0, limit) : messages;
-            const nextCursor: string | null = hasNextPage ? resultMessages[resultMessages.length - 1].chat_id : null;
+            const nextCursor: string | null = hasNextPage ? resultMessages[resultMessages.length - 1].id : null;
 
             return {
                 messages: resultMessages,
@@ -289,7 +311,9 @@ export class ChatService {
             // Verificar que el mensaje existe
             const messageExist: ChatMessages | null = await ChatMessages.findByPk(message_id);
 
-            if (!messageExist) throw new AppError(404, 'MessageNotFound');
+            if (!messageExist) {
+                dbLogger.error(`[ChatService] Mensaje no encontrado: ${message_id}`);
+                throw new AppError(404, 'MessageNotFound')};
 
             // Eliminar el mensaje
             await messageExist.destroy()
@@ -301,10 +325,10 @@ export class ChatService {
 
         } catch (error) {
             if (error instanceof AppError) {
-                dbLogger.error(`[ChatService] Error al eliminar mensaje: ${error.message}`);
+                dbLogger.error("[ChatService] Error al eliminar mensaje:", {error});
                 throw error;
             }
-            dbLogger.error(`[ChatService] Error inesperado al eliminar mensaje: ${error}`);
+            dbLogger.error("[ChatService] Error inesperado al eliminar mensaje:", {error});
             throw new AppError(500, 'InternalServerError');
         }
     }
@@ -317,6 +341,7 @@ export class ChatService {
             // Verificar que el mensaje existe
             const message: ChatMessages | null = await ChatMessages.findByPk(message_id);
             if (!message) {
+                dbLogger.error(`[ChatService] Mensaje no encontrado: ${message_id}`);
                 throw new AppError(404, 'MessageNotFound');
             }
 
@@ -329,10 +354,10 @@ export class ChatService {
             return message;
         } catch (error) {
             if (error instanceof AppError) {
-                dbLogger.error(`[ChatService] Error al marcar mensaje como entregado: ${error.message}`);
+                dbLogger.error("[ChatService] Error al marcar mensaje como entregado:", {error});
                 throw error;
             }
-            dbLogger.error(`[ChatService] Error inesperado al marcar mensaje como entregado: ${error}`);
+            dbLogger.error("[ChatService] Error inesperado al marcar mensaje como entregado:", {error});
             throw new AppError(500, 'InternalServerError');
         }
     }
@@ -345,6 +370,7 @@ export class ChatService {
             // Verificar que el mensaje existe
             const message: ChatMessages | null = await ChatMessages.findByPk(message_id);
             if (!message) {
+                dbLogger.error(`[ChatService] Mensaje no encontrado: ${message_id}`);
                 throw new AppError(404, 'MessageNotFound');
             }
 
@@ -358,10 +384,10 @@ export class ChatService {
             return message;
         } catch (error) {
             if (error instanceof AppError) {
-                dbLogger.error(`[ChatService] Error al marcar mensaje como leído: ${error.message}`);
+                dbLogger.error("[ChatService] Error al marcar mensaje como leído:", {error});
                 throw error;
             }
-            dbLogger.error(`[ChatService] Error inesperado al marcar mensaje como leído: ${error}`);
+            dbLogger.error("[ChatService] Error inesperado al marcar mensaje como leído:", {error});
             throw new AppError(500, 'InternalServerError');
         }
     }

@@ -5,6 +5,7 @@ import { existsPost, existsUser } from "../utils/modelExists";
 import { PostAttributes, UserFilters } from "../types/custom";
 import { sequelize } from "../config/database";
 import { CreatePostAttributes } from "../types/custom";
+import dbLogger from '../config/logger';
 
 export class PostService {
     // Guarda la ruta de la carpeta media y las subcarpetas images y videos
@@ -14,6 +15,7 @@ export class PostService {
     // Método para crear un nuevo post
     public async createPost(user_id: string, description: string, media?: Express.Multer.File) {
         try {
+            dbLogger.info(`[PostService] Creating post for user: ${user_id}`);
 
             const postData: CreatePostAttributes = {
                 user_id,
@@ -32,11 +34,15 @@ export class PostService {
 
             const post = await Post.create(postData)
 
+            if (!post) throw new AppError(500, 'PostNotCreated');
+
             return post;
         } catch (error) {
             if (error instanceof AppError) {
+                dbLogger.error(`[PostService] Error creating post: ${error.message}`);
                 throw error;
             }
+            dbLogger.error(`[PostService] Unexpected error creating post: ${error}`);
             throw new AppError(500, 'InternalServerError');
         };
     };
@@ -128,8 +134,10 @@ export class PostService {
             };
         } catch (error) {
             if (error instanceof AppError) {
+                dbLogger.error(`[PostService] Error getting posts by user: ${error.message}`);
                 throw error;
             }
+            dbLogger.error(`[PostService] Unexpected error getting posts by user: ${error}`);
             throw new AppError(500, 'InternalServerError');
         };
     }
@@ -137,6 +145,8 @@ export class PostService {
     // Método para obtener los posts paginados
     public async getPosts(limit: number = 10, cursor?: string) {
         try {
+            dbLogger.info('[PostService] Getting all posts');
+
             const queryOptions: any = {
                 limit: limit + 1,
                 order: [['created_at', 'DESC']],
@@ -205,8 +215,10 @@ export class PostService {
             };
         } catch (error: any) {
             if (error instanceof AppError) {
+                dbLogger.error(`[PostService] Error getting posts: ${error.message}`);
                 throw error;
             }
+            dbLogger.error(`[PostService] Unexpected error getting posts: ${error}`);
             throw new AppError(500, 'InternalServerError');
         }
     }
@@ -214,6 +226,8 @@ export class PostService {
     // Método para actualizar un post
     public async updatePost(postId: string, description: string) {
         try {
+            dbLogger.info(`[PostService] Updating post with ID: ${postId}`);
+
             const post: Post | null = await existsPost(postId);
 
             if (!post) throw new AppError(404, "");
@@ -226,8 +240,10 @@ export class PostService {
 
         } catch (error) {
             if (error instanceof AppError) {
+                dbLogger.error(`[PostService] Error updating post: ${error.message}`);
                 throw error;
             }
+            dbLogger.error(`[PostService] Unexpected error updating post: ${error}`);
             throw new AppError(500, 'InternalServerError');
         };
     };
@@ -235,6 +251,8 @@ export class PostService {
     // Método para eliminar un post
     public async deletePost(postId: string) {
         try {
+            dbLogger.info(`[PostService] Deleting post with ID: ${postId}`);
+
             const post: Post | null = await existsPost(postId);
 
             if (!post) throw new AppError(404, "");
@@ -244,8 +262,10 @@ export class PostService {
             return post;
         } catch (error) {
             if (error instanceof AppError) {
+                dbLogger.error(`[PostService] Error deleting post: ${error.message}`);
                 throw error;
             }
+            dbLogger.error(`[PostService] Unexpected error deleting post: ${error}`);
             throw new AppError(500, 'InternalServerError');
         };
     };
@@ -253,6 +273,8 @@ export class PostService {
     // Método para dar like a un post
     public async likePost(postId: string, userId: string) {
         try {
+            dbLogger.info(`[PostService] Liking post with ID: ${postId} by user: ${userId}`);
+
             const post: Post | null = await existsPost(postId);
             if (!post) throw new AppError(404, 'PostNotFound');
 
@@ -277,8 +299,10 @@ export class PostService {
             return { success: true, message: 'Like added successfully' };
         } catch (error) {
             if (error instanceof AppError) {
+                dbLogger.error(`[PostService] Error liking post: ${error.message}`);
                 throw error;
             }
+            dbLogger.error(`[PostService] Unexpected error liking post: ${error}`);
             throw new AppError(500, 'InternalServerError');
         };
     };
@@ -286,6 +310,8 @@ export class PostService {
     // Método para quitar like de un post
     public async unlikePost(postId: string, userId: string) {
         try {
+            dbLogger.info(`[PostService] Unliking post with ID: ${postId} by user: ${userId}`);
+
             const post: Post | null = await existsPost(postId);
             if (!post) throw new AppError(404, 'PostNotFound');
 
@@ -307,8 +333,10 @@ export class PostService {
             return { success: true, message: 'Like removed successfully' };
         } catch (error) {
             if (error instanceof AppError) {
+                dbLogger.error(`[PostService] Error unliking post: ${error.message}`);
                 throw error;
             }
+            dbLogger.error(`[PostService] Unexpected error unliking post: ${error}`);
             throw new AppError(500, 'InternalServerError');
         };
     };
@@ -316,6 +344,8 @@ export class PostService {
     // Método para verificar si un usuario dio like a un post
     public async checkUserLike(postId: string, userId: string) {
         try {
+            dbLogger.info(`[PostService] Checking user like for post with ID: ${postId} by user: ${userId}`);
+
             const post: Post | null = await existsPost(postId);
             if (!post) throw new AppError(404, 'PostNotFound');
 
@@ -329,8 +359,10 @@ export class PostService {
             return { hasLiked: !!like };
         } catch (error) {
             if (error instanceof AppError) {
+                dbLogger.error(`[PostService] Error checking user like for post: ${error.message}`);
                 throw error;
             }
+            dbLogger.error(`[PostService] Unexpected error checking user like for post: ${error}`);
             throw new AppError(500, 'InternalServerError');
         };
     };

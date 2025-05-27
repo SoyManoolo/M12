@@ -2,19 +2,26 @@ import { Request, Response, NextFunction } from 'express';
 import i18n from '../config/i18n';
 import { AppError } from '../middlewares/errors/AppError';
 import { CommentService } from '../services/comment';
+import dbLogger from '../config/logger';
 
 export class CommentController {
     constructor(private readonly commentService: CommentService) {};
 
     public async getComments(req: Request, res: Response, next: NextFunction) {
         try {
+            dbLogger.info('[CommentController] Get comments request received');
+
+            // Elegir el locale del header 'accept-language' o por defecto 'en' para el idioma de la respuesta
             const locale = req.headers['accept-language'] || 'en';
             i18n.setLocale(locale);
 
+            // Extraer postId de los parámetros de la solicitud
             const { postId } = req.params;
             const comments = await this.commentService.getComments(postId);
 
+            // Si no hay comentarios, lanza un error
             if (!comments) {
+                dbLogger.error(`[CommentController] No comments found for postId: ${postId}`);
                 throw new AppError(404, 'CommentsNotFound');
             }
 
@@ -32,13 +39,19 @@ export class CommentController {
 
     public async deleteComment(req: Request, res: Response, next: NextFunction) {
         try {
+            dbLogger.info('[CommentController] Delete comment request received');
+
+            // Elegir el locale del header 'accept-language' o por defecto 'en' para el idioma de la respuesta
             const locale = req.headers['accept-language'] || 'en';
             i18n.setLocale(locale);
 
+            // Extraer commentId de los parámetros de la solicitud y user_id del token
             const { commentId } = req.params;
             const user_id = req.user?.user_id;
 
+            // Verificar si el usuario está autenticado
             if (!user_id) {
+                dbLogger.error('[CommentController] Unauthorized access attempt');
                 throw new AppError(401, 'Unauthorized');
             }
 
@@ -56,13 +69,19 @@ export class CommentController {
 
     public async createComment(req: Request, res: Response, next: NextFunction) {
         try {
+            dbLogger.info('[CommentController] Create comment request received');
+
+            // Elegir el locale del header 'accept-language' o por defecto 'en' para el idioma de la respuesta
             const locale = req.headers['accept-language'] || 'en';
             i18n.setLocale(locale);
 
+            // Extraer post_id, content del cuerpo de la solicitud y user_id del token
             const { post_id, content } = req.body;
             const user_id = req.user?.user_id;
 
+            // Verificar si el usuario está autenticado
             if (!user_id) {
+                dbLogger.error('[CommentController] Unauthorized access attempt');
                 throw new AppError(401, 'Unauthorized');
             }
 
