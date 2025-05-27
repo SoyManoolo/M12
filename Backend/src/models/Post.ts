@@ -1,8 +1,10 @@
 import { sequelize } from "../config/database";
 import { Model, DataTypes } from "sequelize";
 import { User } from "./User";
+import { PostCreationAttributes } from "../types/custom";
+import { PostAttributes } from "../types/custom";
 
-export class Post extends Model {};
+export class Post extends Model <PostAttributes, PostCreationAttributes>{};
 
 Post.init(
     {

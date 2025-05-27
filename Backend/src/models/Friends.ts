@@ -1,8 +1,14 @@
 import { sequelize } from "../config/database";
 import { Model, DataTypes } from "sequelize";
 import { User } from "./User";
+import { FriendsAttributes } from "../types/custom";
+import { FriendsCreationAttributes } from "../types/custom";
 
-export class Friends extends Model { };
+export class Friends extends Model <FriendsAttributes, FriendsCreationAttributes>{
+    friendship_id!: string;
+    user1_id!: string;
+    user2_id!: string;
+};
 
 Friends.init(
     {

@@ -2,8 +2,9 @@ import { Op, where } from "sequelize";
 import { AppError } from "../middlewares/errors/AppError";
 import { Post, PostLikes, User } from "../models";
 import { existsPost, existsUser } from "../utils/modelExists";
-import { UserFilters } from "../types/custom";
+import { PostAttributes, UserFilters } from "../types/custom";
 import { sequelize } from "../config/database";
+import { CreatePostAttributes } from "../types/custom";
 
 export class PostService {
     // Guarda la ruta de la carpeta media y las subcarpetas images y videos
@@ -14,7 +15,7 @@ export class PostService {
     public async createPost(user_id: string, description: string, media?: Express.Multer.File) {
         try {
 
-            const postData: any = {
+            const postData: CreatePostAttributes = {
                 user_id,
                 description
             }
@@ -47,7 +48,7 @@ export class PostService {
                 throw new AppError(400, "");
             };
 
-            const user = await existsUser(filters);
+            const user: User | null = await existsUser(filters);
 
             if (!user) throw new AppError(404, "");
 
@@ -118,7 +119,7 @@ export class PostService {
             const resultPosts: Post[] = hasNextPage ? posts.slice(0, limit) : posts;
 
             // Obtenemos el cursor del último post
-            const nextCursor = hasNextPage ? resultPosts[resultPosts.length - 1].dataValues.post_id : null;
+            const nextCursor: string | null = hasNextPage ? resultPosts[resultPosts.length - 1].dataValues.post_id : null;
 
             return {
                 posts: resultPosts,
@@ -181,7 +182,7 @@ export class PostService {
                 };
             };
 
-            const posts = await Post.findAll(queryOptions);
+            const posts: Post[] = await Post.findAll(queryOptions);
 
             // Si no hay posts, lanzamos un error
             if (!posts || posts.length === 0) throw new AppError(404, 'PostNotFound');
@@ -194,8 +195,8 @@ export class PostService {
 
             // Paginación
             const hasNextPage: boolean = postsWithLikes.length > limit;
-            const resultPosts = hasNextPage ? postsWithLikes.slice(0, limit) : postsWithLikes;
-            const nextCursor = hasNextPage ? resultPosts[resultPosts.length - 1].post_id : null;
+            const resultPosts: PostAttributes[] = hasNextPage ? postsWithLikes.slice(0, limit) : postsWithLikes;
+            const nextCursor: string | null = hasNextPage ? resultPosts[resultPosts.length - 1].post_id : null;
 
             return {
                 posts: resultPosts,
@@ -213,7 +214,7 @@ export class PostService {
     // Método para actualizar un post
     public async updatePost(postId: string, description: string) {
         try {
-            const post = await existsPost(postId);
+            const post: Post | null = await existsPost(postId);
 
             if (!post) throw new AppError(404, "");
 
@@ -234,7 +235,7 @@ export class PostService {
     // Método para eliminar un post
     public async deletePost(postId: string) {
         try {
-            const post = await existsPost(postId);
+            const post: Post | null = await existsPost(postId);
 
             if (!post) throw new AppError(404, "");
 
@@ -252,11 +253,11 @@ export class PostService {
     // Método para dar like a un post
     public async likePost(postId: string, userId: string) {
         try {
-            const post = await existsPost(postId);
+            const post: Post | null = await existsPost(postId);
             if (!post) throw new AppError(404, 'PostNotFound');
 
             // Verificar si el usuario ya dio like
-            const existingLike = await PostLikes.findOne({
+            const existingLike: PostLikes | null = await PostLikes.findOne({
                 where: {
                     post_id: postId,
                     user_id: userId
@@ -285,11 +286,11 @@ export class PostService {
     // Método para quitar like de un post
     public async unlikePost(postId: string, userId: string) {
         try {
-            const post = await existsPost(postId);
+            const post: Post | null = await existsPost(postId);
             if (!post) throw new AppError(404, 'PostNotFound');
 
             // Verificar si el usuario dio like
-            const existingLike = await PostLikes.findOne({
+            const existingLike: PostLikes | null = await PostLikes.findOne({
                 where: {
                     post_id: postId,
                     user_id: userId
@@ -315,10 +316,10 @@ export class PostService {
     // Método para verificar si un usuario dio like a un post
     public async checkUserLike(postId: string, userId: string) {
         try {
-            const post = await existsPost(postId);
+            const post: Post | null = await existsPost(postId);
             if (!post) throw new AppError(404, 'PostNotFound');
 
-            const like = await PostLikes.findOne({
+            const like: PostLikes | null = await PostLikes.findOne({
                 where: {
                     post_id: postId,
                     user_id: userId

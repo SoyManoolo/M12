@@ -1,7 +1,7 @@
 import { User } from "../models";
 import { AppError } from "../middlewares/errors/AppError";
 import { existsUser } from "../utils/modelExists";
-import { UserFilters, UpdateUserData } from '../types/custom';
+import { UserFilters, UpdateUserData, UserAttributes } from '../types/custom';
 import { Op } from "sequelize";
 import path from "path";
 import fs from "fs";
@@ -48,13 +48,13 @@ export class UserService {
             }
 
             // Determinar si hay más páginas
-            const hasNextPage = users.length > limit;
+            const hasNextPage: boolean = users.length > limit;
 
             // Recortar el array si obtenemos uno extra para determinar hasNextPage
-            const resultUsers = hasNextPage ? users.slice(0, limit) : users;
+            const resultUsers: User[] = hasNextPage ? users.slice(0, limit) : users;
 
             // Determinar el próximo cursor
-            const nextCursor = hasNextPage ? resultUsers[resultUsers.length - 1].dataValues.user_id : null;
+            const nextCursor: string | null = hasNextPage ? resultUsers[resultUsers.length - 1].dataValues.user_id : null;
 
             return {
                 users: resultUsers,
@@ -76,7 +76,7 @@ export class UserService {
                 throw new AppError(400, "");
             };
 
-            const user = await existsUser(filters);
+            const user: User | null = await existsUser(filters);
 
             if (!user) throw new AppError(404, "");
 
@@ -96,7 +96,7 @@ export class UserService {
                 throw new AppError(400, "");
             };
 
-            const user = await existsUser(filters);
+            const user: User | null = await existsUser(filters);
             if (!user) throw new AppError(404, "");
 
             // Si se va a actualizar la contraseña, hashearla antes de guardar
@@ -104,7 +104,7 @@ export class UserService {
                 updateData.password = await hash(updateData.password, 10);
             }
 
-            const newUser = await user.update(updateData);
+            const newUser: User = await user.update(updateData);
 
             if (!newUser) throw new AppError(404, "");
 
@@ -122,7 +122,7 @@ export class UserService {
     // Método para eliminar un usuario
     public async deleteUser(filters: UserFilters) {
         try {
-            const user = await existsUser(filters);
+            const user: User | null = await existsUser(filters);
 
             if (!user) throw new AppError(404, "");
 
@@ -140,7 +140,7 @@ export class UserService {
     private deletionLogic(profilePicturePath: string | null) {
         if (!profilePicturePath) return;
 
-        const rutas = [
+        const rutas: string [] = [
             path.join(process.cwd(), 'Backend', profilePicturePath),
             path.join(process.cwd(), profilePicturePath),
             path.join(process.cwd(), 'Backend', 'media', 'images', path.basename(profilePicturePath)),
@@ -167,18 +167,18 @@ export class UserService {
                 throw new AppError(400, "Se requieren filtros para identificar al usuario");
             };
 
-            const user = await existsUser(filters);
+            const user: User | null = await existsUser(filters);
 
             if (!user) throw new AppError(404, "Usuario no encontrado");
 
             // Eliminar la imagen anterior si existe
-            const userData = user.toJSON();
+            const userData: UserAttributes = user.toJSON();
             if (userData.profile_picture) {
                 this.deletionLogic(userData.profile_picture);
             }
 
             // Actualizar con la nueva imagen
-            const imagePath = `${this.imageBasePath}/${profilePicture.filename}`;
+            const imagePath: string = `${this.imageBasePath}/${profilePicture.filename}`;
             await user.update({ profile_picture: imagePath });
             await user.reload();
 
@@ -198,13 +198,13 @@ export class UserService {
                 throw new AppError(400, "Se requieren filtros para identificar al usuario");
             };
 
-            const user = await existsUser(filters);
+            const user: User | null = await existsUser(filters);
 
             if (!user) throw new AppError(404, "Usuario no encontrado");
 
             // Guardamos la ruta antes de actualizar
-            const userData = user.toJSON();
-            const oldProfilePicture = userData.profile_picture;
+            const userData: UserAttributes = user.toJSON();
+            const oldProfilePicture: string | null = userData.profile_picture;
 
             // Primero eliminamos la referencia en la base de datos
             await user.update({ profile_picture: null });
