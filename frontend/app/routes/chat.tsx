@@ -20,6 +20,7 @@ import type { User } from '~/types/user.types';
 import { chatService } from '~/services/chat.service';
 import { useAuth } from '~/hooks/useAuth';
 import { userService } from '~/services/user.service';
+import { jwtDecode } from 'jwt-decode';
 
 interface Message {
   id: string;
@@ -68,12 +69,19 @@ export default function Chat() {
   const typingTimeoutRef = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
-    if (!token) return;
+    if (!token) {
+      console.log('No hay token disponible');
+      return;
+    }
+
+    console.log('Token disponible:', token.substring(0, 20) + '...');
 
     const loadChat = async () => {
       try {
         setLoading(true);
         const userId = searchParams.get('userId');
+        
+        console.log('Cargando chat para usuario:', userId);
         
         if (!userId) {
           // Si no hay userId, cargar la lista de chats activos
@@ -83,6 +91,17 @@ export default function Chat() {
             window.location.href = `/chat?userId=${chats[0].other_user.user_id}`;
             return;
           }
+          setLoading(false);
+          return;
+        }
+
+        // Obtener el ID del usuario actual del token
+        const decodedToken = jwtDecode(token) as { id: string };
+        const currentUserId = decodedToken.id;
+
+        // Verificar que no estamos intentando chatear con nosotros mismos
+        if (currentUserId === userId) {
+          console.error('No puedes chatear contigo mismo');
           setLoading(false);
           return;
         }
@@ -111,19 +130,27 @@ export default function Chat() {
 
         // Cargar mensajes del chat
         const { messages: chatMessages } = await chatService.getMessages(userId, token);
-        setMessages(chatMessages.reverse().map(msg => ({
+        // Ordenar mensajes por fecha de creación (más antiguos primero)
+        const sortedMessages = chatMessages.sort((a, b) => 
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        );
+        setMessages(sortedMessages.map(msg => ({
           ...msg,
-          is_own: msg.sender_id !== userId
+          is_own: msg.sender_id === currentUserId
         })));
 
         // Definir los handlers de eventos
         const handleNewMessage = (message: Message) => {
           console.log('Manejando nuevo mensaje:', message);
-          // Verificar si el mensaje ya existe en el estado
           setMessages(prev => {
             const messageExists = prev.some(msg => msg.id === message.id);
             if (messageExists) return prev;
-            return [...prev, { ...message, is_own: message.sender_id !== userId }];
+            
+            // Agregar el nuevo mensaje y ordenar
+            const newMessages = [...prev, { ...message, is_own: message.sender_id === currentUserId }];
+            return newMessages.sort((a, b) => 
+              new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+            );
           });
           scrollToBottom();
         };
@@ -159,8 +186,8 @@ export default function Chat() {
         chatService.onReadStatus(handleReadStatus);
         chatService.onTyping(handleTyping);
 
-        // Conectar al WebSocket
-        chatService.connect(token, userId);
+        // Conectar al WebSocket con el ID del usuario actual
+        chatService.connect(token, currentUserId);
 
         // Marcar mensajes como leídos
         chatMessages
@@ -208,16 +235,16 @@ export default function Chat() {
   };
 
   const handleTyping = () => {
-    if (!chatUser) return;
+    if (!chatUser || !token) return;
 
-    chatService.setTyping(chatUser.user_id, true);
+    chatService.setTyping(chatUser.user_id, true, token);
 
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
     }
 
     typingTimeoutRef.current = setTimeout(() => {
-      chatService.setTyping(chatUser.user_id, false);
+      chatService.setTyping(chatUser.user_id, false, token);
     }, 2000);
   };
 

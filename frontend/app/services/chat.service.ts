@@ -1,4 +1,5 @@
 import { io, Socket } from 'socket.io-client';
+import { jwtDecode } from 'jwt-decode';
 
 interface Message {
   id: string;
@@ -33,6 +34,10 @@ class ChatService {
   private typingHandlers: ((data: { userId: string; isTyping: boolean }) => void)[] = [];
   private baseUrl = 'http://localhost:3000';
   private isConnecting = false;
+  private reconnectAttempts = 0;
+  private maxReconnectAttempts = 2;
+  private reconnectDelay = 2000;
+  private lastToken: string | null = null;
 
   constructor() {
     this.socket = io(this.baseUrl, {
@@ -60,12 +65,16 @@ class ChatService {
 
     this.socket.on('new-message', (data: { message: Message }) => {
       console.log('Nuevo mensaje recibido:', data.message);
-      this.messageHandlers.forEach(handler => handler(data.message));
+      requestAnimationFrame(() => {
+        this.messageHandlers.forEach(handler => handler(data.message));
+      });
     });
 
     this.socket.on('chat-message-sent', (data: { success: boolean; message: Message }) => {
       console.log('Mensaje enviado:', data.message);
-      this.messageHandlers.forEach(handler => handler(data.message));
+      requestAnimationFrame(() => {
+        this.messageHandlers.forEach(handler => handler(data.message));
+      });
     });
 
     this.socket.on('message-received', (data: { message: Message }) => {
@@ -90,45 +99,80 @@ class ChatService {
 
     this.socket.on('error', (error) => {
       console.error('Error del socket:', error);
-      this.isConnecting = false;
+      
+      // Solo manejar errores críticos
+      if (error.type === 'UserNotAuthenticated' || error.type === 'InvalidToken') {
+        this.isConnecting = false;
+        this.socket?.disconnect();
+      }
     });
   }
 
   public connect(token: string, userId: string) {
     if (!this.socket || this.isConnecting) return;
 
-    this.isConnecting = true;
+    try {
+      // Decodificar el token para obtener el ID del usuario
+      const decoded = jwtDecode(token) as { id: string };
+      
+      // Verificar que el token pertenece al usuario correcto
+      if (decoded.id !== userId) {
+        console.error('El token no coincide con el usuario:', {
+          tokenId: decoded.id,
+          userId
+        });
+        return;
+      }
 
-    // Limpiar listeners existentes
-    this.socket.off('connect');
-    this.socket.off('disconnect');
-    this.socket.off('new-message');
-    this.socket.off('chat-message-sent');
-    this.socket.off('message-received');
-    this.socket.off('message-delivery-status');
-    this.socket.off('message-read-status');
-    this.socket.off('user-typing');
-    this.socket.off('error');
+      this.isConnecting = true;
+      
+      // Configurar la autenticación del socket
+      this.socket.auth = { token };
+      
+      // Conectar el socket
+      this.socket.connect();
 
-    // Configurar listeners
-    this.setupSocketListeners();
+      // Configurar el manejador de conexión exitosa
+      this.socket.on('connect', () => {
+        console.log('Socket conectado');
+        this.isConnecting = false;
+        this.reconnectAttempts = 0;
+        
+        // Unirse a la sala del usuario
+        this.socket?.emit('join-user', { userId, token });
+      });
 
-    // Configurar autenticación y conectar
-    this.socket.auth = { token };
-    this.socket.connect();
+      // Configurar el manejador de reconexión
+      this.socket.on('connect_error', (error) => {
+        console.error('Error de conexión:', error);
+        this.isConnecting = false;
+        
+        if (error.message === 'InvalidToken') {
+          // Si el token es inválido, no intentar reconectar
+          this.socket?.disconnect();
+          return;
+        }
+        
+        // Intentar reconectar después de un retraso
+        setTimeout(() => {
+          if (this.socket && !this.socket.connected) {
+            this.connect(token, userId);
+          }
+        }, this.reconnectDelay);
+      });
 
-    // Esperar a que el socket esté conectado antes de unirse
-    this.socket.on('connect', () => {
-      console.log('Socket conectado, uniéndose como usuario:', userId);
-      // Unirse a la sala del usuario
-      this.socket?.emit('join-user', { userId, token });
-    });
+    } catch (error) {
+      console.error('Error al conectar el socket:', error);
+      this.isConnecting = false;
+    }
   }
 
   public disconnect() {
     if (!this.socket) return;
     
     this.isConnecting = false;
+    this.reconnectAttempts = 0;
+    this.lastToken = null;
     
     // Remover todos los listeners
     this.socket.off('connect');
@@ -146,6 +190,13 @@ class ChatService {
 
   public sendMessage(receiverId: string, content: string, token: string) {
     if (!this.socket) return;
+
+    // Verificar que el socket está conectado
+    if (!this.socket.connected) {
+      console.log('Socket no conectado, reconectando...');
+      this.connect(token, receiverId);
+      return;
+    }
 
     this.socket.emit('chat-message', {
       data: {
@@ -178,12 +229,27 @@ class ChatService {
     });
   }
 
-  public setTyping(receiverId: string, isTyping: boolean) {
-    if (!this.socket) return;
+  public setTyping(receiverId: string, isTyping: boolean, token: string) {
+    if (!this.socket || !token) return;
+
+    // Verificar que el socket está conectado
+    if (!this.socket.connected) {
+      console.log('Socket no conectado, reconectando...');
+      // Obtener el userId del token
+      try {
+        const decodedToken = JSON.parse(atob(token.split('.')[1]));
+        this.connect(token, decodedToken.id);
+      } catch (error) {
+        console.error('Error al decodificar el token:', error);
+        return;
+      }
+      return;
+    }
 
     this.socket.emit('typing', {
       receiver_id: receiverId,
-      isTyping
+      isTyping,
+      token
     });
   }
 
