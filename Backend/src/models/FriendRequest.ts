@@ -1,8 +1,16 @@
 import { sequelize } from "../config/database";
 import { Model, DataTypes } from "sequelize";
 import { User } from "./User";
+import { FriendRequestAttributes } from "../types/custom";
+import { FriendRequestCreationAttributes } from "../types/custom";
 
-export class FriendRequest extends Model { };
+export class FriendRequest extends Model <FriendRequestAttributes, FriendRequestCreationAttributes>{
+    request_id!: string;
+    sender_id!: string;
+    receiver_id!: string;
+    status!: string;
+    created_at!: Date;
+};
 
 FriendRequest.init(
     {

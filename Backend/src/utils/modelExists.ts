@@ -1,6 +1,6 @@
 import { Op } from "sequelize";
 import { AppError } from "../middlewares/errors/AppError";
-import { User, Post, Friends } from "../models";
+import { User, Post, Friends, PostComments } from "../models";
 import { UserFilters } from "../types/custom";
 
 // Método para comprobar si existe un usuario
@@ -57,7 +57,7 @@ export async function existsPost(id: string) {
 // Método para comprobar si existe un comentario
 export async function existCommentChat(id: string) {
     try {
-        const comment = await Post.findOne({
+        const comment = await PostComments.findOne({
             where: {
                 comment_id: id
             }

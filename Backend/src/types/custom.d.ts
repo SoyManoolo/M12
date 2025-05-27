@@ -32,6 +32,16 @@ export interface UpdateUserData {
     bio?: string;
 };
 
+// Interfaz para los atributos necesarios para crear un usuario
+export type CreateUserAttributes = Pick<
+    UserAttributes,
+    | "name"
+    | "surname"
+    | "username"
+    | "email"
+    | "password"
+    >
+
 // Interfaz para los campos opcionales en la creación del modelo
 export interface UserCreationAttributes
     extends Optional<
@@ -72,7 +82,9 @@ export interface UserAttributes {
 // DInterfaz para los atributos necesarios para crear un mensaje
 export type CreateMessageAttributes = Pick<
     IChatMessages,
-    "sender_id" | "receiver_id" | "content"
+    | "sender_id"
+    | "receiver_id"
+    | "content"
 >;
 
 // Interfaz para los atributos opcionales en la creación de mensajes
@@ -108,6 +120,7 @@ export interface IChatMessages {
 // === VIDEO CALLS INTERFACES ===========
 // =======================================
 
+// Interfaz para los atributos opcionales en la creación de llamadas de video
 export interface VideoCallCreationAttributes
     extends Optional<
         VideoCallAttributes,
@@ -119,7 +132,7 @@ export interface VideoCallCreationAttributes
         | "match_status"
     > { }
 
-// Interfaz para la creación de una videollamada
+// Interfaz completa para el modelo VideoCalls
 export interface VideoCallAttributes {
     call_id: string;
     user1_id: string;
@@ -129,6 +142,95 @@ export interface VideoCallAttributes {
     call_duration: number | null;
     status: string;
     match_status: boolean;
+};
+
+// =======================================
+// === POST MODEL INTERFACES ============
+// =======================================
+
+// Interfaz para los atributos necesarios para crear un post
+export type CreatePostAttributes = Pick<
+    PostAttributes,
+    | "user_id"
+    | "description"
+    > & {
+    media?: string;
+};
+
+// Interfaz para los atributos opcionales en la creación de un post
+export interface PostCreationAttributes
+    extends Optional<
+        PostAttributes,
+        | "post_id"
+        | "media"
+        | "created_at"
+        | "updated_at"
+    > { }
+
+// Interfaz completa para el modelo Post
+export interface PostAttributes {
+    post_id: string;
+    user_id: string;
+    description: string;
+    media?: string | null;
+    created_at?: Date;
+    updated_at?: Date | null;
+    deleted_at?: Date | null;
+};
+
+// =======================================
+// === FRIEND REQUEST INTERFACES ========
+// =======================================
+
+// Interfaz para los atributos necesarios para crear una solicitud de amistad
+export type CreateFriendRequestAttributes = Pick<
+    FriendRequestAttributes,
+    | "sender_id"
+    | "receiver_id"
+    | "created_from"
+    | "video_call_id"
+    >
+
+// Interfaz para los atributos opcionales en la creación de una solicitud de amistad
+export interface FriendRequestCreationAttributes
+    extends Optional<
+        FriendRequestAttributes,
+        | "request_id"
+        | "status"
+        | "created_at"
+        | "updated_at"
+    > { }
+
+// Interfaz completa para el modelo FriendRequest
+export interface FriendRequestAttributes {
+    request_id: string;
+    sender_id: string;
+    receiver_id: string;
+    status: 'pending' | 'accepted' | 'rejected';
+    created_from?: 'search' | 'video_call' | 'suggestion';
+    video_call_id?: string | null;
+    created_at?: Date;
+    updated_at?: Date;
+}
+
+// =======================================
+// === FRIENDS INTERFACES ===============
+// =======================================
+
+// Interfaz para los atributos opcionales en la creación de una amistad
+export interface FriendsCreationAttributes
+    extends Optional<
+        FriendsAttributes,
+        | "friendship_id"
+        | "created_at"
+    > { }
+
+// Interfaz completa para el modelo Friends
+export interface FriendsAttributes {
+    friendship_id: string;
+    user1_id: string;
+    user2_id: string;
+    created_at?: Date;
 }
 
 export { };

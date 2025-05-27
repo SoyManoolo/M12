@@ -22,7 +22,7 @@ export class VideoCallService {
     // Método para manejar la cola de espera
     public async QueueVideoCall(user_id: string, socket_id: string) {
         try {
-            const user = await existsUser({ user_id });
+            const user: User | null = await existsUser({ user_id });
             if (!user) throw new AppError(404, 'UserNotFound');
 
             if (VideoCallService.waitingQueue.has(user_id)) return false;
@@ -41,8 +41,8 @@ export class VideoCallService {
     // Método para empearejar usuarios
     public async initiateVideoCall(caller_id: string, friend_id: string) {
         try {
-            const caller = await existsUser({ user_id: caller_id });
-            const friend = await existsUser({ user_id: friend_id });
+            const caller: User | null = await existsUser({ user_id: caller_id });
+            const friend: User | null = await existsUser({ user_id: friend_id });
             if (!caller) throw new AppError(404, 'UserNotFound');
             if (!friend) throw new AppError(404, 'UserNotFound');
 
@@ -62,11 +62,11 @@ export class VideoCallService {
             if (VideoCallService.waitingQueue.size < 2) return;
 
             // Crear un array de los usuarios en cola y mezclarlos aleatoriamente
-            const queueEntries = Array.from(VideoCallService.waitingQueue.entries());
+            const queueEntries: [string, string][] = Array.from(VideoCallService.waitingQueue.entries());
             queueEntries.sort(() => Math.random() - 0.5);
 
             // Número de pares a procesar
-            const pairsCount = Math.floor(queueEntries.length / 2);
+            const pairsCount: number = Math.floor(queueEntries.length / 2);
 
             for (let i = 0; i < pairsCount; i++) {
                 const [user1_id, socket_id1] = queueEntries[i * 2];
@@ -83,7 +83,7 @@ export class VideoCallService {
                 VideoCallService.waitingQueue.delete(user2_id);
 
                 // Crear una nueva llamada en la base de datos
-                const newVideoCall = await VideoCalls.create({
+                const newVideoCall: VideoCalls = await VideoCalls.create({
                     user1_id: user1_id,
                     user2_id: user2_id
                 });
@@ -125,8 +125,8 @@ export class VideoCallService {
     // Método para que usuarios se envien solicitud de amistad dentro de la llamada
     public async sendFriendRequest(user_id: string, user_id2: string) {
         try {
-            const user = await existsUser({ user_id });
-            const user2 = await existsUser({ user_id: user_id2 });
+            const user: User | null = await existsUser({ user_id });
+            const user2: User | null = await existsUser({ user_id: user_id2 });
 
             if (!user) throw new AppError(404, 'UserNotFound');
             if (!user2) throw new AppError(404, 'UserNotFound');
@@ -145,10 +145,10 @@ export class VideoCallService {
     // Método para terminar la llamada
     public async endCall(user_id: string, call_id: string) {
         try {
-            const user = await existsUser({ user_id });
+            const user: User | null = await existsUser({ user_id });
             if (!user) throw new AppError(404, 'UserNotFound');
 
-            const call = await VideoCalls.findOne({
+            const call: VideoCalls | null = await VideoCalls.findOne({
                 where: {
                     call_id,
                     [Op.or]: [
@@ -182,7 +182,7 @@ export class VideoCallService {
     // Método para dejar la cola de espera
     public async leaveQueue(user_id: string) {
         try {
-            const user = await existsUser({ user_id });
+            const user: User | null = await existsUser({ user_id });
             if (!user) throw new AppError(404, 'UserNotFound');
 
             if (!VideoCallService.waitingQueue.has(user_id)) return false;
@@ -201,7 +201,7 @@ export class VideoCallService {
     public async updateCallStatus(call_id: string, user_id: string, status: string) {
         try {
             // Verificar que el usuario es parte de esta llamada
-            const call = await VideoCalls.findOne({
+            const call: VideoCalls | null = await VideoCalls.findOne({
                 where: {
                     call_id,
                     [Op.or]: [

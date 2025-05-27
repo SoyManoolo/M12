@@ -1,4 +1,4 @@
-import { ChatMessages, User } from "../models";
+import { ChatMessages, PostComments, User } from "../models";
 import { AppError } from "../middlewares/errors/AppError";
 import { Op } from "sequelize";
 import { existCommentChat } from "../utils/modelExists";
@@ -9,7 +9,7 @@ export class ChatService {
     public async createMessage(sender_id: string, receiver_id: string, content: string) {
         try {
             // Verificar que el usuario receptor existe
-            const receiver = await User.findByPk(receiver_id);
+            const receiver: User | null = await User.findByPk(receiver_id);
             if (!receiver) {
                 throw new AppError(404, 'UserNotFound');
             }
@@ -29,7 +29,7 @@ export class ChatService {
                 content,
             };
 
-            const message = await ChatMessages.create(messageData);
+            const message: ChatMessages = await ChatMessages.create(messageData);
 
             if (!message) throw new AppError(400, 'MessageNotCreated');
 
@@ -47,7 +47,7 @@ export class ChatService {
     public async getUserChats(user_id: string) {
         try {
             // Obtener todos los chats donde el usuario es remitente o receptor
-            const chats = await ChatMessages.findAll({
+            const chats: ChatMessages[] = await ChatMessages.findAll({
                 where: {
                     [Op.or]: [
                         { sender_id: user_id },
@@ -77,8 +77,8 @@ export class ChatService {
 
             // Procesar los chats para obtener el último mensaje y la información del otro usuario
             const processedChats = await Promise.all(chats.map(async (chat: ChatMessages & { sender?: User, receiver?: User }) => {
-                const otherUserId = chat.sender_id === user_id ? chat.receiver_id : chat.sender_id;
-                const otherUser = chat.sender_id === user_id ? chat.receiver : chat.sender;
+                const otherUserId: string = chat.sender_id === user_id ? chat.receiver_id : chat.sender_id;
+                const otherUser: User | undefined = chat.sender_id === user_id ? chat.receiver : chat.sender;
 
                 if (!otherUser) {
                     // Si no hay usuario relacionado, salta este chat
@@ -86,7 +86,7 @@ export class ChatService {
                 }
 
                 // Obtener el último mensaje
-                const lastMessage = await ChatMessages.findOne({
+                const lastMessage: ChatMessages | null = await ChatMessages.findOne({
                     where: {
                         [Op.or]: [
                             {
@@ -103,7 +103,7 @@ export class ChatService {
                 });
 
                 // Contar mensajes no leídos
-                const unreadCount = await ChatMessages.count({
+                const unreadCount: number = await ChatMessages.count({
                     where: {
                         sender_id: otherUserId,
                         receiver_id: user_id,
@@ -173,7 +173,7 @@ export class ChatService {
                 }
             }
 
-            const messages = await ChatMessages.findAll({
+            const messages: ChatMessages[] = await ChatMessages.findAll({
                 ...queryOptions,
                 where: {
                     [Op.or]: [
@@ -192,8 +192,8 @@ export class ChatService {
             if (!messages || messages.length === 0) throw new AppError(404, 'NoMessagesFound');
 
             const hasNextPage: boolean = messages.length > limit;
-            const resultMessages = hasNextPage ? messages.slice(0, limit) : messages;
-            const nextCursor = hasNextPage ? resultMessages[resultMessages.length - 1].chat_id : null;
+            const resultMessages: ChatMessages[] = hasNextPage ? messages.slice(0, limit) : messages;
+            const nextCursor: string | null = hasNextPage ? resultMessages[resultMessages.length - 1].chat_id : null;
 
             return {
                 messages: resultMessages,
@@ -211,11 +211,11 @@ export class ChatService {
     // Método para editar un mensaje
     public async updateMessage(message_id: string, content: string) {
         try {
-            const message = await ChatMessages.findByPk(message_id);
+            const message: ChatMessages | null = await ChatMessages.findByPk(message_id);
 
             if (!message) throw new AppError(404, 'MessageNotFound');
 
-            const created_at = message.getDataValue('created_at');
+            const created_at: Date | undefined = message.getDataValue('created_at');
             if (!created_at || created_at < new Date(Date.now() - 1000 * 60 * 5)) {
                 throw new AppError(403, 'MessageTooOld');
             }
@@ -236,13 +236,16 @@ export class ChatService {
     // Método para eliminar un mensaje
     public async deleteMessage(message_id: string) {
         try {
-            const messageExist = await existCommentChat(message_id);
+            const messageExist: PostComments | null = await existCommentChat(message_id);
 
             if (!messageExist) throw new AppError(404, 'MessageNotFound');
 
             await messageExist.destroy()
 
-            return { result: true, message_id };
+            return {
+                result: true,
+                message_id
+            };
 
         } catch (error) {
             if (error instanceof AppError) {
@@ -255,7 +258,7 @@ export class ChatService {
     // Método para marcar mensaje como entregado
     public async markMessageAsDelivered(message_id: string) {
         try {
-            const message = await ChatMessages.findByPk(message_id);
+            const message: ChatMessages | null = await ChatMessages.findByPk(message_id);
             if (!message) {
                 throw new AppError(404, 'MessageNotFound');
             }
@@ -277,7 +280,7 @@ export class ChatService {
     // Método para marcar mensaje como leído
     public async markMessageAsRead(message_id: string) {
         try {
-            const message = await ChatMessages.findByPk(message_id);
+            const message: ChatMessages | null = await ChatMessages.findByPk(message_id);
             if (!message) {
                 throw new AppError(404, 'MessageNotFound');
             }
