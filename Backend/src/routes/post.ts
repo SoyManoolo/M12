@@ -4,24 +4,19 @@ import { PostController } from "../controllers/post";
 import { PostService } from "../services/post";
 import { AuthToken } from "../middlewares/validation/authentication/jwt";
 import upload from "../middlewares/multer"
+import { PostValidator } from "../middlewares/validation/post/PostValidator";
 
 const router = express.Router();
 const postService = new PostService();
 const postController = new PostController(postService);
+const postValidator = new PostValidator();
+const { CreatePostValidator, UpdatePostValidator } = postValidator;
 
 router.get('/username', async (req: Request, res: Response, next: NextFunction) => {
     await postController.getPostsUser(req, res, next);
 });
 
-router.patch('/username', async (req: Request, res: Response, next: NextFunction) => {
-    await postController.updatePost(req, res, next);
-});
-
-router.delete('/username', async (req: Request, res: Response, next: NextFunction) => {
-    await postController.deletePost(req, res, next);
-});
-
-router.post('/', AuthToken.verifyToken, upload.single('media'), async (req: Request, res: Response, next: NextFunction) => {
+router.post('/', AuthToken.verifyToken, CreatePostValidator, upload.single('media'), async (req: Request, res: Response, next: NextFunction) => {
     await postController.createPost(req, res, next);
 });
 
@@ -33,11 +28,11 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
     await postController.getPostsUser(req, res, next);
 });
 
-router.patch('/:id', async (req: Request, res: Response, next: NextFunction) => {
+router.patch('/:id', AuthToken.verifyToken, UpdatePostValidator,async (req: Request, res: Response, next: NextFunction) => {
     await postController.updatePost(req, res, next);
 });
 
-router.delete('/:id', async (req: Request, res: Response, next: NextFunction) => {
+router.delete('/:id', AuthToken.verifyToken, async (req: Request, res: Response, next: NextFunction) => {
     await postController.deletePost(req, res, next);
 });
 
