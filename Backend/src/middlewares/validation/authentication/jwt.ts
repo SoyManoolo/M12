@@ -20,8 +20,8 @@ export class AuthToken {
     public generateToken(user: User): string {
         // Generamos un token con el id y el dni del usuario
         return jwt.sign({
-            id: user.user_id,
-            username: user.username,
+            user_id: user.getDataValue("user_id"),
+            username: user.getDataValue("username"),
         },
             AuthToken.secretKey,
             { expiresIn: 3600 }
@@ -30,13 +30,13 @@ export class AuthToken {
 
     public static async verifyToken(req: Request, res: Response, next: NextFunction): Promise<void> {
         // Comprobamos si existe el token
-        const authHeader = req.headers['authorization'];
+        const authHeader: string | undefined = req.headers['authorization'];
 
         // Si no existe el token o no es un string devolvemos un error
         if (!authHeader || typeof authHeader !== 'string') throw new AppError(403, "MissingJWT");
 
         // Si existe el token lo extraemos
-        const token = authHeader.split(' ')[1];
+        const token: string = authHeader.split(' ')[1];
 
         // Si no existe el token devolvemos un error
         if (!token) throw new AppError(403, "FormatJWT");
@@ -58,16 +58,16 @@ export class AuthToken {
                 throw error;
             };
             throw new AppError(403, "FormatJWT");
-        };
+        }; 
     };
 
     public static async isModerator(req: Request, res: Response, next: NextFunction) {
         try {
             // Verifica si el token ha sido validado
-            if (!req.user || !req.user.id) throw new AppError(403, "Missing authentication. Please provide a valid token");
+            if (!req.user || !req.user.user_id) throw new AppError(403, "Missing authentication. Please provide a valid token");
 
             // Busca el usuario en la base de datos
-            const user = await User.findOne({ where: { user_id: req.user.id } });
+            const user = await User.findOne({ where: { user_id: req.user.user_id } });
 
             // Si el usuario no existe o no es admin, lanza error
             if (!user || !user.is_moderator) throw new AppError(403, "NoAdmin");

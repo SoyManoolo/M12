@@ -27,4 +27,4 @@ export function decodeToken(token: string): DecodedToken | null {
     console.error('Error al decodificar el token:', error);
     return null;
   }
-} 
+}

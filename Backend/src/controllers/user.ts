@@ -98,7 +98,7 @@ export class UserController {
             i18n.setLocale(locale);
 
             // Verifica si el usuario está autenticado
-            if (!req.user?.id) {
+            if (!req.user?.user_id) {
                 throw new AppError(401, 'Unauthorized');
             };
 
@@ -134,7 +134,7 @@ export class UserController {
             i18n.setLocale(locale);
 
             // Verifica si el usuario está autenticado
-            if (!req.user?.id) {
+            if (!req.user?.user_id) {
                 throw new AppError(401, 'Unauthorized');
             };
 
