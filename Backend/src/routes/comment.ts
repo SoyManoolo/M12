@@ -1,7 +1,8 @@
 import express from "express";
 import { Request, Response, NextFunction } from 'express';
-import { validateComment } from '../middlewares/validation/commentValidation';
 import { AuthToken } from '../middlewares/validation/authentication/jwt';
+import { CommentValidation } from '../middlewares/validation/commentValidation';
+const { validateComment } = new CommentValidation();
 
 const router = express.Router();
 import { CommentService } from '../services/comment';

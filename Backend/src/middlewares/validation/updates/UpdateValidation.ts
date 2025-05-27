@@ -11,5 +11,5 @@ export class UpdateValidation {
                 bio: Joi.string(),
             }).min(1) // Requiere al menos un campo
         }) (req, res, next);
-    }
-}
+    };
+};

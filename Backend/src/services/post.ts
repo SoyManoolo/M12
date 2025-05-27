@@ -51,7 +51,7 @@ export class PostService {
 
             if (!user) throw new AppError(404, "");
 
-            const user_id = user.dataValues.user_id;
+            const user_id = user.user_id;
 
             const queryOptions: any = {
                 limit: limit + 1,
@@ -98,7 +98,7 @@ export class PostService {
                             { user_id },  // Mantener la condición de user_id
                             {
                                 created_at: {
-                                    [Op.lt]: lastPost.dataValues.created_at
+                                    [Op.lt]: lastPost.getDataValue("created_at")
                                 }
                             }
                         ]
@@ -279,8 +279,8 @@ export class PostService {
                 throw error;
             }
             throw new AppError(500, 'InternalServerError');
-        }
-    }
+        };
+    };
 
     // Método para quitar like de un post
     public async unlikePost(postId: string, userId: string) {
@@ -309,8 +309,8 @@ export class PostService {
                 throw error;
             }
             throw new AppError(500, 'InternalServerError');
-        }
-    }
+        };
+    };
 
     // Método para verificar si un usuario dio like a un post
     public async checkUserLike(postId: string, userId: string) {
@@ -331,6 +331,6 @@ export class PostService {
                 throw error;
             }
             throw new AppError(500, 'InternalServerError');
-        }
-    }
-}
+        };
+    };
+};

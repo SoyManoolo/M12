@@ -40,8 +40,9 @@ UserBlocks.init({
         indexes: [
             {
                 unique: true,
-                fields: [ "blocker_id", "blocked_id" ],
+                fields: ["blocker_id", "blocked_id"],
                 name: "idx_blocker_id_blocked_id"
             }
         ]
-    })
+    }
+);

@@ -1,26 +1,7 @@
 import { sequelize } from "../config/database";
 import { Model, DataTypes, Optional } from "sequelize";
-
-// Interfaz para los atributos del modelo
-interface UserAttributes {
-    user_id: string;
-    name: string;
-    surname: string;
-    username: string;
-    email: string;
-    password: string;
-    profile_picture?: string | null;
-    bio?: string | null;
-    email_verified: boolean;
-    is_moderator: boolean;
-    active_video_call: boolean;
-    created_at?: Date;
-    updated_at?: Date;
-    deleted_at?: Date | null;
-}
-
-// Interfaz para la creación del modelo
-interface UserCreationAttributes extends Optional<UserAttributes, 'user_id' | 'profile_picture' | 'bio' | 'email_verified' | 'is_moderator' | 'active_video_call' | 'created_at' | 'updated_at' | 'deleted_at'> {}
+import { UserAttributes } from "../types/custom";
+import { UserCreationAttributes } from "../types/custom";
 
 export class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
     public user_id!: string;
@@ -76,7 +57,6 @@ User.init(
         profile_picture: {
             type: DataTypes.STRING(255),
             allowNull: true,
-            // validate: { isUrl: true },
         },
         bio: {
             type: DataTypes.TEXT,

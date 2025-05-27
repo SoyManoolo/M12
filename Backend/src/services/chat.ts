@@ -2,13 +2,7 @@ import { ChatMessages, User } from "../models";
 import { AppError } from "../middlewares/errors/AppError";
 import { Op } from "sequelize";
 import { existCommentChat } from "../utils/modelExists";
-import { IChatMessages } from "../models/ChatMessages";
-
-type CreateMessageAttributes = Pick<IChatMessages, 'sender_id' | 'receiver_id' | 'content'> & {
-    is_delivered: boolean;
-    delivered_at: null;
-    read_at: null;
-};
+import { CreateMessageAttributes } from "../types/custom";
 
 export class ChatService {
     // Método para crear un nuevo mensaje
@@ -33,9 +27,6 @@ export class ChatService {
                 sender_id,
                 receiver_id,
                 content,
-                is_delivered: false,
-                delivered_at: null,
-                read_at: null
             };
 
             const message = await ChatMessages.create(messageData);
@@ -140,7 +131,7 @@ export class ChatService {
     public async markMessagesAsRead(sender_id: string, receiver_id: string) {
         try {
             await ChatMessages.update(
-                { 
+                {
                     read_at: new Date(),
                     is_delivered: true,
                     delivered_at: new Date()
@@ -202,7 +193,7 @@ export class ChatService {
 
             const hasNextPage: boolean = messages.length > limit;
             const resultMessages = hasNextPage ? messages.slice(0, limit) : messages;
-            const nextCursor = hasNextPage ? resultMessages[resultMessages.length - 1].id : null;
+            const nextCursor = hasNextPage ? resultMessages[resultMessages.length - 1].chat_id : null;
 
             return {
                 messages: resultMessages,
@@ -210,56 +201,56 @@ export class ChatService {
                 nextCursor
             };
         } catch (error) {
-        if (error instanceof AppError) {
-            throw error;
+            if (error instanceof AppError) {
+                throw error;
+            }
+            throw new AppError(500, 'InternalServerError');
         }
-        throw new AppError(500, 'InternalServerError');
     }
-}
 
     // Método para editar un mensaje
     public async updateMessage(message_id: string, content: string) {
-    try {
-        const message = await ChatMessages.findByPk(message_id);
+        try {
+            const message = await ChatMessages.findByPk(message_id);
 
-        if (!message) throw new AppError(404, 'MessageNotFound');
+            if (!message) throw new AppError(404, 'MessageNotFound');
 
             const created_at = message.getDataValue('created_at');
             if (!created_at || created_at < new Date(Date.now() - 1000 * 60 * 5)) {
                 throw new AppError(403, 'MessageTooOld');
+            }
+
+            await message.update({ content });
+
+            await message.reload();
+
+            return { result: true, message_id };
+        } catch (error) {
+            if (error instanceof AppError) {
+                throw error;
+            }
+            throw new AppError(500, 'InternalServerError');
         }
-
-        await message.update({ content });
-
-        await message.reload();
-
-        return { result: true, message_id };
-    } catch (error) {
-        if (error instanceof AppError) {
-            throw error;
-        }
-        throw new AppError(500, 'InternalServerError');
     }
-}
 
     // Método para eliminar un mensaje
     public async deleteMessage(message_id: string) {
-    try {
-        const messageExist = await existCommentChat(message_id);
+        try {
+            const messageExist = await existCommentChat(message_id);
 
-        if (!messageExist) throw new AppError(404, 'MessageNotFound');
+            if (!messageExist) throw new AppError(404, 'MessageNotFound');
 
-        await messageExist.destroy()
+            await messageExist.destroy()
 
-        return { result: true, message_id };
+            return { result: true, message_id };
 
-    } catch (error) {
-        if (error instanceof AppError) {
-            throw error;
+        } catch (error) {
+            if (error instanceof AppError) {
+                throw error;
+            }
+            throw new AppError(500, 'InternalServerError');
         }
-        throw new AppError(500, 'InternalServerError');
     }
-}
 
     // Método para marcar mensaje como entregado
     public async markMessageAsDelivered(message_id: string) {

@@ -26,7 +26,7 @@ export function chatEvents(socket: Socket, io: Server) {
 
             const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
             const user = await User.findByPk(decoded.id);
-            
+
             if (!user) {
                 throw new AppError(401, 'UserNotFound');
             }
@@ -80,7 +80,7 @@ export function chatEvents(socket: Socket, io: Server) {
                 lastSeen: new Date(),
                 typingTo: null
             });
-            
+
             // Notificar a los contactos que el usuario está desconectado
             io.emit("user-status-change", {
                 userId,
