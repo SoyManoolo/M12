@@ -13,7 +13,7 @@ export class AuthService {
 
             if (!user) throw new AppError(404, 'UserNotFound');
 
-            const correctPassword = await compare(password, user.dataValues.password);
+            const correctPassword = await compare(password, user.getDataValue("password"));
 
             if (!correctPassword) throw new AppError(401, 'IncorrectPassword');
 
@@ -41,7 +41,7 @@ export class AuthService {
         try {
             const existingUser = await User.findOne({ where: { [Op.or]: [{ username }, { email }] } });
             if (existingUser) {
-                if (existingUser.dataValues.email === email) {
+                if (existingUser.email === email) {
                     throw new AppError(409, 'UserEmailAlreadyExists');
                 } else {
                     throw new AppError(409, 'UserUsernameAlreadyExists'); // Usar un código/mensaje diferente

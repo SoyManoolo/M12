@@ -28,7 +28,7 @@ export function chatEvents(socket: Socket, io: Server) {
 
             const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
             const user = await User.findByPk(decoded.id);
-            
+
             if (!user) {
                 throw new AppError(401, 'UserNotFound');
             }
@@ -43,7 +43,7 @@ export function chatEvents(socket: Socket, io: Server) {
             } else if (error instanceof Error) {
                 next(error);
             } else {
-            next(new Error('Authentication error'));
+                next(new Error('Authentication error'));
             }
         }
     });
@@ -56,7 +56,7 @@ export function chatEvents(socket: Socket, io: Server) {
 
             // Verificar el token
             const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
-            
+
             // Verificar que el ID del token coincide con el userId proporcionado
             if (decoded.id !== userId) {
                 console.error("[SOCKET] Token ID no coincide con userId:", { tokenId: decoded.id, userId });
@@ -110,10 +110,10 @@ export function chatEvents(socket: Socket, io: Server) {
                     message: 'Token inválido'
                 });
             } else {
-            socket.emit("error", {
+                socket.emit("error", {
                     type: 'InternalServerError',
-                message: error instanceof Error ? error.message : 'Error interno del servidor'
-            });
+                    message: error instanceof Error ? error.message : 'Error interno del servidor'
+                });
             }
         }
     });
@@ -138,14 +138,14 @@ export function chatEvents(socket: Socket, io: Server) {
     socket.on('chat-message', async (data: { data: { receiver_id: string; content: string }, token: string }) => {
         try {
             console.log('[SOCKET] Evento \'chat-message\' recibido:', data);
-            
+
             if (!socket.data.user) {
                 throw new AppError(401, 'UserNotAuthenticated');
             }
 
             const sender = socket.data.user;
             console.log(`[SOCKET] Enviando mensaje de ${sender.user_id} a ${data.data.receiver_id}`);
-            
+
             // Crear el mensaje
             const message = await chatService.createMessage(
                 sender.user_id,
@@ -174,7 +174,7 @@ export function chatEvents(socket: Socket, io: Server) {
 
         } catch (error) {
             console.error('[SOCKET] Error en \'chat-message\':', error);
-            
+
             // Solo emitir error si es un error de autenticación o si el mensaje no se pudo crear
             if (error instanceof AppError && error.type === 'UserNotAuthenticated') {
                 socket.emit('error', {
@@ -182,10 +182,10 @@ export function chatEvents(socket: Socket, io: Server) {
                     message: 'Usuario no autenticado'
                 });
             } else if (error instanceof Error && error.message.includes('Error al crear el mensaje')) {
-            socket.emit('error', {
+                socket.emit('error', {
                     type: 'MessageCreationError',
                     message: 'No se pudo crear el mensaje'
-            });
+                });
             }
             // No emitir error para otros casos ya que el mensaje se envió correctamente
         }
@@ -243,29 +243,29 @@ export function chatEvents(socket: Socket, io: Server) {
     socket.on("typing", (data) => {
         try {
             const { receiver_id, isTyping, token } = data;
-            
+
             if (!socket.data.user) {
                 throw new AppError(401, 'UserNotAuthenticated');
             }
 
-        const sender_id = socket.data.user.user_id;
+            const sender_id = socket.data.user.user_id;
 
-        if (isTyping) {
-            userStatus.set(sender_id, {
-                ...userStatus.get(sender_id)!,
-                typingTo: receiver_id
-            });
-        } else {
-            userStatus.set(sender_id, {
-                ...userStatus.get(sender_id)!,
-                typingTo: null
-            });
-        }
+            if (isTyping) {
+                userStatus.set(sender_id, {
+                    ...userStatus.get(sender_id)!,
+                    typingTo: receiver_id
+                });
+            } else {
+                userStatus.set(sender_id, {
+                    ...userStatus.get(sender_id)!,
+                    typingTo: null
+                });
+            }
 
-        io.to(receiver_id).emit("user-typing", {
-            userId: sender_id,
-            isTyping
-        });
+            io.to(receiver_id).emit("user-typing", {
+                userId: sender_id,
+                isTyping
+            });
         } catch (error) {
             console.error("[SOCKET] Error en typing:", error);
             socket.emit("error", {

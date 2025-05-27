@@ -18,6 +18,7 @@ export class VideoCallService {
         }
         return VideoCallService.instance;
     }
+
     // Método para manejar la cola de espera
     public async QueueVideoCall(user_id: string, socket_id: string) {
         try {

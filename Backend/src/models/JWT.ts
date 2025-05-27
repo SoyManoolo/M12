@@ -33,4 +33,5 @@ JWT.init({
                 fields: ['token']
             }
         ]
-    });
+    }
+);

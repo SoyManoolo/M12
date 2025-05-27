@@ -20,8 +20,8 @@ export class AuthToken {
     public generateToken(user: User): string {
         // Generamos un token con el id y el dni del usuario
         return jwt.sign({
-            id: user.dataValues.user_id,
-            username: user.dataValues.username,
+            id: user.user_id,
+            username: user.username,
         },
             AuthToken.secretKey,
             { expiresIn: 3600 }
@@ -70,7 +70,7 @@ export class AuthToken {
             const user = await User.findOne({ where: { user_id: req.user.id } });
 
             // Si el usuario no existe o no es admin, lanza error
-            if (!user || !user.dataValues.is_moderator !== true) throw new AppError(403, "NoAdmin");
+            if (!user || !user.is_moderator) throw new AppError(403, "NoAdmin");
 
             // Pasa al siguiente middleware si el usuario es admin
             next();

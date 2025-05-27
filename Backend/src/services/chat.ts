@@ -2,13 +2,7 @@ import { ChatMessages, User } from "../models";
 import { AppError } from "../middlewares/errors/AppError";
 import { Op } from "sequelize";
 import { existCommentChat } from "../utils/modelExists";
-import { IChatMessages } from "../models/ChatMessages";
-
-type CreateMessageAttributes = Pick<IChatMessages, 'sender_id' | 'receiver_id' | 'content'> & {
-    is_delivered: boolean;
-    delivered_at: null;
-    read_at: null;
-};
+import { CreateMessageAttributes } from "../types/custom";
 
 export class ChatService {
     // Método para crear un nuevo mensaje
@@ -33,9 +27,6 @@ export class ChatService {
                 sender_id,
                 receiver_id,
                 content,
-                is_delivered: false,
-                delivered_at: null,
-                read_at: null
             };
 
             const message = await ChatMessages.create(messageData);
@@ -148,7 +139,7 @@ export class ChatService {
     public async markMessagesAsRead(sender_id: string, receiver_id: string) {
         try {
             await ChatMessages.update(
-                { 
+                {
                     read_at: new Date(),
                     is_delivered: true,
                     delivered_at: new Date()
@@ -216,7 +207,7 @@ export class ChatService {
 
             const hasNextPage: boolean = messages.length > limit;
             const resultMessages = hasNextPage ? messages.slice(0, limit) : messages;
-            const nextCursor = hasNextPage ? resultMessages[resultMessages.length - 1].id : null;
+            const nextCursor = hasNextPage ? resultMessages[resultMessages.length - 1].chat_id : null;
 
             return {
                 messages: resultMessages,
