@@ -24,6 +24,9 @@ export class AuthValidation {
 
     // Validación de los datos de registro
     public registerValidation(req: Request, res: Response, next: NextFunction) {
+        // Regex para contraseña segura: al menos 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&.#])[A-Za-z\d@$!%*?&.#]{8,}$/;
+
         return celebrate({
             [Segments.BODY]: Joi.object({
                 email: Joi.string()
@@ -52,12 +55,14 @@ export class AuthValidation {
                         'any.required': 'errors.validation.MissingSurname'
                     }),
                 password: Joi.string()
+                    .pattern(passwordRegex)
                     .required()
                     .messages({
                         'string.empty': 'errors.validation.MissingPassword',
-                        'any.required': 'errors.validation.MissingPassword'
+                        'any.required': 'errors.validation.MissingPassword',
+                        'string.pattern.base': 'errors.validation.InsecurePassword'
                     })
             })
         })(req, res, next);
-    };
+    }
 }

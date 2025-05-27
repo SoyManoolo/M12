@@ -2,7 +2,6 @@ import express from "express";
 import { Request, Response, NextFunction } from 'express';
 import { UserService } from "../services/user";
 import { UserController } from "../controllers/user";
-import { UpdateValidation } from "../middlewares/validation/updates/UpdateValidation";
 import { UserValidator } from "../middlewares/validation/user/UserValidator";
 import { AuthToken } from "../middlewares/validation/authentication/jwt";
 import upload from "../middlewares/multer";
@@ -10,10 +9,8 @@ import upload from "../middlewares/multer";
 const router = express.Router();
 const userService = new UserService();
 const userController = new UserController(userService);
-const updateValidation = new UpdateValidation();
-const { updateUserValidator } = updateValidation;
 const userValidator = new UserValidator();
-const { IdValidator, UsernameValidator } = userValidator;
+const { IdValidator, UsernameValidator, updateUserValidator } = userValidator;
 
 // Ruta para obtener todos los usuarios
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {

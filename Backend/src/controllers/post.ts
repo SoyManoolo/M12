@@ -82,7 +82,6 @@ export class PostController {
 
             const limit = req.query.limit? parseInt(req.query.limit as string, 10) : undefined;
             const cursor = req.query.cursor as string | undefined;
-            const username = req.query.username as string | undefined;
 
             // Llama al servicio para obtener los posts
             const posts = await this.postService.getPosts(limit, cursor);
