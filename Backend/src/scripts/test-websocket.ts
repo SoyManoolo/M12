@@ -90,7 +90,7 @@ async function main() {
             console.log("📨 TestUser recibió mensaje:", data.message.content);
             // Marcar mensaje como entregado y leído
             console.log("🔄 TestUser marcando mensaje como entregado y leído...", data.message.id);
-            
+
             // Enviar eventos con el formato correcto
             testUserSocket.emit("message-delivered", {
                 message_id: data.message.id,
@@ -98,7 +98,7 @@ async function main() {
                 delivered_at: new Date().toISOString(),
                 token: testUserToken
             });
-            
+
             testUserSocket.emit("message-read", {
                 message_id: data.message.id,
                 status: 'read',
