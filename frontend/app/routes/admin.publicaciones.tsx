@@ -114,9 +114,9 @@ function PostDetailModal({ isOpen, onClose, post, onImageClick }: PostDetailModa
         </button>
         
         <div className="flex h-full">
-          {/* Lado izquierdo - Imagen */}
-          <div className="w-1/2 bg-black flex items-center justify-center relative">
-            {post.media && (
+          {/* Lado izquierdo - Imagen (solo si hay) */}
+          {post.media && (
+            <div className="w-1/2 bg-black flex items-center justify-center relative">
               <div 
                 className="w-full h-full flex items-center justify-center cursor-zoom-in group" 
                 onClick={() => {
@@ -135,11 +135,11 @@ function PostDetailModal({ isOpen, onClose, post, onImageClick }: PostDetailModa
                   </span>
                 </div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Lado derecho - Contenido y comentarios */}
-          <div className="w-1/2 flex flex-col h-full bg-gray-900">
+          <div className={`${post.media ? 'w-1/2' : 'w-full'} flex flex-col h-full bg-gray-900`}>
             {/* Cabecera con información del usuario */}
             <div className="p-6 border-b border-gray-800 bg-gray-900/95 backdrop-blur-sm">
               <div 
