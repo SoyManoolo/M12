@@ -120,6 +120,7 @@ export function chatEvents(socket: Socket, io: Server) {
 
     // Manejar desconexión
     socket.on("disconnect", () => {
+
         // Encontrar y eliminar el socket del usuario
         for (const [userId, userSocket] of userSockets.entries()) {
             if (userSocket === socket) {

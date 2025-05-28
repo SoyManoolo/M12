@@ -271,12 +271,14 @@ export class ChatService {
                 nextCursor
             };
         } catch (error) {
+
             if (error instanceof AppError) {
                 throw error;
             }
             throw new AppError(500, 'InternalServerError');
         }
     }
+
 
     // Método para editar un mensaje
     public async updateMessage(message_id: string, content: string) {

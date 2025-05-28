@@ -19,7 +19,7 @@ export class PostController {
                 username: req.query.username as string
             };
 
-            const limit = req.query.limit? parseInt(req.query.limit as string, 10) : undefined;
+            const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : undefined;
             const cursor = req.query.cursor as string | undefined;
 
             // Llama al servicio para obtener los posts
@@ -80,7 +80,7 @@ export class PostController {
             const locale = req.headers['accept-language'] || 'en';
             i18n.setLocale(locale);
 
-            const limit = req.query.limit? parseInt(req.query.limit as string, 10) : undefined;
+            const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : undefined;
             const cursor = req.query.cursor as string | undefined;
 
             // Llama al servicio para obtener los posts
@@ -167,7 +167,7 @@ export class PostController {
 
             if (!req.user?.user_id) {
                 throw new AppError(401, 'Unauthorized');
-            }
+            };
 
             const postId = req.params.id;
             const userId = req.user.user_id;
@@ -182,8 +182,8 @@ export class PostController {
             });
         } catch (error) {
             next(error);
-        }
-    }
+        };
+    };
 
     public async unlikePost(req: Request, res: Response, next: NextFunction) {
         try {
@@ -192,7 +192,7 @@ export class PostController {
 
             if (!req.user?.user_id) {
                 throw new AppError(401, 'Unauthorized');
-            }
+            };
 
             const postId = req.params.id;
             const userId = req.user.user_id;
@@ -207,8 +207,8 @@ export class PostController {
             });
         } catch (error) {
             next(error);
-        }
-    }
+        };
+    };
 
     public async checkUserLike(req: Request, res: Response, next: NextFunction) {
         try {
@@ -217,7 +217,7 @@ export class PostController {
 
             if (!req.user?.user_id) {
                 throw new AppError(401, 'Unauthorized');
-            }
+            };
 
             const postId = req.params.id;
             const userId = req.user.user_id;
@@ -231,6 +231,6 @@ export class PostController {
             });
         } catch (error) {
             next(error);
-        }
-    }
+        };
+    };
 };
