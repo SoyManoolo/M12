@@ -91,14 +91,29 @@ export default function Chat() {
           console.log('Mensaje ya existe, ignorando:', message.id);
           return prev;
         }
+
+        // Si es un mensaje temporal nuestro, reemplazarlo
+        if (message.sender_id === currentUser.user_id) {
+          const newMessages = prev.filter(msg => !msg.id.startsWith('temp-'));
+          newMessages.push({ ...message, is_own: true });
+          return newMessages.sort((a, b) => 
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+          );
+        }
         
         // Agregar el nuevo mensaje y ordenar
         const newMessages = [...prev, { ...message, is_own: message.sender_id === currentUser.user_id }];
-        return newMessages.sort((a, b) => 
+        const sortedMessages = newMessages.sort((a, b) => 
           new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
         );
+
+        // Hacer scroll solo si el mensaje es nuevo y no es nuestro
+        if (!messageExists && message.sender_id !== currentUser.user_id) {
+          setTimeout(scrollToBottom, 100);
+        }
+
+        return sortedMessages;
       });
-      scrollToBottom();
     };
 
     const handleDeliveryStatus = (data: { message_id: string; status: string; delivered_at?: string }) => {
@@ -183,6 +198,11 @@ export default function Chat() {
           setMessages(uniqueMessages.sort((a, b) => 
             new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
           ));
+
+          // Desplazarse al final después de cargar los mensajes
+          setTimeout(() => {
+            scrollToBottom();
+          }, 100);
         }
 
         // Cargar información del usuario del chat
@@ -243,27 +263,65 @@ export default function Chat() {
     loadChat();
   }, [token, userId, currentUser]);
 
+  // Agregar un efecto para desplazarse al final cuando cambian los mensajes
+  useEffect(() => {
+    if (!loading && messages.length > 0) {
+      scrollToBottom();
+    }
+  }, [loading, messages]);
+
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesEndRef.current) {
+      const container = messagesEndRef.current.parentElement;
+      if (container) {
+        const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+        
+        // Solo hacer scroll automático si estamos cerca del final
+        if (isNearBottom) {
+          messagesEndRef.current.scrollIntoView({ 
+            behavior: 'smooth',
+            block: 'end'
+          });
+        }
+      }
+    }
   };
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || !token || !userId || !chatUser || connectionStatus !== 'connected') {
+    if (!newMessage.trim() || !token || !userId || !chatUser || !currentUser || connectionStatus !== 'connected') {
       console.log('No se puede enviar mensaje:', { 
         messageEmpty: !newMessage.trim(), 
         noToken: !token, 
         noUserId: !userId,
         noChatUser: !chatUser,
+        noCurrentUser: !currentUser,
         connectionStatus 
       });
       return;
     }
 
     try {
-      // No agregar el mensaje aquí, esperar a que llegue por socket
-      await chatService.sendMessage(chatUser.user_id, newMessage.trim(), token);
+      // Guardar el mensaje temporalmente para scroll inmediato
+      const tempMessage = {
+        id: `temp-${Date.now()}`,
+        content: newMessage.trim(),
+        sender_id: currentUser.user_id,
+        receiver_id: chatUser.user_id,
+        created_at: new Date().toISOString(),
+        is_delivered: false,
+        delivered_at: null,
+        read_at: null,
+        is_own: true
+      };
+
+      // Agregar mensaje temporal y hacer scroll
+      setMessages(prev => [...prev, tempMessage]);
       setNewMessage('');
+      scrollToBottom();
+
+      // Enviar mensaje real
+      await chatService.sendMessage(chatUser.user_id, newMessage.trim(), token);
     } catch (error) {
       console.error('Error al enviar mensaje:', error);
       // Intentar reconectar si hay error
