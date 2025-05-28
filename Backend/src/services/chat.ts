@@ -1,7 +1,7 @@
 import { ChatMessages, PostComments, User } from "../models";
 import { AppError } from "../middlewares/errors/AppError";
 import { Op } from "sequelize";
-import { existCommentChat, existsUser } from "../utils/modelExists";
+import { existsUser } from "../utils/modelExists";
 import { CreateMessageAttributes } from "../types/custom";
 import dbLogger from "../config/logger";
 
