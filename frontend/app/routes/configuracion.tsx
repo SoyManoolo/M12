@@ -77,8 +77,6 @@ export default function ConfiguracionPage() {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchParams] = useSearchParams();
-  const [activeSection, setActiveSection] = useState(searchParams.get('section') || 'cuenta');
-  const [showRedirectModal, setShowRedirectModal] = useState(false);
   const [notification, setNotification] = useState<{
     message: string;
     type: 'success' | 'error';
@@ -170,7 +168,7 @@ export default function ConfiguracionPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      if (!token || !userId) {
+      if (!token || !userId || !user) {
         showMessage('error', 'No pudimos obtener tu información de sesión');
         return;
       }
@@ -450,7 +448,7 @@ export default function ConfiguracionPage() {
                   name="bio"
                   value={formData.bio}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none min-h-[150px]"
+                  className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none min-h-[250px]"
                   placeholder="Cuéntanos algo sobre ti..."
                 />
               </div>
