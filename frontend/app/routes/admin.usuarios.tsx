@@ -140,11 +140,21 @@ export default function AdminUsuarios() {
                 <div key={user.user_id} className="bg-gray-900 rounded-lg p-6 border border-gray-800 hover:border-blue-500 transition-colors">
                   <div className="flex justify-between items-start">
                     <div className="flex items-center space-x-4">
-                      <img
-                        src={user.profile_picture || "/images/default-avatar.png"}
-                        alt="Usuario"
-                        className="w-12 h-12 rounded-full"
-                      />
+                      {user.profile_picture ? (
+                        <img
+                          src={user.profile_picture}
+                          alt="Usuario"
+                          className="w-12 h-12 rounded-full object-cover border-2 border-gray-800"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = "/default-avatar.png";
+                          }}
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-full border-2 border-gray-800 bg-gray-800 flex items-center justify-center">
+                          <span className="text-gray-400 text-xl">{user.username.charAt(0).toUpperCase()}</span>
+                        </div>
+                      )}
                       <div>
                         <h3 className="font-semibold">{user.username}</h3>
                         <p className="text-sm text-gray-400">{user.name} {user.surname}</p>
