@@ -250,7 +250,7 @@ export const authService = {
                 };
             }
 
-            const response = await fetch(`${environment.apiUrl}${environment.apiEndpoints.auth.logout}/${token}`, {
+            const response = await fetch(`${environment.apiUrl}${environment.apiEndpoints.auth.logout}`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',

@@ -187,14 +187,20 @@ export default function ConfiguracionPage() {
       const requestBody: Record<string, string> = {};
 
       // Validaciones según el esquema del backend y el regex
-      if (formData.username && (formData.username.length < 3 || formData.username.length > 50)) {
-        showMessage('error', 'El nombre de usuario debe tener entre 3 y 50 caracteres');
-        return;
+      if (formData.username && formData.username !== user.username) {
+        if (formData.username.length < 3 || formData.username.length > 50) {
+          showMessage('error', 'El nombre de usuario debe tener entre 3 y 50 caracteres');
+          return;
+        }
+        requestBody.username = formData.username.trim();
       }
 
-      if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-        showMessage('error', 'Por favor, introduce un correo electrónico válido');
-        return;
+      if (formData.email && formData.email !== user.email) {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+          showMessage('error', 'Por favor, introduce un correo electrónico válido');
+          return;
+        }
+        requestBody.email = formData.email.trim();
       }
 
       if (formData.password && formData.password.trim() !== '') {
