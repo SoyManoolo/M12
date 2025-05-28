@@ -1,6 +1,7 @@
 import { environment } from '../config/environment';
 import type { UserProfile, ApiResponse, PaginatedUsersResponse } from '../types/user.types';
 import { jwtDecode } from 'jwt-decode';
+import type { User } from '~/types/user.types';
 
 export const userService = {
     /**
@@ -9,22 +10,49 @@ export const userService = {
     async getAllUsers(token: string): Promise<ApiResponse<PaginatedUsersResponse>> {
         try {
             const response = await fetch(`${environment.apiUrl}/users`, {
-                method: 'GET',
                 headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
+                    'Authorization': `Bearer ${token}`
+                }
             });
 
+            if (!response.ok) {
+                throw new Error('Error al obtener usuarios');
+            }
+
             const data = await response.json();
-            return data;
+            
+            // Obtener el ID del usuario actual del token
+            const decodedToken = jwtDecode(token) as { user_id: string };
+            const currentUserId = decodedToken.user_id;
+
+            // Filtrar el usuario actual de la lista
+            const filteredUsers = data.data.users.filter((user: User) => user.user_id !== currentUserId);
+
+            return {
+                success: true,
+                status: 200,
+                message: 'Usuarios obtenidos correctamente',
+                data: {
+                    users: filteredUsers,
+                    total: filteredUsers.length,
+                    page: 1,
+                    limit: filteredUsers.length,
+                    hasMore: false
+                }
+            };
         } catch (error) {
             console.error('Error al obtener usuarios:', error);
             return {
                 success: false,
                 status: 500,
-                message: 'Error al conectar con el servidor',
-                data: {} as PaginatedUsersResponse
+                message: 'Error al obtener usuarios',
+                data: {
+                    users: [],
+                    total: 0,
+                    page: 1,
+                    limit: 0,
+                    hasMore: false
+                }
             };
         }
     },

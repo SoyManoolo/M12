@@ -100,37 +100,41 @@ export default function Chats() {
       try {
         // Cargar chats activos
         const activeChats = await chatService.getActiveChats(token);
-        const formattedChats: Chat[] = activeChats.map((chat: ChatResponse) => ({
-          chat_id: `${user.user_id}-${chat.other_user.user_id}`,
-          user: {
-            user_id: chat.other_user.user_id,
-            username: chat.other_user.username,
-            profile_picture: chat.other_user.profile_picture
-          },
-          last_message: {
-            content: chat.last_message.content,
-            timestamp: chat.last_message.created_at
-          },
-          unread_count: chat.unread_count
-        }));
+        const formattedChats: Chat[] = activeChats
+          .filter((chat: ChatResponse) => chat.other_user.user_id !== user.user_id) // Filtrar chats con uno mismo
+          .map((chat: ChatResponse) => ({
+            chat_id: `${user.user_id}-${chat.other_user.user_id}`,
+            user: {
+              user_id: chat.other_user.user_id,
+              username: chat.other_user.username,
+              profile_picture: chat.other_user.profile_picture
+            },
+            last_message: {
+              content: chat.last_message.content,
+              timestamp: chat.last_message.created_at
+            },
+            unread_count: chat.unread_count
+          }));
         setChats(formattedChats);
 
-        // Cargar amigos
+        // Cargar amigos excluyendo al usuario actual
         const friendsResponse = await userService.getAllUsers(token);
         if (friendsResponse.success && friendsResponse.data && Array.isArray(friendsResponse.data.users)) {
-          const friendsData = friendsResponse.data.users.map(user => ({
-            friendship_id: user.user_id,
-            user1_id: user.user_id,
-            user2_id: user.user_id,
-            created_at: new Date().toISOString(),
-            user: {
-              ...user,
-              profile_picture: user.profile_picture || null,
-              bio: user.bio ?? null,
-              deleted_at: null,
-              active_video_call: false
-            }
-          }));
+          const friendsData = friendsResponse.data.users
+            .filter(friend => friend.user_id !== user.user_id) // Excluir al usuario actual
+            .map(user => ({
+              friendship_id: user.user_id,
+              user1_id: user.user_id,
+              user2_id: user.user_id,
+              created_at: new Date().toISOString(),
+              user: {
+                ...user,
+                profile_picture: user.profile_picture || null,
+                bio: user.bio ?? null,
+                deleted_at: null,
+                active_video_call: false
+              }
+            }));
           setFriends(friendsData);
         } else {
           setFriends([]);

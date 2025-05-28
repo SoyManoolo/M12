@@ -66,6 +66,8 @@ export interface Friend {
 
 export interface PaginatedUsersResponse {
   users: User[];
-  hasNextPage: boolean;
-  nextCursor: string | null;
+  total: number;
+  page: number;
+  limit: number;
+  hasMore: boolean;
 } 
