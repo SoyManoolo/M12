@@ -66,14 +66,14 @@ class ChatService {
     this.socket.on('new-message', (data: { message: Message }) => {
       console.log('Nuevo mensaje recibido:', data.message);
       requestAnimationFrame(() => {
-        this.messageHandlers.forEach(handler => handler(data.message));
+      this.messageHandlers.forEach(handler => handler(data.message));
       });
     });
 
     this.socket.on('chat-message-sent', (data: { success: boolean; message: Message }) => {
       console.log('Mensaje enviado:', data.message);
       requestAnimationFrame(() => {
-        this.messageHandlers.forEach(handler => handler(data.message));
+      this.messageHandlers.forEach(handler => handler(data.message));
       });
     });
 
@@ -102,7 +102,7 @@ class ChatService {
       
       // Solo manejar errores críticos
       if (error.type === 'UserNotAuthenticated' || error.type === 'InvalidToken') {
-        this.isConnecting = false;
+      this.isConnecting = false;
         this.socket?.disconnect();
       }
     });
@@ -124,23 +124,23 @@ class ChatService {
         return;
       }
 
-      this.isConnecting = true;
-      
+    this.isConnecting = true;
+
       // Configurar la autenticación del socket
       this.socket.auth = { token };
-      
+
       // Conectar el socket
-      this.socket.connect();
+    this.socket.connect();
 
       // Configurar el manejador de conexión exitosa
-      this.socket.on('connect', () => {
+    this.socket.on('connect', () => {
         console.log('Socket conectado');
         this.isConnecting = false;
         this.reconnectAttempts = 0;
         
-        // Unirse a la sala del usuario
-        this.socket?.emit('join-user', { userId, token });
-      });
+      // Unirse a la sala del usuario
+      this.socket?.emit('join-user', { userId, token });
+    });
 
       // Configurar el manejador de reconexión
       this.socket.on('connect_error', (error) => {

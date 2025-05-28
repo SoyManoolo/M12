@@ -43,7 +43,7 @@ export function chatEvents(socket: Socket, io: Server) {
             } else if (error instanceof Error) {
                 next(error);
             } else {
-                next(new Error('Authentication error'));
+            next(new Error('Authentication error'));
             }
         }
     });
@@ -110,10 +110,10 @@ export function chatEvents(socket: Socket, io: Server) {
                     message: 'Token inválido'
                 });
             } else {
-                socket.emit("error", {
+            socket.emit("error", {
                     type: 'InternalServerError',
-                    message: error instanceof Error ? error.message : 'Error interno del servidor'
-                });
+                message: error instanceof Error ? error.message : 'Error interno del servidor'
+            });
             }
         }
     });
@@ -182,10 +182,10 @@ export function chatEvents(socket: Socket, io: Server) {
                     message: 'Usuario no autenticado'
                 });
             } else if (error instanceof Error && error.message.includes('Error al crear el mensaje')) {
-                socket.emit('error', {
+            socket.emit('error', {
                     type: 'MessageCreationError',
                     message: 'No se pudo crear el mensaje'
-                });
+            });
             }
             // No emitir error para otros casos ya que el mensaje se envió correctamente
         }
@@ -248,24 +248,24 @@ export function chatEvents(socket: Socket, io: Server) {
                 throw new AppError(401, 'UserNotAuthenticated');
             }
 
-            const sender_id = socket.data.user.user_id;
+        const sender_id = socket.data.user.user_id;
 
-            if (isTyping) {
-                userStatus.set(sender_id, {
-                    ...userStatus.get(sender_id)!,
-                    typingTo: receiver_id
-                });
-            } else {
-                userStatus.set(sender_id, {
-                    ...userStatus.get(sender_id)!,
-                    typingTo: null
-                });
-            }
-
-            io.to(receiver_id).emit("user-typing", {
-                userId: sender_id,
-                isTyping
+        if (isTyping) {
+            userStatus.set(sender_id, {
+                ...userStatus.get(sender_id)!,
+                typingTo: receiver_id
             });
+        } else {
+            userStatus.set(sender_id, {
+                ...userStatus.get(sender_id)!,
+                typingTo: null
+            });
+        }
+
+        io.to(receiver_id).emit("user-typing", {
+            userId: sender_id,
+            isTyping
+        });
         } catch (error) {
             console.error("[SOCKET] Error en typing:", error);
             socket.emit("error", {

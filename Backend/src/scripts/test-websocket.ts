@@ -1,4 +1,4 @@
-/* import { io, Socket } from "socket.io-client";
+import { io, Socket } from "socket.io-client";
 import axios from "axios";
 
 // Interfaces para los tipos de datos
@@ -40,120 +40,254 @@ async function getToken(username: string, password: string): Promise<string> {
     }
 }
 
+// Función para esperar un tiempo
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Función para imprimir mensajes con formato
+function logMessage(prefix: string, message: string, data?: any) {
+    console.log(`\n${prefix} ${message}`);
+    if (data) {
+        console.log('📦 Detalles:', JSON.stringify(data, null, 2));
+    }
+}
+
 // Función principal
 async function main() {
     try {
         // Obtener tokens mediante login
-        console.log("🔑 Obteniendo tokens...");
-        const adminToken = await getToken('admin', 'admin123');
-        const testUserToken = await getToken('testuser', 'Test123!');
-        console.log("✅ Tokens obtenidos correctamente");
+        logMessage('🔑', 'Obteniendo tokens...');
+        const jaiderToken = await getToken('Jaider', 'Jaider123');
+        const erikToken = await getToken('Erik', 'Erik123');
+        logMessage('✅', 'Tokens obtenidos correctamente');
 
         // Crear conexiones WebSocket para ambos usuarios
-        const adminSocket: Socket = io("http://localhost:3000", {
-            auth: { token: adminToken }
+        const jaiderSocket: Socket = io("http://localhost:3000", {
+            auth: { token: jaiderToken },
+            reconnection: true,
+            reconnectionAttempts: 5,
+            reconnectionDelay: 1000,
+            timeout: 10000
         });
 
-        const testUserSocket: Socket = io("http://localhost:3000", {
-            auth: { token: testUserToken }
+        const erikSocket: Socket = io("http://localhost:3000", {
+            auth: { token: erikToken },
+            reconnection: true,
+            reconnectionAttempts: 5,
+            reconnectionDelay: 1000,
+            timeout: 10000
         });
 
-        // IDs de los usuarios
-        const adminId = "b4ae9cb8-0c9f-4f1e-8466-cb8ceaa6fb73";
-        const testUserId = "39837e9d-8cb2-486a-902d-a810ca852a23";
+        // IDs de los usuarios (actualizados con los reales)
+        const jaiderId = "2971d435-0539-492d-a2f5-b97df959f74e";
+        const erikId = "1f406e20-c8a8-43a0-b502-038e67bede71";
 
-        // Configurar eventos para el admin
-        adminSocket.on("connect", () => {
-            console.log("✅ Admin conectado");
-            adminSocket.emit("join-user", { userId: adminId, token: adminToken });
+        // Configurar eventos para Jaider
+        jaiderSocket.on("connect", () => {
+            logMessage('✅', 'Jaider conectado');
+            jaiderSocket.emit("join-user", { userId: jaiderId, token: jaiderToken });
         });
 
-        adminSocket.on("new-message", (data: MessageData) => {
-            console.log("📨 Admin recibió mensaje:", data.message.content);
+        jaiderSocket.on("disconnect", () => {
+            logMessage('❌', 'Jaider desconectado');
         });
 
-        adminSocket.on("message-delivery-status", (data: DeliveryStatus) => {
-            console.log("✓ Admin - Mensaje entregado:", data.message_id);
+        jaiderSocket.on("connect_error", (error) => {
+            logMessage('❌', `Error de conexión de Jaider: ${error.message}`);
         });
 
-        adminSocket.on("message-read-status", (data: ReadStatus) => {
-            console.log("✓✓ Admin - Mensaje leído:", data.message_id);
+        jaiderSocket.on("new-message", (data: MessageData) => {
+            logMessage('📨', 'Jaider recibió mensaje:', {
+                content: data.message.content,
+                id: data.message.id,
+                sender: data.message.sender_id,
+                delivered: data.message.is_delivered,
+                delivered_at: data.message.delivered_at,
+                read_at: data.message.read_at
+            });
+
+            // Marcar mensaje como entregado y leído si Jaider es el receptor
+            if (data.message.receiver_id === jaiderId) {
+                logMessage('🔄', 'Jaider marcando mensaje como entregado y leído...', { message_id: data.message.id });
+                
+                // Enviar eventos con el formato correcto
+                jaiderSocket.emit("message-delivered", {
+                    message_id: data.message.id,
+                    status: 'delivered',
+                    delivered_at: new Date().toISOString(),
+                    token: jaiderToken
+                });
+                
+                jaiderSocket.emit("message-read", {
+                    message_id: data.message.id,
+                    status: 'read',
+                    read_at: new Date().toISOString(),
+                    token: jaiderToken
+                });
+            }
         });
 
-        // Configurar eventos para el usuario de prueba
-        testUserSocket.on("connect", () => {
-            console.log("✅ TestUser conectado");
-            testUserSocket.emit("join-user", { userId: testUserId, token: testUserToken });
+        jaiderSocket.on("message-delivery-status", (data: DeliveryStatus) => {
+            logMessage('✓', 'Jaider - Mensaje entregado:', {
+                message_id: data.message_id,
+                delivered_at: data.delivered_at
+            });
         });
 
-        testUserSocket.on("new-message", (data: MessageData) => {
-            console.log("📨 TestUser recibió mensaje:", data.message.content);
-            // Marcar mensaje como entregado y leído
-            console.log("🔄 TestUser marcando mensaje como entregado y leído...", data.message.id);
+        jaiderSocket.on("message-read-status", (data: ReadStatus) => {
+            logMessage('✓✓', 'Jaider - Mensaje leído:', {
+                message_id: data.message_id,
+                read_at: data.read_at
+            });
+        });
+
+        jaiderSocket.on("chat-message-sent", (data) => {
+            logMessage("📤 Jaider (chat-message-sent)", "Mensaje enviado (confirmación)", data);
+        });
+
+        jaiderSocket.on("error", (data) => {
+            logMessage("❌ Jaider (error)", "Error en socket", data);
+        });
+
+        // Configurar eventos para Erik
+        erikSocket.on("connect", () => {
+            logMessage('✅', 'Erik conectado');
+            erikSocket.emit("join-user", { userId: erikId, token: erikToken });
+        });
+
+        erikSocket.on("disconnect", () => {
+            logMessage('❌', 'Erik desconectado');
+        });
+
+        erikSocket.on("connect_error", (error) => {
+            logMessage('❌', `Error de conexión de Erik: ${error.message}`);
+        });
+
+        erikSocket.on("new-message", (data: MessageData) => {
+            logMessage('📨', 'Erik recibió mensaje:', {
+                content: data.message.content,
+                id: data.message.id,
+                sender: data.message.sender_id,
+                delivered: data.message.is_delivered,
+                delivered_at: data.message.delivered_at,
+                read_at: data.message.read_at
+            });
+
+            // Marcar mensaje como entregado y leído si Erik es el receptor
+            if (data.message.receiver_id === erikId) {
+                logMessage('🔄', 'Erik marcando mensaje como entregado y leído...', { message_id: data.message.id });
             
             // Enviar eventos con el formato correcto
-            testUserSocket.emit("message-delivered", {
+                erikSocket.emit("message-delivered", {
                 message_id: data.message.id,
                 status: 'delivered',
                 delivered_at: new Date().toISOString(),
-                token: testUserToken
+                    token: erikToken
             });
             
-            testUserSocket.emit("message-read", {
+                erikSocket.emit("message-read", {
                 message_id: data.message.id,
                 status: 'read',
                 read_at: new Date().toISOString(),
-                token: testUserToken
+                    token: erikToken
+                });
+            }
+        });
+
+        erikSocket.on("message-delivery-status", (data: DeliveryStatus) => {
+            logMessage('✓', 'Erik - Mensaje entregado:', {
+                message_id: data.message_id,
+                delivered_at: data.delivered_at
             });
         });
 
-        testUserSocket.on("message-delivery-status", (data: DeliveryStatus) => {
-            console.log("✓ TestUser - Mensaje entregado:", data.message_id);
+        erikSocket.on("message-read-status", (data: ReadStatus) => {
+            logMessage('✓✓', 'Erik - Mensaje leído:', {
+                message_id: data.message_id,
+                read_at: data.read_at
+            });
         });
 
-        testUserSocket.on("message-read-status", (data: ReadStatus) => {
-            console.log("✓✓ TestUser - Mensaje leído:", data.message_id);
+        erikSocket.on("chat-message-sent", (data) => {
+            logMessage("📤 Erik (chat-message-sent)", "Mensaje enviado (confirmación)", data);
+        });
+
+        erikSocket.on("error", (data) => {
+            logMessage("❌ Erik (error)", "Error en socket", data);
         });
 
         // Función para enviar mensaje
-        function sendMessage(sender: Socket, receiverId: string, content: string) {
-            console.log("📤 Enviando mensaje:", content);
+        async function sendMessage(sender: Socket, receiverId: string, content: string) {
+            logMessage('📤', `Enviando mensaje: ${content}`);
             sender.emit("chat-message", {
                 data: {
                     receiver_id: receiverId,
                     content: content
                 },
-                token: sender === adminSocket ? adminToken : testUserToken
+                token: sender === jaiderSocket ? jaiderToken : erikToken
             });
+            // Esperar un poco para asegurar que el mensaje se procesa
+            await sleep(1000);
         }
 
-        // Enviar mensaje del admin al usuario de prueba
-        setTimeout(() => {
-            console.log("\n📝 Enviando mensaje del admin al usuario de prueba...");
-            sendMessage(adminSocket, testUserId, "¡Hola! Este es un mensaje de prueba por WebSocket");
-        }, 2000);
+        // Esperar a que ambos estén conectados
+        logMessage('⏳', 'Esperando conexión de usuarios...');
+        await sleep(3000);
 
-        // Enviar mensaje del usuario de prueba al admin
-        setTimeout(() => {
-            console.log("\n📝 Enviando mensaje del usuario de prueba al admin...");
-            sendMessage(testUserSocket, adminId, "¡Hola admin! Recibí tu mensaje");
-        }, 4000);
+        // Prueba 1: Envío de mensaje simple
+        logMessage('📝', 'Prueba 1: Envío de mensaje simple');
+        await sendMessage(jaiderSocket, erikId, "¡Hola Erik! Este es un mensaje de prueba por WebSocket");
+        await sleep(3000);
 
-        // Cerrar la conexión después de 10 segundos
-        setTimeout(() => {
-            console.log("\n🔌 Cerrando conexiones...");
-            adminSocket.disconnect();
-            testUserSocket.disconnect();
+        // Prueba 2: Envío de mensaje con respuesta
+        logMessage('📝', 'Prueba 2: Envío de mensaje con respuesta');
+        await sendMessage(erikSocket, jaiderId, "¡Hola Jaider! Recibí tu mensaje");
+        await sleep(3000);
+
+        // Prueba 3: Envío de mensaje largo
+        logMessage('📝', 'Prueba 3: Envío de mensaje largo');
+        await sendMessage(jaiderSocket, erikId, "Este es un mensaje más largo para probar el manejo de mensajes extensos. Debería funcionar correctamente y mostrar todos los detalles de entrega y lectura.");
+        await sleep(3000);
+
+        // Prueba 4: Envío de mensaje con caracteres especiales
+        logMessage('📝', 'Prueba 4: Envío de mensaje con caracteres especiales');
+        await sendMessage(erikSocket, jaiderId, "¡Hola! ¿Cómo estás? 😊 Este mensaje tiene caracteres especiales: áéíóú ñ Ñ");
+        await sleep(3000);
+
+        // Prueba 5: Envío de mensajes rápidos
+        logMessage('📝', 'Prueba 5: Envío de mensajes rápidos');
+        for (let i = 1; i <= 3; i++) {
+            await sendMessage(jaiderSocket, erikId, `Mensaje rápido ${i}`);
+            await sleep(1000);
+        }
+        await sleep(3000);
+
+        // Prueba 6: Desconexión y reconexión
+        logMessage('📝', 'Prueba 6: Desconexión y reconexión');
+        logMessage('🔄', 'Desconectando a Jaider...');
+        jaiderSocket.disconnect();
+        await sleep(3000);
+        logMessage('🔄', 'Reconectando a Jaider...');
+        jaiderSocket.connect();
+        await sleep(3000);
+
+        // Prueba 7: Envío de mensaje después de reconexión
+        logMessage('📝', 'Prueba 7: Envío de mensaje después de reconexión');
+        await sendMessage(jaiderSocket, erikId, "¡Hola! Me reconecté correctamente");
+        await sleep(3000);
+
+        // Prueba 8: Envío de mensajes en paralelo
+        logMessage('📝', 'Prueba 8: Envío de mensajes en paralelo');
+        await Promise.all([
+            sendMessage(jaiderSocket, erikId, "Mensaje paralelo 1 de Jaider"),
+            sendMessage(erikSocket, jaiderId, "Mensaje paralelo 1 de Erik")
+        ]);
+        await sleep(3000);
+
+        // Cerrar la conexión después de todas las pruebas
+        logMessage('🔌', 'Cerrando conexiones...');
+        jaiderSocket.disconnect();
+        erikSocket.disconnect();
             process.exit(0);
-        }, 10000);
-
-        // Manejar cierre manual
-        process.on("SIGINT", () => {
-            console.log("\n🔌 Cerrando conexiones...");
-            adminSocket.disconnect();
-            testUserSocket.disconnect();
-            process.exit(0);
-        });
 
     } catch (error) {
         console.error("Error en la ejecución:", error);
@@ -163,4 +297,3 @@ async function main() {
 
 // Ejecutar el script
 main();
-*/
