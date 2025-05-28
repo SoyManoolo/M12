@@ -280,6 +280,7 @@ export default function Chats() {
       <RightPanel
         friends={friends}
         mode="online"
+        customTitle="Mis amigos"
       />
     </div>
   );
