@@ -324,11 +324,11 @@ export default function ConfiguracionPage() {
           )}
 
           {/* Contenedor principal con grid de dos columnas */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
             {/* Columna izquierda - Foto de perfil y biografía */}
-            <div className="space-y-6">
+            <div className="flex flex-col h-full space-y-6">
               {/* Bloque circular para la foto de perfil */}
-              <div className="bg-gray-900 rounded-xl p-6 shadow-lg border border-gray-800">
+              <div className="bg-gray-900 rounded-xl p-6 shadow-lg border border-gray-800 flex-1 flex flex-col justify-between">
                 <h2 className="text-xl font-semibold mb-4 text-center">Foto de Perfil</h2>
                 <div className="flex flex-col items-center">
                   <div className="relative w-48 h-48 mb-4 group">
@@ -419,7 +419,7 @@ export default function ConfiguracionPage() {
               </div>
 
               {/* Biografía */}
-              <div className="bg-gray-900 rounded-xl p-6 shadow-lg border border-gray-800">
+              <div className="bg-gray-900 rounded-xl p-6 shadow-lg border border-gray-800 flex-1 flex flex-col justify-between">
                 <h2 className="text-xl font-semibold mb-4">Biografía</h2>
                 <textarea
                   name="bio"
@@ -431,9 +431,9 @@ export default function ConfiguracionPage() {
               </div>
             </div>
 
-            {/* Columna derecha - Información de la cuenta */}
-            <div className="space-y-6">
-              <div className="bg-gray-900 rounded-xl p-6 shadow-lg border border-gray-800">
+            {/* Columna derecha - Información de la cuenta y acciones */}
+            <div className="flex flex-col h-full space-y-6">
+              <div className="bg-gray-900 rounded-xl p-6 shadow-lg border border-gray-800 flex-1 flex flex-col justify-between">
                 <h2 className="text-xl font-semibold mb-6">Información de la Cuenta</h2>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
@@ -473,7 +473,7 @@ export default function ConfiguracionPage() {
               </div>
 
               {/* Botones de acción */}
-              <div className="bg-gray-900 rounded-xl p-6 shadow-lg border border-gray-800">
+              <div className="bg-gray-900 rounded-xl p-6 shadow-lg border border-gray-800 flex-1 flex flex-col justify-between">
                 <h2 className="text-xl font-semibold mb-6">Acciones de Cuenta</h2>
                 <div className="flex flex-col space-y-4">
                   <button
