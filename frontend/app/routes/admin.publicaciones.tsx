@@ -509,13 +509,13 @@ export default function AdminPublicaciones() {
                             onClick={e => { e.stopPropagation(); handleEdit(post.post_id); }}
                             className="p-1.5 text-blue-500 hover:bg-blue-500/10 rounded-lg transition-colors"
                           >
-                            <FaEdit className="w-3 h-3" />
+                            <FaEdit className="w-4 h-4" />
                           </button>
                           <button 
                             onClick={e => { e.stopPropagation(); handleDelete(post.post_id); }}
                             className="p-1.5 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
                           >
-                            <FaTrash className="w-3 h-3" />
+                            <FaTrash className="w-4 h-4" />
                           </button>
                         </div>
                       </div>
