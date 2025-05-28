@@ -35,7 +35,7 @@ export class UserService {
                 if (lastUser) {
                     queryOptions.where = {
                         created_at: {
-                            [Op.lt]: lastUser.dataValues.created_at
+                            [Op.lt]: lastUser.getDataValue("created_at")
                         }
                     };
                 }
