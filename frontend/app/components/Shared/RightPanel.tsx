@@ -68,7 +68,7 @@ export default function RightPanel({
     ? 'Amigos sugeridos' 
     : mode === 'common' 
     ? 'Amigos en común' 
-    : 'Posibles amigos');
+    : 'Sugerencias de amistades');
     
   const emptyMessage = mode === 'suggested' 
     ? 'No hay sugerencias disponibles' 

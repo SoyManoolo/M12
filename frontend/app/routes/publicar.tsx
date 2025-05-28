@@ -3,6 +3,7 @@ import Navbar from '~/components/Inicio/Navbar';
 import { useAuth } from '~/hooks/useAuth';
 import { redirect } from "@remix-run/node";
 import Notification from '~/components/Shared/Notification';
+import { useNavigate } from '@remix-run/react';
 
 interface CreatePostResponse {
   success: boolean;
@@ -38,6 +39,7 @@ export default function Publicar() {
     message: string;
     type: 'success' | 'error';
   } | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     setMounted(true);
@@ -108,10 +110,11 @@ export default function Publicar() {
         type: 'success'
       });
       
-      // Limpiar el formulario después de 2 segundos
+      // Redirigir a la página principal después de 1 segundo
       setTimeout(() => {
         resetForm();
-      }, 2000);
+        navigate('/inicio');
+      }, 1000);
 
     } catch (err) {
       setNotification({

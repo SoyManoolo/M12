@@ -37,8 +37,11 @@ interface PostProps {
   media_url: string;
   comments: Array<{
     comment_id: string;
-    user_id: string;
-    username: string;
+    author: {
+      user_id: string;
+      username: string;
+      profile_picture: string | null;
+    };
     content: string;
     created_at: string;
   }>;
@@ -73,7 +76,6 @@ export default function Post({
 }: PostProps) {
   // Estados para controlar las interacciones del usuario
   const [isLiked, setIsLiked] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [showAllComments, setShowAllComments] = useState(false);
   const [currentLikes, setCurrentLikes] = useState(parseInt(likes_count));
@@ -91,7 +93,18 @@ export default function Post({
 
         const response = await commentService.getComments(token, post_id);
         if (response.success && response.data.comments) {
-          setComments(response.data.comments);
+          setComments(
+            response.data.comments.map((comment: any) => ({
+              comment_id: comment.comment_id || '',
+              content: comment.content || '',
+              created_at: comment.created_at || '',
+              author: {
+                user_id: comment.author?.user_id || '',
+                username: comment.author?.username ?? '',
+                profile_picture: comment.author?.profile_picture || null
+              }
+            }))
+          );
         }
       } catch (error) {
         console.error('Error al cargar comentarios:', error);
@@ -141,16 +154,6 @@ export default function Post({
   };
 
   /**
-   * Manejador para cerrar el modal de imagen expandida
-   */
-  const handleCloseModal = () => {
-    // Eliminar lógica antigua de modal local
-    // setIsExpanded(false);
-    // setShowImageZoomModal(false);
-    // onClose(); // Si onClose es una prop relevante del modal anterior
-  };
-
-  /**
    * Manejador para alternar la descripción completa
    */
   const toggleDescription = (e: React.MouseEvent) => {
@@ -174,7 +177,19 @@ export default function Post({
       const response = await commentService.createComment(token, post_id, newComment.trim());
       
       // Agregar el nuevo comentario a la lista
-      setComments(prevComments => [...prevComments, response.data.comment]);
+      setComments(prevComments => [
+        { 
+          comment_id: response.data.comment?.comment_id || '',
+          content: response.data.comment?.content || '',
+          created_at: response.data.comment?.created_at || '',
+          author: {
+            user_id: (response.data.comment?.author as any)?.user_id || '',
+            username: response.data.comment?.author?.username ?? '',
+            profile_picture: response.data.comment?.author?.profile_picture || null
+          }
+        },
+        ...prevComments // Agregar el nuevo comentario al principio
+      ]);
       setNewComment('');
     } catch (error) {
       console.error('Error al agregar comentario:', error);
@@ -405,9 +420,9 @@ export default function Post({
                   <h3 className="text-white font-semibold">Comentarios</h3>
                   <span className="text-sm text-gray-400">({comments.length})</span>
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-6">
                   {comments.length === 0 ? (
-                    <div className="text-center text-gray-400 py-8 bg-gray-800/30 rounded-xl">
+                    <div className="text-center text-gray-400 py-8 rounded-xl">
                       <span className="text-4xl mb-4 block">💭</span>
                       <p className="text-lg">No hay comentarios aún</p>
                       <p className="text-sm mt-2">Sé el primero en comentar</p>
@@ -415,25 +430,40 @@ export default function Post({
                   ) : (
                     <>
                       {(showAllComments ? comments : comments.slice(0, 3)).map(comment => (
-                        <div key={comment.comment_id} className="text-sm text-gray-300 flex justify-between items-start">
-                          <div>
-                            <span className="font-semibold text-white">{comment.username}</span>
-                            <span className="inline">
-                              {" "}{truncateText(comment.content, 100)}
-                            </span>
-                            <span className="text-xs text-gray-500 ml-2">
-                              {formatTimeAgo(comment.created_at)}
-                            </span>
-                          </div>
-                          {currentUserId === comment.user_id && (
-                            <button
-                              onClick={() => handleDeleteComment(comment.comment_id)}
-                              className="text-red-500 hover:text-red-700 focus:outline-none"
-                              title="Eliminar comentario"
+                        <div key={comment.comment_id} className="flex items-start gap-3 mb-4">
+                          {/* Foto de perfil o inicial */}
+                          {comment.author && comment.author.profile_picture ? (
+                            <img
+                              src={String(comment.author.profile_picture)}
+                              alt={comment.author.username}
+                              className="w-9 h-9 rounded-full object-cover flex-shrink-0"
+                            />
+                          ) : (
+                            <div 
+                              className="w-9 h-9 rounded-full bg-gray-800 flex items-center justify-center flex-shrink-0"
                             >
-                              <FaTrash className="text-sm" />
-                            </button>
+                              <span className="text-gray-400 text-lg font-bold">
+                                {comment.author?.username?.charAt(0).toUpperCase()}
+                              </span>
+                            </div>
                           )}
+                          {/* Usuario en negrita y comentario en la misma línea */}
+                          <div className="flex-1">
+                            <span className="font-bold text-white mr-2">{comment.author?.username}</span>
+                            <span className="text-gray-300">{truncateText(comment.content, 100)}</span>
+                            <div className="flex items-center gap-4 mt-1 text-xs text-gray-400">
+                              <span>{`hace ${formatTimeAgo(comment.created_at)}`}</span>
+                              {currentUserId === comment.author?.user_id && (
+                                <button
+                                  onClick={() => handleDeleteComment(comment.comment_id)}
+                                  className="text-red-500 hover:text-red-700 focus:outline-none ml-2"
+                                  title="Eliminar comentario"
+                                >
+                                  <FaTrash className="text-sm" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       ))}
                       {comments.length > 3 && (

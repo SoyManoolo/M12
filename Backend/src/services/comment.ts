@@ -42,7 +42,7 @@ export class CommentService {
                 include: [{
                     model: User,
                     as: 'author',
-                    attributes: ['username', 'profile_picture']
+                    attributes: ['user_id', 'username', 'profile_picture']
                 }]
             });
 
@@ -82,7 +82,7 @@ export class CommentService {
                 include: [{
                     model: User,
                     as: 'author',
-                    attributes: ['username', 'profile_picture']
+                    attributes: ['user_id', 'username', 'profile_picture']
                 }],
                 order: [['created_at', 'DESC']]
             });
