@@ -396,7 +396,7 @@ export default function Post({
               </div>
 
               {/* Sección de comentarios */}
-              <div className="space-y-6">
+              <div className={`${media_url ? 'overflow-y-auto' : 'max-h-60 overflow-y-auto'} space-y-6`}>
                 <div className="flex items-center gap-2 mb-2">
                   <h3 className="text-white font-semibold">Comentarios</h3>
                   <span className="text-sm text-gray-400">({comments.length})</span>
@@ -428,8 +428,8 @@ export default function Post({
                           </div>
                         )}
                         {/* Contenido del comentario y botón de eliminar */}
-                        <div className="flex-1 flex justify-between items-start">
-                          <div className="flex-1">
+                        <div className="flex-1 flex justify-between items-start px-2">
+                          <div className="flex-1 pr-2">
                             <div className="flex items-center gap-2">
                               <span className="font-semibold text-white text-sm">
                                 {comment.author?.username}
