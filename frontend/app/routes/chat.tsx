@@ -107,10 +107,10 @@ export default function Chat() {
         );
       });
 
-      // Hacer scroll solo si el mensaje es nuevo y no es nuestro
+        // Hacer scroll solo si el mensaje es nuevo y no es nuestro
       if (message.sender_id !== currentUser.user_id) {
-        setTimeout(scrollToBottom, 100);
-      }
+          setTimeout(scrollToBottom, 100);
+        }
     };
 
     const handleDeliveryStatus = (data: { message_id: string; status: string; delivered_at?: string }) => {
@@ -255,26 +255,37 @@ export default function Chat() {
 
   }, [token, userId, currentUser]);
 
-  // Agregar un efecto para desplazarse al final cuando cambian los mensajes
+  // Efecto para desplazarse al final cuando se carga el chat
   useEffect(() => {
-    if (!loading && messages.length > 0) {
+    if (!loading) {
+      // Esperar a que los mensajes se rendericen
+      setTimeout(scrollToBottom, 100);
+    }
+  }, [loading]);
+
+  // Efecto para desplazarse al final cuando hay nuevos mensajes
+  useEffect(() => {
+    if (messages.length > 0) {
       scrollToBottom();
     }
-  }, [loading, messages]);
+  }, [messages]);
+
+  // Efecto para desplazarse al final cuando cambia el usuario del chat
+  useEffect(() => {
+    if (chatUser) {
+      scrollToBottom();
+    }
+  }, [chatUser]);
 
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
       const container = messagesEndRef.current.parentElement;
       if (container) {
-        const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
-        
-        // Solo hacer scroll automático si estamos cerca del final
-        if (isNearBottom) {
+        // Siempre hacer scroll al final, sin importar la posición actual
           messagesEndRef.current.scrollIntoView({ 
             behavior: 'smooth',
             block: 'end'
           });
-        }
       }
     }
   };
@@ -478,41 +489,41 @@ export default function Chat() {
                   new Date(message.created_at).getTime() - new Date(prevMessage.created_at).getTime() < 60000; // 1 minuto
 
                 return (
-                  <div
-                    key={message.id}
+                <div
+                  key={message.id}
                     className={`flex ${message.is_own ? 'justify-end' : 'justify-start'} ${
                       !isGrouped ? 'mt-6' : 'mt-1'
                     }`}
-                  >
-                    <div
+                >
+                  <div
                       className={`max-w-[70%] p-3 rounded-2xl ${
-                        message.is_own
+                      message.is_own
                           ? 'bg-blue-600 text-white rounded-br-none'
                           : 'bg-gray-800 text-white rounded-bl-none'
                       } shadow-md hover:shadow-lg transition-shadow duration-200`}
-                    >
+                  >
                       <p className="break-words text-[15px] leading-relaxed">{message.content}</p>
                       <div className="flex items-center justify-end space-x-2 mt-1.5">
-                        <p className="text-xs text-gray-400">
+                      <p className="text-xs text-gray-400">
                           {new Date(message.created_at).toLocaleTimeString([], { 
                             hour: '2-digit', 
                             minute: '2-digit' 
                           })}
-                        </p>
-                        {message.is_own && (
-                          <span className="text-xs flex items-center space-x-1">
-                            {message.read_at ? (
-                              <span className="text-blue-300" title="Leído">✓✓</span>
-                            ) : message.is_delivered ? (
-                              <span className="text-gray-300" title="Entregado">✓</span>
-                            ) : (
-                              <span className="text-gray-500 animate-pulse" title="Enviando">•</span>
-                            )}
-                          </span>
-                        )}
-                      </div>
+                      </p>
+                      {message.is_own && (
+                        <span className="text-xs flex items-center space-x-1">
+                          {message.read_at ? (
+                            <span className="text-blue-300" title="Leído">✓✓</span>
+                          ) : message.is_delivered ? (
+                            <span className="text-gray-300" title="Entregado">✓</span>
+                          ) : (
+                            <span className="text-gray-500 animate-pulse" title="Enviando">•</span>
+                          )}
+                        </span>
+                      )}
                     </div>
                   </div>
+                </div>
                 );
               })
             )}
@@ -555,17 +566,17 @@ export default function Chat() {
           <form onSubmit={handleSendMessage} className="p-4 border-t border-gray-800">
             <div className="flex items-center relative">
               <div className="relative flex-1">
-                <input
-                  type="text"
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  onKeyPress={handleTyping}
-                  placeholder={connectionStatus === 'connected' ? "Escribe un mensaje..." : "Conectando..."}
-                  disabled={connectionStatus !== 'connected'}
+              <input
+                type="text"
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                onKeyPress={handleTyping}
+                placeholder={connectionStatus === 'connected' ? "Escribe un mensaje..." : "Conectando..."}
+                disabled={connectionStatus !== 'connected'}
                   className={`w-full bg-gray-900 rounded-lg py-2 px-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    connectionStatus !== 'connected' ? 'opacity-50 cursor-not-allowed' : ''
-                  }`}
-                />
+                  connectionStatus !== 'connected' ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+              />
                 <button
                   type="button"
                   onClick={() => setShowEmojiPicker(!showEmojiPicker)}

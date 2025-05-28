@@ -103,18 +103,18 @@ export default function Chats() {
         const formattedChats: Chat[] = activeChats
           .filter((chat: ChatResponse) => chat.other_user.user_id !== user.user_id) // Filtrar chats con uno mismo
           .map((chat: ChatResponse) => ({
-            chat_id: `${user.user_id}-${chat.other_user.user_id}`,
-            user: {
-              user_id: chat.other_user.user_id,
-              username: chat.other_user.username,
-              profile_picture: chat.other_user.profile_picture
-            },
-            last_message: {
-              content: chat.last_message.content,
-              timestamp: chat.last_message.created_at
-            },
-            unread_count: chat.unread_count
-          }));
+          chat_id: `${user.user_id}-${chat.other_user.user_id}`,
+          user: {
+            user_id: chat.other_user.user_id,
+            username: chat.other_user.username,
+            profile_picture: chat.other_user.profile_picture
+          },
+          last_message: {
+            content: chat.last_message.content,
+            timestamp: chat.last_message.created_at
+          },
+          unread_count: chat.unread_count
+        }));
         setChats(formattedChats);
 
         // Cargar amigos excluyendo al usuario actual
@@ -123,18 +123,18 @@ export default function Chats() {
           const friendsData = friendsResponse.data.users
             .filter(friend => friend.user_id !== user.user_id) // Excluir al usuario actual
             .map(user => ({
-              friendship_id: user.user_id,
-              user1_id: user.user_id,
-              user2_id: user.user_id,
-              created_at: new Date().toISOString(),
-              user: {
-                ...user,
-                profile_picture: user.profile_picture || null,
-                bio: user.bio ?? null,
-                deleted_at: null,
-                active_video_call: false
-              }
-            }));
+            friendship_id: user.user_id,
+            user1_id: user.user_id,
+            user2_id: user.user_id,
+            created_at: new Date().toISOString(),
+            user: {
+              ...user,
+              profile_picture: user.profile_picture || null,
+              bio: user.bio ?? null,
+              deleted_at: null,
+              active_video_call: false
+            }
+          }));
           setFriends(friendsData);
         } else {
           setFriends([]);
@@ -247,7 +247,7 @@ export default function Chats() {
           </div>
 
           {/* Lista de chats */}
-          <div className="space-y-4">
+          <div className="space-y-4 custom-scrollbar max-h-[calc(100vh-200px)] overflow-y-auto">
             {filteredChats.map((chat) => (
               <ChatItem
                 key={chat.chat_id}
@@ -279,6 +279,28 @@ export default function Chats() {
               </div>
             )}
           </div>
+
+          <style>
+            {`
+              .custom-scrollbar::-webkit-scrollbar {
+                width: 6px;
+              }
+              
+              .custom-scrollbar::-webkit-scrollbar-track {
+                background: #1f2937;
+                border-radius: 3px;
+              }
+              
+              .custom-scrollbar::-webkit-scrollbar-thumb {
+                background: #4b5563;
+                border-radius: 3px;
+              }
+              
+              .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                background: #6b7280;
+              }
+            `}
+          </style>
         </div>
       </div>
 

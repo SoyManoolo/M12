@@ -530,24 +530,24 @@ class ChatService {
       } else {
         // Si no hay socket, usar HTTP
         console.log('Socket no conectado, usando HTTP');
-        const response = await fetch(`${this.baseUrl}/chat`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            receiver_id: receiverId,
-            content
-          })
-        });
+      const response = await fetch(`${this.baseUrl}/chat`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          receiver_id: receiverId,
+          content
+        })
+      });
 
-        if (!response.ok) {
-          throw new Error('Error al crear el mensaje');
-        }
+      if (!response.ok) {
+        throw new Error('Error al crear el mensaje');
+      }
 
-        const data = await response.json();
-        return data.data;
+      const data = await response.json();
+      return data.data;
       }
     } catch (error) {
       console.error('Error al crear mensaje:', error);
