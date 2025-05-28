@@ -94,8 +94,8 @@ export default function Chats() {
   useEffect(() => {
     if (!token || !user) return;
 
-    // Conectar al WebSocket
-    chatService.connect(token, user.user_id);
+    // Eliminamos la conexión WebSocket de aquí
+    // chatService.connect(token, user.user_id);
 
     const fetchData = async () => {
       try {
