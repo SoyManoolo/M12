@@ -397,98 +397,108 @@ export default function Post({
 
           {/* Columna derecha - Descripción y comentarios */}
           <div className={`flex-1 flex flex-col ${media_url ? 'pl-4' : 'px-4'} ${!media_url ? 'h-full' : ''}`}>
-            {/* Contenedor de descripción y comentarios */}
-            <div className={`flex-1 overflow-y-auto ${!media_url ? 'h-[calc(400px-8rem)]' : ''}`}>
-              {/* Sección de descripción */}
-              <div className="mb-4">
-                <h3 className="text-white font-semibold mb-2">Descripción</h3>
-                <div className="text-gray-300 text-sm">
-                  {showFullDescription ? (
-                    <p>{description}</p>
-                  ) : (
-                    <p>{truncateText(description, media_url ? 100 : 200)}</p>
-                  )}
-                  {description.length > (media_url ? 100 : 200) && (
-                    <button
-                      onClick={toggleDescription}
-                      className="text-blue-400 hover:text-blue-300 text-sm font-medium block mt-1"
-                    >
-                      {showFullDescription ? 'Ver menos' : 'Leer más...'}
-                    </button>
-                  )}
-                </div>
-              </div>
 
-              {/* Sección de comentarios */}
-              <div className={`${
-                media_url 
-                  ? 'overflow-y-auto' 
-                  : 'h-[calc(400px-12rem)] overflow-y-auto'
-              } space-y-6`}>
-                <div className="flex items-center gap-2 mb-2">
-                  <h3 className="text-white font-semibold">Comentarios</h3>
-                  <span className="text-sm text-gray-400">({comments.length})</span>
-                </div>
+            {/* Sección de descripción - Siempre visible y no scrollable */}
+            <div className="mb-4 flex-shrink-0">
+              <h3 className="text-white font-semibold mb-2">Descripción</h3>
+              <div className="text-gray-300 text-sm">
+                {showFullDescription ? (
+                  <p>{description}</p>
+                ) : (
+                  <p>{truncateText(description, media_url ? 100 : 200)}</p>
+                )}
+                {description.length > (media_url ? 100 : 200) && (
+                  <button
+                    onClick={toggleDescription}
+                    className="text-blue-400 hover:text-blue-300 text-sm font-medium block mt-1"
+                  >
+                    {showFullDescription ? 'Ver menos' : 'Leer más...'}
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Sección de comentarios - Con scroll si es necesario */}
+            <div className={`flex-1 flex flex-col ${
+              media_url 
+                ? 'overflow-hidden' // No scroll aquí, el scroll está en el modal principal si tiene imagen
+                : comments.length > 3 
+                  ? 'overflow-hidden' // No scroll aquí, el scroll está en el contenedor interno
+                  : ''
+            }`}>
+              <div className="flex items-center gap-2 mb-2 flex-shrink-0">
+                <h3 className="text-white font-semibold">Comentarios</h3>
+                <span className="text-sm text-gray-400">({comments.length})</span>
+              </div>
+              
+              {/* Contenedor de la lista de comentarios con scrollbar */}
+              <div className={`flex-1 ${
+                media_url || comments.length > 3 
+                  ? 'overflow-y-auto custom-scrollbar' 
+                  : ''
+              }`}>
                 {comments.length === 0 ? (
-                  <div className="text-center text-gray-400 py-8 rounded-xl">
-                    <span className="text-4xl mb-4 block">💭</span>
+                  <div className="text-center text-gray-400 py-4 rounded-xl">
+                    <span className="text-4xl mb-2 block">💭</span>
                     <p className="text-lg">No hay comentarios aún</p>
-                    <p className="text-sm mt-2">Sé el primero en comentar</p>
+                    <p className="text-sm mt-1">Sé el primero en comentar</p>
                   </div>
                 ) : (
                   <>
-                    {(showAllComments ? comments : comments.slice(0, 3)).map((comment) => (
-                      <div key={comment.comment_id} className="flex items-start gap-3 mb-4">
-                        {/* Foto de perfil o inicial */}
-                        {comment.author && comment.author.profile_picture ? (
-                          <img
-                            src={String(comment.author.profile_picture)}
-                            alt={comment.author.username}
-                            className="w-9 h-9 rounded-full object-cover flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
-                            onClick={() => window.location.href = `/perfil?username=${comment.author.username}`}
-                          />
-                        ) : (
-                          <div 
-                            className="w-9 h-9 rounded-full bg-gray-800 flex items-center justify-center flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
-                            onClick={() => window.location.href = `/perfil?username=${comment.author.username}`}
-                          >
-                            <span className="text-gray-400 text-lg font-bold">
-                              {comment.author?.username?.charAt(0).toUpperCase()}
-                            </span>
-                          </div>
-                        )}
-                        {/* Contenido del comentario y botón de eliminar */}
-                        <div className="flex-1 flex justify-between items-start px-2">
-                          <div className="flex-1 pr-2">
-                            <div className="flex items-center gap-2">
-                              <span 
-                                className="font-semibold text-white text-sm cursor-pointer hover:underline"
-                                onClick={() => window.location.href = `/perfil?username=${comment.author.username}`}
-                              >
-                                {comment.author?.username}
-                              </span>
-                              <span className="text-gray-400 text-xs">
-                                {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true, locale: es })}
+                    <div className="space-y-4">
+                      {(showAllComments ? comments : comments.slice(0, 3)).map((comment) => (
+                        <div key={comment.comment_id} className="flex items-start gap-3">
+                          {/* Foto de perfil o inicial */}
+                          {comment.author && comment.author.profile_picture ? (
+                            <img
+                              src={String(comment.author.profile_picture)}
+                              alt={comment.author.username}
+                              className="w-9 h-9 rounded-full object-cover flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                              onClick={() => window.location.href = `/perfil?username=${comment.author.username}`}
+                            />
+                          ) : (
+                            <div 
+                              className="w-9 h-9 rounded-full bg-gray-800 flex items-center justify-center flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                              onClick={() => window.location.href = `/perfil?username=${comment.author.username}`}
+                            >
+                              <span className="text-gray-400 text-lg font-bold">
+                                {comment.author?.username?.charAt(0).toUpperCase()}
                               </span>
                             </div>
-                            <p className="text-gray-300 text-sm mt-1">{comment.content}</p>
-                          </div>
-                          {currentUserId === comment.author?.user_id && (
-                            <button
-                              onClick={() => handleDeleteComment(comment.comment_id)}
-                              className="text-red-500 hover:text-red-700 focus:outline-none ml-4 cursor-pointer"
-                              title="Eliminar comentario"
-                            >
-                              <FaTrash className="text-sm" />
-                            </button>
                           )}
+                          {/* Contenido del comentario y botón de eliminar */}
+                          <div className="flex-1 flex justify-between items-start px-2">
+                            <div className="flex-1 pr-2">
+                              <div className="flex items-center gap-2">
+                                <span 
+                                  className="font-semibold text-white text-sm cursor-pointer hover:underline"
+                                  onClick={() => window.location.href = `/perfil?username=${comment.author.username}`}
+                                >
+                                  {comment.author?.username}
+                                </span>
+                                <span className="text-gray-400 text-xs">
+                                  {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true, locale: es })}
+                                </span>
+                              </div>
+                              <p className="text-gray-300 text-sm mt-1">{comment.content}</p>
+                            </div>
+                            {currentUserId === comment.author?.user_id && (
+                              <button
+                                onClick={() => handleDeleteComment(comment.comment_id)}
+                                className="text-red-500 hover:text-red-700 focus:outline-none ml-4 cursor-pointer"
+                                title="Eliminar comentario"
+                              >
+                                <FaTrash className="text-sm" />
+                              </button>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                     {comments.length > 3 && (
                       <button
                         onClick={() => setShowAllComments(!showAllComments)}
-                        className="text-blue-400 hover:text-blue-300 text-sm font-medium w-full text-center py-2 cursor-pointer"
+                        className="text-blue-400 hover:text-blue-300 text-sm font-medium w-full text-center py-2 cursor-pointer mt-2"
                       >
                         {showAllComments ? 'Ver menos comentarios' : 'Ver todos los comentarios'}
                       </button>
@@ -498,8 +508,8 @@ export default function Post({
               </div>
             </div>
 
-            {/* Input de comentarios */}
-            <div className="mt-auto pt-4 border-t border-gray-800">
+            {/* Input de comentarios - Siempre visible */}
+            <div className="mt-4 pt-4 border-t border-gray-800 flex-shrink-0">
               <div className="flex items-center bg-gray-800 rounded-lg p-2 relative">
                 <input
                   type="text"
@@ -551,6 +561,28 @@ export default function Post({
           </div>
         </div>
       </div>
+
+      <style>
+        {`
+          .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+          }
+          
+          .custom-scrollbar::-webkit-scrollbar-track {
+            background: #1f2937;
+            border-radius: 3px;
+          }
+          
+          .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 3px;
+          }
+          
+          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #6b7280;
+          }
+        `}
+      </style>
 
       {/* Modal para imagen expandida */}
       {/* Eliminar completamente el modal local */}
