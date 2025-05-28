@@ -73,10 +73,11 @@ export default function Publicar() {
       return;
     }
 
-    if (!description && !selectedFile) {
+    // La descripción es obligatoria
+    if (!description.trim()) {
       setNotification({
-        message: 'Debes agregar una descripción o una imagen',
-        type: 'error'
+        message: 'La descripción no puede estar vacía.',
+        type: 'error',
       });
       return;
     }
@@ -219,7 +220,7 @@ export default function Publicar() {
             <button
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-lg font-medium"
+              className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-lg font-medium cursor-pointer"
             >
               {isSubmitting ? 'Publicando...' : 'Publicar'}
             </button>

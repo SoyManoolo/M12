@@ -22,8 +22,7 @@ import type { ActionFunction } from "@remix-run/node";
 import { redirect } from "@remix-run/node";
 import { authService } from '../services/auth.service';
 import { useAuth } from '../hooks/useAuth.tsx';
-import { useMessage } from '../hooks/useMessage';
-import Message from '../components/Shared/Message';
+import Notification from '../components/Shared/Notification';
 
 /**
  * @function action
@@ -64,23 +63,27 @@ export const action: ActionFunction = async ({ request }) => {
  * @state {string} message - Estado para mensajes de éxito
  * 
  * @method handleSubmit - Maneja el envío del formulario de inicio de sesión
- * @method handleGoogleLogin - Maneja el inicio de sesión con Google (pendiente)
- * @method handleFacebookLogin - Maneja el inicio de sesión con Facebook (pendiente)
  */
 export default function LoginPage() {
   const [id, setId] = useState('');
   const [password, setPassword] = useState('');
   const { setToken } = useAuth();
-  const { message, showMessage, clearMessage } = useMessage();
+  const [notification, setNotification] = useState<{
+    message: string;
+    type: 'success' | 'error';
+  } | null>(null);
 
   useEffect(() => {
     // Verificar si hay un mensaje de éxito del registro
     const signupSuccess = localStorage.getItem('signupSuccess');
     if (signupSuccess) {
-      showMessage('success', signupSuccess);
+      setNotification({
+        message: signupSuccess,
+        type: 'success'
+      });
       localStorage.removeItem('signupSuccess');
     }
-  }, [showMessage]);
+  }, []);
 
   /**
    * @function handleSubmit
@@ -100,36 +103,27 @@ export default function LoginPage() {
         console.log('✅ Login exitoso, token recibido');
         localStorage.setItem('token', response.token);
         setToken(response.token);
-        showMessage('success', response.message || '¡Bienvenido de nuevo!');
+        setNotification({
+          message: response.message || '¡Bienvenido de nuevo!',
+          type: 'success'
+        });
         // Dejamos que el action de Remix maneje la redirección
         const form = e.target as HTMLFormElement;
         form.submit();
       } else {
         console.log('❌ Error en el login:', response.message);
-        showMessage('error', response.message || 'No pudimos iniciar tu sesión');
+        setNotification({
+          message: response.message || 'No pudimos iniciar tu sesión',
+          type: 'error'
+        });
       }
     } catch (error) {
       console.error('⚠️ Error al conectar con el servidor:', error);
-      showMessage('error', 'No pudimos conectarnos al servidor. Por favor, verifica tu conexión a internet');
+      setNotification({
+        message: 'No pudimos conectarnos al servidor. Por favor, verifica tu conexión a internet',
+        type: 'error'
+      });
     }
-  };
-
-  /**
-   * @function handleGoogleLogin
-   * @description Maneja el inicio de sesión con Google (pendiente de implementación)
-   */
-  const handleGoogleLogin = () => {
-    console.log('🔵 Iniciando login con Google...');
-    // Implementar login con Google
-  };
-
-  /**
-   * @function handleFacebookLogin
-   * @description Maneja el inicio de sesión con Facebook (pendiente de implementación)
-   */
-  const handleFacebookLogin = () => {
-    console.log('🔵 Iniciando login con Facebook...');
-    // Implementar login con Facebook
   };
 
   return (
@@ -137,11 +131,11 @@ export default function LoginPage() {
       <div className="w-full max-w-md bg-black border border-gray-800 rounded-lg p-8">
         <h1 className="text-4xl text-white text-center mb-8 font-bold tracking-wider">INICIA SESIÓN</h1>
         
-        {message && (
-          <Message
-            type={message.type}
-            message={message.text}
-            onClose={clearMessage}
+        {notification && (
+          <Notification
+            message={notification.message}
+            type={notification.type}
+            onClose={() => setNotification(null)}
           />
         )}
         
@@ -193,26 +187,6 @@ export default function LoginPage() {
           >
             INICIA SESIÓN
           </button>
-
-          <div className="mt-6">
-            <p className="text-gray-400 text-center mb-4 tracking-wider">INICIA SESIÓN CON:</p>
-            <div className="flex justify-center space-x-4">
-              <button
-                type="button"
-                onClick={handleGoogleLogin}
-                className="text-white hover:text-gray-300 tracking-wider cursor-pointer"
-              >
-                GOOGLE
-              </button>
-              <button
-                type="button"
-                onClick={handleFacebookLogin}
-                className="text-white hover:text-gray-300 tracking-wider cursor-pointer"
-              >
-                FACEBOOK
-              </button>
-            </div>
-          </div>
 
           <div className="text-center mt-6">
             <Link
