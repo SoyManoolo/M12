@@ -420,7 +420,7 @@ export default function Post({
                   <h3 className="text-white font-semibold">Comentarios</h3>
                   <span className="text-sm text-gray-400">({comments.length})</span>
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-6">
                   {comments.length === 0 ? (
                     <div className="text-center text-gray-400 py-8 rounded-xl">
                       <span className="text-4xl mb-4 block">💭</span>
@@ -430,16 +430,18 @@ export default function Post({
                   ) : (
                     <>
                       {(showAllComments ? comments : comments.slice(0, 3)).map(comment => (
-                        <div key={comment.comment_id} className="flex items-start gap-3 mb-1">
+                        <div key={comment.comment_id} className="flex items-start gap-3 mb-4">
                           {/* Foto de perfil o inicial */}
                           {comment.author && comment.author.profile_picture ? (
                             <img
                               src={String(comment.author.profile_picture)}
                               alt={comment.author.username}
-                              className="w-9 h-9 rounded-full object-cover"
+                              className="w-9 h-9 rounded-full object-cover flex-shrink-0"
                             />
                           ) : (
-                            <div className="w-9 h-9 rounded-full bg-gray-800 border-2 border-gray-700 flex items-center justify-center">
+                            <div 
+                              className="w-9 h-9 rounded-full bg-gray-800 flex items-center justify-center flex-shrink-0"
+                            >
                               <span className="text-gray-400 text-lg font-bold">
                                 {comment.author?.username?.charAt(0).toUpperCase()}
                               </span>
