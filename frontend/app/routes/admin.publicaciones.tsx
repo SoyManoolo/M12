@@ -19,6 +19,7 @@ import Notification from '~/components/Shared/Notification';
 import ConfirmModal from '~/components/Shared/ConfirmModal';
 import EditPostModal from '~/components/Shared/EditPostModal';
 import ImageZoomModal from '~/components/Shared/ImageZoomModal';
+import { differenceInSeconds, differenceInMinutes, differenceInHours, differenceInDays } from 'date-fns';
 
 interface Post {
   post_id: string;
@@ -145,11 +146,19 @@ function PostDetailModal({ isOpen, onClose, post, onImageClick }: PostDetailModa
                 className="flex items-center gap-3 cursor-pointer hover:bg-gray-800/50 p-2 rounded-lg transition-colors duration-200" 
                 onClick={() => { window.location.href = `/perfil?username=${post.author.username}`; }}
               >
-                <img 
-                  src={post.author.profile_picture || '/images/default-avatar.png'} 
-                  alt={post.author.username} 
-                  className="w-12 h-12 rounded-full ring-2 ring-blue-500/50" 
-                />
+                {post.author.profile_picture ? (
+                  <img
+                    src={post.author.profile_picture}
+                    alt={post.author.username}
+                    className="w-12 h-12 rounded-full ring-2 ring-blue-500/50"
+                  />
+                ) : (
+                  <div className="w-12 h-12 rounded-full bg-gray-800 border-2 border-gray-700 flex items-center justify-center">
+                    <span className="text-gray-400 text-base font-bold">
+                      {post.author.username?.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                )}
                 <div className="flex flex-col">
                   <span className="font-semibold text-lg text-white">{post.author.name}</span>
                   <span className="text-sm text-gray-400">@{post.author.username}</span>
@@ -170,11 +179,7 @@ function PostDetailModal({ isOpen, onClose, post, onImageClick }: PostDetailModa
                   </span>
                 </div>
                 <span className="text-gray-500 bg-gray-800/50 px-3 py-1 rounded-full text-xs">
-                  {new Date(post.created_at).toLocaleDateString('es-ES', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: '2-digit'
-                  })}
+                  {`hace ${formatTimeAgo(post.created_at)}`}
                 </span>
               </div>
             </div>
@@ -194,27 +199,32 @@ function PostDetailModal({ isOpen, onClose, post, onImageClick }: PostDetailModa
                 <div className="space-y-4">
                   {comments.map((comment) => (
                     <div key={comment.comment_id} className="bg-gray-800/50 rounded-xl p-4 hover:bg-gray-800/70 transition-colors duration-200">
-                      <div className="flex items-center justify-between mb-2">
-                        <div 
-                          className="flex items-center gap-2 cursor-pointer hover:bg-gray-700/50 p-1 rounded-lg transition-colors duration-200"
-                          onClick={() => { window.location.href = `/perfil?username=${comment.author.username}`; }}
-                        >
-                          <img 
-                            src={comment.author.profile_picture || '/images/default-avatar.png'} 
-                            alt={comment.author.username} 
-                            className="w-6 h-6 rounded-full"
+                      <div className="flex items-start gap-3 mb-1">
+                        {/* Foto de perfil o inicial */}
+                        {comment.author.profile_picture ? (
+                          <img
+                            src={comment.author.profile_picture}
+                            alt={comment.author.username}
+                            className="w-9 h-9 rounded-full"
                           />
-                          <span className="font-semibold text-white">@{comment.author.username}</span>
+                        ) : (
+                          <div className="w-9 h-9 rounded-full bg-gray-800 border-2 border-gray-700 flex items-center justify-center">
+                            <span className="text-gray-400 text-lg font-bold">
+                              {comment.author.username?.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                        )}
+                        {/* Usuario en negrita y comentario en la misma línea */}
+                        <div className="flex-1">
+                          <span className="font-bold text-white mr-2">{comment.author.username}</span>
+                          <span className="text-gray-300">{comment.content}</span>
+                          {/* Acciones y fecha */}
+                          <div className="flex items-center gap-4 mt-1 text-xs text-gray-400">
+                            <span>{`hace ${formatTimeAgo(comment.created_at)}`}</span>
+                            {/* Aquí puedes agregar acciones como 'Responder', 'Me gusta', etc. si lo deseas */}
+                          </div>
                         </div>
-                        <span className="text-xs text-gray-400 bg-gray-900/50 px-2 py-1 rounded-full">
-                          {new Date(comment.created_at).toLocaleDateString('es-ES', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            year: '2-digit'
-                          })}
-                        </span>
                       </div>
-                      <p className="text-gray-300 leading-relaxed">{comment.content}</p>
                     </div>
                   ))}
                 </div>
@@ -226,6 +236,25 @@ function PostDetailModal({ isOpen, onClose, post, onImageClick }: PostDetailModa
     </div>
   );
 }
+
+// Formato relativo para fechas tipo "hace X tiempo"
+const formatTimeAgo = (date: string) => {
+  const now = new Date();
+  const past = new Date(date);
+  const seconds = differenceInSeconds(now, past);
+  const minutes = differenceInMinutes(now, past);
+  const hours = differenceInHours(now, past);
+  const days = differenceInDays(now, past);
+  if (days > 0) {
+    return `${days} ${days === 1 ? 'día' : 'días'}`;
+  } else if (hours > 0) {
+    return `${hours} ${hours === 1 ? 'hora' : 'horas'}`;
+  } else if (minutes > 0) {
+    return `${minutes} ${minutes === 1 ? 'minuto' : 'minutos'}`;
+  } else {
+    return `${seconds} ${seconds === 1 ? 'segundo' : 'segundos'}`;
+  }
+};
 
 export default function AdminPublicaciones() {
   const { token } = useAuth();
@@ -457,11 +486,19 @@ export default function AdminPublicaciones() {
                     <div className="p-3 border-b border-gray-800 flex-shrink-0">
                       <div className="flex justify-between items-start gap-2">
                         <div className="flex items-center gap-2 min-w-0">
-                          <img
-                            src={post.author.profile_picture || "/images/default-avatar.png"}
-                            alt={post.author.username}
-                            className="w-8 h-8 rounded-full flex-shrink-0"
-                          />
+                          {post.author.profile_picture ? (
+                            <img
+                              src={post.author.profile_picture}
+                              alt={post.author.username}
+                              className="w-8 h-8 rounded-full flex-shrink-0 object-cover"
+                            />
+                          ) : (
+                            <div className="w-8 h-8 rounded-full bg-gray-800 border-2 border-gray-700 flex items-center justify-center flex-shrink-0">
+                              <span className="text-gray-400 text-base font-bold">
+                                {post.author.username?.charAt(0).toUpperCase()}
+                              </span>
+                            </div>
+                          )}
                           <div className="min-w-0">
                             <h3 className="font-semibold text-sm truncate">{post.author.name}</h3>
                             <p className="text-xs text-gray-400 truncate">@{post.author.username}</p>
@@ -512,11 +549,7 @@ export default function AdminPublicaciones() {
                           <span>💬 {post.comments_count}</span>
                         </div>
                         <span className="text-gray-500">
-                          {new Date(post.created_at).toLocaleDateString('es-ES', {
-                            day: '2-digit',
-                            month: '2-digit',
-                            year: '2-digit'
-                          })}
+                          {`hace ${formatTimeAgo(post.created_at)}`}
                         </span>
                       </div>
                     </div>
