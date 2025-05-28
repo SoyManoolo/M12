@@ -73,16 +73,12 @@ export default function Publicar() {
       return;
     }
 
+    // La descripción es obligatoria
     if (!description.trim()) {
       setNotification({
         message: 'La descripción no puede estar vacía.',
         type: 'error',
       });
-      return;
-    }
-
-    if (!selectedFile) {
-      console.error('No hay archivo seleccionado');
       return;
     }
 
