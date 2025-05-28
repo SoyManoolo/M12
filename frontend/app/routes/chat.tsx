@@ -70,11 +70,30 @@ export default function Chat() {
   const { token, user: currentUser } = useAuth();
   const userId = searchParams.get('userId');
 
+  // Efecto para manejar la carga inicial
   useEffect(() => {
-    if (!token || !userId || !currentUser?.user_id) {
-      console.log('Faltan datos necesarios:', { token: !!token, userId, currentUserId: currentUser?.user_id });
+    if (!token) {
+      console.log('No hay token disponible');
+      setLoading(false);
       return;
     }
+
+    if (!userId) {
+      console.log('No hay userId en los parámetros');
+      setLoading(false);
+      return;
+    }
+
+    if (!currentUser) {
+      console.log('Esperando a que se cargue el usuario actual...');
+      return;
+    }
+
+    console.log('Datos disponibles:', { 
+      token: !!token, 
+      userId, 
+      currentUserId: currentUser.user_id 
+    });
 
     console.log('Iniciando conexión del chat...');
     let isComponentMounted = true;
@@ -320,8 +339,8 @@ export default function Chat() {
       setNewMessage('');
       scrollToBottom();
 
-      // Enviar mensaje real
-      await chatService.sendMessage(chatUser.user_id, newMessage.trim(), token);
+      // Enviar mensaje real usando createMessage que guarda en el backend
+      await chatService.createMessage(chatUser.user_id, newMessage.trim(), token);
     } catch (error) {
       console.error('Error al enviar mensaje:', error);
       // Intentar reconectar si hay error
@@ -351,6 +370,18 @@ export default function Chat() {
       chatService.setTyping(chatUser.user_id, false, token);
     }, 2000);
   };
+
+  // Mostrar estado de carga mientras se obtiene el usuario
+  if (!currentUser) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-400">Cargando información del usuario...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

@@ -75,11 +75,11 @@ class ChatService {
     this.socket.off('connection-success');
     this.socket.off('new-message');
     this.socket.off('chat-message-sent');
-    this.socket.off('message-received');
     this.socket.off('message-delivery-status');
     this.socket.off('message-read-status');
     this.socket.off('user-typing');
     this.socket.off('error');
+    this.socket.off('user-status');
 
     this.socket.on('connect', () => {
       console.log('Socket conectado');
@@ -88,6 +88,7 @@ class ChatService {
       
       if (this.lastUserId && this.lastToken) {
         console.log('Enviando join-user con:', { userId: this.lastUserId });
+        // Asegurarse de que el usuario se una a su sala
         this.socket?.emit('join-user', { 
           userId: this.lastUserId, 
           token: this.lastToken 
@@ -124,6 +125,7 @@ class ChatService {
     this.socket.on('connection-success', (data) => {
       console.log('Conexión exitosa:', data);
       if (data.status === 'connected') {
+        console.log('Usuario unido a su sala:', this.lastUserId);
         this.connectionHandlers.forEach(handler => handler('connected'));
       } else {
         console.error('Error al conectar:', data.error);
@@ -133,20 +135,34 @@ class ChatService {
 
     // Manejar mensajes nuevos
     this.socket.on('new-message', (data: { message: Message }) => {
-      console.log('Nuevo mensaje recibido:', data.message);
-      this.messageHandlers.forEach(handler => handler(data.message));
+      console.log('Nuevo mensaje recibido en socket:', data.message);
+      
+      // Verificar que el mensaje sea para nosotros o de nosotros usando el ID del token
+      if (this.lastUserId && 
+          (data.message.sender_id === this.lastUserId || 
+           data.message.receiver_id === this.lastUserId)) {
+        console.log('Mensaje válido para este usuario, emitiendo a handlers');
+        // Emitir el mensaje a todos los handlers
+        this.messageHandlers.forEach(handler => handler(data.message));
+        
+        // Si el mensaje es nuestro, marcar como entregado
+        if (this.lastUserId && data.message.sender_id === this.lastUserId) {
+          console.log('Marcando mensaje como entregado:', data.message.id);
+          this.markMessageAsDelivered(data.message.id, this.lastToken!);
+        }
+      } else {
+        console.log('Mensaje ignorado - no es para este usuario:', {
+          messageUserId: data.message.sender_id,
+          messageReceiverId: data.message.receiver_id,
+          currentUserId: this.lastUserId
+        });
+      }
     });
 
     // Manejar confirmación de envío
     this.socket.on('chat-message-sent', (data: { success: boolean; message: Message }) => {
       console.log('Mensaje enviado:', data.message);
-      // No emitir el mensaje aquí, ya que se maneja en new-message
-    });
-
-    // Manejar confirmación de recepción
-    this.socket.on('message-received', (data: { message: Message }) => {
-      console.log('Mensaje recibido:', data.message);
-      // No emitir el mensaje aquí, ya que se maneja en new-message
+      // No necesitamos hacer nada aquí ya que el mensaje se maneja en new-message
     });
 
     // Manejar estado de entrega
@@ -177,6 +193,12 @@ class ChatService {
     this.socket.on('user-typing', (data: { userId: string; isTyping: boolean }) => {
       console.log('Estado de escritura actualizado:', data);
       this.typingHandlers.forEach(handler => handler(data));
+    });
+
+    // Manejar estado de usuario
+    this.socket.on('user-status', (data: { userId: string; status: string }) => {
+      console.log('Estado de usuario actualizado:', data);
+      // Aquí podríamos agregar handlers para el estado de usuario si es necesario
     });
 
     this.socket.on('error', (error) => {
@@ -234,17 +256,29 @@ class ChatService {
       console.log('Iniciando conexión del socket...');
       this.isConnecting = true;
       this.lastToken = token;
-      this.lastUserId = userId;
+      this.lastUserId = decoded.user_id;
       this.socket.auth = { token };
 
-      // Si ya está conectado, emitir join-user directamente
+      // Si ya está conectado, desconectar primero para asegurar una conexión limpia
       if (this.socket.connected) {
-        console.log('Socket ya conectado, enviando join-user...');
-        this.socket.emit('join-user', { userId, token });
+        console.log('Socket ya conectado, reconectando...');
+        this.socket.disconnect();
+        setTimeout(() => {
+          this.socket?.connect();
+        }, 100);
       } else {
         console.log('Conectando socket...');
         this.socket.connect();
       }
+
+      // Asegurarse de que el usuario se una a su sala después de la conexión
+      this.socket.on('connect', () => {
+        console.log('Socket conectado, uniendo a sala:', userId);
+        this.socket?.emit('join-user', { 
+          userId, 
+          token 
+        });
+      });
 
     } catch (error) {
       console.error('Error al conectar el socket:', error);
@@ -473,18 +507,9 @@ class ChatService {
 
   public async createMessage(receiverId: string, content: string, token: string): Promise<Message> {
     try {
-      // Enviar el mensaje por socket
-      if (this.socket?.connected) {
-        this.socket.emit('chat-message', {
-          data: {
-            receiver_id: receiverId,
-            content
-          },
-          token
-        });
-      }
-
-      // También guardar en el backend por HTTP
+      console.log('Creando mensaje:', { receiverId, content });
+      
+      // Primero guardar en el backend por HTTP
       const response = await fetch(`${this.baseUrl}/chat`, {
         method: 'POST',
         headers: {
@@ -502,6 +527,22 @@ class ChatService {
       }
 
       const data = await response.json();
+      console.log('Mensaje creado en backend:', data.data);
+
+      // Luego enviar por socket si está conectado
+      if (this.socket?.connected) {
+        console.log('Enviando mensaje por socket');
+        this.socket.emit('chat-message', {
+          data: {
+            receiver_id: receiverId,
+            content
+          },
+          token
+        });
+      } else {
+        console.log('Socket no conectado, mensaje solo guardado en backend');
+      }
+
       return data.data;
     } catch (error) {
       console.error('Error al crear mensaje:', error);
