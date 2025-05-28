@@ -91,7 +91,12 @@ export default function Post({
 
         const response = await commentService.getComments(token, post_id);
         if (response.success && response.data.comments) {
-          setComments(response.data.comments);
+          setComments(
+            response.data.comments.map((comment: any) => ({
+              username: comment.username ?? '',
+              ...comment
+            }))
+          );
         }
       } catch (error) {
         console.error('Error al cargar comentarios:', error);
@@ -174,7 +179,10 @@ export default function Post({
       const response = await commentService.createComment(token, post_id, newComment.trim());
       
       // Agregar el nuevo comentario a la lista
-      setComments(prevComments => [...prevComments, response.data.comment]);
+      setComments(prevComments => [
+        ...prevComments,
+        { ...response.data.comment, username: (response.data.comment as any).username ?? '' }
+      ]);
       setNewComment('');
     } catch (error) {
       console.error('Error al agregar comentario:', error);
@@ -407,7 +415,7 @@ export default function Post({
                 </div>
                 <div className="space-y-2">
                   {comments.length === 0 ? (
-                    <div className="text-center text-gray-400 py-8 bg-gray-800/30 rounded-xl">
+                    <div className="text-center text-gray-400 py-8 rounded-xl">
                       <span className="text-4xl mb-4 block">💭</span>
                       <p className="text-lg">No hay comentarios aún</p>
                       <p className="text-sm mt-2">Sé el primero en comentar</p>
