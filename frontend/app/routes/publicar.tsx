@@ -73,11 +73,16 @@ export default function Publicar() {
       return;
     }
 
-    if (!description && !selectedFile) {
+    if (!description.trim()) {
       setNotification({
-        message: 'Debes agregar una descripción o una imagen',
-        type: 'error'
+        message: 'La descripción no puede estar vacía.',
+        type: 'error',
       });
+      return;
+    }
+
+    if (!selectedFile) {
+      console.error('No hay archivo seleccionado');
       return;
     }
 
