@@ -69,17 +69,7 @@ class ChatService {
     if (!this.socket) return;
 
     // Limpiar listeners existentes para evitar duplicados
-    this.socket.off('connect');
-    this.socket.off('disconnect');
-    this.socket.off('connect_error');
-    this.socket.off('connection-success');
-    this.socket.off('new-message');
-    this.socket.off('chat-message-sent');
-    this.socket.off('message-delivery-status');
-    this.socket.off('message-read-status');
-    this.socket.off('user-typing');
-    this.socket.off('error');
-    this.socket.off('user-status');
+    this.socket.removeAllListeners();
 
     this.socket.on('connect', () => {
       console.log('Socket conectado');
@@ -143,7 +133,13 @@ class ChatService {
            data.message.receiver_id === this.lastUserId)) {
         console.log('Mensaje válido para este usuario, emitiendo a handlers');
         // Emitir el mensaje a todos los handlers
-        this.messageHandlers.forEach(handler => handler(data.message));
+        this.messageHandlers.forEach(handler => {
+          try {
+            handler(data.message);
+          } catch (error) {
+            console.error('Error en handler de mensaje:', error);
+          }
+        });
         
         // Si el mensaje es nuestro, marcar como entregado
         if (this.lastUserId && data.message.sender_id === this.lastUserId) {
@@ -263,22 +259,14 @@ class ChatService {
       if (this.socket.connected) {
         console.log('Socket ya conectado, reconectando...');
         this.socket.disconnect();
-        setTimeout(() => {
-          this.socket?.connect();
-        }, 100);
-      } else {
-        console.log('Conectando socket...');
-        this.socket.connect();
       }
 
-      // Asegurarse de que el usuario se una a su sala después de la conexión
-      this.socket.on('connect', () => {
-        console.log('Socket conectado, uniendo a sala:', userId);
-        this.socket?.emit('join-user', { 
-          userId, 
-          token 
-        });
-      });
+      // Configurar los listeners antes de conectar
+      this.setupSocketListeners();
+      
+      // Conectar el socket
+      console.log('Conectando socket...');
+      this.socket.connect();
 
     } catch (error) {
       console.error('Error al conectar el socket:', error);
@@ -290,21 +278,21 @@ class ChatService {
   public disconnect() {
     if (!this.socket) return;
     
+    console.log('Desconectando socket...');
     this.isConnecting = false;
     this.reconnectAttempts = 0;
     this.lastToken = null;
     this.lastUserId = null;
     
     // Remover todos los listeners
-    this.socket.off('connect');
-    this.socket.off('disconnect');
-    this.socket.off('new-message');
-    this.socket.off('chat-message-sent');
-    this.socket.off('message-received');
-    this.socket.off('message-delivery-status');
-    this.socket.off('message-read-status');
-    this.socket.off('user-typing');
-    this.socket.off('error');
+    this.socket.removeAllListeners();
+    
+    // Limpiar los handlers
+    this.messageHandlers = [];
+    this.deliveryHandlers = [];
+    this.readHandlers = [];
+    this.typingHandlers = [];
+    this.connectionHandlers = [];
     
     this.socket.disconnect();
   }
@@ -376,34 +364,37 @@ class ChatService {
 
   public onNewMessage(handler: (message: Message) => void) {
     this.messageHandlers.push(handler);
+    return () => {
+      this.messageHandlers = this.messageHandlers.filter(h => h !== handler);
+    };
   }
 
   public onDeliveryStatus(handler: (data: DeliveryStatus) => void) {
     this.deliveryHandlers.push(handler);
+    return () => {
+      this.deliveryHandlers = this.deliveryHandlers.filter(h => h !== handler);
+    };
   }
 
   public onReadStatus(handler: (data: ReadStatus) => void) {
     this.readHandlers.push(handler);
+    return () => {
+      this.readHandlers = this.readHandlers.filter(h => h !== handler);
+    };
   }
 
   public onTyping(handler: (data: { userId: string; isTyping: boolean }) => void) {
     this.typingHandlers.push(handler);
+    return () => {
+      this.typingHandlers = this.typingHandlers.filter(h => h !== handler);
+    };
   }
 
-  public removeMessageHandler(handler: (message: Message) => void) {
-    this.messageHandlers = this.messageHandlers.filter(h => h !== handler);
-  }
-
-  public removeDeliveryHandler(handler: (data: DeliveryStatus) => void) {
-    this.deliveryHandlers = this.deliveryHandlers.filter(h => h !== handler);
-  }
-
-  public removeReadHandler(handler: (data: ReadStatus) => void) {
-    this.readHandlers = this.readHandlers.filter(h => h !== handler);
-  }
-
-  public removeTypingHandler(handler: (data: { userId: string; isTyping: boolean }) => void) {
-    this.typingHandlers = this.typingHandlers.filter(h => h !== handler);
+  public onConnectionStatus(handler: (status: 'connected' | 'disconnected' | 'reconnecting') => void) {
+    this.connectionHandlers.push(handler);
+    return () => {
+      this.connectionHandlers = this.connectionHandlers.filter(h => h !== handler);
+    };
   }
 
   public async getActiveChats(token: string): Promise<Chat[]> {
@@ -509,27 +500,7 @@ class ChatService {
     try {
       console.log('Creando mensaje:', { receiverId, content });
       
-      // Primero guardar en el backend por HTTP
-      const response = await fetch(`${this.baseUrl}/chat`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          receiver_id: receiverId,
-          content
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al crear el mensaje');
-      }
-
-      const data = await response.json();
-      console.log('Mensaje creado en backend:', data.data);
-
-      // Luego enviar por socket si está conectado
+      // Solo enviar por socket si está conectado, y dejar que el backend maneje la persistencia
       if (this.socket?.connected) {
         console.log('Enviando mensaje por socket');
         this.socket.emit('chat-message', {
@@ -539,11 +510,45 @@ class ChatService {
           },
           token
         });
-      } else {
-        console.log('Socket no conectado, mensaje solo guardado en backend');
-      }
+        
+        // Esperar la respuesta del socket que incluirá el mensaje creado
+        return new Promise((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            reject(new Error('Timeout esperando respuesta del servidor'));
+          }, 5000);
 
-      return data.data;
+          const handler = (data: { success: boolean; message: Message }) => {
+            if (data.success) {
+              clearTimeout(timeout);
+              this.socket?.off('chat-message-sent', handler);
+              resolve(data.message);
+            }
+          };
+
+          this.socket?.once('chat-message-sent', handler);
+        });
+      } else {
+        // Si no hay socket, usar HTTP
+        console.log('Socket no conectado, usando HTTP');
+        const response = await fetch(`${this.baseUrl}/chat`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            receiver_id: receiverId,
+            content
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('Error al crear el mensaje');
+        }
+
+        const data = await response.json();
+        return data.data;
+      }
     } catch (error) {
       console.error('Error al crear mensaje:', error);
       throw error;
@@ -611,13 +616,6 @@ class ChatService {
       console.error('Error al marcar mensaje como leído:', error);
       throw error;
     }
-  }
-
-  public onConnectionStatus(handler: (status: 'connected' | 'disconnected' | 'reconnecting') => void) {
-    this.connectionHandlers.push(handler);
-    return () => {
-      this.connectionHandlers = this.connectionHandlers.filter(h => h !== handler);
-    };
   }
 }
 

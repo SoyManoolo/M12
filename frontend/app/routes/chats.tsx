@@ -94,8 +94,7 @@ export default function Chats() {
   useEffect(() => {
     if (!token || !user) return;
 
-    // Eliminamos la conexión WebSocket de aquí
-    // chatService.connect(token, user.user_id);
+    let unsubscribeFunctions: (() => void)[] = [];
 
     const fetchData = async () => {
       try {
@@ -189,13 +188,16 @@ export default function Chats() {
       });
     };
 
-    chatService.onNewMessage(handleNewMessage);
+    // Registrar el handler y guardar la función de limpieza
+    const unsubscribeNewMessage = chatService.onNewMessage(handleNewMessage);
+    unsubscribeFunctions.push(unsubscribeNewMessage);
 
     fetchData();
 
+    // Limpiar al desmontar
     return () => {
-      chatService.removeMessageHandler(handleNewMessage);
-      chatService.disconnect();
+      console.log('Limpiando suscripciones de chats...');
+      unsubscribeFunctions.forEach(unsubscribe => unsubscribe());
     };
   }, [token, user]);
 
