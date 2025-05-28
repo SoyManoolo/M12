@@ -1,7 +1,7 @@
 import { ChatMessages, PostComments, User } from "../models";
 import { AppError } from "../middlewares/errors/AppError";
 import { Op } from "sequelize";
-import { existCommentChat, existsUser } from "../utils/modelExists";
+import { existsUser } from "../utils/modelExists";
 import { CreateMessageAttributes } from "../types/custom";
 import dbLogger from "../config/logger";
 
@@ -310,7 +310,7 @@ export class ChatService {
             dbLogger.info(`[ChatService] Eliminando mensaje con ID: ${message_id}`);
 
             // Verificar que el mensaje existe
-            const messageExist: PostComments | null = await existCommentChat(message_id);
+            const messageExist: ChatMessages | null = await ChatMessages.findByPk(message_id);
 
             if (!messageExist) {
                 dbLogger.error(`[ChatService] Mensaje no encontrado: ${message_id}`);
