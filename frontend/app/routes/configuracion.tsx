@@ -101,6 +101,9 @@ export default function ConfiguracionPage() {
   const [showCountdownModal, setShowCountdownModal] = useState(false);
   const [countdown, setCountdown] = useState(3);
 
+  // Regex para validar contraseñas (al menos 8 caracteres, mayúscula, minúscula, número, caracter especial)
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&.#])[A-Za-z\d@$!%*?&.#]{8,}$/;
+
   useEffect(() => {
     const fetchUserData = async () => {
       if (!token) {
@@ -177,7 +180,10 @@ export default function ConfiguracionPage() {
         return;
       }
 
-      // Validaciones según el esquema del backend
+      // Solo enviamos los campos que han cambiado y no están vacíos
+      const requestBody: Record<string, string> = {};
+
+      // Validaciones según el esquema del backend y el regex
       if (formData.username && (formData.username.length < 3 || formData.username.length > 50)) {
         showMessage('error', 'El nombre de usuario debe tener entre 3 y 50 caracteres');
         return;
@@ -188,23 +194,15 @@ export default function ConfiguracionPage() {
         return;
       }
 
-      if (formData.password && formData.password.trim() === '') {
-        showMessage('error', 'La contraseña no puede estar vacía');
-        return;
-      }
-
-      // Solo enviamos los campos que han cambiado y no están vacíos
-      const requestBody: Record<string, string> = {};
-      
-      if (formData.username !== user?.username && formData.username.trim() !== '') {
-        requestBody.username = formData.username.trim();
-      }
-      
-      if (formData.email !== user?.email && formData.email.trim() !== '') {
-        requestBody.email = formData.email.trim();
-      }
-
       if (formData.password && formData.password.trim() !== '') {
+        // Validar la nueva contraseña con el regex
+        if (!passwordRegex.test(formData.password)) {
+          setNotification({
+            message: 'La contraseña debe tener al menos 8 caracteres, incluyendo una mayúscula, una minúscula, un número y un caracter especial (@$!%*?&.#)',
+            type: 'error'
+          });
+          return;
+        }
         requestBody.password = formData.password.trim();
       }
       
