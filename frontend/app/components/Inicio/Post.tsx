@@ -280,8 +280,8 @@ export default function Post({
   return (
     <>
       {/* Contenedor principal del post */}
-      <div className="bg-gray-900 rounded-lg p-4 mb-4 w-full h-[500px]">
-        <div className="flex h-full">
+      <div className={`bg-gray-900 rounded-lg p-4 mb-4 w-full ${media_url ? 'h-[500px]' : 'min-h-[200px]'}`}>
+        <div className={`flex ${media_url ? 'h-full' : ''}`}>
           {/* Columna izquierda - Acciones y perfil */}
           <div className="w-[80px] flex flex-col items-center space-y-4">
             {/* Perfil y nombre del usuario */}
@@ -351,49 +351,30 @@ export default function Post({
             </div>
           </div>
 
-          {/* Columna central - Contenido multimedia */}
-          <div className="w-[500px] px-4">
-            <div 
-              className={`rounded-lg overflow-hidden bg-gray-800 h-full ${media_url ? 'cursor-pointer' : ''} relative`}
-              onClick={media_url ? handleImageClick : undefined}
-            >
-              {media_url ? (
+          {/* Columna central - Contenido multimedia (solo si hay imagen) */}
+          {media_url && (
+            <div className="w-[500px] px-4">
+              <div 
+                className="rounded-lg overflow-hidden bg-gray-800 h-full cursor-pointer relative"
+                onClick={handleImageClick}
+              >
                 <img 
                   src={media_url}
                   alt="Contenido del post"
                   className="w-full h-full object-cover"
                 />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gray-800">
-                  <div className="text-center">
-                    <svg
-                      className="mx-auto h-16 w-16 text-gray-600"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      />
-                    </svg>
-                    <p className="mt-2 text-gray-500">Sin imagen</p>
-                  </div>
+                {/* Fecha de publicación */}
+                <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 px-2 py-1 rounded text-xs text-gray-300">
+                  {formatDistanceToNow(new Date(created_at), { addSuffix: true, locale: es })}
                 </div>
-              )}
-              {/* Fecha de publicación */}
-              <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 px-2 py-1 rounded text-xs text-gray-300">
-                {formatDistanceToNow(new Date(created_at), { addSuffix: true, locale: es })}
               </div>
             </div>
-          </div>
+          )}
 
           {/* Columna derecha - Descripción y comentarios */}
-          <div className="flex-1 pl-4 flex flex-col h-full">
+          <div className={`flex-1 flex flex-col ${media_url ? 'pl-4' : 'px-4'}`}>
             {/* Contenedor de descripción y comentarios */}
-            <div className="flex-1 overflow-hidden">
+            <div className="flex-1 overflow-y-auto">
               {/* Sección de descripción */}
               <div className="mb-4">
                 <h3 className="text-white font-semibold mb-2">Descripción</h3>
@@ -401,9 +382,9 @@ export default function Post({
                   {showFullDescription ? (
                     <p>{description}</p>
                   ) : (
-                    <p>{truncateText(description, 100)}</p>
+                    <p>{truncateText(description, media_url ? 100 : 200)}</p>
                   )}
-                  {description.length > 100 && (
+                  {description.length > (media_url ? 100 : 200) && (
                     <button
                       onClick={toggleDescription}
                       className="text-blue-400 hover:text-blue-300 text-sm font-medium block mt-1"
@@ -415,74 +396,76 @@ export default function Post({
               </div>
 
               {/* Sección de comentarios */}
-              <div className="overflow-y-auto">
+              <div className={`${media_url ? 'overflow-y-auto' : 'max-h-60 overflow-y-auto'} space-y-6`}>
                 <div className="flex items-center gap-2 mb-2">
                   <h3 className="text-white font-semibold">Comentarios</h3>
                   <span className="text-sm text-gray-400">({comments.length})</span>
                 </div>
-                <div className="space-y-6">
-                  {comments.length === 0 ? (
-                    <div className="text-center text-gray-400 py-8 rounded-xl">
-                      <span className="text-4xl mb-4 block">💭</span>
-                      <p className="text-lg">No hay comentarios aún</p>
-                      <p className="text-sm mt-2">Sé el primero en comentar</p>
-                    </div>
-                  ) : (
-                    <>
-                      {(showAllComments ? comments : comments.slice(0, 3)).map(comment => (
-                        <div key={comment.comment_id} className="flex items-start gap-3 mb-4">
-                          {/* Foto de perfil o inicial */}
-                          {comment.author && comment.author.profile_picture ? (
-                            <img
-                              src={String(comment.author.profile_picture)}
-                              alt={comment.author.username}
-                              className="w-9 h-9 rounded-full object-cover flex-shrink-0"
-                            />
-                          ) : (
-                            <div 
-                              className="w-9 h-9 rounded-full bg-gray-800 flex items-center justify-center flex-shrink-0"
-                            >
-                              <span className="text-gray-400 text-lg font-bold">
-                                {comment.author?.username?.charAt(0).toUpperCase()}
+                {comments.length === 0 ? (
+                  <div className="text-center text-gray-400 py-8 rounded-xl">
+                    <span className="text-4xl mb-4 block">💭</span>
+                    <p className="text-lg">No hay comentarios aún</p>
+                    <p className="text-sm mt-2">Sé el primero en comentar</p>
+                  </div>
+                ) : (
+                  <>
+                    {(showAllComments ? comments : comments.slice(0, 3)).map((comment) => (
+                      <div key={comment.comment_id} className="flex items-start gap-3 mb-4">
+                        {/* Foto de perfil o inicial */}
+                        {comment.author && comment.author.profile_picture ? (
+                          <img
+                            src={String(comment.author.profile_picture)}
+                            alt={comment.author.username}
+                            className="w-9 h-9 rounded-full object-cover flex-shrink-0"
+                          />
+                        ) : (
+                          <div 
+                            className="w-9 h-9 rounded-full bg-gray-800 flex items-center justify-center flex-shrink-0"
+                          >
+                            <span className="text-gray-400 text-lg font-bold">
+                              {comment.author?.username?.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                        )}
+                        {/* Contenido del comentario y botón de eliminar */}
+                        <div className="flex-1 flex justify-between items-start px-2">
+                          <div className="flex-1 pr-2">
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold text-white text-sm">
+                                {comment.author?.username}
+                              </span>
+                              <span className="text-gray-400 text-xs">
+                                {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true, locale: es })}
                               </span>
                             </div>
-                          )}
-                          {/* Usuario en negrita y comentario en la misma línea */}
-                          <div className="flex-1">
-                            <span className="font-bold text-white mr-2">{comment.author?.username}</span>
-                            <span className="text-gray-300">{truncateText(comment.content, 100)}</span>
-                            <div className="flex items-center gap-4 mt-1 text-xs text-gray-400">
-                              <span>{`hace ${formatTimeAgo(comment.created_at)}`}</span>
-                              {currentUserId === comment.author?.user_id && (
-                                <button
-                                  onClick={() => handleDeleteComment(comment.comment_id)}
-                                  className="text-red-500 hover:text-red-700 focus:outline-none ml-2"
-                                  title="Eliminar comentario"
-                                >
-                                  <FaTrash className="text-sm" />
-                                </button>
-                              )}
-                            </div>
+                            <p className="text-gray-300 text-sm mt-1">{comment.content}</p>
                           </div>
+                          {currentUserId === comment.author?.user_id && (
+                            <button
+                              onClick={() => handleDeleteComment(comment.comment_id)}
+                              className="text-red-500 hover:text-red-700 focus:outline-none ml-4"
+                              title="Eliminar comentario"
+                            >
+                              <FaTrash className="text-sm" />
+                            </button>
+                          )}
                         </div>
-                      ))}
-                      {comments.length > 3 && (
-                        <button
-                          onClick={() => setShowAllComments(!showAllComments)}
-                          className="text-blue-400 hover:text-blue-300 text-sm font-medium block mt-2"
-                        >
-                          {showAllComments 
-                            ? 'Ver menos comentarios' 
-                            : `Ver todos los ${comments.length} comentarios`}
-                        </button>
-                      )}
-                    </>
-                  )}
-                </div>
+                      </div>
+                    ))}
+                    {comments.length > 3 && (
+                      <button
+                        onClick={() => setShowAllComments(!showAllComments)}
+                        className="text-blue-400 hover:text-blue-300 text-sm font-medium w-full text-center py-2"
+                      >
+                        {showAllComments ? 'Ver menos comentarios' : 'Ver todos los comentarios'}
+                      </button>
+                    )}
+                  </>
+                )}
               </div>
             </div>
 
-            {/* Input para nuevos comentarios */}
+            {/* Input de comentarios */}
             <div className="mt-auto pt-4 border-t border-gray-800">
               <div className="flex items-center bg-gray-800 rounded-lg p-2">
                 <input
