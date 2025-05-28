@@ -18,8 +18,7 @@ import { Form, useNavigate, Link } from "@remix-run/react";
 import type { ActionFunction } from "@remix-run/node";
 import { redirect } from "@remix-run/node";
 import { authService } from '../services/auth.service';
-import { useMessage } from '../hooks/useMessage';
-import Message from '../components/Shared/Message';
+import Notification from '../components/Shared/Notification';
 
 /**
  * @function action
@@ -80,7 +79,10 @@ export default function SignUpPage(): React.ReactElement {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
-  const { message, showMessage, clearMessage } = useMessage();
+  const [notification, setNotification] = useState<{
+    message: string;
+    type: 'success' | 'error';
+  } | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -91,6 +93,9 @@ export default function SignUpPage(): React.ReactElement {
       <div className="text-white">Cargando...</div>
     </div>;
   }
+
+  // Regex para validar contraseñas (al menos 8 caracteres, mayúscula, minúscula, número, caracter especial)
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&.#])[A-Za-z\d@$!%*?&.#]{8,}$/;
 
   /**
    * @function handleSubmit
@@ -108,6 +113,15 @@ export default function SignUpPage(): React.ReactElement {
     });
     console.log('🔄 Iniciando proceso de registro...');
 
+    // Validar contraseña con el regex
+    if (!passwordRegex.test(password)) {
+      setNotification({
+        message: 'La contraseña debe tener al menos 8 caracteres, incluyendo una mayúscula, una minúscula, un número y un caracter especial (@$!%*?&.#)',
+        type: 'error'
+      });
+      return;
+    }
+
     try {
       const response = await authService.register({
         name,
@@ -121,38 +135,27 @@ export default function SignUpPage(): React.ReactElement {
       
       if (response.success) {
         console.log('✅ Registro exitoso');
-        showMessage('success', response.message || '¡Cuenta creada con éxito! Ya puedes iniciar sesión');
+        setNotification({
+          message: response.message || '¡Cuenta creada con éxito! Ya puedes iniciar sesión',
+          type: 'success'
+        });
         // Guardamos el mensaje en localStorage antes de navegar
         localStorage.setItem('signupSuccess', response.message || '¡Cuenta creada con éxito! Ya puedes iniciar sesión');
         navigate('/login');
       } else {
         console.log('❌ Error en el registro:', response.message);
-        showMessage('error', response.message || 'No pudimos crear tu cuenta');
+        setNotification({
+          message: response.message || 'No pudimos crear tu cuenta',
+          type: 'error'
+        });
       }
     } catch (error) {
       console.error('⚠️ Error al conectar con el servidor:', error);
-      showMessage('error', 'No pudimos conectarnos al servidor. Por favor, verifica tu conexión a internet');
+      setNotification({
+        message: 'No pudimos conectarnos al servidor. Por favor, verifica tu conexión a internet',
+        type: 'error'
+      });
     }
-  };
-
-  /**
-   * @function handleGoogleSignUp
-   * @description Maneja el registro con Google (pendiente de implementación)
-   */
-  const handleGoogleSignUp = () => {
-    console.log('🔵 Iniciando registro con Google...');
-    // Implementar registro con Google
-    navigate('/inicio');
-  };
-
-  /**
-   * @function handleFacebookSignUp
-   * @description Maneja el registro con Facebook (pendiente de implementación)
-   */
-  const handleFacebookSignUp = () => {
-    console.log('🔵 Iniciando registro con Facebook...');
-    // Implementar registro con Facebook
-    navigate('/inicio');
   };
 
   return (
@@ -160,11 +163,11 @@ export default function SignUpPage(): React.ReactElement {
       <div className="w-full max-w-md bg-black border border-gray-800 rounded-lg p-8">
         <h1 className="text-4xl text-white text-center mb-8 font-bold tracking-wider">REGISTRARSE</h1>
         
-        {message && (
-          <Message
-            type={message.type}
-            message={message.text}
-            onClose={clearMessage}
+        {notification && (
+          <Notification
+            message={notification.message}
+            type={notification.type}
+            onClose={() => setNotification(null)}
           />
         )}
         
@@ -250,26 +253,6 @@ export default function SignUpPage(): React.ReactElement {
           >
             REGISTRARSE
           </button>
-
-          <div className="mt-6">
-            <p className="text-gray-400 text-center mb-4 tracking-wider">REGISTRARSE CON:</p>
-            <div className="flex justify-center space-x-4">
-              <button
-                type="button"
-                onClick={handleGoogleSignUp}
-                className="text-white hover:text-gray-300 tracking-wider cursor-pointer"
-              >
-                GOOGLE
-              </button>
-              <button
-                type="button"
-                onClick={handleFacebookSignUp}
-                className="text-white hover:text-gray-300 tracking-wider cursor-pointer"
-              >
-                FACEBOOK
-              </button>
-            </div>
-          </div>
 
           <div className="text-center mt-6">
             <Link
