@@ -195,7 +195,7 @@ export default function InicioPage() {
 
   if (token) {
     const decodedToken = decodeToken(token);
-    currentUserId = decodedToken?.id;
+    currentUserId = decodedToken?.user_id;
     console.log('Token decodificado en inicio:', decodedToken);
   }
 

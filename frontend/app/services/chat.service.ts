@@ -221,11 +221,11 @@ class ChatService {
     }
 
     try {
-      const decoded = jwtDecode(token) as { id: string };
+      const decoded = jwtDecode(token) as { user_id: string };
       
-      if (decoded.id !== userId) {
+      if (decoded.user_id !== userId) {
         console.error('El token no coincide con el usuario:', {
-          tokenId: decoded.id,
+          tokenId: decoded.user_id,
           userId
         });
         return;

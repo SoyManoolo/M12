@@ -1,5 +1,6 @@
 import { environment } from '../config/environment';
 import type { UserProfile, ApiResponse, PaginatedUsersResponse } from '../types/user.types';
+import { jwtDecode } from 'jwt-decode';
 
 export const userService = {
     /**
@@ -35,15 +36,8 @@ export const userService = {
         try {
             // Si el userId es 'me', decodificamos el token para obtener el ID
             if (userId === 'me') {
-                // Decodificar el token JWT
-                const base64Url = token.split('.')[1];
-                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-                }).join(''));
-
-                const payload = JSON.parse(jsonPayload);
-                userId = payload.id; // El ID del usuario está en el payload del token
+                const decoded = jwtDecode(token) as { user_id: string };
+                userId = decoded.user_id;
             }
 
             const response = await fetch(`${environment.apiUrl}/users/${userId}`, {

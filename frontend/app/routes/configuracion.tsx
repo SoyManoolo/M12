@@ -21,6 +21,7 @@ import { authService } from '../services/auth.service';
 import RedirectModal from '~/components/Shared/RedirectModal';
 import Notification from '../components/Shared/Notification';
 import ConfirmModal from '../components/Shared/ConfirmModal';
+import { decodeToken } from '../utils/token';
 
 /**
  * Función auxiliar para obtener el username del token JWT
@@ -31,14 +32,8 @@ const getUsernameFromToken = (token: string | null): string => {
   if (!token) return '';
   
   try {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-    }).join(''));
-
-    const payload = JSON.parse(jsonPayload);
-    return payload.username;
+    const decoded = decodeToken(token);
+    return decoded?.username || '';
   } catch (error) {
     console.error('Error al decodificar el token:', error);
     return '';
@@ -180,6 +175,14 @@ export default function ConfiguracionPage() {
         return;
       }
 
+      // Verificar que el token sea válido
+      const decodedToken = decodeToken(token);
+      if (!decodedToken) {
+        showMessage('error', 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
+        navigate('/login');
+        return;
+      }
+
       // Solo enviamos los campos que han cambiado y no están vacíos
       const requestBody: Record<string, string> = {};
 
@@ -216,7 +219,15 @@ export default function ConfiguracionPage() {
         return;
       }
 
-      const response = await userService.updateUserById(userId, requestBody, token);
+      // Asegurarnos de que el token esté actualizado
+      const currentToken = localStorage.getItem('token');
+      if (!currentToken) {
+        showMessage('error', 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
+        navigate('/login');
+        return;
+      }
+
+      const response = await userService.updateUserById(userId, requestBody, currentToken);
 
       if (response.success) {
         // Si se actualizaron datos sensibles (email, username o password)
@@ -237,17 +248,27 @@ export default function ConfiguracionPage() {
           }
         }
       } else {
-        setNotification({
-          message: response.message || 'Error al actualizar los datos',
-          type: 'error'
-        });
+        if (response.status === 401) {
+          showMessage('error', 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
+          navigate('/login');
+        } else {
+          setNotification({
+            message: response.message || 'Error al actualizar los datos',
+            type: 'error'
+          });
+        }
       }
     } catch (error) {
       console.error('Error al actualizar:', error);
-      setNotification({
-        message: 'Error al actualizar los datos',
-        type: 'error'
-      });
+      if (error instanceof Error && error.message.includes('401')) {
+        showMessage('error', 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
+        navigate('/login');
+      } else {
+        setNotification({
+          message: 'Error al actualizar los datos',
+          type: 'error'
+        });
+      }
     }
   };
 
