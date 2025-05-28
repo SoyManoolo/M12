@@ -50,15 +50,21 @@ export class PostService {
     // Método para obtener los posts de un usuario
     public async getPostsUser(filters: UserFilters, limit: number = 10, cursor?: string) {
         try {
+            dbLogger.info(`[PostService] Getting posts for user with filters: ${JSON.stringify(filters)}`);
             if (Object.keys(filters).length === 0) {
                 throw new AppError(400, "");
             };
 
             const user: User | null = await existsUser(filters);
+            dbLogger.info(`[PostService] User found: ${JSON.stringify(user)}`);
 
-            if (!user) throw new AppError(404, "");
+            if (!user) {
+                dbLogger.error("[PostService] User not found for filters:", { filters });
+                throw new AppError(404, "")
+            };
 
-            const user_id = user.user_id;
+            const user_id = user.getDataValue("user_id");
+            dbLogger.info(`[PostService] User ID: ${JSON.stringify(user_id)}`);
 
             const queryOptions: any = {
                 limit: limit + 1,
@@ -100,20 +106,18 @@ export class PostService {
             if (cursor) {
                 const lastPost = await Post.findByPk(cursor);
                 if (lastPost) {
+                    // Mantén todas las condiciones existentes
                     queryOptions.where = {
-                        [Op.and]: [
-                            { user_id },  // Mantener la condición de user_id
-                            {
-                                created_at: {
-                                    [Op.lt]: lastPost.getDataValue("created_at")
-                                }
-                            }
-                        ]
+                        user_id, // Mantener la condición de user_id
+                        created_at: {
+                            [Op.lt]: lastPost.getDataValue("created_at") // Usa acceso directo a la propiedad
+                        }
                     };
                 }
             }
 
             const posts = await Post.findAll(queryOptions)
+            dbLogger.info(`[PostService] Posts found: ${JSON.stringify(posts)}`);
 
             // Si no hay posts, lanzamos un error
             if (!posts || posts.length === 0) throw new AppError(404, 'PostNotFound');
@@ -134,10 +138,10 @@ export class PostService {
             };
         } catch (error) {
             if (error instanceof AppError) {
-                dbLogger.error(`[PostService] Error getting posts by user: ${error.message}`);
+                dbLogger.error("[PostService] Error getting posts by user", { error });
                 throw error;
             }
-            dbLogger.error(`[PostService] Unexpected error getting posts by user: ${error}`);
+            dbLogger.error("[PostService] Unexpected error getting posts by user", { error });
             throw new AppError(500, 'InternalServerError');
         };
     }
@@ -186,7 +190,7 @@ export class PostService {
                 if (lastPost) {
                     queryOptions.where = {
                         created_at: {
-                            [Op.lt]: lastPost.dataValues.created_at
+                            [Op.lt]: lastPost.getDataValue("created_at")
                         }
                     };
                 };

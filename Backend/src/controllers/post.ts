@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import i18n from '../config/i18n';
 import { PostService } from '../services/post';
 import { AppError } from '../middlewares/errors/AppError';
+import dbLogger from '../config/logger';
 
 
 export class PostController {
@@ -10,6 +11,7 @@ export class PostController {
 
     public async getPostsUser(req: Request, res: Response, next: NextFunction) {
         try {
+            dbLogger.info(`[PostController] Request to get posts for user: ${req.params.id}`);
             // Guarda el idioma en la variable locale y lo asigna a i18n
             const locale = req.headers['accept-language'] || 'en';
             i18n.setLocale(locale);
