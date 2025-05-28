@@ -20,6 +20,7 @@ import type { User } from '~/types/user.types';
 import { chatService } from '~/services/chat.service';
 import { useAuth } from '~/hooks/useAuth';
 import { userService } from '~/services/user.service';
+import { jwtDecode } from 'jwt-decode';
 
 interface Message {
   id: string;
@@ -60,36 +61,153 @@ export default function Chat() {
   const [searchParams] = useSearchParams();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
-  const [chatUser, setChatUser] = useState<ChatUser | null>(null);
-  const [isTyping, setIsTyping] = useState(false);
+  const [chatUser, setChatUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isTyping, setIsTyping] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'reconnecting'>('disconnected');
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { token } = useAuth();
   const typingTimeoutRef = useRef<NodeJS.Timeout>();
+  const { token, user: currentUser } = useAuth();
+  const userId = searchParams.get('userId');
 
   useEffect(() => {
-    if (!token) return;
+    if (!token || !userId || !currentUser?.user_id) {
+      console.log('Faltan datos necesarios:', { token: !!token, userId, currentUserId: currentUser?.user_id });
+      return;
+    }
+
+    console.log('Iniciando conexión del chat...');
+    let isComponentMounted = true;
+
+    // Definir los handlers de eventos
+    const handleNewMessage = (message: Message) => {
+      console.log('Manejando nuevo mensaje:', message);
+      if (!isComponentMounted) return;
+      
+      setMessages(prev => {
+        // Verificar si el mensaje ya existe usando el ID
+        const messageExists = prev.some(msg => msg.id === message.id);
+        if (messageExists) {
+          console.log('Mensaje ya existe, ignorando:', message.id);
+          return prev;
+        }
+
+        // Si es un mensaje temporal nuestro, reemplazarlo
+        if (message.sender_id === currentUser.user_id) {
+          const newMessages = prev.filter(msg => !msg.id.startsWith('temp-'));
+          newMessages.push({ ...message, is_own: true });
+          return newMessages.sort((a, b) => 
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+          );
+        }
+        
+        // Agregar el nuevo mensaje y ordenar
+        const newMessages = [...prev, { ...message, is_own: message.sender_id === currentUser.user_id }];
+        const sortedMessages = newMessages.sort((a, b) => 
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        );
+
+        // Hacer scroll solo si el mensaje es nuevo y no es nuestro
+        if (!messageExists && message.sender_id !== currentUser.user_id) {
+          setTimeout(scrollToBottom, 100);
+        }
+
+        return sortedMessages;
+      });
+    };
+
+    const handleDeliveryStatus = (data: { message_id: string; status: string; delivered_at?: string }) => {
+      console.log('Manejando estado de entrega:', data);
+      if (!isComponentMounted) return;
+      
+      setMessages(prev => {
+        const messageExists = prev.some(msg => msg.id === data.message_id);
+        if (!messageExists) {
+          console.log('Mensaje no encontrado para actualizar entrega:', data.message_id);
+          return prev;
+        }
+        
+        return prev.map(msg => 
+          msg.id === data.message_id 
+            ? { ...msg, is_delivered: true, delivered_at: data.delivered_at || new Date().toISOString() }
+            : msg
+        );
+      });
+    };
+
+    const handleReadStatus = (data: { message_id: string; status: string; read_at?: string }) => {
+      console.log('Manejando estado de lectura:', data);
+      if (!isComponentMounted) return;
+      
+      setMessages(prev => {
+        const messageExists = prev.some(msg => msg.id === data.message_id);
+        if (!messageExists) {
+          console.log('Mensaje no encontrado para actualizar lectura:', data.message_id);
+          return prev;
+        }
+        
+        return prev.map(msg => 
+          msg.id === data.message_id 
+            ? { ...msg, read_at: data.read_at || new Date().toISOString() }
+            : msg
+        );
+      });
+    };
+
+    const handleTyping = (data: { userId: string; isTyping: boolean }) => {
+      if (!isComponentMounted) return;
+      
+      // Solo actualizar si es el usuario del chat actual
+      if (data.userId === userId) {
+        console.log('Actualizando estado de escritura:', data);
+        setIsTyping(data.isTyping);
+      }
+    };
+
+    const handleConnectionStatus = (status: 'connected' | 'disconnected' | 'reconnecting') => {
+      if (!isComponentMounted) return;
+      
+      console.log('Estado de conexión actualizado:', status);
+      setConnectionStatus(status);
+    };
 
     const loadChat = async () => {
       try {
         setLoading(true);
-        const userId = searchParams.get('userId');
         
-        if (!userId) {
-          // Si no hay userId, cargar la lista de chats activos
-          const chats = await chatService.getActiveChats(token);
-          if (chats.length > 0) {
-            // Redirigir al primer chat
-            window.location.href = `/chat?userId=${chats[0].other_user.user_id}`;
-            return;
-          }
-          setLoading(false);
-          return;
+        // Limpiar mensajes existentes
+        setMessages([]);
+        
+        // Suscribirse al estado de conexión primero
+        const unsubscribeConnection = chatService.onConnectionStatus(handleConnectionStatus);
+        
+        // Conectar al WebSocket
+        chatService.connect(token, currentUser.user_id);
+
+        // Cargar mensajes del chat
+        const { messages: chatMessages } = await chatService.getMessages(userId, token);
+        if (isComponentMounted) {
+          // Asegurarse de que no haya duplicados al cargar mensajes iniciales
+          const uniqueMessages = chatMessages.reduce((acc: Message[], msg) => {
+            if (!acc.some(m => m.id === msg.id)) {
+              acc.push({ ...msg, is_own: msg.sender_id === currentUser.user_id });
+            }
+            return acc;
+          }, []);
+          
+          setMessages(uniqueMessages.sort((a, b) => 
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+          ));
+
+          // Desplazarse al final después de cargar los mensajes
+          setTimeout(() => {
+            scrollToBottom();
+          }, 100);
         }
 
         // Cargar información del usuario del chat
         const userResponse = await userService.getUserById(userId, token);
-        if (userResponse.success && userResponse.data) {
+        if (isComponentMounted && userResponse.success && userResponse.data) {
           setChatUser({
             user_id: userResponse.data.user_id,
             username: userResponse.data.username,
@@ -105,48 +223,9 @@ export default function Chat() {
             updated_at: userResponse.data.updated_at || '',
             active_video_call: false
           });
-        } else {
-          setChatUser(null);
         }
 
-        // Cargar mensajes del chat
-        const { messages: chatMessages } = await chatService.getMessages(userId, token);
-        setMessages(chatMessages.map(msg => ({
-          ...msg,
-          is_own: msg.sender_id === userId
-        })));
-
-        // Conectar al WebSocket
-        chatService.connect(token, userId);
-
-        // Configurar manejadores de eventos
-        const handleNewMessage = (message: Message) => {
-          setMessages(prev => [...prev, { ...message, is_own: message.sender_id === userId }]);
-          scrollToBottom();
-        };
-
-        const handleDeliveryStatus = (data: { message_id: string; status: string }) => {
-          setMessages(prev => prev.map(msg => 
-            msg.id === data.message_id 
-              ? { ...msg, is_delivered: true, delivered_at: new Date().toISOString() }
-              : msg
-          ));
-        };
-
-        const handleReadStatus = (data: { message_id: string; status: string }) => {
-          setMessages(prev => prev.map(msg => 
-            msg.id === data.message_id 
-              ? { ...msg, read_at: new Date().toISOString() }
-              : msg
-          ));
-        };
-
-        const handleTyping = (data: { userId: string; isTyping: boolean }) => {
-          if (data.userId === userId) {
-            setIsTyping(data.isTyping);
-          }
-        };
-
+        // Suscribirse a los eventos del socket
         chatService.onNewMessage(handleNewMessage);
         chatService.onDeliveryStatus(handleDeliveryStatus);
         chatService.onReadStatus(handleReadStatus);
@@ -157,43 +236,119 @@ export default function Chat() {
           .filter(msg => msg.sender_id === userId && !msg.read_at)
           .forEach(msg => chatService.markMessageAsRead(msg.id, token));
 
+        // Limpiar suscripciones al desmontar
+        return () => {
+          console.log('Limpiando suscripciones del chat...');
+          isComponentMounted = false;
+          unsubscribeConnection();
+          chatService.removeMessageHandler(handleNewMessage);
+          chatService.removeDeliveryHandler(handleDeliveryStatus);
+          chatService.removeReadHandler(handleReadStatus);
+          chatService.removeTypingHandler(handleTyping);
+          chatService.disconnect();
+        };
+
       } catch (error) {
         console.error('Error al cargar el chat:', error);
+        if (isComponentMounted) {
+          setConnectionStatus('disconnected');
+        }
       } finally {
-        setLoading(false);
+        if (isComponentMounted) {
+          setLoading(false);
+        }
       }
     };
 
     loadChat();
+  }, [token, userId, currentUser]);
 
-    return () => {
-      chatService.disconnect();
-    };
-  }, [token, searchParams]);
+  // Agregar un efecto para desplazarse al final cuando cambian los mensajes
+  useEffect(() => {
+    if (!loading && messages.length > 0) {
+      scrollToBottom();
+    }
+  }, [loading, messages]);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesEndRef.current) {
+      const container = messagesEndRef.current.parentElement;
+      if (container) {
+        const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+        
+        // Solo hacer scroll automático si estamos cerca del final
+        if (isNearBottom) {
+          messagesEndRef.current.scrollIntoView({ 
+            behavior: 'smooth',
+            block: 'end'
+          });
+        }
+      }
+    }
   };
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || !token || !chatUser) return;
+    if (!newMessage.trim() || !token || !userId || !chatUser || !currentUser || connectionStatus !== 'connected') {
+      console.log('No se puede enviar mensaje:', { 
+        messageEmpty: !newMessage.trim(), 
+        noToken: !token, 
+        noUserId: !userId,
+        noChatUser: !chatUser,
+        noCurrentUser: !currentUser,
+        connectionStatus 
+      });
+      return;
+    }
 
-    chatService.sendMessage(chatUser.user_id, newMessage, token);
-    setNewMessage('');
+    try {
+      // Guardar el mensaje temporalmente para scroll inmediato
+      const tempMessage = {
+        id: `temp-${Date.now()}`,
+        content: newMessage.trim(),
+        sender_id: currentUser.user_id,
+        receiver_id: chatUser.user_id,
+        created_at: new Date().toISOString(),
+        is_delivered: false,
+        delivered_at: null,
+        read_at: null,
+        is_own: true
+      };
+
+      // Agregar mensaje temporal y hacer scroll
+      setMessages(prev => [...prev, tempMessage]);
+      setNewMessage('');
+      scrollToBottom();
+
+      // Enviar mensaje real
+      await chatService.sendMessage(chatUser.user_id, newMessage.trim(), token);
+    } catch (error) {
+      console.error('Error al enviar mensaje:', error);
+      // Intentar reconectar si hay error
+      if (currentUser?.user_id) {
+        chatService.connect(token, currentUser.user_id);
+      }
+    }
   };
 
   const handleTyping = () => {
-    if (!chatUser) return;
+    if (!chatUser || !token || connectionStatus !== 'connected') {
+      console.log('No se puede enviar estado de escritura:', {
+        noChatUser: !chatUser,
+        noToken: !token,
+        connectionStatus
+      });
+      return;
+    }
 
-    chatService.setTyping(chatUser.user_id, true);
+    chatService.setTyping(chatUser.user_id, true, token);
 
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
     }
 
     typingTimeoutRef.current = setTimeout(() => {
-      chatService.setTyping(chatUser.user_id, false);
+      chatService.setTyping(chatUser.user_id, false, token);
     }, 2000);
   };
 
@@ -231,52 +386,102 @@ export default function Chat() {
       <div className="w-2/3 ml-[16.666667%] border-r border-gray-800">
         {/* Área de chat */}
         <div className="flex flex-col h-screen">
-          {/* Encabezado del chat */}
+          {/* Encabezado del chat con estado de conexión */}
           <div className="p-4 border-b border-gray-800">
-            <h1 className="text-xl font-bold">{chatUser.name} {chatUser.surname}</h1>
+            <div className="flex justify-between items-center">
+              <h1 className="text-xl font-bold">{chatUser?.name} {chatUser?.surname}</h1>
+              <div className="flex items-center space-x-2">
+                {connectionStatus === 'connected' && (
+                  <span className="text-green-500 text-sm flex items-center">
+                    <span className="w-2 h-2 bg-green-500 rounded-full mr-1"></span>
+                    Conectado
+                  </span>
+                )}
+                {connectionStatus === 'disconnected' && (
+                  <span className="text-red-500 text-sm flex items-center">
+                    <span className="w-2 h-2 bg-red-500 rounded-full mr-1"></span>
+                    Desconectado
+                  </span>
+                )}
+                {connectionStatus === 'reconnecting' && (
+                  <span className="text-yellow-500 text-sm flex items-center">
+                    <span className="w-2 h-2 bg-yellow-500 rounded-full mr-1 animate-pulse"></span>
+                    Reconectando...
+                  </span>
+                )}
+              </div>
+            </div>
             {isTyping && (
-              <p className="text-sm text-gray-400">Escribiendo...</p>
+              <p className="text-sm text-gray-400 mt-1">Escribiendo...</p>
             )}
           </div>
 
           {/* Mensajes */}
-          <div className="flex-1 p-4 overflow-y-auto">
-            <div className="space-y-4">
-              {messages.length === 0 ? (
-                <p className="text-gray-400 text-center mt-8">Aún no hay mensajes. ¡Escribe el primero!</p>
-              ) : (
-                messages.map((message) => (
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-4">
+            {loading ? (
+              <div className="flex justify-center items-center h-full">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+              </div>
+            ) : (
+              messages.map(message => (
+                <div
+                  key={message.id}
+                  className={`flex ${message.is_own ? 'justify-end' : 'justify-start'}`}
+                >
                   <div
-                    key={message.id}
-                    className={`flex ${message.is_own ? 'justify-end' : 'justify-start'}`}
+                    className={`max-w-[70%] p-3 rounded-lg ${
+                      message.is_own
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-800 text-white'
+                    }`}
                   >
-                    <div
-                      className={`max-w-[70%] p-3 rounded-lg ${
-                        message.is_own
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-800 text-white'
-                      }`}
-                    >
-                      <p>{message.content}</p>
-                      <div className="flex items-center justify-end space-x-2 mt-1">
-                        <p className="text-xs text-gray-400">
+                    <p className="break-words">{message.content}</p>
+                    <div className="flex items-center justify-end space-x-2 mt-1">
+                      <p className="text-xs text-gray-400">
                         {new Date(message.created_at).toLocaleTimeString()}
                       </p>
-                        {message.is_own && (
-                          <span className="text-xs">
-                            {message.read_at ? '✓✓' : message.is_delivered ? '✓' : ''}
-                          </span>
-                        )}
-                      </div>
+                      {message.is_own && (
+                        <span className="text-xs flex items-center space-x-1">
+                          {message.read_at ? (
+                            <span className="text-blue-300" title="Leído">✓✓</span>
+                          ) : message.is_delivered ? (
+                            <span className="text-gray-300" title="Entregado">✓</span>
+                          ) : (
+                            <span className="text-gray-500 animate-pulse" title="Enviando">•</span>
+                          )}
+                        </span>
+                      )}
                     </div>
                   </div>
-                ))
-              )}
-              <div ref={messagesEndRef} />
-            </div>
+                </div>
+              ))
+            )}
+            <div ref={messagesEndRef} />
           </div>
 
-          {/* Input de mensaje */}
+          <style>
+            {`
+              .custom-scrollbar::-webkit-scrollbar {
+                width: 6px;
+              }
+              
+              .custom-scrollbar::-webkit-scrollbar-track {
+                background: #1f2937;
+                border-radius: 3px;
+              }
+              
+              .custom-scrollbar::-webkit-scrollbar-thumb {
+                background: #4b5563;
+                border-radius: 3px;
+              }
+              
+              .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                background: #6b7280;
+              }
+            `}
+          </style>
+
+          {/* Input de mensaje con estado de conexión */}
           <form onSubmit={handleSendMessage} className="p-4 border-t border-gray-800">
             <div className="flex items-center">
               <input
@@ -284,12 +489,20 @@ export default function Chat() {
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyPress={handleTyping}
-                placeholder="Escribe un mensaje..."
-                className="flex-1 bg-gray-900 rounded-lg py-2 px-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder={connectionStatus === 'connected' ? "Escribe un mensaje..." : "Conectando..."}
+                disabled={connectionStatus !== 'connected'}
+                className={`flex-1 bg-gray-900 rounded-lg py-2 px-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  connectionStatus !== 'connected' ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
               />
               <button
                 type="submit"
-                className="ml-4 p-2 bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                disabled={connectionStatus !== 'connected' || !newMessage.trim()}
+                className={`ml-4 p-2 bg-blue-600 rounded-lg transition-colors ${
+                  connectionStatus === 'connected' && newMessage.trim()
+                    ? 'hover:bg-blue-700'
+                    : 'opacity-50 cursor-not-allowed'
+                }`}
               >
                 <FaPaperPlane className="text-white" />
               </button>
@@ -302,4 +515,4 @@ export default function Chat() {
       <ChatUserInfo user={chatUser} />
     </div>
   );
-} 
+}

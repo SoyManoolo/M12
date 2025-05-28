@@ -389,6 +389,7 @@ export default function Perfil() {
       <RightPanel
         friends={friends}
         mode="online"
+        customTitle="Mis amigos"
       />
 
       <ConfirmModal

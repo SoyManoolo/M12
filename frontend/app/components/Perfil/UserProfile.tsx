@@ -52,7 +52,7 @@ export default function UserProfile({ user, isOwnProfile, onEditProfile }: UserP
                         />
                     ) : (
                         <div className="w-32 h-32 rounded-full border-4 border-gray-800 bg-gray-800 flex items-center justify-center">
-                            <span className="text-gray-400 text-sm text-center px-2">Sin foto de perfil</span>
+                            <span className="text-gray-400 text-5xl">{user.username.charAt(0).toUpperCase()}</span>
                         </div>
                     )}
                 </div>

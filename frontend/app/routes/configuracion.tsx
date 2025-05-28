@@ -332,15 +332,21 @@ export default function ConfiguracionPage() {
                 <h2 className="text-xl font-semibold mb-4 text-center">Foto de Perfil</h2>
                 <div className="flex flex-col items-center">
                   <div className="relative w-48 h-48 mb-4 group">
-                    <img
-                      src={user?.profile_picture || "/default-avatar.png"}
-                      alt="Foto de perfil"
-                      className="w-full h-full rounded-full object-cover border-4 border-gray-700 shadow-lg transition-all duration-300 group-hover:blur-sm"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.src = "/default-avatar.png";
-                      }}
-                    />
+                    {user?.profile_picture ? (
+                      <img
+                        src={user.profile_picture}
+                        alt="Foto de perfil"
+                        className="w-full h-full rounded-full object-cover border-4 border-gray-700 shadow-lg transition-all duration-300 group-hover:blur-sm"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = "/default-avatar.png";
+                        }}
+                      />
+                    ) : (
+                      <div className="w-full h-full rounded-full border-4 border-gray-700 bg-gray-800 flex items-center justify-center shadow-lg">
+                        <span className="text-gray-400 text-7xl">{user.username.charAt(0).toUpperCase()}</span>
+                      </div>
+                    )}
                     {/* Overlay con botones (visible al hover) */}
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
                       <div className="flex flex-col space-y-3">

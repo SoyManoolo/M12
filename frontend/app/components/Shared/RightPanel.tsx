@@ -50,6 +50,7 @@ interface RightPanelProps {
   showSearch?: boolean;
   onSearch?: (query: string) => void;
   onFollow?: (userId: string) => void;
+  customTitle?: string;
 }
 
 export default function RightPanel({ 
@@ -58,20 +59,22 @@ export default function RightPanel({
   mode = 'suggested', 
   showSearch = true,
   onSearch, 
-  onFollow 
+  onFollow,
+  customTitle
 }: RightPanelProps) {
   const navigate = useNavigate();
-  const title = mode === 'suggested' 
+  
+  const title = customTitle || (mode === 'suggested' 
     ? 'Amigos sugeridos' 
     : mode === 'common' 
     ? 'Amigos en común' 
-    : 'Amigos en línea';
+    : 'Posibles amigos');
     
   const emptyMessage = mode === 'suggested' 
     ? 'No hay sugerencias disponibles' 
     : mode === 'common'
     ? 'No hay amigos en común'
-    : 'No hay amigos conectados';
+    : 'No hay usuarios disponibles';
 
   const handleUserClick = (username: string) => {
     navigate(`/perfil?username=${username}`);

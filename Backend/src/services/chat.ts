@@ -92,12 +92,23 @@ export class ChatService {
                 ],
                 order: [['created_at', 'DESC']],
                 group: [
+                    'ChatMessages.id',
                     'ChatMessages.sender_id',
                     'ChatMessages.receiver_id',
+                    'ChatMessages.content',
+                    'ChatMessages.is_delivered',
+                    'ChatMessages.delivered_at',
+                    'ChatMessages.read_at',
+                    'ChatMessages.created_at',
+                    'ChatMessages.updated_at',
                     'sender.user_id',
                     'receiver.user_id'
                 ]
             });
+
+            if (!chats || chats.length === 0) {
+                return [];
+            }
 
             // Procesar los chats para obtener el último mensaje y la información del otro usuario
             const processedChats = await Promise.all(chats.map(async (chat: ChatMessages & { sender?: User, receiver?: User }) => {
@@ -105,7 +116,6 @@ export class ChatService {
                 const otherUser: User | undefined = chat.sender_id === user_id ? chat.receiver : chat.sender;
 
                 if (!otherUser) {
-                    // Si no hay usuario relacionado, salta este chat
                     return null;
                 }
 
@@ -144,12 +154,8 @@ export class ChatService {
 
             return processedChats.filter(Boolean);
         } catch (error) {
-            if (error instanceof AppError) {
-                dbLogger.error("[ChatService] Error al obtener chats:", {error});
-                throw error;
-            }
-            dbLogger.error("[ChatService] Error inesperado al obtener chats:", {error});
-            throw new AppError(500, 'InternalServerError');
+            dbLogger.error('Error en getUserChats:', {error});
+            return [];
         }
     }
 
@@ -246,7 +252,13 @@ export class ChatService {
                 }
             });
 
-            if (!messages || messages.length === 0) throw new AppError(404, 'NoMessagesFound');
+            if (!messages || messages.length === 0) {
+                return {
+                    messages: [],
+                    hasNextPage: false,
+                    nextCursor: null
+                };
+            }
 
             const hasNextPage: boolean = messages.length > limit;
             const resultMessages: ChatMessages[] = hasNextPage ? messages.slice(0, limit) : messages;
@@ -258,12 +270,14 @@ export class ChatService {
                 nextCursor
             };
         } catch (error) {
+
             if (error instanceof AppError) {
                 throw error;
             }
             throw new AppError(500, 'InternalServerError');
         }
     }
+
 
     // Método para editar un mensaje
     public async updateMessage(message_id: string, content: string) {
@@ -296,7 +310,7 @@ export class ChatService {
             dbLogger.info(`[ChatService] Eliminando mensaje con ID: ${message_id}`);
 
             // Verificar que el mensaje existe
-            const messageExist: ChatMessages | null = await ChatMessages.findByPk(message_id);
+            const messageExist: PostComments | null = await existCommentChat(message_id);
 
             if (!messageExist) {
                 dbLogger.error(`[ChatService] Mensaje no encontrado: ${message_id}`);
