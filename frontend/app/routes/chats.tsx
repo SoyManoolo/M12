@@ -229,11 +229,16 @@ export default function Chats() {
         <div className="p-6">
           {/* Encabezado */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">Mensajes</h1>
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Mensajes</h1>
+                <p className="text-gray-400 mt-1">Gestiona tus conversaciones y mensajes</p>
+              </div>
+            </div>
           </div>
 
           {/* Barra de búsqueda */}
-          <div className="mb-8">
+          <div className="mb-6">
             <div className="relative">
               <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
@@ -247,60 +252,37 @@ export default function Chats() {
           </div>
 
           {/* Lista de chats */}
-          <div className="space-y-4 custom-scrollbar max-h-[calc(100vh-200px)] overflow-y-auto">
+          <div className="space-y-2 max-h-[calc(100vh-250px)] overflow-y-auto custom-scrollbar">
             {filteredChats.map((chat) => (
-              <ChatItem
+              <div
                 key={chat.chat_id}
-                chat={chat}
                 onClick={() => handleChatClick(chat.user.user_id)}
-              />
+                className="group bg-gray-900/50 hover:bg-gray-800/80 rounded-xl p-4 cursor-pointer transition-all duration-200 border border-transparent hover:border-gray-700"
+              >
+                <ChatItem
+                  chat={chat}
+                  onClick={() => {}}
+                />
+              </div>
             ))}
 
             {/* Mensaje cuando no hay chats */}
             {filteredChats.length === 0 && (
               <div className="flex flex-col items-center justify-center py-16 bg-gray-900/50 rounded-xl border border-gray-800">
-                <div className="w-24 h-24 bg-gray-800 rounded-full flex items-center justify-center mb-6">
-                  <FaEnvelope className="text-4xl text-gray-400" />
+                <div className="w-24 h-24 bg-gradient-to-br from-blue-600/20 to-purple-600/20 rounded-full flex items-center justify-center mb-6">
+                  <FaEnvelope className="text-4xl text-blue-500" />
                 </div>
                 <h3 className="text-xl font-semibold text-white mb-2">
                   {searchQuery ? 'No se encontraron chats' : 'No tienes chats activos'}
                 </h3>
                 <p className="text-gray-400 text-center max-w-md mb-6">
                   {searchQuery 
-                    ? 'Intenta con otros términos de búsqueda o inicia una nueva conversación'
-                    : 'Comienza una nueva conversación con tus amigos o contactos'}
+                    ? 'Intenta con otros términos de búsqueda'
+                    : 'Comienza una conversación con tus amigos'}
                 </p>
-                <button 
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                  onClick={handleStartNewChat}
-                >
-                  Iniciar nuevo chat
-                </button>
               </div>
             )}
           </div>
-
-          <style>
-            {`
-              .custom-scrollbar::-webkit-scrollbar {
-                width: 6px;
-              }
-              
-              .custom-scrollbar::-webkit-scrollbar-track {
-                background: #1f2937;
-                border-radius: 3px;
-              }
-              
-              .custom-scrollbar::-webkit-scrollbar-thumb {
-                background: #4b5563;
-                border-radius: 3px;
-              }
-              
-              .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-                background: #6b7280;
-              }
-            `}
-          </style>
         </div>
       </div>
 
@@ -310,6 +292,24 @@ export default function Chats() {
         mode="online"
         customTitle="Mis amigos"
       />
+
+      <style>
+        {`
+          .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #374151;
+            border-radius: 3px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #4B5563;
+          }
+        `}
+      </style>
     </div>
   );
 } 

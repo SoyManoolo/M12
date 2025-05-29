@@ -53,7 +53,9 @@ export default function EditPostModal({
 
         {/* Título */}
         <div className="p-6 border-b border-gray-800">
-          <h2 className="text-xl font-semibold text-white">{title}</h2>
+          <h2 className="text-xl font-bold text-center bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            {title}
+          </h2>
         </div>
 
         {/* Contenido */}

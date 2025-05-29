@@ -13,6 +13,7 @@ import type { LoaderFunction } from "@remix-run/node";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
 import "./tailwind.css";
+import "./styles/globals.css";
 
 // Rutas públicas que no requieren autenticación
 const publicRoutes = ['/login', '/signup', '/forgot-password'];

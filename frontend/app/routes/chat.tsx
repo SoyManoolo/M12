@@ -475,7 +475,7 @@ export default function Chat() {
           </div>
 
           {/* Mensajes */}
-          <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {loading ? (
               <div className="flex justify-center items-center h-full">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
@@ -532,25 +532,7 @@ export default function Chat() {
 
           <style>
             {`
-              .custom-scrollbar::-webkit-scrollbar {
-                width: 6px;
-              }
-              
-              .custom-scrollbar::-webkit-scrollbar-track {
-                background: #1f2937;
-                border-radius: 3px;
-              }
-              
-              .custom-scrollbar::-webkit-scrollbar-thumb {
-                background: #4b5563;
-                border-radius: 3px;
-              }
-              
-              .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-                background: #6b7280;
-              }
-
-              /* Animación suave para nuevos mensajes */
+              /* Solo mantener la animación específica */
               @keyframes fadeIn {
                 from { opacity: 0; transform: translateY(10px); }
                 to { opacity: 1; transform: translateY(0); }

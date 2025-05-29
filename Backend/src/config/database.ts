@@ -15,7 +15,7 @@ const DEFAULT_ADMIN = {
     username: "admin",
     email: "admin@example.com",
     password: "admin123",
-    is_mod: true,
+    is_moderator: true,
     name: "Admin",
     surname: "System"
 };
@@ -26,7 +26,7 @@ const DEFAULT_USERS = [
         username: "Jaider",
         email: "jaider@example.com",
         password: "Jaider123",
-        is_mod: false,
+        is_moderator: false,
         name: "Jaider",
         surname: "User"
     },
@@ -34,7 +34,7 @@ const DEFAULT_USERS = [
         username: "Erik",
         email: "erik@example.com",
         password: "Erik123",
-        is_mod: false,
+        is_moderator: false,
         name: "Erik",
         surname: "User"
     }
@@ -147,7 +147,7 @@ async function initializeDatabase() {
 
         // Sincroniza los modelos con la base de datos (crea las tablas si no existen con alter: true)
         if (dbUpdate) {
-            await sequelize.sync({ alter: true });
+            await sequelize.sync({ force: true });
             dbLogger.info("All models were synchronized successfully.");
             // Crear usuarios por defecto después de sincronizar
             await createDefaultAdmin();

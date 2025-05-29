@@ -28,7 +28,7 @@ export default function ConfirmModal({
           <FaExclamationTriangle className="text-yellow-500 text-4xl" />
         </div>
         
-        <h3 className="text-xl font-bold text-white text-center mb-2">
+        <h3 className="text-xl font-bold text-center mb-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
           {title}
         </h3>
         

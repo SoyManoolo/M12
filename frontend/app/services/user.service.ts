@@ -58,6 +58,53 @@ export const userService = {
     },
 
     /**
+     * Obtiene todos los usuarios incluyendo al administrador actual
+     * Esta función es específica para la página de administración
+     */
+    async getAllUsersForAdmin(token: string): Promise<ApiResponse<PaginatedUsersResponse>> {
+        try {
+            const response = await fetch(`${environment.apiUrl}/users`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Error al obtener usuarios');
+            }
+
+            const data = await response.json();
+            
+            return {
+                success: true,
+                status: 200,
+                message: 'Usuarios obtenidos correctamente',
+                data: {
+                    users: data.data.users,
+                    total: data.data.users.length,
+                    page: 1,
+                    limit: data.data.users.length,
+                    hasMore: false
+                }
+            };
+        } catch (error) {
+            console.error('Error al obtener usuarios:', error);
+            return {
+                success: false,
+                status: 500,
+                message: 'Error al obtener usuarios',
+                data: {
+                    users: [],
+                    total: 0,
+                    page: 1,
+                    limit: 0,
+                    hasMore: false
+                }
+            };
+        }
+    },
+
+    /**
      * Obtiene un usuario por ID
      */
     async getUserById(userId: string, token: string): Promise<ApiResponse<UserProfile>> {
