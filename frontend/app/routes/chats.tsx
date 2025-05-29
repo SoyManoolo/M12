@@ -262,7 +262,7 @@ export default function Chats() {
                 <ChatItem
                   chat={chat}
                   onClick={() => {}}
-                />
+              />
               </div>
             ))}
 

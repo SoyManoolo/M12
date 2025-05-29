@@ -113,47 +113,47 @@ export default function Navbar() {
         {/* Menú de administración - Solo visible para moderadores */}
         {isModerator && (
           <div className="mt-2">
-            {/* Botón principal de administración */}
-            <button
-              onClick={() => setIsAdminOpen(!isAdminOpen)}
-              className="flex items-center justify-between w-full p-2 rounded hover:bg-gray-800/50 cursor-pointer text-gray-400 hover:text-white group"
-            >
+          {/* Botón principal de administración */}
+          <button
+            onClick={() => setIsAdminOpen(!isAdminOpen)}
+            className="flex items-center justify-between w-full p-2 rounded hover:bg-gray-800/50 cursor-pointer text-gray-400 hover:text-white group"
+          >
               <div className="flex items-center space-x-2">
                 <FaShieldAlt className="text-lg" />
                 <span className="tracking-wider text-sm">ADMINISTRACIÓN</span>
-              </div>
+            </div>
               <FaChevronDown className={`text-xs transition-transform ${isAdminOpen ? 'rotate-180' : ''}`} />
-            </button>
+          </button>
 
-            {/* Submenú de administración */}
-            {isAdminOpen && (
+          {/* Submenú de administración */}
+          {isAdminOpen && (
               <div className="mt-1 ml-3 space-y-1 border-l border-gray-800 pl-3">
-                <Link 
-                  to="/admin/publicaciones"
+              <Link 
+                to="/admin/publicaciones"
                   className="flex items-center space-x-2 text-gray-400 hover:text-white w-full p-1.5 rounded hover:bg-gray-800/50 cursor-pointer"
-                >
+              >
                   <FaNewspaper className="text-base" />
                   <span className="tracking-wider text-xs">Publicaciones</span>
-                </Link>
+              </Link>
 
-                <Link 
-                  to="/admin/usuarios"
+              <Link 
+                to="/admin/usuarios"
                   className="flex items-center space-x-2 text-gray-400 hover:text-white w-full p-1.5 rounded hover:bg-gray-800/50 cursor-pointer"
-                >
+              >
                   <FaUsers className="text-base" />
                   <span className="tracking-wider text-xs">Usuarios</span>
-                </Link>
+              </Link>
 
-                <Link 
-                  to="/admin/estadisticas"
+              <Link 
+                to="/admin/estadisticas"
                   className="flex items-center space-x-2 text-gray-400 hover:text-white w-full p-1.5 rounded hover:bg-gray-800/50 cursor-pointer"
-                >
+              >
                   <FaChartBar className="text-base" />
                   <span className="tracking-wider text-xs">Estadísticas</span>
-                </Link>
-              </div>
-            )}
-          </div>
+              </Link>
+            </div>
+          )}
+        </div>
         )}
       </nav>
     </div>

@@ -335,8 +335,8 @@ export default function ConfiguracionPage() {
         <div className="max-w-4xl mx-auto h-full flex flex-col">
           <div className="mb-2">
             <h1 className="text-3xl font-bold text-center bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Configuración
-            </h1>
+            Configuración
+          </h1>
             <p className="text-gray-400 text-center mb-2">Gestiona tu cuenta y personaliza tu perfil</p>
           </div>
           
@@ -465,49 +465,49 @@ export default function ConfiguracionPage() {
                 <form onSubmit={handleSubmit} className="flex-1 flex flex-col space-y-6">
                   <div className="flex-1 flex flex-col space-y-6">
                     <div className="relative">
-                      <label className="block text-sm font-medium mb-2 text-gray-300">Nombre de usuario</label>
+                    <label className="block text-sm font-medium mb-2 text-gray-300">Nombre de usuario</label>
                       <div className="relative">
                         <FaUser className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                        <input
-                          type="text"
-                          name="username"
-                          value={formData.username}
-                          onChange={handleInputChange}
+                    <input
+                      type="text"
+                      name="username"
+                      value={formData.username}
+                      onChange={handleInputChange}
                           className="w-full pl-12 pr-4 py-3 bg-gray-800/50 border border-gray-700/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all duration-300"
-                          placeholder="Tu nombre de usuario"
-                        />
-                      </div>
+                      placeholder="Tu nombre de usuario"
+                    />
+                  </div>
                     </div>
                     <div className="relative">
-                      <label className="block text-sm font-medium mb-2 text-gray-300">Correo electrónico</label>
+                    <label className="block text-sm font-medium mb-2 text-gray-300">Correo electrónico</label>
                       <div className="relative">
                         <FaEnvelope className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                        <input
-                          type="email"
-                          name="email"
-                          value={formData.email}
-                          onChange={handleInputChange}
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
                           className="w-full pl-12 pr-4 py-3 bg-gray-800/50 border border-gray-700/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all duration-300"
-                          placeholder="tu@email.com"
-                        />
-                      </div>
+                      placeholder="tu@email.com"
+                    />
+                  </div>
                     </div>
                     <div className="relative">
-                      <label className="block text-sm font-medium mb-2 text-gray-300">Nueva Contraseña</label>
+                    <label className="block text-sm font-medium mb-2 text-gray-300">Nueva Contraseña</label>
                       <div className="relative">
                         <FaLock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                        <input
-                          type="password"
-                          name="password"
-                          value={formData.password}
-                          onChange={handleInputChange}
+                    <input
+                      type="password"
+                      name="password"
+                      value={formData.password}
+                      onChange={handleInputChange}
                           className="w-full pl-12 pr-4 py-3 bg-gray-800/50 border border-gray-700/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all duration-300"
-                          placeholder="••••••••"
-                        />
+                      placeholder="••••••••"
+                    />
                       </div>
                       <p className="text-xs text-gray-400 mt-2">
-                        Debe tener al menos 8 caracteres, incluyendo una mayúscula, una minúscula, un número y un caracter especial (@$!%*?&.#)
-                      </p>
+                      Debe tener al menos 8 caracteres, incluyendo una mayúscula, una minúscula, un número y un caracter especial (@$!%*?&.#)
+                    </p>
                     </div>
                   </div>
                 </form>

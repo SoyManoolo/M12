@@ -177,8 +177,8 @@ export default function Publicar() {
 
   return (
     <div className="flex min-h-screen bg-black">
-      <Navbar />
-      
+        <Navbar />
+
       <div className="flex-1 p-8 flex items-center justify-center">
         <div className="w-[900px] bg-gray-900 rounded-xl shadow-xl p-8 border border-gray-800">
           {/* Encabezado */}
@@ -260,29 +260,29 @@ export default function Publicar() {
 
             {/* Área de descripción */}
             <div className="flex-1 flex flex-col">
-              <div className="flex-1">
-                <textarea
+            <div className="flex-1">
+              <textarea
                   className="w-full h-[350px] p-6 bg-gray-800 border border-gray-700 rounded-xl resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-400 text-lg transition-all duration-300"
                   placeholder="¿Qué quieres compartir con tus amigos?..."
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                />
-              </div>
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
+            </div>
               
               {/* Contador de caracteres */}
               <div className="mt-2 text-right">
                 <span className={`text-sm ${description.length > 500 ? 'text-red-500' : 'text-gray-400'}`}>
                   {description.length}/500
                 </span>
-              </div>
+          </div>
 
-              {/* Botón de publicar */}
+          {/* Botón de publicar */}
               <div className="mt-6 flex justify-end">
-                <button
-                  onClick={handleSubmit}
+            <button
+              onClick={handleSubmit}
                   disabled={isSubmitting || !description.trim()}
                   className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-lg hover:from-blue-500 hover:to-purple-500 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-lg font-medium shadow-lg transform hover:scale-105 disabled:transform-none disabled:hover:scale-100 flex items-center space-x-2"
-                >
+            >
                   {isSubmitting ? (
                     <>
                       <FaSpinner className="animate-spin" />
@@ -294,7 +294,7 @@ export default function Publicar() {
                       <span>Publicar</span>
                     </>
                   )}
-                </button>
+            </button>
               </div>
             </div>
           </div>

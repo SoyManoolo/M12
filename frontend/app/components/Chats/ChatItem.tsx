@@ -81,7 +81,7 @@ export default function ChatItem({ chat, onClick }: ChatItemProps) {
             <p className={`text-sm mt-0.5 truncate max-w-[200px] ${isEmpty ? 'text-transparent' : 'text-gray-400 group-hover:text-gray-300'} transition-colors`}>
               {isEmpty ? 'Nuevo chat' : chat.last_message.content}
             </p>
-          </div>
+        </div>
           <span className="text-xs text-gray-500 group-hover:text-gray-400 whitespace-nowrap ml-2 transition-colors">
             {isEmpty ? '' : formatTime(chat.last_message.timestamp)}
           </span>

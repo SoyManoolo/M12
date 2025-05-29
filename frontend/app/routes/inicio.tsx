@@ -431,7 +431,7 @@ export default function InicioPage() {
                 <FaCamera className="text-4xl text-blue-500" />
               </div>
               <h3 className="text-xl font-semibold text-white mb-2">
-                No hay publicaciones para mostrar
+              No hay publicaciones para mostrar
               </h3>
               <p className="text-gray-400 text-center max-w-md">
                 Sé el primero en compartir un momento especial. ¡Comienza a publicar y conecta con tus amigos!

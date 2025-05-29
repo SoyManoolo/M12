@@ -128,10 +128,10 @@ export default function RightPanel({
                 return (
                   <div key={friend.friendship_id} className="flex items-center justify-between py-2">
                     <div className="flex items-center p-2 rounded-lg transition-colors w-full">
-                      <div 
+                    <div 
                         className="relative cursor-pointer"
-                        onClick={() => handleUserClick(friend.user.username)}
-                      >
+                      onClick={() => handleUserClick(friend.user.username)}
+                    >
                         {imageUrl ? (
                           <img 
                             src={imageUrl}

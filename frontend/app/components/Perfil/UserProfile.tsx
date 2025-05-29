@@ -109,26 +109,26 @@ export default function UserProfile({ user, isOwnProfile, onEditProfile }: UserP
 
     return (
         <>
-            <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
-                <div className="flex items-start space-x-6">
+        <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
+            <div className="flex items-start space-x-6">
                     {/* Foto de perfil con efecto hover */}
                     <div 
                         className="relative group"
                         onMouseEnter={() => setIsHovering(true)}
                         onMouseLeave={() => setIsHovering(false)}
                     >
-                        {user.profile_picture ? (
-                            <img
-                                src={user.profile_picture}
-                                alt={`${user.username} profile`}
+                    {user.profile_picture ? (
+                        <img
+                            src={user.profile_picture}
+                            alt={`${user.username} profile`}
                                 className="w-40 h-40 rounded-full object-cover border-4 border-gray-800 cursor-pointer transition-all duration-300 group-hover:border-blue-500/50 group-hover:scale-105"
-                                onClick={() => setShowZoomModal(true)}
-                                onError={(e) => {
-                                    const target = e.target as HTMLImageElement;
-                                    target.src = "/default-avatar.png";
-                                }}
-                            />
-                        ) : (
+                            onClick={() => setShowZoomModal(true)}
+                            onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.src = "/default-avatar.png";
+                            }}
+                        />
+                    ) : (
                             <div className="w-40 h-40 rounded-full border-4 border-gray-800 bg-gray-800 flex items-center justify-center cursor-pointer transition-all duration-300 group-hover:border-blue-500/50 group-hover:scale-105">
                                 <span className="text-gray-400 text-6xl group-hover:text-blue-500/50 transition-colors duration-300">
                                     {user.username.charAt(0).toUpperCase()}
@@ -159,30 +159,30 @@ export default function UserProfile({ user, isOwnProfile, onEditProfile }: UserP
                                         </button>
                                     )}
                                 </div>
-                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* Información del usuario */}
+                <div className="flex-1">
+                    <div className="flex items-center justify-between mb-4">
+                        <div>
+                            <h1 className="text-2xl font-bold text-white">
+                                {user.name} {user.surname}
+                            </h1>
+                            <p className="text-gray-400">@{user.username}</p>
+                        </div>
+                        
+                        {isOwnProfile && (
+                            <button
+                                onClick={onEditProfile}
+                                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center space-x-2 transition-colors"
+                            >
+                                <FaEdit />
+                                <span>Editar perfil</span>
+                            </button>
                         )}
                     </div>
-
-                    {/* Información del usuario */}
-                    <div className="flex-1">
-                        <div className="flex items-center justify-between mb-4">
-                            <div>
-                                <h1 className="text-2xl font-bold text-white">
-                                    {user.name} {user.surname}
-                                </h1>
-                                <p className="text-gray-400">@{user.username}</p>
-                            </div>
-                            
-                            {isOwnProfile && (
-                                <button
-                                    onClick={onEditProfile}
-                                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center space-x-2 transition-colors"
-                                >
-                                    <FaEdit />
-                                    <span>Editar perfil</span>
-                                </button>
-                            )}
-                        </div>
 
                         {/* Biografía simple */}
                         <p className="text-gray-300 whitespace-pre-wrap">
