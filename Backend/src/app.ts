@@ -7,6 +7,7 @@ import authRoutes from './routes/auth';
 import postRoutes from './routes/post';
 import chatROutes from './routes/chat';
 import commentRoutes from './routes/comment';
+import friendshipRoutes from './routes/friendship.routes';
 import { celebrateErrorHandler } from './middlewares/errors/CelebrateErrorHandler';
 import path from 'path';
 import helmet from 'helmet';
@@ -26,6 +27,7 @@ app.use('/auth', authRoutes);
 app.use('/posts', postRoutes);
 app.use('/chat', chatROutes);
 app.use('/comments', commentRoutes);
+app.use('/friendship', friendshipRoutes);
 
 // Middleware de manejo de errores
 app.use((error: any, req: Request, res: Response, next: NextFunction) => {

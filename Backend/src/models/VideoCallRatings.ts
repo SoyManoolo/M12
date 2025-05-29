@@ -1,7 +1,7 @@
 import { sequelize } from "../config/database";
 import { Model, DataTypes } from "sequelize";
 import { User } from "./User";
-import { VideoCalls } from "./VideoCalls.js"; // Asegúrate de importar este modelo
+import { VideoCalls } from "./VideoCalls";
 
 export class VideoCallRatings extends Model { }
 
