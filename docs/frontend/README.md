@@ -4,13 +4,13 @@ Desarrollo del proyecto final de curso - FriendsGo
 ## Arquitectura y Stack Tecnológico
 
 ### Stack Tecnológico Principal
-- **Framework**: React 18.x
-- **Lenguaje**: TypeScript 5.x
-- **Bundler**: Vite 5.x
-- **Estilos**: Tailwind CSS 3.x
-- **Linting**: ESLint 8.x
-- **Formateo**: Prettier
-- **Optimización**: SWC (Rust-based compiler)
+- **Framework**: React 18.2.0
+- **Lenguaje**: TypeScript 5.7.2
+- **Bundler**: Vite 6.2.3
+- **Framework Web**: Remix 2.16.2
+- **Estilos**: Tailwind CSS 4.0.15
+- **Linting**: ESLint 9.21.0
+- **Comunicación en Tiempo Real**: Socket.IO Client 4.8.1
 
 ### Configuración del Proyecto
 - **TypeScript Configuration**
@@ -26,103 +26,108 @@ Desarrollo del proyecto final de curso - FriendsGo
 
 ### Estructura de Directorios
 ```
-/app
-├── components/         # Componentes reutilizables
-│   ├── Inicio/        # Componentes de la página principal
-│   │   └── Navbar.tsx # Barra de navegación principal
-│   ├── Settings/      # Componentes de configuración
-│   ├── Shared/        # Componentes compartidos
-│   ├── Videollamada/  # Componentes de videollamada
-│   └── Perfil/        # Componentes de perfil
-├── routes/            # Configuración de rutas y páginas
-│   ├── _index.tsx     # Página principal
-│   ├── inicio.tsx     # Feed principal
-│   ├── login.tsx      # Página de inicio de sesión
-│   ├── signup.tsx     # Página de registro
-│   ├── perfil.tsx     # Perfil de usuario
-│   ├── publicar.tsx   # Página de creación de publicaciones
-│   ├── configuracion.tsx # Configuración de usuario
-│   ├── videollamada.tsx # Sistema de videollamadas
-│   └── notificaciones.tsx # Centro de notificaciones
-├── services/          # Servicios API y lógica de negocio
-├── styles/            # Estilos globales y módulos CSS
-├── types/            # Definiciones de tipos TypeScript
-├── config/           # Configuraciones de la aplicación
-├── assets/           # Recursos estáticos (imágenes, fuentes)
-├── entry.client.tsx  # Punto de entrada del cliente
-├── entry.server.tsx  # Punto de entrada del servidor
-└── root.tsx          # Componente raíz de la aplicación
+frontend/
+├── app/              # Componentes y rutas de la aplicación
+│   ├── components/   # Componentes reutilizables
+│   ├── routes/       # Configuración de rutas y páginas
+│   ├── services/     # Servicios API y lógica de negocio
+│   ├── styles/       # Estilos globales
+│   ├── types/        # Definiciones de tipos TypeScript
+│   ├── config/       # Configuraciones de la aplicación
+│   ├── assets/       # Recursos estáticos
+│   ├── entry.client.tsx  # Punto de entrada del cliente
+│   ├── entry.server.tsx  # Punto de entrada del servidor
+│   └── root.tsx      # Componente raíz de la aplicación
+├── public/           # Archivos estáticos
+├── vite.config.ts    # Configuración de Vite
+├── tailwind.config.ts # Configuración de Tailwind
+├── tsconfig.json     # Configuración base de TypeScript
+├── tsconfig.app.json # Configuración de TypeScript para la app
+├── tsconfig.node.json # Configuración de TypeScript para Node
+├── eslint.config.js  # Configuración de ESLint
+└── .eslintrc.cjs     # Reglas de ESLint
+```
+
+### Scripts Disponibles
+```bash
+npm run dev     # Inicia el servidor de desarrollo con Vite
+npm run build   # Construye la aplicación con Remix y Vite
+npm run lint    # Ejecuta ESLint para verificar el código
+npm run preview # Previsualiza la build de producción
+npm run analyze # Analiza el bundle de producción
 ```
 
 ### Características Implementadas
 
-#### Sistema de Navegación
-- **Navbar Lateral**
-  - Navegación principal de la aplicación
-  - Acceso rápido a todas las funcionalidades
-  - Diseño oscuro y moderno
-  - Iconos intuitivos
+#### Sistema de Autenticación
+- Autenticación JWT
+- Gestión de sesiones
+- Protección de rutas
+- Manejo de tokens
 
-#### Páginas Principales
-- **Inicio (Feed)**
-  - Visualización de publicaciones
-  - Interacción con contenido
-  - Diseño responsive
+#### Comunicación en Tiempo Real
+- Chat en tiempo real con Socket.IO
+- Notificaciones instantáneas
+- Sistema de videollamadas
+- Estado de conexión de usuarios
 
-- **Publicar**
-  - Interfaz de publicación moderna
-  - Subida de imágenes con vista previa
-  - Editor de descripción
-  - Diseño centrado y optimizado
+#### Interfaz de Usuario
+- Diseño responsive con Tailwind CSS
+- Tema oscuro
+- Componentes reutilizables
+- Animaciones y transiciones
+- Loading states y feedback visual
 
-- **Perfil**
-  - Visualización de información personal
-  - Gestión de contenido propio
-  - Estadísticas de usuario
+#### Funcionalidades Principales
+- Sistema de publicaciones
+- Gestión de perfiles de usuario
+- Búsqueda de usuarios
+- Sistema de amigos
+- Moderación de contenido
+- Gestión de notificaciones
 
-- **Videollamada**
-  - Sistema de comunicación en tiempo real
-  - Interfaz de usuario intuitiva
-
-#### Diseño y UI/UX
-- **Tema Oscuro**
-  - Paleta de colores oscura consistente
-  - Contraste optimizado
-  - Elementos UI modernos
-
-- **Componentes Interactivos**
-  - Botones con feedback visual
-  - Formularios optimizados
-  - Animaciones suaves
-  - Loading states
+#### Optimizaciones
+- Lazy loading de componentes
+- Code splitting con Vite
+- Optimización de imágenes
+- Caché de assets
+- Compresión de bundles
 
 ### Dependencias Principales
-- **Core**
-  - `react`: ^18.2.0
-  - `react-dom`: ^18.2.0
-  - `typescript`: ^5.0.0
-- **Styling**
-  - `tailwindcss`: ^3.0.0
-  - `postcss`: ^8.0.0
-  - `autoprefixer`: ^10.0.0
-- **Development**
-  - `@vitejs/plugin-react`: ^4.0.0
-  - `@types/react`: ^18.0.0
-  - `@types/react-dom`: ^18.0.0
-- **Testing**
-  - `vitest`: ^1.0.0
-  - `@testing-library/react`: ^14.0.0
+```json
+{
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "@remix-run/react": "^2.16.2",
+    "@remix-run/node": "^2.16.2",
+    "socket.io-client": "^4.8.1",
+    "tailwindcss": "^4.0.15"
+  },
+  "devDependencies": {
+    "typescript": "~5.7.2",
+    "vite": "^6.2.3",
+    "eslint": "^9.21.0",
+    "@vitejs/plugin-react": "^4.3.4"
+  }
+}
+```
 
 ### Características Técnicas
 - **Performance**
   - Lazy loading de componentes
   - Optimización de imágenes
   - Caché de assets
+  - Code splitting con Vite
+
 - **Seguridad**
   - Sanitización de inputs
   - Protección contra XSS
   - Headers de seguridad configurados
+  - Validación de datos
+
 - **Accesibilidad**
   - ARIA labels implementados
   - Navegación por teclado
   - Contraste de colores WCAG 2.1
+  - Semántica HTML correcta
