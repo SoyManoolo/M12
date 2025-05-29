@@ -19,9 +19,11 @@ import type { Notification } from "~/types/notifications";
 import type { User, Friend } from "~/types/user.types";
 import Navbar from "~/components/Inicio/Navbar";
 import RightPanel from "~/components/Shared/RightPanel";
-import { FaUserFriends, FaComment, FaHeart, FaVideo, FaCheck, FaTimes } from 'react-icons/fa';
+import { FaUserFriends, FaComment, FaHeart, FaVideo, FaCheck, FaTimes, FaSearch, FaTrash, FaCheckDouble, FaBell } from 'react-icons/fa';
 import { useAuth } from "~/hooks/useAuth";
 import { userService } from "~/services/user.service";
+import { formatDistanceToNow, isToday, isYesterday, isThisWeek, isThisMonth } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 interface LoaderData {
   notifications: (Notification & { user: User })[];
@@ -119,6 +121,8 @@ export default function Notificaciones(): React.ReactElement {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedFilter, setSelectedFilter] = useState<string>('all');
 
   useEffect(() => {
     const fetchFriends = async () => {
@@ -203,6 +207,26 @@ export default function Notificaciones(): React.ReactElement {
     }
   };
 
+  const handleMarkAllAsRead = async () => {
+    try {
+      setCurrentNotifications(prev =>
+        prev.map(notification => ({ ...notification, is_read: true }))
+      );
+    } catch (error) {
+      console.error('Error al marcar todas como leídas:', error);
+    }
+  };
+
+  const handleDeleteNotification = async (notificationId: string) => {
+    try {
+      setCurrentNotifications(prev =>
+        prev.filter(notification => notification.notification_id !== notificationId)
+      );
+    } catch (error) {
+      console.error('Error al eliminar notificación:', error);
+    }
+  };
+
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'friend_request':
@@ -240,78 +264,240 @@ export default function Notificaciones(): React.ReactElement {
     }
   };
 
+  const getNotificationGroup = (date: string) => {
+    const notificationDate = new Date(date);
+    if (isToday(notificationDate)) return 'Hoy';
+    if (isYesterday(notificationDate)) return 'Ayer';
+    if (isThisWeek(notificationDate)) return 'Esta semana';
+    if (isThisMonth(notificationDate)) return 'Este mes';
+    return 'Anteriores';
+  };
+
+  const filteredNotifications = currentNotifications
+    .filter(notification => {
+      const matchesSearch = notification.user?.username.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesFilter = selectedFilter === 'all' || notification.type === selectedFilter;
+      return matchesSearch && matchesFilter;
+    })
+    .reduce((groups, notification) => {
+      const group = getNotificationGroup(notification.created_at);
+      if (!groups[group]) {
+        groups[group] = [];
+      }
+      groups[group].push(notification);
+      return groups;
+    }, {} as Record<string, Notification[]>);
+
   return (
     <div className="min-h-screen bg-black text-white flex">
-      {/* Barra lateral usando el componente Navbar */}
       <Navbar />
 
       {/* Contenido central */}
       <div className="w-2/3 ml-[16.666667%] border-r border-gray-800">
         <div className="p-6">
-          <h1 className="text-3xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Notificaciones</h1>
-
-          {/* Lista de notificaciones */}
-          <div className="space-y-4">
-            {currentNotifications.map((notification) => (
-              <div
-                key={notification.notification_id}
-                className={getNotificationStyle(notification.type, notification.is_read)}
+          {/* Encabezado */}
+          <div className="mb-8">
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Notificaciones</h1>
+                <p className="text-gray-400 mt-1">Mantente al día con tus actividades</p>
+              </div>
+              <button
+                onClick={handleMarkAllAsRead}
+                className="px-4 py-2 bg-blue-600/20 text-blue-400 rounded-lg hover:bg-blue-600/30 transition-colors flex items-center space-x-2"
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 flex items-center justify-center">
-                      {getNotificationIcon(notification.type)}
-                    </div>
-                    <div>
-                      <p className="text-sm">
-                        <span className="font-semibold">{notification.user?.username}</span>
-                        {notification.type === 'friend_request' && ' te envió una solicitud de amistad'}
-                        {notification.type === 'message' && ' te envió un mensaje'}
-                        {notification.type === 'comment' && ' comentó tu publicación'}
-                        {notification.type === 'post_like' && ' le gustó tu publicación'}
-                        {notification.type === 'video_call' && ' te llamó'}
-                      </p>
-                      <p className="text-xs text-gray-400">
-                        {new Date(notification.created_at).toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
+                <FaCheckDouble className="text-sm" />
+                <span>Marcar todas como leídas</span>
+              </button>
+            </div>
 
-                  {notification.type === 'friend_request' ? (
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => handleAcceptFriend(notification.related_id)}
-                        className="p-2 bg-green-500 text-white rounded-full hover:bg-green-600"
-                      >
-                        <FaCheck />
-                      </button>
-                      <button
-                        onClick={() => handleRejectFriend(notification.related_id)}
-                        className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600"
-                      >
-                        <FaTimes />
-                      </button>
+            {/* Barra de búsqueda y filtros */}
+            <div className="space-y-4">
+              <div className="relative">
+                <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Buscar en notificaciones..."
+                  className="w-full bg-gray-900 rounded-xl py-3 pl-12 pr-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              <div className="flex space-x-2 overflow-x-auto pb-2 custom-scrollbar">
+                <button
+                  onClick={() => setSelectedFilter('all')}
+                  className={`px-3 py-1.5 rounded-lg text-sm transition-colors whitespace-nowrap ${
+                    selectedFilter === 'all' 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                  }`}
+                >
+                  Todas
+                </button>
+                <button
+                  onClick={() => setSelectedFilter('friend_request')}
+                  className={`px-3 py-1.5 rounded-lg text-sm transition-colors whitespace-nowrap ${
+                    selectedFilter === 'friend_request' 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                  }`}
+                >
+                  Solicitudes
+                </button>
+                <button
+                  onClick={() => setSelectedFilter('message')}
+                  className={`px-3 py-1.5 rounded-lg text-sm transition-colors whitespace-nowrap ${
+                    selectedFilter === 'message' 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                  }`}
+                >
+                  Mensajes
+                </button>
+                <button
+                  onClick={() => setSelectedFilter('post_like')}
+                  className={`px-3 py-1.5 rounded-lg text-sm transition-colors whitespace-nowrap ${
+                    selectedFilter === 'post_like' 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                  }`}
+                >
+                  Likes
+                </button>
+                <button
+                  onClick={() => setSelectedFilter('comment')}
+                  className={`px-3 py-1.5 rounded-lg text-sm transition-colors whitespace-nowrap ${
+                    selectedFilter === 'comment' 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                  }`}
+                >
+                  Comentarios
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Lista de notificaciones agrupadas */}
+          <div className="space-y-6">
+            {Object.entries(filteredNotifications).map(([group, notifications]) => (
+              <div key={group} className="space-y-2">
+                <h2 className="text-sm font-semibold text-gray-400 mb-3">{group}</h2>
+                {notifications.map((notification) => (
+                  <div
+                    key={notification.notification_id}
+                    className={`group relative ${getNotificationStyle(notification.type, notification.is_read)} hover:scale-[1.02] transition-all duration-200`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 flex items-center justify-center">
+                          {getNotificationIcon(notification.type)}
+                        </div>
+                        <div>
+                          <p className="text-sm">
+                            <span className="font-semibold">{notification.user?.username}</span>
+                            {notification.type === 'friend_request' && ' te envió una solicitud de amistad'}
+                            {notification.type === 'message' && ' te envió un mensaje'}
+                            {notification.type === 'comment' && ' comentó tu publicación'}
+                            {notification.type === 'post_like' && ' le gustó tu publicación'}
+                            {notification.type === 'video_call' && ' te llamó'}
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            {formatDistanceToNow(new Date(notification.created_at), {
+                              addSuffix: true,
+                              locale: es
+                            })}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        {notification.type === 'friend_request' ? (
+                          <>
+                            <button
+                              onClick={() => handleAcceptFriend(notification.related_id)}
+                              className="p-2 bg-green-500/20 text-green-400 rounded-full hover:bg-green-500/30 transition-colors"
+                              title="Aceptar solicitud"
+                            >
+                              <FaCheck />
+                            </button>
+                            <button
+                              onClick={() => handleRejectFriend(notification.related_id)}
+                              className="p-2 bg-red-500/20 text-red-400 rounded-full hover:bg-red-500/30 transition-colors"
+                              title="Rechazar solicitud"
+                            >
+                              <FaTimes />
+                            </button>
+                          </>
+                        ) : !notification.is_read && (
+                          <button
+                            onClick={() => handleMarkAsRead(notification.notification_id)}
+                            className="text-blue-400 hover:text-blue-300 text-sm transition-colors"
+                            title="Marcar como leída"
+                          >
+                            Marcar como leída
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleDeleteNotification(notification.notification_id)}
+                          className="p-2 text-gray-400 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all duration-200"
+                          title="Eliminar notificación"
+                        >
+                          <FaTrash className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
-                  ) : !notification.is_read && (
-                    <button
-                      onClick={() => handleMarkAsRead(notification.notification_id)}
-                      className="text-blue-500 hover:text-blue-400 text-sm"
-                    >
-                      Marcar como leída
-                    </button>
-                  )}
-                </div>
+                    {!notification.is_read && (
+                      <div className="absolute top-0 right-0 w-2 h-2 bg-blue-500 rounded-full transform translate-x-1 -translate-y-1" />
+                    )}
+                  </div>
+                ))}
               </div>
             ))}
+
+            {/* Mensaje cuando no hay notificaciones */}
+            {Object.keys(filteredNotifications).length === 0 && (
+              <div className="flex flex-col items-center justify-center py-16 bg-gray-900/50 rounded-xl border border-gray-800">
+                <div className="w-24 h-24 bg-gradient-to-br from-blue-600/20 to-purple-600/20 rounded-full flex items-center justify-center mb-6">
+                  <FaBell className="text-4xl text-blue-500" />
+                </div>
+                <h3 className="text-xl font-semibold text-white mb-2">
+                  {searchQuery ? 'No se encontraron notificaciones' : 'No tienes notificaciones'}
+                </h3>
+                <p className="text-gray-400 text-center max-w-md">
+                  {searchQuery 
+                    ? 'Intenta con otros términos de búsqueda'
+                    : 'Las notificaciones aparecerán aquí cuando tengas nuevas interacciones'}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Barra lateral derecha */}
+      {/* Panel lateral derecho */}
       <RightPanel
         friends={friends}
         mode="online"
       />
+
+      <style>
+        {`
+          .custom-scrollbar::-webkit-scrollbar {
+            height: 4px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #374151;
+            border-radius: 2px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #4B5563;
+          }
+        `}
+      </style>
     </div>
   );
 } 

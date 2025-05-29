@@ -24,7 +24,7 @@
  */
 
 import { useState, useEffect } from "react";
-import { redirect, useNavigate, useSearchParams } from "@remix-run/react";
+import { redirect, useNavigate, useSearchParams, Link } from "@remix-run/react";
 import { json } from "@remix-run/node";
 import Navbar from "~/components/Inicio/Navbar";
 import Post from "~/components/Inicio/Post";
@@ -36,6 +36,7 @@ import ImageZoomModal from '~/components/Shared/ImageZoomModal';
 import { useAuth } from "~/hooks/useAuth";
 import { postService } from "~/services/post.service";
 import { userService } from "~/services/user.service";
+import { FaCamera } from 'react-icons/fa';
 
 /**
  * @interface User
@@ -425,8 +426,23 @@ export default function InicioPage() {
               <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
             </div>
           ) : posts.length === 0 ? (
-            <div className="text-center text-gray-500">
-              No hay publicaciones para mostrar
+            <div className="flex flex-col items-center justify-center py-16 bg-gray-900/50 rounded-xl border border-gray-800">
+              <div className="w-24 h-24 bg-gradient-to-br from-blue-600/20 to-purple-600/20 rounded-full flex items-center justify-center mb-6">
+                <FaCamera className="text-4xl text-blue-500" />
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-2">
+                No hay publicaciones para mostrar
+              </h3>
+              <p className="text-gray-400 text-center max-w-md">
+                Sé el primero en compartir un momento especial. ¡Comienza a publicar y conecta con tus amigos!
+              </p>
+              <Link
+                to="/publicar"
+                className="mt-6 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+              >
+                <FaCamera className="text-sm" />
+                <span>Crear nueva publicación</span>
+              </Link>
             </div>
           ) : (
             <>
