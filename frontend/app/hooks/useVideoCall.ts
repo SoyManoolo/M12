@@ -188,6 +188,7 @@ export function useVideoCall() {
         endCall,
         toggleVideo,
         toggleAudio,
+        setState,
         localStream: localStreamForUI,
         remoteStream: remoteStreamForUI,
         partnerDBId: partnerInfo.dbId

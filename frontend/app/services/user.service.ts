@@ -20,7 +20,7 @@ export const userService = {
             }
 
             const data = await response.json();
-            
+
             // Obtener el ID del usuario actual del token
             const decodedToken = jwtDecode(token) as { user_id: string };
             const currentUserId = decodedToken.user_id;

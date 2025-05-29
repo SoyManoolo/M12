@@ -168,7 +168,194 @@ export class VideoCallService {
         };
     };
 
-    // Método para terminar la llamada
+
+    // Método para dejar la cola de espera
+    public async leaveQueue(user_id: string) {
+        try {
+            dbLogger.info(`[VideoCallService] User ${user_id} is leaving the waiting queue`);
+
+            // Verificar que el usuario existe
+            const user: User | null = await existsUser({ user_id });
+            if (!user) {
+                dbLogger.error(`[VideoCallService] User not found for ID: ${user_id}`);
+                throw new AppError(404, 'UserNotFound')
+            };
+
+            if (!VideoCallService.waitingQueue.has(user_id)) return false;
+
+            VideoCallService.waitingQueue.delete(user_id);
+
+            return true;
+        } catch (error) {
+            if (error instanceof AppError) {
+                dbLogger.error("[VideoCallService] Error in leaveQueue:", { error });
+                throw error;
+            }
+            dbLogger.error("[VideoCallService] Unexpected error in leaveQueue:", { error });
+            throw new AppError(500, 'InternalServerError');
+        };
+    }
+
+    // Añadir estos métodos al final de tu clase VideoCallService
+
+    /**
+     * Obtiene la información necesaria para enviar mensajes de señalización WebRTC al destinatario de una llamada
+     * @param fromUserId ID del usuario que inicia la solicitud
+     * @param toUserId ID del usuario destinatario
+     * @returns Objeto con socketId y callId del destinatario
+     */
+    public async getCallRecipient(fromUserId: string, toUserId: string) {
+        try {
+            dbLogger.info(`[VideoCallService] Getting call recipient data for user ${toUserId} requested by ${fromUserId}`);
+
+            // Buscar una llamada activa donde participen ambos usuarios
+            let callId: string | undefined;
+            let recipientSocketId: string | undefined;
+
+            // Buscar en las llamadas activas en memoria
+            for (const [activeCallId, callData] of VideoCallService.activeCalls.entries()) {
+                const fromUser = callData.users.find(u => u.id === fromUserId);
+                const toUser = callData.users.find(u => u.id === toUserId);
+
+                if (fromUser && toUser) {
+                    callId = activeCallId;
+                    recipientSocketId = toUser.socketId;
+                    break;
+                }
+            }
+
+            if (!callId || !recipientSocketId) {
+                dbLogger.error(`[VideoCallService] No active call found between ${fromUserId} and ${toUserId}`);
+                return null;
+            }
+
+            return {
+                socketId: recipientSocketId,
+                callId: callId
+            };
+        } catch (error) {
+            if (error instanceof AppError) {
+                dbLogger.error("[VideoCallService] Error in getCallRecipient:", { error });
+                throw error;
+            }
+            dbLogger.error("[VideoCallService] Unexpected error in getCallRecipient:", { error });
+            throw new AppError(500, 'InternalServerError');
+        }
+    }
+
+    /**
+     * Obtiene el socketId de un usuario
+     * @param userId ID del usuario
+     * @returns socketId del usuario o undefined si no está conectado
+     */
+    public async getUserSocketId(userId: string) {
+        try {
+            // Buscar en las llamadas activas en memoria
+            for (const callData of VideoCallService.activeCalls.values()) {
+                const user = callData.users.find(u => u.id === userId);
+                if (user) {
+                    return user.socketId;
+                }
+            }
+
+            // Buscar en la cola de espera
+            if (VideoCallService.waitingQueue.has(userId)) {
+                return VideoCallService.waitingQueue.get(userId);
+            }
+
+            return undefined;
+        } catch (error) {
+            dbLogger.error("[VideoCallService] Error in getUserSocketId:", { error });
+            return undefined;
+        }
+    }
+
+    /**
+     * Obtiene información sobre la llamada activa de un usuario
+     * @param userId ID del usuario
+     * @returns Objeto con información de la llamada o null si no tiene llamada activa
+     */
+    public async getUserActiveCall(userId: string) {
+        try {
+            // Buscar en las llamadas activas en memoria
+            for (const [callId, callData] of VideoCallService.activeCalls.entries()) {
+                const userInCall = callData.users.find(u => u.id === userId);
+
+                if (userInCall) {
+                    // Crear un array con los IDs de ambos participantes
+                    const participants = callData.users.map(u => u.id);
+
+                    return {
+                        callId,
+                        participants,
+                        startTime: callData.startTime,
+                        status: callData.status
+                    };
+                }
+            }
+
+            return null;
+        } catch (error) {
+            dbLogger.error("[VideoCallService] Error in getUserActiveCall:", { error });
+            return null;
+        }
+    }
+
+    /**
+     * Obtiene el nombre de usuario a partir de su ID
+     * @param userId ID del usuario
+     * @returns Nombre de usuario o string por defecto
+     */
+    public async getUserUsername(userId: string) {
+        try {
+            const user: User | null = await User.findByPk(userId);
+            if (!user) {
+                return "Usuario";
+            }
+            return user.dataValues.username || "Usuario";
+        } catch (error) {
+            dbLogger.error("[VideoCallService] Error in getUserUsername:", { error });
+            return "Usuario";
+        }
+    }
+
+    /**
+     * Marca una llamada como conectada cuando se establece la conexión WebRTC
+     * @param callId ID de la llamada
+     * @returns true si se actualizó correctamente, false si no
+     */
+    public async markCallAsConnected(callId: string) {
+        try {
+            // Actualizar en la base de datos
+            const call = await VideoCalls.findByPk(callId);
+            if (!call) {
+                return false;
+            }
+
+            await call.update({
+                status: "connected",
+            });
+
+            // Actualizar en memoria
+            if (VideoCallService.activeCalls.has(callId)) {
+                const callData = VideoCallService.activeCalls.get(callId);
+                if (!callData) return false;
+
+                callData.status = "connected";
+                VideoCallService.activeCalls.set(callId, callData);
+                return true;
+            }
+
+            return false;
+        } catch (error) {
+            dbLogger.error("[VideoCallService] Error in markCallAsConnected:", { error });
+            return false;
+        }
+    }
+
+    /**
+     * Actualiza el método endCall para usar el ID de la llamada en lugar del socket
+     */
     public async endCall(user_id: string, call_id: string) {
         try {
             dbLogger.info(`[VideoCallService] User ${user_id} is ending the call with ID: ${call_id}`);
@@ -216,78 +403,5 @@ export class VideoCallService {
             dbLogger.error("[VideoCallService] Unexpected error in endCall:", { error });
             throw new AppError(500, 'InternalServerError');
         };
-    };
-
-    // Método para dejar la cola de espera
-    public async leaveQueue(user_id: string) {
-        try {
-            dbLogger.info(`[VideoCallService] User ${user_id} is leaving the waiting queue`);
-
-            // Verificar que el usuario existe
-            const user: User | null = await existsUser({ user_id });
-            if (!user) {
-                dbLogger.error(`[VideoCallService] User not found for ID: ${user_id}`);
-                throw new AppError(404, 'UserNotFound')
-            };
-
-            if (!VideoCallService.waitingQueue.has(user_id)) return false;
-
-            VideoCallService.waitingQueue.delete(user_id);
-
-            return true;
-        } catch (error) {
-            if (error instanceof AppError) {
-                dbLogger.error("[VideoCallService] Error in leaveQueue:", { error });
-                throw error;
-            }
-            dbLogger.error("[VideoCallService] Unexpected error in leaveQueue:", { error });
-            throw new AppError(500, 'InternalServerError');
-        };
-    }
-
-    public async updateCallStatus(call_id: string, user_id: string, status: string) {
-        try {
-            dbLogger.info(`[VideoCallService] User ${user_id} is updating the call status for call ID: ${call_id} to ${status}`);
-
-            // Verificar que el usuario es parte de esta llamada
-            const call: VideoCalls | null = await VideoCalls.findOne({
-                where: {
-                    call_id,
-                    [Op.or]: [
-                        { user1_id: user_id },
-                        { user2_id: user_id }
-                    ]
-                }
-            });
-
-            if (!call) {
-                dbLogger.error(`[VideoCallService] Call not found for ID: ${call_id} and user ID: ${user_id}`);
-                throw new AppError(404, 'CallNotFound')
-            };
-
-            // Actualizar el estado de la llamada en la base de datos
-            await call.update({ status });
-
-            // También actualizar en la memoria
-            if (VideoCallService.activeCalls.has(call_id)) {
-                const callData = VideoCallService.activeCalls.get(call_id);
-                if (!callData) {
-                    dbLogger.error(`[VideoCallService] Call data not found in memory for call ID: ${call_id}`);
-                    throw new AppError(404, 'CallNotFound')
-                };
-
-                callData.status = status;
-                VideoCallService.activeCalls.set(call_id, callData);
-            }
-
-            return true;
-        } catch (error) {
-            if (error instanceof AppError) {
-                dbLogger.error("[VideoCallService] Error in updateCallStatus:", { error });
-                throw error;
-            }
-            dbLogger.error("[VideoCallService] Unexpected error in updateCallStatus:", { error });
-            throw new AppError(500, 'InternalServerError');
-        }
     }
 };
