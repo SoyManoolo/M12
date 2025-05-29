@@ -131,8 +131,8 @@ function EditUserModal({ isOpen, onClose, user, onSave, isLoading }: EditUserMod
 
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={onClose}>
-        <div className="bg-gray-900 rounded-lg shadow-2xl w-full max-w-md mx-4 p-6" onClick={e => e.stopPropagation()}>
+      <div className="fixed inset-0 backdrop-blur-sm bg-black/30 flex items-center justify-center z-50">
+        <div className="bg-gray-900/95 rounded-xl p-6 max-w-md w-full mx-4 border border-gray-800 shadow-xl" onClick={e => e.stopPropagation()}>
           <h2 className="text-2xl font-bold text-white mb-6 text-center">Editar Usuario</h2>
           {notification && (
             <Notification
@@ -249,7 +249,7 @@ export default function AdminUsuarios() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [userToDelete, setUserToDelete] = useState<string | null>(null);
+  const [userToDelete, setUserToDelete] = useState<{ id: string; username: string } | null>(null);
   const [notification, setNotification] = useState<{
     message: string;
     type: 'success' | 'error';
@@ -330,8 +330,8 @@ export default function AdminUsuarios() {
     setFilteredUsers(filtered);
   }, [searchQuery, users, activeFilter]);
 
-  const handleDelete = (userId: string) => {
-    setUserToDelete(userId);
+  const handleDelete = (user: User) => {
+    setUserToDelete({ id: user.user_id, username: user.username || 'Usuario sin nombre' });
     setShowDeleteModal(true);
   };
 
@@ -433,10 +433,10 @@ export default function AdminUsuarios() {
 
     try {
       // Asegurarse de que estamos eliminando el usuario correcto
-      await userService.deleteUserById(userToDelete, token);
+      await userService.deleteUserById(userToDelete.id, token);
       setNotification({ message: 'Usuario eliminado correctamente', type: 'success' });
-      // Filtrar la lista local para remover el usuario eliminado (lista de tipo User[])
-      setUsers(prevUsers => prevUsers.filter(user => user.user_id !== userToDelete));
+      // Filtrar la lista local para remover el usuario eliminado
+      setUsers(prevUsers => prevUsers.filter(user => user.user_id !== userToDelete.id));
       setShowDeleteModal(false);
       setUserToDelete(null);
     } catch (error) {
@@ -591,7 +591,7 @@ export default function AdminUsuarios() {
                           <FaEdit className="text-base" />
                         </button>
                         <button
-                          onClick={() => handleDelete(user.user_id)}
+                          onClick={() => handleDelete(user)}
                           className="p-2.5 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors cursor-pointer"
                           title="Eliminar usuario"
                         >
@@ -613,7 +613,7 @@ export default function AdminUsuarios() {
         onClose={() => setShowDeleteModal(false)}
         onConfirm={confirmDelete}
         title="Eliminar usuario"
-        message={`¿Estás seguro de que quieres eliminar al usuario ${userToDelete}? Esta acción es irreversible y perderá todo su contenido.`}
+        message={`¿Estás seguro de que quieres eliminar al usuario ${userToDelete?.username}? Esta acción es irreversible y perderá todo su contenido.`}
         confirmText="Eliminar"
         cancelText="Cancelar"
       />
