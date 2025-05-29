@@ -169,7 +169,7 @@ export default function AdminUsuarios() {
   const [isSaving, setIsSaving] = useState(false);
 
   // Función para cargar usuarios
-    const fetchUsers = async () => {
+  const fetchUsers = async () => {
     if (!token) {
       setError('Por favor, inicia sesión para ver los usuarios');
       setLoading(false);
@@ -177,19 +177,19 @@ export default function AdminUsuarios() {
     }
 
     try {
-      const response = await userService.getAllUsers(token);
+      const response = await userService.getAllUsersForAdmin(token);
       if (response.success && response.data) {
         // Asignar directamente los datos de la API (tipo User[])
         setUsers(response.data.users);
-        } else {
+      } else {
         throw new Error(response.message || 'No pudimos cargar los usuarios');
-        }
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al cargar los usuarios');
-      } finally {
-        setLoading(false);
-      }
-    };
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchUsers();
