@@ -127,11 +127,11 @@ export default function RightPanel({
 
                 return (
                   <div key={friend.friendship_id} className="flex items-center justify-between py-2">
-                    <div 
-                      className="flex items-center cursor-pointer hover:bg-gray-800/50 p-2 rounded-lg transition-colors w-full"
-                      onClick={() => handleUserClick(friend.user.username)}
-                    >
-                      <div className="relative">
+                    <div className="flex items-center p-2 rounded-lg transition-colors w-full">
+                      <div 
+                        className="relative cursor-pointer"
+                        onClick={() => handleUserClick(friend.user.username)}
+                      >
                         {imageUrl ? (
                           <img 
                             src={imageUrl}
@@ -153,8 +153,13 @@ export default function RightPanel({
                         )}
                       </div>
                       <div className="ml-4 flex flex-col">
-                        <p className="font-semibold text-white hover:text-blue-400 text-base">{friend.user.username}</p>
-                        <p className="text-sm text-gray-400 hover:text-gray-300">
+                        <p 
+                          className="font-semibold text-white hover:text-blue-400 text-base cursor-pointer"
+                          onClick={() => handleUserClick(friend.user.username)}
+                        >
+                          {friend.user.username}
+                        </p>
+                        <p className="text-sm text-gray-400">
                           {friend.user.name} {friend.user.surname}
                         </p>
                         {mode === 'suggested' && friend.user.common_friends_count !== undefined && (
