@@ -327,16 +327,18 @@ export default function ConfiguracionPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white flex">
+    <div className="h-screen bg-black text-white flex overflow-hidden">
       <Navbar />
       
-      <div className="w-5/6 ml-[16.666667%] p-8">
+      <div className="w-5/6 ml-[16.666667%] p-4">
         {/* Encabezado con título y mensajes */}
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl font-bold mb-2 text-center bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            Configuración
-          </h1>
-          <p className="text-gray-400 text-center mb-8">Gestiona tu cuenta y personaliza tu perfil</p>
+        <div className="max-w-4xl mx-auto h-full flex flex-col">
+          <div className="mb-2">
+            <h1 className="text-3xl font-bold text-center bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              Configuración
+            </h1>
+            <p className="text-gray-400 text-center mb-2">Gestiona tu cuenta y personaliza tu perfil</p>
+          </div>
           
           {message && (
             <Message
@@ -347,14 +349,14 @@ export default function ConfiguracionPage() {
           )}
 
           {/* Contenedor principal con grid de dos columnas */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 h-[calc(100vh-12rem)]">
             {/* Columna izquierda - Foto de perfil y biografía */}
-            <div className="flex flex-col h-full space-y-6">
+            <div className="flex flex-col space-y-4 h-full">
               {/* Bloque circular para la foto de perfil */}
-              <div className="bg-gray-900 rounded-xl p-6 shadow-lg border border-gray-800 flex-1 flex flex-col justify-between">
-                <h2 className="text-xl font-semibold mb-4 text-center">Foto de Perfil</h2>
-                <div className="flex flex-col items-center">
-                  <div className="relative w-48 h-48 mb-4 group">
+              <div className="bg-gray-900 rounded-xl p-4 shadow-lg border border-gray-800 h-2/5 flex flex-col">
+                <h2 className="text-lg font-semibold mb-2 text-center">Foto de Perfil</h2>
+                <div className="flex-1 flex items-center justify-center">
+                  <div className="relative w-48 h-48 group">
                     {user?.profile_picture ? (
                       <img
                         src={user.profile_picture}
@@ -372,8 +374,8 @@ export default function ConfiguracionPage() {
                     )}
                     {/* Overlay con botones (visible al hover) */}
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
-                      <div className="flex flex-col space-y-3">
-                        <label className="px-4 py-2 bg-blue-600 text-white rounded-lg cursor-pointer hover:bg-blue-700 transition-colors text-sm shadow-lg transform hover:scale-105">
+                      <div className="flex flex-col space-y-2">
+                        <label className="px-4 py-2 bg-blue-600 text-white rounded-lg cursor-pointer hover:bg-blue-700 transition-colors text-sm shadow-lg">
                           Cambiar foto
                           <input
                             type="file"
@@ -431,7 +433,7 @@ export default function ConfiguracionPage() {
                               }
                             })();
                           }}
-                          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm shadow-lg transform hover:scale-105"
+                          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm shadow-lg"
                         >
                           Eliminar foto
                         </button>
@@ -442,78 +444,80 @@ export default function ConfiguracionPage() {
               </div>
 
               {/* Biografía */}
-              <div className="bg-gray-900 rounded-xl p-6 shadow-lg border border-gray-800 flex-1 flex flex-col justify-between">
-                <h2 className="text-xl font-semibold mb-4">Biografía</h2>
+              <div className="bg-gray-900 rounded-xl p-4 shadow-lg border border-gray-800 h-3/5 flex flex-col">
+                <h2 className="text-lg font-semibold mb-2">Biografía</h2>
                 <textarea
                   name="bio"
                   value={formData.bio}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none min-h-[250px]"
+                  className="w-full flex-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                   placeholder="Cuéntanos algo sobre ti..."
                 />
               </div>
             </div>
 
             {/* Columna derecha - Información de la cuenta y acciones */}
-            <div className="flex flex-col h-full space-y-6">
-              <div className="bg-gray-900 rounded-xl p-6 shadow-lg border border-gray-800 flex-1 flex flex-col justify-between">
-                <h2 className="text-xl font-semibold mb-6">Información de la Cuenta</h2>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-gray-300">Nombre de usuario</label>
-                    <input
-                      type="text"
-                      name="username"
-                      value={formData.username}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Tu nombre de usuario"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-gray-300">Correo electrónico</label>
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="tu@email.com"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-gray-300">Nueva Contraseña</label>
-                    <input
-                      type="password"
-                      name="password"
-                      value={formData.password}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="••••••••"
-                    />
-                    <p className="text-xs text-gray-400 mt-1">
-                      Debe tener al menos 8 caracteres, incluyendo una mayúscula, una minúscula, un número y un caracter especial (@$!%*?&.#)
-                    </p>
+            <div className="flex flex-col space-y-4 h-full">
+              <div className="bg-gray-900 rounded-xl p-4 shadow-lg border border-gray-800 h-2/3 flex flex-col">
+                <h2 className="text-lg font-semibold mb-3">Información de la Cuenta</h2>
+                <form onSubmit={handleSubmit} className="flex-1 flex flex-col space-y-4">
+                  <div className="flex-1 flex flex-col space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-1 text-gray-300">Nombre de usuario</label>
+                      <input
+                        type="text"
+                        name="username"
+                        value={formData.username}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Tu nombre de usuario"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1 text-gray-300">Correo electrónico</label>
+                      <input
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="tu@email.com"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1 text-gray-300">Nueva Contraseña</label>
+                      <input
+                        type="password"
+                        name="password"
+                        value={formData.password}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="••••••••"
+                      />
+                      <p className="text-xs text-gray-400 mt-1">
+                        Debe tener al menos 8 caracteres, incluyendo una mayúscula, una minúscula, un número y un caracter especial (@$!%*?&.#)
+                      </p>
+                    </div>
                   </div>
                 </form>
               </div>
 
               {/* Botones de acción */}
-              <div className="bg-gray-900 rounded-xl p-6 shadow-lg border border-gray-800 flex-1 flex flex-col justify-between">
-                <h2 className="text-xl font-semibold mb-6">Acciones de Cuenta</h2>
-                <div className="flex flex-col space-y-4">
+              <div className="bg-gray-900 rounded-xl p-4 shadow-lg border border-gray-800 h-1/3 flex flex-col">
+                <h2 className="text-lg font-semibold mb-3">Acciones de Cuenta</h2>
+                <div className="flex-1 flex flex-col justify-center space-y-3">
                   <button
                     type="submit"
                     onClick={handleSubmit}
-                    className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-lg transform hover:scale-105 cursor-pointer"
+                    className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-lg transform hover:scale-105 cursor-pointer"
                   >
                     Guardar cambios
                   </button>
-                  <div className="flex space-x-4">
+                  <div className="flex space-x-3">
                     <button
                       type="button"
                       onClick={handleLogout}
-                      className="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors shadow-lg transform hover:scale-105 flex items-center justify-center space-x-2 cursor-pointer"
+                      className="flex-1 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors shadow-lg transform hover:scale-105 flex items-center justify-center space-x-2 cursor-pointer"
                     >
                       <FaSignOutAlt />
                       <span>Cerrar sesión</span>
@@ -521,7 +525,7 @@ export default function ConfiguracionPage() {
                     <button
                       type="button"
                       onClick={handleDeleteProfile}
-                      className="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors shadow-lg transform hover:scale-105 flex items-center justify-center space-x-2 cursor-pointer"
+                      className="flex-1 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors shadow-lg transform hover:scale-105 flex items-center justify-center space-x-2 cursor-pointer"
                     >
                       <FaTrash />
                       <span>Eliminar cuenta</span>
@@ -534,6 +538,7 @@ export default function ConfiguracionPage() {
         </div>
       </div>
 
+      {/* Modales */}
       <ConfirmModal
         isOpen={showDeleteAccountModal}
         onClose={() => setShowDeleteAccountModal(false)}
