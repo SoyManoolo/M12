@@ -12,7 +12,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { FaVideo, FaArrowRight, FaClock, FaMicrophone, FaMicrophoneSlash, FaVideoSlash } from 'react-icons/fa';
+import { FaVideo, FaArrowRight, FaClock, FaMicrophone, FaMicrophoneSlash, FaVideoSlash, FaSearch } from 'react-icons/fa';
 import ChatVideollamada from '~/components/Videollamada/ChatVideollamada';
 import { useNavigate, useParams } from '@remix-run/react';
 import { redirect } from "@remix-run/node";
@@ -70,7 +70,9 @@ export default function VideollamadaPage() {
         toggleVideo,
         toggleAudio,
         localStream,
-        remoteStream
+        remoteStream,
+        joinQueue,
+        leaveQueue
     } = useVideoCall();
 
     const [messages, setMessages] = useState<Message[]>([]);
@@ -117,27 +119,49 @@ export default function VideollamadaPage() {
 
         socketService.emit(VideoCallEvent.CHAT_MESSAGE, {
             ...newMessage,
-            to: userId
+            to: videoCallState.callId || userId
         });
 
         setMessages(prev => [...prev, newMessage]);
     };
 
+    // MODIFICADO: Ahora termina la llamada y muestra el modal de calificación
     const handleEndCall = () => {
-        endCall();
-        setShowRatingModal(true);
+        if (videoCallState.isCallActive) {
+            endCall();
+            setShowRatingModal(true);
+        }
     };
 
+    // MODIFICADO: Ahora termina la llamada y busca una nueva
     const handleNextCall = () => {
-        endCall();
-        navigate('/inicio');
+        if (videoCallState.isCallActive) {
+            endCall();
+            handleSearchCall();
+        }
+    };
+    
+    // MODIFICADO: Ahora implementa correctamente la lógica de búsqueda
+    const handleSearchCall = () => {
+        console.log("Buscando nueva videollamada...");
+        if (videoCallState.inQueue) {
+            // Si ya está en cola, salir de la cola
+            leaveQueue();
+        } else {
+            // Si no está en cola, unirse a la cola
+            joinQueue();
+        }
     };
 
+    // MODIFICADO: Ahora envía la calificación con el ID correcto
     const handleRatingSubmit = (rating: number) => {
-        socketService.emit(VideoCallEvent.CALL_RATING, {
-            rating,
-            to: userId
-        });
+        if (videoCallState.callId) {
+            socketService.emit(VideoCallEvent.CALL_RATING, {
+                rating,
+                to: videoCallState.callId,
+                callId: videoCallState.callId
+            });
+        }
         navigate('/inicio');
     };
 
@@ -157,19 +181,39 @@ export default function VideollamadaPage() {
 
                             <button
                                 onClick={handleEndCall}
-                                className="bg-red-600 border border-red-700 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center gap-2 cursor-pointer transition-colors"
+                                className={`bg-red-600 border border-red-700 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center gap-2 cursor-pointer transition-colors ${!videoCallState.isCallActive ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                disabled={!videoCallState.isCallActive}
                             >
                                 <FaVideo className="text-xl" />
                                 <span>FINALIZAR VIDEOLLAMADA</span>
                             </button>
+                            
+                            {/* Fila con dos botones */}
+                            <div className="flex gap-2">
+                                {/* MODIFICADO: Botón de buscar/cancelar llamada */}
+                                <button
+                                    onClick={handleSearchCall}
+                                    className={`flex-1 ${videoCallState.inQueue 
+                                        ? 'bg-orange-600 border border-orange-700 hover:bg-orange-700' 
+                                        : 'bg-blue-600 border border-blue-700 hover:bg-blue-700'} 
+                                        text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2 cursor-pointer transition-colors 
+                                        ${videoCallState.isCallActive ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    disabled={videoCallState.isCallActive}
+                                >
+                                    <FaSearch className="text-xl" />
+                                    <span>{videoCallState.inQueue ? 'CANCELAR' : 'BUSCAR'}</span>
+                                </button>
 
-                            <button
-                                onClick={handleNextCall}
-                                className="bg-gray-900 border border-gray-700 hover:bg-gray-800 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center gap-2 cursor-pointer transition-colors"
-                            >
-                                <FaArrowRight className="text-xl" />
-                                <span>SIGUIENTE VIDEOLLAMADA</span>
-                            </button>
+                                {/* MODIFICADO: Botón de siguiente llamada */}
+                                <button
+                                    onClick={handleNextCall}
+                                    className={`flex-1 bg-gray-900 border border-gray-700 hover:bg-gray-800 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2 cursor-pointer transition-colors ${!videoCallState.isCallActive ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    disabled={!videoCallState.isCallActive}
+                                >
+                                    <FaArrowRight className="text-xl" />
+                                    <span>SIGUIENTE</span>
+                                </button>
+                            </div>
 
                             {/* Video local */}
                             <div className="flex-1 relative">
@@ -205,8 +249,19 @@ export default function VideollamadaPage() {
                                 className="w-full h-full object-cover"
                             />
 
+                            {/* MODIFICADO: Indicador de búsqueda */}
+                            {videoCallState.inQueue && (
+                                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-75">
+                                    <div className="mb-6 animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500"></div>
+                                    <h2 className="text-2xl font-bold mb-2">Buscando videollamada...</h2>
+                                    <p className="text-gray-400 max-w-md text-center">
+                                        Estamos buscando a otro usuario para conectarte. Por favor, espera un momento.
+                                    </p>
+                                </div>
+                            )}
+
                             {/* Indicador de estado */}
-                            {videoCallState.isConnecting && (
+                            {videoCallState.isConnecting && !videoCallState.inQueue && (
                                 <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-4 py-2 rounded">
                                     Conectando...
                                 </div>
@@ -267,4 +322,4 @@ export const loader = async ({ request }: { request: Request }) => {
     const token = cookieHeader?.split(";").find((c: string) => c.trim().startsWith("token="))?.split("=")[1];
     if (!token) return redirect("/login");
     return null;
-}; 
+};

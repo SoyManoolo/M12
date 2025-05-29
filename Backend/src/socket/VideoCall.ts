@@ -74,7 +74,30 @@ export function videoCallEvents(socket: Socket, io: Server) {
                 });
                 return;
             };
+
+            const { callId } = data;
+            if (!callId) {
+                socket.emit("call_connected_result", {
+                    success: false,
+                    message: "No call ID provided",
+                });
+                return;
+            }
+
+            const connected = await videoCallService.markCallAsConnected(callId);
+            if (connected) {
+                socket.emit("call_connected_result", {
+                    success: true,
+                    message: "Call marked as connected",
+                });
+            } else {
+                socket.emit("call_connected_result", {
+                    success: false,
+                    message: "Failed to mark call as connected",
+                });
+            }
         } catch (error) {
+            console.error("Error connecting call:", error);
             socket.emit("call_connected_result", {
                 success: false,
                 message: "Error connecting call",
@@ -82,18 +105,36 @@ export function videoCallEvents(socket: Socket, io: Server) {
         }
     });
 
-    socket.on("end_call", async () => {
+    socket.on("end_call", async (data) => {
         try {
             const user_id = socket.data.user_id;
             if (!user_id) {
-                socket.emit("leave_queue_result", {
+                socket.emit("end_call_result", {
                     success: false,
                     message: "User not authenticated",
                 });
                 return;
             };
 
-            const resultEndCall = await videoCallService.endCall(user_id, socket.id);
+            // Obtener el callId del objeto data o buscar la llamada activa
+            const callId = data?.callId;
+            let callIdToUse = callId;
+
+            // Si no se proporciona callId, buscar la llamada activa
+            if (!callIdToUse) {
+                const callData = await videoCallService.getUserActiveCall(user_id);
+                if (!callData) {
+                    socket.emit("end_call_result", {
+                        success: false,
+                        message: "No active call found",
+                    });
+                    return;
+                }
+                callIdToUse = callData.callId;
+            }
+
+            const resultEndCall = await videoCallService.endCall(user_id, callIdToUse);
+
             if (resultEndCall) {
                 socket.emit("end_call_result", {
                     success: true,
@@ -115,8 +156,41 @@ export function videoCallEvents(socket: Socket, io: Server) {
 
     socket.on("send_offer", async (data) => {
         try {
+            const user_id = socket.data.user_id;
+            if (!user_id) {
+                socket.emit("send_offer_result", {
+                    success: false,
+                    message: "User not authenticated",
+                });
+                return;
+            }
 
+            const { offer, to } = data;
+
+            // Buscar el socketId del destinatario usando el servicio
+            const recipientData = await videoCallService.getCallRecipient(user_id, to);
+
+            if (!recipientData || !recipientData.socketId) {
+                socket.emit("send_offer_result", {
+                    success: false,
+                    message: "Recipient not found or not connected",
+                });
+                return;
+            }
+
+            // Enviar oferta al destinatario
+            io.to(recipientData.socketId).emit("receive_offer", {
+                offer,
+                from: user_id,
+                callId: recipientData.callId
+            });
+
+            socket.emit("send_offer_result", {
+                success: true,
+                message: "Offer sent successfully",
+            });
         } catch (error) {
+            console.error("Error sending offer:", error);
             socket.emit("send_offer_result", {
                 success: false,
                 message: "Error sending offer",
@@ -126,8 +200,41 @@ export function videoCallEvents(socket: Socket, io: Server) {
 
     socket.on("send_answer", async (data) => {
         try {
+            const user_id = socket.data.user_id;
+            if (!user_id) {
+                socket.emit("send_answer_result", {
+                    success: false,
+                    message: "User not authenticated",
+                });
+                return;
+            }
 
+            const { answer, to } = data;
+
+            // Buscar el socketId del destinatario usando el servicio
+            const recipientData = await videoCallService.getCallRecipient(user_id, to);
+
+            if (!recipientData || !recipientData.socketId) {
+                socket.emit("send_answer_result", {
+                    success: false,
+                    message: "Recipient not found or not connected",
+                });
+                return;
+            }
+
+            // Enviar respuesta al destinatario
+            io.to(recipientData.socketId).emit("receive_answer", {
+                answer,
+                from: user_id,
+                callId: recipientData.callId
+            });
+
+            socket.emit("send_answer_result", {
+                success: true,
+                message: "Answer sent successfully",
+            });
         } catch (error) {
+            console.error("Error sending answer:", error);
             socket.emit("send_answer_result", {
                 success: false,
                 message: "Error sending answer",
@@ -137,8 +244,41 @@ export function videoCallEvents(socket: Socket, io: Server) {
 
     socket.on("send_ice_candidate", async (data) => {
         try {
+            const user_id = socket.data.user_id;
+            if (!user_id) {
+                socket.emit("send_ice_candidate_result", {
+                    success: false,
+                    message: "User not authenticated",
+                });
+                return;
+            }
 
+            const { candidate, to } = data;
+
+            // Buscar el socketId del destinatario usando el servicio
+            const recipientData = await videoCallService.getCallRecipient(user_id, to);
+
+            if (!recipientData || !recipientData.socketId) {
+                socket.emit("send_ice_candidate_result", {
+                    success: false,
+                    message: "Recipient not found or not connected",
+                });
+                return;
+            }
+
+            // Enviar candidato ICE al destinatario
+            io.to(recipientData.socketId).emit("receive_ice_candidate", {
+                candidate,
+                from: user_id,
+                callId: recipientData.callId
+            });
+
+            socket.emit("send_ice_candidate_result", {
+                success: true,
+                message: "ICE candidate sent successfully",
+            });
         } catch (error) {
+            console.error("Error sending ICE candidate:", error);
             socket.emit("send_ice_candidate_result", {
                 success: false,
                 message: "Error sending ICE candidate",
@@ -146,36 +286,41 @@ export function videoCallEvents(socket: Socket, io: Server) {
         }
     });
 
-    socket.on("request_match", async () => {
-        try {
-
-        } catch (error) {
-            socket.emit("request_match_result", {
-                success: false,
-                message: "Error requesting match",
-            });
-        }
-    });
-
-    socket.on("get_ice_servers", async () => {
-        try {
-
-        } catch (error) {
-            socket.emit("get_ice_servers_result", {
-                success: false,
-                message: "Error getting ICE servers",
-            });
-        }
-    });
-
     socket.on("disconnect", async () => {
         try {
+            const user_id = socket.data.user_id;
+            if (!user_id) return;
 
+            console.log(`User ${user_id} disconnected`);
+
+            // 1. Si el usuario está en cola, sacarlo
+            const queueResult = await videoCallService.leaveQueue(user_id);
+            if (queueResult) {
+                console.log(`User ${user_id} removed from queue due to disconnect`);
+            }
+
+            // 2. Si el usuario está en una llamada, terminarla y notificar al otro usuario
+            const callData = await videoCallService.getUserActiveCall(user_id);
+            if (callData) {
+                // Notificar al otro participante
+                const otherParticipantId = callData.participants.find(p => p !== user_id);
+                if (otherParticipantId) {
+                    const otherSocketId = await videoCallService.getUserSocketId(otherParticipantId);
+                    if (otherSocketId) {
+                        io.to(otherSocketId).emit("partner_disconnected", {
+                            callId: callData.callId,
+                            reason: "Partner disconnected from server"
+                        });
+                    }
+                }
+
+                // Terminar la llamada en la base de datos
+                await videoCallService.endCall(user_id, callData.callId); // Correcto
+                console.log(`Call ${callData.callId} ended due to user ${user_id} disconnect`);
+            }
         } catch (error) {
-            socket.emit("disconnect_result", {
-                success: false,
-                message: "Error disconnecting",
-            });
+            console.error("Error handling disconnect:", error);
+            // No podemos emitir al socket porque ya se desconectó
         }
     });
-};
+}
