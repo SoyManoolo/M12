@@ -34,11 +34,19 @@ function EditUserModal({ isOpen, onClose, user, onSave, isLoading }: EditUserMod
     email: '',
     name: '',
     surname: '',
-    bio: ''
+    bio: '',
+    password: ''
   });
   const [showWarningModal, setShowWarningModal] = useState(false);
   const { token, logout } = useAuth();
   const navigate = useNavigate();
+  const [notification, setNotification] = useState<{
+    message: string;
+    type: 'success' | 'error';
+  } | null>(null);
+
+  // Regex para validar contraseñas (al menos 8 caracteres, mayúscula, minúscula, número, caracter especial)
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&.#])[A-Za-z\d@$!%*?&.#]{8,}$/;
 
   useEffect(() => {
     if (user) {
@@ -47,7 +55,8 @@ function EditUserModal({ isOpen, onClose, user, onSave, isLoading }: EditUserMod
         email: user.email || '',
         name: user.name || '',
         surname: user.surname || '',
-        bio: user.bio || ''
+        bio: user.bio || '',
+        password: ''
       });
     } else {
       setFormData({
@@ -55,7 +64,8 @@ function EditUserModal({ isOpen, onClose, user, onSave, isLoading }: EditUserMod
         email: '',
         name: '',
         surname: '',
-        bio: ''
+        bio: '',
+        password: ''
       });
     }
   }, [user]);
@@ -78,8 +88,17 @@ function EditUserModal({ isOpen, onClose, user, onSave, isLoading }: EditUserMod
     e.preventDefault();
     if (!user) return;
 
+    // Validar la contraseña si se ha proporcionado una
+    if (formData.password && !passwordRegex.test(formData.password)) {
+      setNotification({
+        message: 'La contraseña debe tener al menos 8 caracteres, incluyendo una mayúscula, una minúscula, un número y un caracter especial (@$!%*?&.#)',
+        type: 'error'
+      });
+      return;
+    }
+
     // Si es el usuario actual y se están modificando credenciales sensibles
-    if (isCurrentUser() && (formData.username !== user.username || formData.email !== user.email)) {
+    if (isCurrentUser() && (formData.username !== user.username || formData.email !== user.email || formData.password)) {
       setShowWarningModal(true);
       return;
     }
@@ -95,7 +114,7 @@ function EditUserModal({ isOpen, onClose, user, onSave, isLoading }: EditUserMod
       await onSave(user.user_id, formData);
       
       // Si es el usuario actual y se modificaron credenciales sensibles
-      if (isCurrentUser() && (formData.username !== user.username || formData.email !== user.email)) {
+      if (isCurrentUser() && (formData.username !== user.username || formData.email !== user.email || formData.password)) {
         // Cerrar sesión y redirigir al login
         await logout();
         navigate('/login');
@@ -115,6 +134,13 @@ function EditUserModal({ isOpen, onClose, user, onSave, isLoading }: EditUserMod
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={onClose}>
         <div className="bg-gray-900 rounded-lg shadow-2xl w-full max-w-md mx-4 p-6" onClick={e => e.stopPropagation()}>
           <h2 className="text-2xl font-bold text-white mb-6 text-center">Editar Usuario</h2>
+          {notification && (
+            <Notification
+              message={notification.message}
+              type={notification.type}
+              onClose={() => setNotification(null)}
+            />
+          )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium mb-1 text-gray-300">Nombre de usuario</label>
@@ -165,6 +191,20 @@ function EditUserModal({ isOpen, onClose, user, onSave, isLoading }: EditUserMod
                 className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white resize-none min-h-[100px]"
               />
             </div>
+            <div>
+              <label className="block text-sm font-medium mb-1 text-gray-300">Nueva Contraseña</label>
+              <input
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-white"
+                placeholder="••••••••"
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                Debe tener al menos 8 caracteres, incluyendo una mayúscula, una minúscula, un número y un caracter especial (@$!%*?&.#)
+              </p>
+            </div>
             <div className="flex justify-end space-x-4 mt-6">
               <button
                 type="button"
@@ -192,7 +232,7 @@ function EditUserModal({ isOpen, onClose, user, onSave, isLoading }: EditUserMod
         onClose={() => setShowWarningModal(false)}
         onConfirm={handleSave}
         title="Advertencia"
-        message="Estás editando tu propio perfil y has modificado credenciales sensibles (nombre de usuario o correo electrónico). Después de guardar los cambios, tu sesión actual se cerrará y deberás iniciar sesión nuevamente. ¿Deseas continuar?"
+        message="Estás editando tu propio perfil y has modificado credenciales sensibles (nombre de usuario, correo electrónico o contraseña). Después de guardar los cambios, tu sesión actual se cerrará y deberás iniciar sesión nuevamente. ¿Deseas continuar?"
         confirmText="Sí, continuar"
         cancelText="Cancelar"
       />
@@ -354,6 +394,11 @@ export default function AdminUsuarios() {
         if (formData.bio.trim()) {
           requestBody.bio = formData.bio.trim();
         }
+      }
+
+      // Para password, solo la enviamos si se ha proporcionado una nueva
+      if (formData.password?.trim()) {
+        requestBody.password = formData.password.trim();
       }
 
       // Si no hay campos para actualizar, mostramos un mensaje y cerramos el modal
