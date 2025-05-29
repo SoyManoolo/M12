@@ -89,6 +89,48 @@ export class FriendshipController {
             next(error);
         }
     }
+
+    /**
+     * Obtiene las solicitudes de amistad enviadas
+     */
+    public async getSentFriendRequests(req: Request, res: Response, next: NextFunction) {
+        try {
+            const user_id = (req as any).user.user_id;
+            const requests = await friendshipService.getSentFriendRequests(user_id);
+            res.json(requests);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * Obtiene el estado de la relación con otro usuario
+     */
+    public async getFriendshipStatus(req: Request, res: Response, next: NextFunction) {
+        try {
+            const user_id = (req as any).user.user_id;
+            const { other_user_id } = req.params;
+            const status = await friendshipService.getFriendshipStatus(user_id, other_user_id);
+            res.json(status);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    /**
+     * Cancela una solicitud de amistad enviada
+     */
+    public async cancelFriendRequest(req: Request, res: Response, next: NextFunction) {
+        try {
+            const { request_id } = req.params;
+            const sender_id = (req as any).user.user_id;
+
+            const friendRequest = await friendshipService.cancelFriendRequest(request_id, sender_id);
+            res.json(friendRequest);
+        } catch (error) {
+            next(error);
+        }
+    }
 }
 
 export const friendshipController = new FriendshipController(); 

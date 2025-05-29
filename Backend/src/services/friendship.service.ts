@@ -180,24 +180,24 @@ export class FriendshipService {
                         model: User,
                         as: 'user1',
                         attributes: ['user_id', 'username', 'name', 'profile_picture'],
-                        where: { user_id: { [Op.ne]: user_id } },
-                        required: false
+                        required: true
                     },
                     {
                         model: User,
                         as: 'user2',
                         attributes: ['user_id', 'username', 'name', 'profile_picture'],
-                        where: { user_id: { [Op.ne]: user_id } },
-                        required: false
+                        required: true
                     }
                 ]
             });
 
             // Transformar el resultado para obtener solo los amigos
             return friendships.map(friendship => {
-                const friend = (friendship as any).user1?.user_id === user_id ? (friendship as any).user2 : (friendship as any).user1;
-                return friend;
-            }).filter(Boolean);
+                // Si el usuario actual es user1, devolver user2 y viceversa
+                return (friendship as any).user1.user_id === user_id 
+                    ? (friendship as any).user2 
+                    : (friendship as any).user1;
+            });
         } catch (error) {
             dbLogger.error('[FriendshipService] Error en getUserFriends:', { error });
             throw new AppError(500, 'InternalServerError');
@@ -229,6 +229,97 @@ export class FriendshipService {
                 throw error;
             }
             dbLogger.error('[FriendshipService] Error en removeFriendship:', { error });
+            throw new AppError(500, 'InternalServerError');
+        }
+    }
+
+    /**
+     * Obtiene las solicitudes de amistad enviadas por el usuario
+     */
+    public async getSentFriendRequests(user_id: string) {
+        try {
+            const requests = await FriendRequest.findAll({
+                where: {
+                    sender_id: user_id,
+                    status: 'pending'
+                },
+                include: [{
+                    model: User,
+                    as: 'receiver',
+                    attributes: ['user_id', 'username', 'name', 'profile_picture']
+                }],
+                order: [['created_at', 'DESC']]
+            });
+
+            return requests;
+        } catch (error) {
+            dbLogger.error('[FriendshipService] Error en getSentFriendRequests:', { error });
+            throw new AppError(500, 'InternalServerError');
+        }
+    }
+
+    /**
+     * Obtiene el estado de la relación con otro usuario
+     */
+    public async getFriendshipStatus(user_id: string, other_user_id: string) {
+        try {
+            // Verificar si son amigos
+            const areFriends = await verifyFriendship(user_id, other_user_id);
+            if (areFriends) {
+                return { status: 'friends' };
+            }
+
+            // Verificar si hay una solicitud pendiente
+            const pendingRequest = await FriendRequest.findOne({
+                where: {
+                    [Op.or]: [
+                        { sender_id: user_id, receiver_id: other_user_id },
+                        { sender_id: other_user_id, receiver_id: user_id }
+                    ],
+                    status: 'pending'
+                }
+            });
+
+            if (pendingRequest) {
+                return {
+                    status: 'pending',
+                    request_id: pendingRequest.request_id,
+                    is_sender: pendingRequest.sender_id === user_id
+                };
+            }
+
+            // Si no hay relación
+            return { status: 'none' };
+        } catch (error) {
+            dbLogger.error('[FriendshipService] Error en getFriendshipStatus:', { error });
+            throw new AppError(500, 'InternalServerError');
+        }
+    }
+
+    /**
+     * Cancela una solicitud de amistad enviada
+     */
+    public async cancelFriendRequest(request_id: string, sender_id: string) {
+        try {
+            const friendRequest = await FriendRequest.findOne({
+                where: {
+                    request_id,
+                    sender_id,
+                    status: 'pending'
+                }
+            });
+
+            if (!friendRequest) {
+                throw new AppError(404, 'FriendRequestNotFound');
+            }
+
+            await friendRequest.update({ status: 'cancelled' });
+            return friendRequest;
+        } catch (error) {
+            if (error instanceof AppError) {
+                throw error;
+            }
+            dbLogger.error('[FriendshipService] Error en cancelFriendRequest:', { error });
             throw new AppError(500, 'InternalServerError');
         }
     }
