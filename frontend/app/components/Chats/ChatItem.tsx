@@ -76,14 +76,14 @@ export default function ChatItem({ chat, onClick }: ChatItemProps) {
       {/* Información del chat */}
       <div className="ml-3 flex-1 min-w-0">
         <div className="flex justify-between items-center">
-          <span className="text-white font-medium truncate max-w-[120px]">{chat.user.username}</span>
+          <span className="text-white font-semibold text-lg truncate max-w-[120px]">{chat.user.username}</span>
           <span className="text-xs text-gray-400 ml-2 whitespace-nowrap">
             {isEmpty ? 'Nuevo chat' : formatTime(chat.last_message.timestamp)}
           </span>
         </div>
         <div className="flex items-center">
-          <span className={`text-xs ${isEmpty ? 'text-gray-500 italic' : 'text-gray-300'} truncate max-w-[180px]`}>
-            {isEmpty ? 'Sin mensajes' : chat.last_message.content}
+          <span className={`text-xs ${isEmpty ? 'text-transparent' : 'text-gray-300'} truncate max-w-[180px]`}>
+            {isEmpty ? '' : chat.last_message.content}
           </span>
         </div>
       </div>
