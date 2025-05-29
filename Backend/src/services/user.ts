@@ -21,6 +21,7 @@ export class UserService {
                 attributes: [
                     'user_id',
                     'username',
+                    'email',
                     'name',
                     'surname',
                     'profile_picture',

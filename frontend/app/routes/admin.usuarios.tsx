@@ -250,21 +250,17 @@ export default function AdminUsuarios() {
     // Mapear User a UserProfile, manejando las diferencias de tipo
     const userProfileForEdit: UserProfile = {
       user_id: user.user_id,
-      username: user.username,
-      email: user.email, // email existe en User
-      name: user.name,
-      surname: user.surname,
-      bio: user.bio ?? undefined, // Convertir null a undefined si UserProfile lo espera así
-      profile_picture: user.profile_picture ?? undefined, // Convertir null a undefined
+      username: user.username || '',
+      email: user.email || '', // Aseguramos que email nunca sea undefined
+      name: user.name || '',
+      surname: user.surname || '',
+      bio: user.bio ?? undefined,
+      profile_picture: user.profile_picture ?? undefined,
       email_verified: user.email_verified,
       is_moderator: user.is_moderator,
-      // id_deleted existe en UserProfile, pero no en User. Derivar o manejar.
-      // Basado en la definición, UserProfile tiene id_deleted: boolean.
-      // Si deleted_at (en User) no es null, el usuario está eliminado.
       id_deleted: user.deleted_at !== null,
       created_at: user.created_at,
-      updated_at: user.updated_at,
-      // active_video_call existe en User pero no en UserProfile - no se incluye en UserProfileForEdit
+      updated_at: user.updated_at
     };
     setUserToEdit(userProfileForEdit);
     setShowEditModal(true);
@@ -278,38 +274,41 @@ export default function AdminUsuarios() {
 
     setIsSaving(true);
     try {
-      // Solo enviamos los campos que han cambiado y no están vacíos (validación simplificada para admin)
-      // Ahora buscamos en la lista de `users` (tipo User[]), pero comparamos con `userProfile` (UserProfile)
       const userOriginal = users.find(u => u.user_id === userId);
-      // Si necesitas comparar con el userToEdit (UserProfile), usa ese objeto
-      // const userProfileEdited = userToEdit; // Si userToEdit ya está actualizado con los cambios del modal
-
-      const requestBody: Record<string, string | undefined> = {}; // Allow undefined for removal?
-
-      // Comparamos con el usuario original (tipo User) para ver qué ha cambiado
-      if (formData.username && formData.username !== userOriginal?.username) requestBody.username = formData.username.trim();
-      if (formData.email && formData.email !== userOriginal?.email) requestBody.email = formData.email.trim();
-      if (formData.name && formData.name !== userOriginal?.name) requestBody.name = formData.name.trim();
-      if (formData.surname && formData.surname !== userOriginal?.surname) requestBody.surname = formData.surname.trim();
-
-      // Para bio, si el formulario está vacío y el original no era null, enviamos vacío para borrarla
-      // Si el formulario no está vacío y es diferente, enviamos el nuevo valor
-      if (formData.bio !== userOriginal?.bio) {
-           if (formData.bio?.trim() === '') {
-               // Si el formulario está vacío y la bio original no era nula, enviamos null o vacío para borrarla
-               // Asumimos que enviar una cadena vacía en el body la borrará en el backend
-              requestBody.bio = ''; // Enviar cadena vacía para indicar borrado
-           } else if (formData.bio !== undefined) { // Si no está vacío y no es undefined
-               requestBody.bio = formData.bio.trim();
-           }
-           // Si formData.bio es undefined, significa que el campo no estaba en el formulario (no se tocó), no hacemos nada.
+      if (!userOriginal) {
+        setNotification({ message: 'Usuario no encontrado', type: 'error' });
+        return;
       }
 
-      // Eliminar campos con undefined si tu API espera que no estén presentes
-      Object.keys(requestBody).forEach(key => requestBody[key] === undefined && delete requestBody[key]);
+      const requestBody: Record<string, string> = {};
 
+      // Solo añadimos campos que han cambiado y no están vacíos
+      if (formData.username?.trim() && formData.username !== userOriginal.username) {
+        requestBody.username = formData.username.trim();
+      }
+
+      if (formData.email?.trim() && formData.email !== userOriginal.email) {
+        requestBody.email = formData.email.trim();
+      }
+
+      if (formData.name?.trim() && formData.name !== userOriginal.name) {
+        requestBody.name = formData.name.trim();
+      }
+
+      if (formData.surname?.trim() && formData.surname !== userOriginal.surname) {
+        requestBody.surname = formData.surname.trim();
+      }
+
+      // Para bio, solo la enviamos si ha cambiado y no está vacía
+      if (formData.bio !== undefined && formData.bio !== userOriginal.bio) {
+        if (formData.bio.trim()) {
+          requestBody.bio = formData.bio.trim();
+        }
+      }
+
+      // Si no hay campos para actualizar, mostramos un mensaje y cerramos el modal
       if (Object.keys(requestBody).length === 0) {
-        setNotification({ message: 'No hay cambios válidos para actualizar', type: 'error' });
+        setNotification({ message: 'No hay cambios para actualizar', type: 'error' });
         setIsSaving(false);
         setShowEditModal(false);
         return;
