@@ -68,7 +68,14 @@ interface PostDetailModalProps {
 }
 
 function PostDetailModal({ isOpen, onClose, post, onImageClick }: PostDetailModalProps) {
+  const { token } = useAuth();
   const [comments, setComments] = useState<Comment[]>([]);
+  const [notification, setNotification] = useState<{
+    message: string;
+    type: 'success' | 'error';
+  } | null>(null);
+  const [showDeleteCommentModal, setShowDeleteCommentModal] = useState(false);
+  const [commentToDelete, setCommentToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -101,6 +108,36 @@ function PostDetailModal({ isOpen, onClose, post, onImageClick }: PostDetailModa
 
     loadComments();
   }, [isOpen, post]);
+
+  const handleDeleteComment = async (commentId: string) => {
+    setCommentToDelete(commentId);
+    setShowDeleteCommentModal(true);
+  };
+
+  const confirmDeleteComment = async () => {
+    if (!token || !commentToDelete || !post) return;
+
+    try {
+      const response = await commentService.deleteComment(token, post.post_id, commentToDelete);
+      if (response.success) {
+        setComments(prev => prev.filter(comment => comment.comment_id !== commentToDelete));
+        setNotification({
+          message: 'Comentario eliminado correctamente',
+          type: 'success'
+        });
+      } else {
+        throw new Error(response.message || 'Error al eliminar el comentario');
+      }
+    } catch (err) {
+      setNotification({
+        message: err instanceof Error ? err.message : 'Error al eliminar el comentario',
+        type: 'error'
+      });
+    } finally {
+      setShowDeleteCommentModal(false);
+      setCommentToDelete(null);
+    }
+  };
 
   if (!isOpen || !post) return null;
   return (
@@ -142,26 +179,28 @@ function PostDetailModal({ isOpen, onClose, post, onImageClick }: PostDetailModa
           <div className={`${post.media ? 'w-1/2' : 'w-full'} flex flex-col h-full bg-gray-900`}>
             {/* Cabecera con información del usuario */}
             <div className="p-6 border-b border-gray-800 bg-gray-900/95 backdrop-blur-sm">
-              <div 
-                className="flex items-center gap-3 cursor-pointer hover:bg-gray-800/50 p-2 rounded-lg transition-colors duration-200" 
-                onClick={() => { window.location.href = `/perfil?username=${post.author.username}`; }}
-              >
-                {post.author.profile_picture ? (
-                  <img
-                    src={post.author.profile_picture}
-                    alt={post.author.username}
-                    className="w-12 h-12 rounded-full ring-2 ring-blue-500/50"
-                  />
-                ) : (
-                  <div className="w-12 h-12 rounded-full bg-gray-800 border-2 border-gray-700 flex items-center justify-center">
-                    <span className="text-gray-400 text-base font-bold">
-                      {post.author.username?.charAt(0).toUpperCase()}
-                    </span>
+              <div className="flex items-center gap-3">
+                <div 
+                  className="flex items-center gap-3 cursor-pointer hover:bg-gray-800/50 p-2 rounded-lg transition-colors duration-200" 
+                  onClick={() => { window.location.href = `/perfil?username=${post.author.username}`; }}
+                >
+                  {post.author.profile_picture ? (
+                    <img
+                      src={post.author.profile_picture}
+                      alt={post.author.username}
+                      className="w-12 h-12 rounded-full ring-2 ring-blue-500/50"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-gray-800 border-2 border-gray-700 flex items-center justify-center">
+                      <span className="text-gray-400 text-base font-bold">
+                        {post.author.username?.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex flex-col">
+                    <span className="font-semibold text-lg text-white">{post.author.name}</span>
+                    <span className="text-sm text-gray-400">@{post.author.username}</span>
                   </div>
-                )}
-                <div className="flex flex-col">
-                  <span className="font-semibold text-lg text-white">{post.author.name}</span>
-                  <span className="text-sm text-gray-400">@{post.author.username}</span>
                 </div>
               </div>
             </div>
@@ -214,14 +253,24 @@ function PostDetailModal({ isOpen, onClose, post, onImageClick }: PostDetailModa
                             </span>
                           </div>
                         )}
-                        {/* Usuario en negrita y comentario en la misma línea */}
+                        {/* Contenido del comentario y acciones */}
                         <div className="flex-1">
-                          <span className="font-bold text-white mr-2">{comment.author.username}</span>
-                          <span className="text-gray-300">{comment.content}</span>
-                          {/* Acciones y fecha */}
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <span className="font-bold text-white mr-2">{comment.author.username}</span>
+                              <span className="text-gray-300">{comment.content}</span>
+                            </div>
+                            <button
+                              onClick={() => handleDeleteComment(comment.comment_id)}
+                              className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors cursor-pointer"
+                              title="Eliminar comentario"
+                            >
+                              <FaTrash className="w-4 h-4" />
+                            </button>
+                          </div>
+                          {/* Fecha */}
                           <div className="flex items-center gap-4 mt-1 text-xs text-gray-400">
                             <span>{`hace ${formatTimeAgo(comment.created_at)}`}</span>
-                            {/* Aquí puedes agregar acciones como 'Responder', 'Me gusta', etc. si lo deseas */}
                           </div>
                         </div>
                       </div>
@@ -233,6 +282,27 @@ function PostDetailModal({ isOpen, onClose, post, onImageClick }: PostDetailModa
           </div>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={showDeleteCommentModal}
+        onClose={() => {
+          setShowDeleteCommentModal(false);
+          setCommentToDelete(null);
+        }}
+        onConfirm={confirmDeleteComment}
+        title="Eliminar comentario"
+        message="¿Estás seguro de que quieres eliminar este comentario? Esta acción no se puede deshacer."
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+      />
+
+      {notification && (
+        <Notification
+          message={notification.message}
+          type={notification.type}
+          onClose={() => setNotification(null)}
+        />
+      )}
     </div>
   );
 }
@@ -260,6 +330,8 @@ export default function AdminPublicaciones() {
   const { token } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [posts, setPosts] = useState<Post[]>([]);
+  const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
+  const [activeFilter, setActiveFilter] = useState<'all' | 'recent' | 'oldest'>('all');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
@@ -275,6 +347,35 @@ export default function AdminPublicaciones() {
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [showGlobalImageZoomModal, setShowGlobalImageZoomModal] = useState(false);
   const [globalZoomImageUrl, setGlobalZoomImageUrl] = useState('');
+
+  // Efecto para filtrar y ordenar posts
+  useEffect(() => {
+    let filtered = [...posts];
+
+    // Aplicar filtro de búsqueda
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(post => 
+        post.author.username.toLowerCase().includes(query) ||
+        post.author.name.toLowerCase().includes(query)
+      );
+    }
+
+    // Aplicar ordenamiento por fecha
+    switch (activeFilter) {
+      case 'recent':
+        filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        break;
+      case 'oldest':
+        filtered.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+        break;
+      default:
+        // 'all' no requiere ordenamiento especial
+        break;
+    }
+
+    setFilteredPosts(filtered);
+  }, [searchQuery, posts, activeFilter]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -302,6 +403,7 @@ export default function AdminPublicaciones() {
             comments: []
           }));
           setPosts(transformedPosts);
+          setFilteredPosts(transformedPosts); // Inicializar posts filtrados
           setNextCursor(response.data.nextCursor);
         } else {
           throw new Error(response.message || 'No pudimos cargar las publicaciones');
@@ -337,7 +439,19 @@ export default function AdminPublicaciones() {
           is_saved: false,
           comments: []
         }));
-        setPosts(prev => [...prev, ...transformedPosts]);
+        const newPosts = [...posts, ...transformedPosts];
+        setPosts(newPosts);
+        // Actualizar también los posts filtrados
+        if (!searchQuery.trim()) {
+          setFilteredPosts(newPosts);
+        } else {
+          const query = searchQuery.toLowerCase().trim();
+          const filtered = newPosts.filter(post => 
+            post.author.username.toLowerCase().includes(query) ||
+            post.author.name.toLowerCase().includes(query)
+          );
+          setFilteredPosts(filtered);
+        }
         setNextCursor(response.data.nextCursor);
       } else {
         throw new Error(response.message || 'Error al cargar más posts');
@@ -436,7 +550,7 @@ export default function AdminPublicaciones() {
               <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
-                placeholder="Buscar publicaciones..."
+                placeholder="Buscar por nombre de usuario..."
                 className="w-full bg-gray-900 rounded-xl py-3 pl-12 pr-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -448,14 +562,35 @@ export default function AdminPublicaciones() {
           <div className="bg-gray-900 rounded-lg p-4 mb-6 border border-gray-800">
             <div className="flex items-center space-x-4">
               <FaFilter className="text-gray-400" />
-              <button className="px-4 py-2 rounded-lg bg-gray-800 text-white hover:bg-gray-700 transition-colors">
+              <button 
+                onClick={() => setActiveFilter('all')}
+                className={`px-4 py-2 rounded-lg transition-colors ${
+                  activeFilter === 'all' 
+                    ? 'bg-blue-600 text-white' 
+                    : 'bg-gray-800 text-white hover:bg-gray-700'
+                }`}
+              >
                 Todas
               </button>
-              <button className="px-4 py-2 rounded-lg bg-gray-800 text-white hover:bg-gray-700 transition-colors">
-                Reportadas
+              <button 
+                onClick={() => setActiveFilter('recent')}
+                className={`px-4 py-2 rounded-lg transition-colors ${
+                  activeFilter === 'recent' 
+                    ? 'bg-blue-600 text-white' 
+                    : 'bg-gray-800 text-white hover:bg-gray-700'
+                }`}
+              >
+                Más recientes
               </button>
-              <button className="px-4 py-2 rounded-lg bg-gray-800 text-white hover:bg-gray-700 transition-colors">
-                Recientes
+              <button 
+                onClick={() => setActiveFilter('oldest')}
+                className={`px-4 py-2 rounded-lg transition-colors ${
+                  activeFilter === 'oldest' 
+                    ? 'bg-blue-600 text-white' 
+                    : 'bg-gray-800 text-white hover:bg-gray-700'
+                }`}
+              >
+                Más antiguas
               </button>
             </div>
           </div>
@@ -466,17 +601,17 @@ export default function AdminPublicaciones() {
               <div className="col-span-3 bg-red-500/10 text-red-500 p-4 rounded-lg">
                 {error}
               </div>
-            ) : loading && posts.length === 0 ? (
+            ) : loading && filteredPosts.length === 0 ? (
               <div className="col-span-3 flex justify-center items-center h-32">
                 <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
               </div>
-            ) : posts.length === 0 ? (
+            ) : filteredPosts.length === 0 ? (
               <div className="col-span-3 text-center text-gray-500">
-                No hay publicaciones para mostrar
+                {searchQuery ? 'No se encontraron publicaciones para este usuario' : 'No hay publicaciones para mostrar'}
               </div>
             ) : (
               <>
-                {posts.map((post) => (
+                {filteredPosts.map((post) => (
                   <div
                     key={post.post_id}
                     className="bg-gray-900 rounded-lg border border-gray-800 hover:border-blue-500 transition-colors flex flex-col w-full cursor-pointer"
@@ -504,18 +639,20 @@ export default function AdminPublicaciones() {
                             <p className="text-xs text-gray-400 truncate">@{post.author.username}</p>
                           </div>
                         </div>
-                        <div className="flex gap-1 flex-shrink-0">
+                        <div className="flex gap-2 flex-shrink-0">
                           <button 
                             onClick={e => { e.stopPropagation(); handleEdit(post.post_id); }}
-                            className="p-1.5 text-blue-500 hover:bg-blue-500/10 rounded-lg transition-colors"
+                            className="p-2.5 text-blue-500 hover:bg-blue-500/10 rounded-lg transition-colors cursor-pointer"
+                            title="Editar publicación"
                           >
-                            <FaEdit className="w-4 h-4" />
+                            <FaEdit className="w-5 h-5" />
                           </button>
                           <button 
                             onClick={e => { e.stopPropagation(); handleDelete(post.post_id); }}
-                            className="p-1.5 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                            className="p-2.5 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors cursor-pointer"
+                            title="Eliminar publicación"
                           >
-                            <FaTrash className="w-4 h-4" />
+                            <FaTrash className="w-5 h-5" />
                           </button>
                         </div>
                       </div>
@@ -556,7 +693,7 @@ export default function AdminPublicaciones() {
                   </div>
                 ))}
 
-                {nextCursor && (
+                {nextCursor && !searchQuery && (
                   <div className="col-span-3 flex justify-center mt-6">
                     <button
                       onClick={handleLoadMore}
