@@ -105,6 +105,8 @@ async function main() {
                 read_at: data.message.read_at
             });
 
+            // Esperar un momento antes de marcar como entregado y leído
+            setTimeout(() => {
             // Marcar mensaje como entregado y leído si Jaider es el receptor
             if (data.message.receiver_id === jaiderId) {
                 logMessage('🔄', 'Jaider marcando mensaje como entregado y leído...', { message_id: data.message.id });
@@ -117,13 +119,16 @@ async function main() {
                     token: jaiderToken
                 });
 
+                    setTimeout(() => {
                 jaiderSocket.emit("message-read", {
                     message_id: data.message.id,
                     status: 'read',
                     read_at: new Date().toISOString(),
                     token: jaiderToken
                 });
+                    }, 1000);
             }
+            }, 1000);
         });
 
         jaiderSocket.on("message-delivery-status", (data: DeliveryStatus) => {
@@ -172,10 +177,11 @@ async function main() {
                 read_at: data.message.read_at
             });
 
+            // Esperar un momento antes de marcar como entregado y leído
+            setTimeout(() => {
             // Marcar mensaje como entregado y leído si Erik es el receptor
             if (data.message.receiver_id === erikId) {
                 logMessage('🔄', 'Erik marcando mensaje como entregado y leído...', { message_id: data.message.id });
-
 
             // Enviar eventos con el formato correcto
             erikSocket.emit("message-delivered", {
@@ -184,13 +190,17 @@ async function main() {
                 delivered_at: new Date().toISOString(),
                 token: erikToken
             });
+
+                    setTimeout(() => {
                 erikSocket.emit("message-read", {
                 message_id: data.message.id,
                 status: 'read',
                 read_at: new Date().toISOString(),
                 token: erikToken
             });
+                    }, 1000);
         }
+            }, 1000);
         });
 
     erikSocket.on("message-delivery-status", (data: DeliveryStatus) => {
@@ -250,7 +260,7 @@ async function main() {
 
     // Prueba 4: Envío de mensaje con caracteres especiales
     logMessage('📝', 'Prueba 4: Envío de mensaje con caracteres especiales');
-    await sendMessage(erikSocket, jaiderId, "¡Hola! ¿Cómo estás? 😊 Este mensaje tiene caracteres especiales: áéíóú ñ Ñ");
+        await sendMessage(erikSocket, jaiderId, "¡Hola! ¿Cómo estás? �� Este mensaje tiene caracteres especiales: áéíóú ñ Ñ");
     await sleep(3000);
 
     // Prueba 5: Envío de mensajes rápidos

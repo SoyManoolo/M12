@@ -49,7 +49,7 @@ router.get('/:id', IdValidator, async (req: Request, res: Response, next: NextFu
     await userController.getUser(req, res, next);
 });
 
-router.patch('/:id', IdValidator, updateUserValidator, async (req: Request, res: Response, next: NextFunction) => {
+router.patch('/:id', AuthToken.verifyToken, IdValidator, updateUserValidator, async (req: Request, res: Response, next: NextFunction) => {
     dbLogger.info('[UserRouter] Update user by ID');
     await userController.updateUser(req, res, next);
 });

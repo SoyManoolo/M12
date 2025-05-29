@@ -21,26 +21,74 @@ export function chatEvents(socket: Socket, io: Server) {
     // Autenticación del socket
     socket.use(async (packet, next) => {
         try {
-            const token = packet[1]?.token || packet[1]?.data?.token;
+            // Extraer el token del paquete de manera más robusta
+            let token: string | undefined;
+            
+            // Intentar obtener el token de diferentes ubicaciones posibles
+            if (packet[0] === 'join-user' && typeof packet[1] === 'object') {
+                // Para el evento join-user, el token viene en el objeto data
+                token = packet[1].token;
+            } else if (packet[0] === 'chat-message' && typeof packet[1] === 'object') {
+                // Para el evento chat-message, el token viene en el objeto data
+                token = packet[1].token;
+            } else if (typeof packet[1] === 'object') {
+                // Para otros eventos, intentar obtener el token de diferentes ubicaciones
+                token = packet[1].token || 
+                       (packet[1].data && packet[1].data.token) || 
+                       (packet[1].auth && packet[1].auth.token);
+            }
+
+            // Si no hay token y no es un evento de desconexión, lanzar error
+            if (!token && packet[0] !== 'disconnect') {
+                console.error("[SOCKET] Token no encontrado en el paquete:", {
+                    event: packet[0],
+                    data: packet[1]
+                });
+                throw new AppError(401, 'TokenRequired');
+            }
+
+            // Si es un evento de desconexión, permitir continuar sin token
+            if (packet[0] === 'disconnect') {
+                return next();
+            }
+
+            // Verificar y decodificar el token
             if (!token) {
                 throw new AppError(401, 'TokenRequired');
             }
 
-            const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
-            const user = await User.findByPk(decoded.id);
+            const decoded = jwt.verify(token, JWT_SECRET) as unknown as { user_id: string; username: string };
+            console.log("[SOCKET] Token decodificado para evento", packet[0], ":", decoded);
 
+            // Buscar el usuario en la base de datos
+            const user = await User.findByPk(decoded.user_id);
             if (!user) {
+                console.error("[SOCKET] Usuario no encontrado para el ID:", decoded.user_id);
                 throw new AppError(401, 'UserNotFound');
             }
 
             // Guardar el usuario en el socket para uso posterior
-            socket.data.user = user;
+            // Asegurarnos de que los datos del usuario estén disponibles directamente
+            socket.data.user = {
+                user_id: user.getDataValue('user_id'),
+                name: user.getDataValue('name'),
+                surname: user.getDataValue('surname'),
+                username: user.getDataValue('username'),
+                email: user.getDataValue('email'),
+                profile_picture: user.getDataValue('profile_picture'),
+                bio: user.getDataValue('bio'),
+                email_verified: user.getDataValue('email_verified'),
+                is_moderator: user.getDataValue('is_moderator'),
+                active_video_call: user.getDataValue('active_video_call')
+            };
+
+            console.log("[SOCKET] Usuario autenticado para evento", packet[0], ":", socket.data.user);
             next();
         } catch (error) {
-            console.error("[SOCKET] Error de autenticación:", error);
+            console.error("[SOCKET] Error de autenticación para evento", packet[0], ":", error);
             if (error instanceof jwt.JsonWebTokenError) {
                 next(new Error('InvalidToken'));
-            } else if (error instanceof Error) {
+            } else if (error instanceof AppError) {
                 next(error);
             } else {
                 next(new Error('Authentication error'));
@@ -58,8 +106,8 @@ export function chatEvents(socket: Socket, io: Server) {
             const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
 
             // Verificar que el ID del token coincide con el userId proporcionado
-            if (decoded.id !== userId) {
-                console.error("[SOCKET] Token ID no coincide con userId:", { tokenId: decoded.id, userId });
+            if (decoded.user_id !== userId) {
+                console.error("[SOCKET] Token ID no coincide con userId:", { tokenId: decoded.user_id, userId });
                 socket.emit("error", {
                     type: 'InvalidToken',
                     message: 'El token no coincide con el usuario'
@@ -138,9 +186,14 @@ export function chatEvents(socket: Socket, io: Server) {
     // Enviar mensaje
     socket.on('chat-message', async (data: { data: { receiver_id: string; content: string }, token: string }) => {
         try {
-            console.log('[SOCKET] Evento \'chat-message\' recibido:', data);
+            console.log('[SOCKET] Datos del socket:', {
+                user: socket.data.user,
+                id: socket.id,
+                rooms: Array.from(socket.rooms)
+            });
 
-            if (!socket.data.user) {
+            if (!socket.data.user || !socket.data.user.user_id) {
+                console.error('[SOCKET] Usuario no autenticado en el socket o user_id no disponible');
                 throw new AppError(401, 'UserNotAuthenticated');
             }
 

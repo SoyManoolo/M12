@@ -14,13 +14,14 @@ import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from '@remix-run/react';
 import Navbar from '~/components/Inicio/Navbar';
 import ChatUserInfo from '~/components/Chats/ChatUserInfo';
-import { FaPaperPlane } from 'react-icons/fa';
+import { FaPaperPlane, FaSmile } from 'react-icons/fa';
 import { redirect } from "@remix-run/node";
 import type { User } from '~/types/user.types';
 import { chatService } from '~/services/chat.service';
 import { useAuth } from '~/hooks/useAuth';
 import { userService } from '~/services/user.service';
 import { jwtDecode } from 'jwt-decode';
+import EmojiPicker, { EmojiClickData, Theme } from 'emoji-picker-react';
 
 interface Message {
   id: string;
@@ -32,22 +33,6 @@ interface Message {
   delivered_at: string | null;
   read_at: string | null;
   is_own?: boolean;
-}
-
-interface ChatUser {
-  user_id: string;
-  username: string;
-  name: string;
-  surname: string;
-  profile_picture: string | null;
-  email: string;
-  bio: string | null;
-  email_verified: boolean;
-  is_moderator: boolean;
-  deleted_at: string | null;
-  created_at: string;
-  updated_at: string;
-  active_video_call: boolean;
 }
 
 export const loader = async ({ request }: { request: Request }) => {
@@ -69,15 +54,29 @@ export default function Chat() {
   const typingTimeoutRef = useRef<NodeJS.Timeout>();
   const { token, user: currentUser } = useAuth();
   const userId = searchParams.get('userId');
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
 
+  // Efecto para manejar la carga inicial
   useEffect(() => {
-    if (!token || !userId || !currentUser?.user_id) {
-      console.log('Faltan datos necesarios:', { token: !!token, userId, currentUserId: currentUser?.user_id });
+    if (!token || !userId || !currentUser) {
+      console.log('Datos no disponibles:', { 
+        noToken: !token, 
+        noUserId: !userId,
+        noCurrentUser: !currentUser 
+      });
+      setLoading(false);
       return;
     }
 
-    console.log('Iniciando conexión del chat...');
+    console.log('Datos disponibles:', { 
+      token: !!token, 
+      userId, 
+      currentUserId: currentUser.user_id 
+    });
+
     let isComponentMounted = true;
+    let unsubscribeFunctions: (() => void)[] = [];
 
     // Definir los handlers de eventos
     const handleNewMessage = (message: Message) => {
@@ -92,7 +91,7 @@ export default function Chat() {
           return prev;
         }
 
-        // Si es un mensaje temporal nuestro, reemplazarlo
+        // Si es un mensaje nuestro, reemplazar cualquier mensaje temporal
         if (message.sender_id === currentUser.user_id) {
           const newMessages = prev.filter(msg => !msg.id.startsWith('temp-'));
           newMessages.push({ ...message, is_own: true });
@@ -101,19 +100,17 @@ export default function Chat() {
           );
         }
         
-        // Agregar el nuevo mensaje y ordenar
+        // Para mensajes de otros usuarios, simplemente agregar
         const newMessages = [...prev, { ...message, is_own: message.sender_id === currentUser.user_id }];
-        const sortedMessages = newMessages.sort((a, b) => 
+        return newMessages.sort((a, b) => 
           new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
         );
+      });
 
         // Hacer scroll solo si el mensaje es nuevo y no es nuestro
-        if (!messageExists && message.sender_id !== currentUser.user_id) {
+      if (message.sender_id !== currentUser.user_id) {
           setTimeout(scrollToBottom, 100);
         }
-
-        return sortedMessages;
-      });
     };
 
     const handleDeliveryStatus = (data: { message_id: string; status: string; delivered_at?: string }) => {
@@ -164,12 +161,24 @@ export default function Chat() {
       }
     };
 
-    const handleConnectionStatus = (status: 'connected' | 'disconnected' | 'reconnecting') => {
+    // Registrar los handlers una sola vez
+    const unsubscribeNewMessage = chatService.onNewMessage(handleNewMessage);
+    const unsubscribeDelivery = chatService.onDeliveryStatus(handleDeliveryStatus);
+    const unsubscribeRead = chatService.onReadStatus(handleReadStatus);
+    const unsubscribeTyping = chatService.onTyping(handleTyping);
+    const unsubscribeConnection = chatService.onConnectionStatus((status) => {
       if (!isComponentMounted) return;
-      
       console.log('Estado de conexión actualizado:', status);
       setConnectionStatus(status);
-    };
+    });
+
+    unsubscribeFunctions.push(
+      unsubscribeNewMessage,
+      unsubscribeDelivery,
+      unsubscribeRead,
+      unsubscribeTyping,
+      unsubscribeConnection
+    );
 
     const loadChat = async () => {
       try {
@@ -177,9 +186,6 @@ export default function Chat() {
         
         // Limpiar mensajes existentes
         setMessages([]);
-        
-        // Suscribirse al estado de conexión primero
-        const unsubscribeConnection = chatService.onConnectionStatus(handleConnectionStatus);
         
         // Conectar al WebSocket
         chatService.connect(token, currentUser.user_id);
@@ -225,29 +231,6 @@ export default function Chat() {
           });
         }
 
-        // Suscribirse a los eventos del socket
-        chatService.onNewMessage(handleNewMessage);
-        chatService.onDeliveryStatus(handleDeliveryStatus);
-        chatService.onReadStatus(handleReadStatus);
-        chatService.onTyping(handleTyping);
-
-        // Marcar mensajes como leídos
-        chatMessages
-          .filter(msg => msg.sender_id === userId && !msg.read_at)
-          .forEach(msg => chatService.markMessageAsRead(msg.id, token));
-
-        // Limpiar suscripciones al desmontar
-        return () => {
-          console.log('Limpiando suscripciones del chat...');
-          isComponentMounted = false;
-          unsubscribeConnection();
-          chatService.removeMessageHandler(handleNewMessage);
-          chatService.removeDeliveryHandler(handleDeliveryStatus);
-          chatService.removeReadHandler(handleReadStatus);
-          chatService.removeTypingHandler(handleTyping);
-          chatService.disconnect();
-        };
-
       } catch (error) {
         console.error('Error al cargar el chat:', error);
         if (isComponentMounted) {
@@ -261,28 +244,48 @@ export default function Chat() {
     };
 
     loadChat();
+
+    // Limpiar suscripciones al desmontar
+    return () => {
+      console.log('Limpiando suscripciones del chat...');
+      isComponentMounted = false;
+      unsubscribeFunctions.forEach(unsubscribe => unsubscribe());
+      chatService.disconnect();
+    };
+
   }, [token, userId, currentUser]);
 
-  // Agregar un efecto para desplazarse al final cuando cambian los mensajes
+  // Efecto para desplazarse al final cuando se carga el chat
   useEffect(() => {
-    if (!loading && messages.length > 0) {
+    if (!loading) {
+      // Esperar a que los mensajes se rendericen
+      setTimeout(scrollToBottom, 100);
+    }
+  }, [loading]);
+
+  // Efecto para desplazarse al final cuando hay nuevos mensajes
+  useEffect(() => {
+    if (messages.length > 0) {
       scrollToBottom();
     }
-  }, [loading, messages]);
+  }, [messages]);
+
+  // Efecto para desplazarse al final cuando cambia el usuario del chat
+  useEffect(() => {
+    if (chatUser) {
+      scrollToBottom();
+    }
+  }, [chatUser]);
 
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
       const container = messagesEndRef.current.parentElement;
       if (container) {
-        const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
-        
-        // Solo hacer scroll automático si estamos cerca del final
-        if (isNearBottom) {
+        // Siempre hacer scroll al final, sin importar la posición actual
           messagesEndRef.current.scrollIntoView({ 
             behavior: 'smooth',
             block: 'end'
           });
-        }
       }
     }
   };
@@ -301,11 +304,17 @@ export default function Chat() {
       return;
     }
 
+    const tempId = `temp-${Date.now()}`;
+    const messageContent = newMessage.trim();
+
     try {
-      // Guardar el mensaje temporalmente para scroll inmediato
+      // Limpiar el input inmediatamente
+      setNewMessage('');
+
+      // Crear el mensaje temporal
       const tempMessage = {
-        id: `temp-${Date.now()}`,
-        content: newMessage.trim(),
+        id: tempId,
+        content: messageContent,
         sender_id: currentUser.user_id,
         receiver_id: chatUser.user_id,
         created_at: new Date().toISOString(),
@@ -315,15 +324,35 @@ export default function Chat() {
         is_own: true
       };
 
-      // Agregar mensaje temporal y hacer scroll
+      // Agregar mensaje temporal
       setMessages(prev => [...prev, tempMessage]);
-      setNewMessage('');
       scrollToBottom();
 
       // Enviar mensaje real
-      await chatService.sendMessage(chatUser.user_id, newMessage.trim(), token);
+      const sentMessage = await chatService.createMessage(chatUser.user_id, messageContent, token);
+      
+      // Actualizar el mensaje temporal con el real
+      setMessages(prev => {
+        // Filtrar el mensaje temporal
+        const filteredMessages = prev.filter(msg => msg.id !== tempId);
+        // Verificar si el mensaje real ya existe (por si acaso)
+        const messageExists = filteredMessages.some(msg => msg.id === sentMessage.id);
+        if (!messageExists) {
+          // Agregar el mensaje real si no existe
+          filteredMessages.push({ ...sentMessage, is_own: true });
+        }
+        // Ordenar mensajes
+        return filteredMessages.sort((a, b) => 
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        );
+      });
+
     } catch (error) {
       console.error('Error al enviar mensaje:', error);
+      // Remover el mensaje temporal en caso de error
+      setMessages(prev => prev.filter(msg => msg.id !== tempId));
+      // Restaurar el mensaje en el input
+      setNewMessage(messageContent);
       // Intentar reconectar si hay error
       if (currentUser?.user_id) {
         chatService.connect(token, currentUser.user_id);
@@ -351,6 +380,35 @@ export default function Chat() {
       chatService.setTyping(chatUser.user_id, false, token);
     }, 2000);
   };
+
+  // Cerrar el selector de emojis al hacer clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
+        setShowEmojiPicker(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const onEmojiClick = (emojiData: EmojiClickData) => {
+    setNewMessage(prev => prev + emojiData.emoji);
+    setShowEmojiPicker(false);
+  };
+
+  // Mostrar estado de carga mientras se obtiene el usuario
+  if (!currentUser) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-400">Cargando información del usuario...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -417,28 +475,40 @@ export default function Chat() {
           </div>
 
           {/* Mensajes */}
-          <div className="flex-1 overflow-y-auto custom-scrollbar p-4">
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4">
             {loading ? (
               <div className="flex justify-center items-center h-full">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
               </div>
             ) : (
-              messages.map(message => (
+              messages.map((message, index) => {
+                // Determinar si este mensaje es parte de un grupo con el anterior
+                const prevMessage = messages[index - 1];
+                const isGrouped = prevMessage && 
+                  prevMessage.sender_id === message.sender_id && 
+                  new Date(message.created_at).getTime() - new Date(prevMessage.created_at).getTime() < 60000; // 1 minuto
+
+                return (
                 <div
                   key={message.id}
-                  className={`flex ${message.is_own ? 'justify-end' : 'justify-start'}`}
+                    className={`flex ${message.is_own ? 'justify-end' : 'justify-start'} ${
+                      !isGrouped ? 'mt-6' : 'mt-1'
+                    }`}
                 >
                   <div
-                    className={`max-w-[70%] p-3 rounded-lg ${
+                      className={`max-w-[70%] p-3 rounded-2xl ${
                       message.is_own
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-800 text-white'
-                    }`}
+                          ? 'bg-blue-600 text-white rounded-br-none'
+                          : 'bg-gray-800 text-white rounded-bl-none'
+                      } shadow-md hover:shadow-lg transition-shadow duration-200`}
                   >
-                    <p className="break-words">{message.content}</p>
-                    <div className="flex items-center justify-end space-x-2 mt-1">
+                      <p className="break-words text-[15px] leading-relaxed">{message.content}</p>
+                      <div className="flex items-center justify-end space-x-2 mt-1.5">
                       <p className="text-xs text-gray-400">
-                        {new Date(message.created_at).toLocaleTimeString()}
+                          {new Date(message.created_at).toLocaleTimeString([], { 
+                            hour: '2-digit', 
+                            minute: '2-digit' 
+                          })}
                       </p>
                       {message.is_own && (
                         <span className="text-xs flex items-center space-x-1">
@@ -454,7 +524,8 @@ export default function Chat() {
                     </div>
                   </div>
                 </div>
-              ))
+                );
+              })
             )}
             <div ref={messagesEndRef} />
           </div>
@@ -478,12 +549,23 @@ export default function Chat() {
               .custom-scrollbar::-webkit-scrollbar-thumb:hover {
                 background: #6b7280;
               }
+
+              /* Animación suave para nuevos mensajes */
+              @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(10px); }
+                to { opacity: 1; transform: translateY(0); }
+              }
+
+              .custom-scrollbar > div {
+                animation: fadeIn 0.3s ease-out;
+              }
             `}
           </style>
 
           {/* Input de mensaje con estado de conexión */}
           <form onSubmit={handleSendMessage} className="p-4 border-t border-gray-800">
-            <div className="flex items-center">
+            <div className="flex items-center relative">
+              <div className="relative flex-1">
               <input
                 type="text"
                 value={newMessage}
@@ -491,10 +573,39 @@ export default function Chat() {
                 onKeyPress={handleTyping}
                 placeholder={connectionStatus === 'connected' ? "Escribe un mensaje..." : "Conectando..."}
                 disabled={connectionStatus !== 'connected'}
-                className={`flex-1 bg-gray-900 rounded-lg py-2 px-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  className={`w-full bg-gray-900 rounded-lg py-2 px-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                   connectionStatus !== 'connected' ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
               />
+                <button
+                  type="button"
+                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                  disabled={connectionStatus !== 'connected'}
+                  className={`absolute right-2 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-white transition-colors ${
+                    connectionStatus !== 'connected' ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                >
+                  <FaSmile className="text-xl" />
+                </button>
+                {showEmojiPicker && (
+                  <div 
+                    ref={emojiPickerRef}
+                    className="absolute bottom-12 right-0 z-50"
+                  >
+                    <EmojiPicker
+                      onEmojiClick={onEmojiClick}
+                      theme={Theme.DARK}
+                      width={350}
+                      height={400}
+                      searchDisabled={false}
+                      skinTonesDisabled={true}
+                      previewConfig={{
+                        showPreview: false
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
               <button
                 type="submit"
                 disabled={connectionStatus !== 'connected' || !newMessage.trim()}

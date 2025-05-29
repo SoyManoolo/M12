@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { authService } from '../services/auth.service';
-import { decodeToken } from '../utils/token';
+import { decodeToken, getUserInfo } from '../utils/token';
 
 interface User {
   user_id: string;
@@ -36,26 +36,65 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const [token, setToken] = useState<string | null>(() => {
         // Inicializar el token desde localStorage solo en el cliente
         if (typeof window !== 'undefined') {
-            return localStorage.getItem('token');
+            const storedToken = localStorage.getItem('token');
+            if (storedToken) {
+                // Verificar que el token sea válido
+                const decodedToken = decodeToken(storedToken);
+                if (!decodedToken) {
+                    localStorage.removeItem('token');
+                    return null;
+                }
+                return storedToken;
+            }
         }
         return null;
     });
 
     const [user, setUser] = useState<User | null>(null);
 
+    // Efecto para sincronizar el token con localStorage
     useEffect(() => {
-        // Sincronizar el token con localStorage
         if (token) {
             localStorage.setItem('token', token);
-            // Decodificar el token para obtener la información del usuario
-            const decodedUser = decodeToken(token);
-            if (decodedUser) {
-                setUser(decodedUser);
-            }
         } else {
             localStorage.removeItem('token');
-            setUser(null);
         }
+    }, [token]);
+
+    useEffect(() => {
+        const initializeAuth = async () => {
+            if (token) {
+                try {
+                    const decodedToken = decodeToken(token);
+                    if (decodedToken) {
+                        // Obtener la información completa del usuario
+                        const userInfo = await getUserInfo(decodedToken.user_id);
+                        if (userInfo?.success) {
+                            setUser(userInfo.data);
+                        } else {
+                            // Si no podemos obtener la información del usuario, el token podría ser inválido
+                            setToken(null);
+                            localStorage.removeItem('token');
+                            setUser(null);
+                        }
+                    } else {
+                        // Token inválido
+                        setToken(null);
+                        localStorage.removeItem('token');
+                        setUser(null);
+                    }
+                } catch (error) {
+                    console.error('Error al inicializar la autenticación:', error);
+                    setToken(null);
+                    localStorage.removeItem('token');
+                    setUser(null);
+                }
+            } else {
+                setUser(null);
+            }
+        };
+
+        initializeAuth();
     }, [token]);
 
     const logout = async () => {

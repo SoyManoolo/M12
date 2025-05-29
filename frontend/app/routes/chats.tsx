@@ -94,14 +94,15 @@ export default function Chats() {
   useEffect(() => {
     if (!token || !user) return;
 
-    // Eliminamos la conexión WebSocket de aquí
-    // chatService.connect(token, user.user_id);
+    let unsubscribeFunctions: (() => void)[] = [];
 
     const fetchData = async () => {
       try {
         // Cargar chats activos
         const activeChats = await chatService.getActiveChats(token);
-        const formattedChats: Chat[] = activeChats.map((chat: ChatResponse) => ({
+        const formattedChats: Chat[] = activeChats
+          .filter((chat: ChatResponse) => chat.other_user.user_id !== user.user_id) // Filtrar chats con uno mismo
+          .map((chat: ChatResponse) => ({
           chat_id: `${user.user_id}-${chat.other_user.user_id}`,
           user: {
             user_id: chat.other_user.user_id,
@@ -116,10 +117,12 @@ export default function Chats() {
         }));
         setChats(formattedChats);
 
-        // Cargar amigos
+        // Cargar amigos excluyendo al usuario actual
         const friendsResponse = await userService.getAllUsers(token);
         if (friendsResponse.success && friendsResponse.data && Array.isArray(friendsResponse.data.users)) {
-          const friendsData = friendsResponse.data.users.map(user => ({
+          const friendsData = friendsResponse.data.users
+            .filter(friend => friend.user_id !== user.user_id) // Excluir al usuario actual
+            .map(user => ({
             friendship_id: user.user_id,
             user1_id: user.user_id,
             user2_id: user.user_id,
@@ -189,13 +192,16 @@ export default function Chats() {
       });
     };
 
-    chatService.onNewMessage(handleNewMessage);
+    // Registrar el handler y guardar la función de limpieza
+    const unsubscribeNewMessage = chatService.onNewMessage(handleNewMessage);
+    unsubscribeFunctions.push(unsubscribeNewMessage);
 
     fetchData();
 
+    // Limpiar al desmontar
     return () => {
-      chatService.removeMessageHandler(handleNewMessage);
-      chatService.disconnect();
+      console.log('Limpiando suscripciones de chats...');
+      unsubscribeFunctions.forEach(unsubscribe => unsubscribe());
     };
   }, [token, user]);
 
@@ -241,7 +247,7 @@ export default function Chats() {
           </div>
 
           {/* Lista de chats */}
-          <div className="space-y-4">
+          <div className="space-y-4 custom-scrollbar max-h-[calc(100vh-200px)] overflow-y-auto">
             {filteredChats.map((chat) => (
               <ChatItem
                 key={chat.chat_id}
@@ -273,6 +279,28 @@ export default function Chats() {
               </div>
             )}
           </div>
+
+          <style>
+            {`
+              .custom-scrollbar::-webkit-scrollbar {
+                width: 6px;
+              }
+              
+              .custom-scrollbar::-webkit-scrollbar-track {
+                background: #1f2937;
+                border-radius: 3px;
+              }
+              
+              .custom-scrollbar::-webkit-scrollbar-thumb {
+                background: #4b5563;
+                border-radius: 3px;
+              }
+              
+              .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                background: #6b7280;
+              }
+            `}
+          </style>
         </div>
       </div>
 

@@ -2,7 +2,7 @@ import { ChatMessages, PostComments, User } from "../models";
 import { AppError } from "../middlewares/errors/AppError";
 import { Op } from "sequelize";
 import { existsUser } from "../utils/modelExists";
-import { CreateMessageAttributes } from "../types/custom";
+import { CreateMessageAttributes, ChatMessagesCreationAttributes } from "../types/custom";
 import dbLogger from "../config/logger";
 
 export class ChatService {
@@ -35,7 +35,7 @@ export class ChatService {
             };
 
             // Crear el mensaje
-            const messageData: CreateMessageAttributes = {
+            const messageData: ChatMessagesCreationAttributes = {
                 sender_id,
                 receiver_id,
                 content,

@@ -1,9 +1,9 @@
-import { Model, DataTypes } from "sequelize";
+import { Model, DataTypes, Optional } from "sequelize";
 import { sequelize } from "../config/database";
 import { User } from "./User";
-import { IChatMessages } from "../types/custom";
+import { IChatMessages, ChatMessagesCreationAttributes } from "../types/custom";
 
-class ChatMessages extends Model<IChatMessages> implements IChatMessages {
+class ChatMessages extends Model<IChatMessages, ChatMessagesCreationAttributes> implements IChatMessages {
     public id!: string;
     public sender_id!: string;
     public receiver_id!: string;

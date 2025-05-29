@@ -21,6 +21,7 @@ import { authService } from '../services/auth.service';
 import RedirectModal from '~/components/Shared/RedirectModal';
 import Notification from '../components/Shared/Notification';
 import ConfirmModal from '../components/Shared/ConfirmModal';
+import { decodeToken } from '../utils/token';
 
 /**
  * Función auxiliar para obtener el username del token JWT
@@ -31,14 +32,8 @@ const getUsernameFromToken = (token: string | null): string => {
   if (!token) return '';
   
   try {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-    }).join(''));
-
-    const payload = JSON.parse(jsonPayload);
-    return payload.username;
+    const decoded = decodeToken(token);
+    return decoded?.username || '';
   } catch (error) {
     console.error('Error al decodificar el token:', error);
     return '';
@@ -82,8 +77,6 @@ export default function ConfiguracionPage() {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchParams] = useSearchParams();
-  const [activeSection, setActiveSection] = useState(searchParams.get('section') || 'cuenta');
-  const [showRedirectModal, setShowRedirectModal] = useState(false);
   const [notification, setNotification] = useState<{
     message: string;
     type: 'success' | 'error';
@@ -175,8 +168,16 @@ export default function ConfiguracionPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      if (!token || !userId) {
+      if (!token || !userId || !user) {
         showMessage('error', 'No pudimos obtener tu información de sesión');
+        return;
+      }
+
+      // Verificar que el token sea válido
+      const decodedToken = decodeToken(token);
+      if (!decodedToken) {
+        showMessage('error', 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
+        navigate('/login');
         return;
       }
 
@@ -184,14 +185,20 @@ export default function ConfiguracionPage() {
       const requestBody: Record<string, string> = {};
 
       // Validaciones según el esquema del backend y el regex
-      if (formData.username && (formData.username.length < 3 || formData.username.length > 50)) {
-        showMessage('error', 'El nombre de usuario debe tener entre 3 y 50 caracteres');
-        return;
+      if (formData.username && formData.username !== user.username) {
+        if (formData.username.length < 3 || formData.username.length > 50) {
+          showMessage('error', 'El nombre de usuario debe tener entre 3 y 50 caracteres');
+          return;
+        }
+        requestBody.username = formData.username.trim();
       }
 
-      if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-        showMessage('error', 'Por favor, introduce un correo electrónico válido');
-        return;
+      if (formData.email && formData.email !== user.email) {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+          showMessage('error', 'Por favor, introduce un correo electrónico válido');
+          return;
+        }
+        requestBody.email = formData.email.trim();
       }
 
       if (formData.password && formData.password.trim() !== '') {
@@ -216,7 +223,15 @@ export default function ConfiguracionPage() {
         return;
       }
 
-      const response = await userService.updateUserById(userId, requestBody, token);
+      // Asegurarnos de que el token esté actualizado
+      const currentToken = localStorage.getItem('token');
+      if (!currentToken) {
+        showMessage('error', 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
+        navigate('/login');
+        return;
+      }
+
+      const response = await userService.updateUserById(userId, requestBody, currentToken);
 
       if (response.success) {
         // Si se actualizaron datos sensibles (email, username o password)
@@ -237,17 +252,27 @@ export default function ConfiguracionPage() {
           }
         }
       } else {
-        setNotification({
-          message: response.message || 'Error al actualizar los datos',
-          type: 'error'
-        });
+        if (response.status === 401) {
+          showMessage('error', 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
+          navigate('/login');
+        } else {
+          setNotification({
+            message: response.message || 'Error al actualizar los datos',
+            type: 'error'
+          });
+        }
       }
     } catch (error) {
       console.error('Error al actualizar:', error);
-      setNotification({
-        message: 'Error al actualizar los datos',
-        type: 'error'
-      });
+      if (error instanceof Error && error.message.includes('401')) {
+        showMessage('error', 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
+        navigate('/login');
+      } else {
+        setNotification({
+          message: 'Error al actualizar los datos',
+          type: 'error'
+        });
+      }
     }
   };
 
@@ -423,7 +448,7 @@ export default function ConfiguracionPage() {
                   name="bio"
                   value={formData.bio}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none min-h-[150px]"
+                  className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none min-h-[250px]"
                   placeholder="Cuéntanos algo sobre ti..."
                 />
               </div>

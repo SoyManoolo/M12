@@ -114,9 +114,9 @@ function PostDetailModal({ isOpen, onClose, post, onImageClick }: PostDetailModa
         </button>
         
         <div className="flex h-full">
-          {/* Lado izquierdo - Imagen */}
-          <div className="w-1/2 bg-black flex items-center justify-center relative">
-            {post.media && (
+          {/* Lado izquierdo - Imagen (solo si hay) */}
+          {post.media && (
+            <div className="w-1/2 bg-black flex items-center justify-center relative">
               <div 
                 className="w-full h-full flex items-center justify-center cursor-zoom-in group" 
                 onClick={() => {
@@ -135,11 +135,11 @@ function PostDetailModal({ isOpen, onClose, post, onImageClick }: PostDetailModa
                   </span>
                 </div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Lado derecho - Contenido y comentarios */}
-          <div className="w-1/2 flex flex-col h-full bg-gray-900">
+          <div className={`${post.media ? 'w-1/2' : 'w-full'} flex flex-col h-full bg-gray-900`}>
             {/* Cabecera con información del usuario */}
             <div className="p-6 border-b border-gray-800 bg-gray-900/95 backdrop-blur-sm">
               <div 
@@ -509,13 +509,13 @@ export default function AdminPublicaciones() {
                             onClick={e => { e.stopPropagation(); handleEdit(post.post_id); }}
                             className="p-1.5 text-blue-500 hover:bg-blue-500/10 rounded-lg transition-colors"
                           >
-                            <FaEdit className="w-3 h-3" />
+                            <FaEdit className="w-4 h-4" />
                           </button>
                           <button 
                             onClick={e => { e.stopPropagation(); handleDelete(post.post_id); }}
                             className="p-1.5 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
                           >
-                            <FaTrash className="w-3 h-3" />
+                            <FaTrash className="w-4 h-4" />
                           </button>
                         </div>
                       </div>

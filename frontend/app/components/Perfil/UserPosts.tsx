@@ -13,21 +13,7 @@ import Post from '~/components/Inicio/Post';
 import { useAuth } from '~/hooks/useAuth';
 import ImageZoomModal from '~/components/Shared/ImageZoomModal';
 import { useState } from 'react';
-
-// Función para decodificar el token JWT
-const decodeToken = (token: string) => {
-  try {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-    }).join(''));
-    return JSON.parse(jsonPayload);
-  } catch (e) {
-    console.error('Error decodificando token:', e);
-    return null;
-  }
-};
+import { decodeToken } from '~/utils/token';
 
 interface User {
   user_id: string;
@@ -87,7 +73,7 @@ export default function UserPosts({ posts = [], onLike, onSave, onDelete, onEdit
 
   if (token) {
     const decodedToken = decodeToken(token);
-    currentUserId = decodedToken?.id;
+    currentUserId = decodedToken?.user_id;
     console.log('Token decodificado:', decodedToken);
   }
 
