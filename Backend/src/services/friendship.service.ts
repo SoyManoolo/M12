@@ -87,17 +87,18 @@ export class FriendshipService {
             await friendRequest.update({ status: 'accepted' });
 
             // Crear la amistad asegurando que los IDs no sean null
-            if (!friendRequest.sender_id || !friendRequest.receiver_id) {
+            const requestData = friendRequest.toJSON();
+            if (!requestData.sender_id || !requestData.receiver_id) {
                 dbLogger.error('[FriendshipService] IDs inválidos:', {
-                    sender_id: friendRequest.sender_id,
-                    receiver_id: friendRequest.receiver_id
+                    sender_id: requestData.sender_id,
+                    receiver_id: requestData.receiver_id
                 });
                 throw new AppError(500, 'InvalidFriendRequestData');
             }
 
             await Friends.create({
-                user1_id: friendRequest.sender_id,
-                user2_id: friendRequest.receiver_id
+                user1_id: requestData.sender_id,
+                user2_id: requestData.receiver_id
             });
 
             return friendRequest;
@@ -281,14 +282,14 @@ export class FriendshipService {
             });
 
             if (pendingRequest) {
+                const requestData = pendingRequest.toJSON();
                 return {
                     status: 'pending',
-                    request_id: pendingRequest.request_id,
-                    is_sender: pendingRequest.sender_id === user_id
+                    request_id: requestData.request_id,
+                    is_sender: requestData.sender_id === user_id
                 };
             }
 
-            // Si no hay relación
             return { status: 'none' };
         } catch (error) {
             dbLogger.error('[FriendshipService] Error en getFriendshipStatus:', { error });
