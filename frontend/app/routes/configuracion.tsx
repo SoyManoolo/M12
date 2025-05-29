@@ -11,7 +11,7 @@ import { useNavigate, useSearchParams } from "@remix-run/react";
 import Navbar from "~/components/Inicio/Navbar";
 import { useAuth } from "~/hooks/useAuth";
 import { environment } from "~/config/environment";
-import { FaSignOutAlt, FaTrash } from 'react-icons/fa';
+import { FaSignOutAlt, FaTrash, FaUser, FaEnvelope, FaLock, FaCamera, FaEdit, FaTimes } from 'react-icons/fa';
 import { userService } from "~/services/user.service";
 import type { UserProfile } from "~/types/user.types";
 import { redirect } from "@remix-run/node";
@@ -349,34 +349,35 @@ export default function ConfiguracionPage() {
           )}
 
           {/* Contenedor principal con grid de dos columnas */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 h-[calc(100vh-12rem)]">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1 h-[calc(100vh-12rem)]">
             {/* Columna izquierda - Foto de perfil y biografía */}
-            <div className="flex flex-col space-y-4 h-full">
+            <div className="flex flex-col space-y-6 h-full">
               {/* Bloque circular para la foto de perfil */}
-              <div className="bg-gray-900 rounded-xl p-4 shadow-lg border border-gray-800 h-2/5 flex flex-col">
-                <h2 className="text-lg font-semibold mb-2 text-center">Foto de Perfil</h2>
+              <div className="bg-gray-900/50 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-gray-800/50 h-3/5 flex flex-col transition-all duration-300 hover:border-gray-700">
+                <h2 className="text-xl font-semibold mb-4 text-center bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">Foto de Perfil</h2>
                 <div className="flex-1 flex items-center justify-center">
-                  <div className="relative w-48 h-48 group">
+                  <div className="relative w-64 h-64 group">
                     {user?.profile_picture ? (
                       <img
                         src={user.profile_picture}
                         alt="Foto de perfil"
-                        className="w-full h-full rounded-full object-cover border-4 border-gray-700 shadow-lg transition-all duration-300 group-hover:blur-sm"
+                        className="w-full h-full rounded-full object-cover border-4 border-gray-700/50 shadow-lg transition-all duration-300 group-hover:border-blue-500/50"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
                           target.src = "/default-avatar.png";
                         }}
                       />
                     ) : (
-                      <div className="w-full h-full rounded-full border-4 border-gray-700 bg-gray-800 flex items-center justify-center shadow-lg">
-                        <span className="text-gray-400 text-7xl">{user.username.charAt(0).toUpperCase()}</span>
+                      <div className="w-full h-full rounded-full border-4 border-gray-700/50 bg-gray-800/50 flex items-center justify-center shadow-lg group-hover:border-blue-500/50 transition-all duration-300">
+                        <span className="text-gray-400 text-8xl group-hover:text-blue-500/50 transition-colors duration-300">{user.username.charAt(0).toUpperCase()}</span>
                       </div>
                     )}
                     {/* Overlay con botones (visible al hover) */}
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
-                      <div className="flex flex-col space-y-2">
-                        <label className="px-4 py-2 bg-blue-600 text-white rounded-lg cursor-pointer hover:bg-blue-700 transition-colors text-sm shadow-lg">
-                          Cambiar foto
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-full bg-black/50 backdrop-blur-sm">
+                      <div className="flex flex-col space-y-3">
+                        <label className="px-4 py-2 bg-blue-600/90 text-white rounded-lg cursor-pointer hover:bg-blue-500 transition-all duration-300 text-sm shadow-lg flex items-center space-x-2 transform hover:scale-105">
+                          <FaCamera />
+                          <span>Cambiar foto</span>
                           <input
                             type="file"
                             accept="image/*"
@@ -433,9 +434,10 @@ export default function ConfiguracionPage() {
                               }
                             })();
                           }}
-                          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm shadow-lg"
+                          className="px-4 py-2 bg-red-600/90 text-white rounded-lg hover:bg-red-500 transition-all duration-300 text-sm shadow-lg flex items-center space-x-2 transform hover:scale-105"
                         >
-                          Eliminar foto
+                          <FaTimes />
+                          <span>Eliminar foto</span>
                         </button>
                       </div>
                     </div>
@@ -444,57 +446,66 @@ export default function ConfiguracionPage() {
               </div>
 
               {/* Biografía */}
-              <div className="bg-gray-900 rounded-xl p-4 shadow-lg border border-gray-800 h-3/5 flex flex-col">
-                <h2 className="text-lg font-semibold mb-2">Biografía</h2>
+              <div className="bg-gray-900/50 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-gray-800/50 h-2/5 flex flex-col transition-all duration-300 hover:border-gray-700">
+                <h2 className="text-xl font-semibold mb-4 bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">Biografía</h2>
                 <textarea
                   name="bio"
                   value={formData.bio}
                   onChange={handleInputChange}
-                  className="w-full flex-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  className="w-full flex-1 px-4 py-3 bg-gray-800/50 border border-gray-700/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent resize-none transition-all duration-300 placeholder-gray-500"
                   placeholder="Cuéntanos algo sobre ti..."
                 />
               </div>
             </div>
 
             {/* Columna derecha - Información de la cuenta y acciones */}
-            <div className="flex flex-col space-y-4 h-full">
-              <div className="bg-gray-900 rounded-xl p-4 shadow-lg border border-gray-800 h-2/3 flex flex-col">
-                <h2 className="text-lg font-semibold mb-3">Información de la Cuenta</h2>
-                <form onSubmit={handleSubmit} className="flex-1 flex flex-col space-y-4">
-                  <div className="flex-1 flex flex-col space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-1 text-gray-300">Nombre de usuario</label>
-                      <input
-                        type="text"
-                        name="username"
-                        value={formData.username}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="Tu nombre de usuario"
-                      />
+            <div className="flex flex-col space-y-6 h-full">
+              <div className="bg-gray-900/50 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-gray-800/50 h-2/3 flex flex-col transition-all duration-300 hover:border-gray-700">
+                <h2 className="text-xl font-semibold mb-6 bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">Información de la Cuenta</h2>
+                <form onSubmit={handleSubmit} className="flex-1 flex flex-col space-y-6">
+                  <div className="flex-1 flex flex-col space-y-6">
+                    <div className="relative">
+                      <label className="block text-sm font-medium mb-2 text-gray-300">Nombre de usuario</label>
+                      <div className="relative">
+                        <FaUser className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                        <input
+                          type="text"
+                          name="username"
+                          value={formData.username}
+                          onChange={handleInputChange}
+                          className="w-full pl-12 pr-4 py-3 bg-gray-800/50 border border-gray-700/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all duration-300"
+                          placeholder="Tu nombre de usuario"
+                        />
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1 text-gray-300">Correo electrónico</label>
-                      <input
-                        type="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="tu@email.com"
-                      />
+                    <div className="relative">
+                      <label className="block text-sm font-medium mb-2 text-gray-300">Correo electrónico</label>
+                      <div className="relative">
+                        <FaEnvelope className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                        <input
+                          type="email"
+                          name="email"
+                          value={formData.email}
+                          onChange={handleInputChange}
+                          className="w-full pl-12 pr-4 py-3 bg-gray-800/50 border border-gray-700/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all duration-300"
+                          placeholder="tu@email.com"
+                        />
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1 text-gray-300">Nueva Contraseña</label>
-                      <input
-                        type="password"
-                        name="password"
-                        value={formData.password}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="••••••••"
-                      />
-                      <p className="text-xs text-gray-400 mt-1">
+                    <div className="relative">
+                      <label className="block text-sm font-medium mb-2 text-gray-300">Nueva Contraseña</label>
+                      <div className="relative">
+                        <FaLock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                        <input
+                          type="password"
+                          name="password"
+                          value={formData.password}
+                          onChange={handleInputChange}
+                          className="w-full pl-12 pr-4 py-3 bg-gray-800/50 border border-gray-700/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all duration-300"
+                          placeholder="••••••••"
+                        />
+                      </div>
+                      <p className="text-xs text-gray-400 mt-2">
                         Debe tener al menos 8 caracteres, incluyendo una mayúscula, una minúscula, un número y un caracter especial (@$!%*?&.#)
                       </p>
                     </div>
@@ -503,21 +514,22 @@ export default function ConfiguracionPage() {
               </div>
 
               {/* Botones de acción */}
-              <div className="bg-gray-900 rounded-xl p-4 shadow-lg border border-gray-800 h-1/3 flex flex-col">
-                <h2 className="text-lg font-semibold mb-3">Acciones de Cuenta</h2>
-                <div className="flex-1 flex flex-col justify-center space-y-3">
+              <div className="bg-gray-900/50 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-gray-800/50 h-1/3 flex flex-col transition-all duration-300 hover:border-gray-700">
+                <h2 className="text-xl font-semibold mb-6 bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent">Acciones de Cuenta</h2>
+                <div className="flex-1 flex flex-col justify-center space-y-4">
                   <button
                     type="submit"
                     onClick={handleSubmit}
-                    className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-lg transform hover:scale-105 cursor-pointer"
+                    className="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-500 hover:to-purple-500 transition-all duration-300 shadow-lg transform hover:scale-105 cursor-pointer flex items-center justify-center space-x-2"
                   >
-                    Guardar cambios
+                    <FaEdit />
+                    <span>Guardar cambios</span>
                   </button>
-                  <div className="flex space-x-3">
+                  <div className="flex space-x-4">
                     <button
                       type="button"
                       onClick={handleLogout}
-                      className="flex-1 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors shadow-lg transform hover:scale-105 flex items-center justify-center space-x-2 cursor-pointer"
+                      className="flex-1 px-4 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl hover:from-red-500 hover:to-red-600 transition-all duration-300 shadow-lg transform hover:scale-105 flex items-center justify-center space-x-2 cursor-pointer"
                     >
                       <FaSignOutAlt />
                       <span>Cerrar sesión</span>
@@ -525,7 +537,7 @@ export default function ConfiguracionPage() {
                     <button
                       type="button"
                       onClick={handleDeleteProfile}
-                      className="flex-1 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors shadow-lg transform hover:scale-105 flex items-center justify-center space-x-2 cursor-pointer"
+                      className="flex-1 px-4 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl hover:from-red-500 hover:to-red-600 transition-all duration-300 shadow-lg transform hover:scale-105 flex items-center justify-center space-x-2 cursor-pointer"
                     >
                       <FaTrash />
                       <span>Eliminar cuenta</span>
