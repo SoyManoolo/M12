@@ -102,7 +102,7 @@ export function useVideoCall() {
   const startCall = useCallback(async () => {
     try {
       setState(prev => ({ ...prev, isConnecting: true, error: null }));
-      
+
       await webRTCService.initializePeerConnection();
       await webRTCService.getUserMedia();
 
