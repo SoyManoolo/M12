@@ -16,7 +16,8 @@ import type { UserProfile, User } from '~/types/user.types';
 import ConfirmModal from '~/components/Shared/ConfirmModal';
 import Notification from '~/components/Shared/Notification';
 import { useAuth } from '~/hooks/useAuth';
-import { Link } from '@remix-run/react';
+import { Link, useNavigate } from '@remix-run/react';
+import { jwtDecode } from 'jwt-decode';
 
 // El modal de edición espera UserProfile. Necesitaremos convertir User a UserProfile al abrir el modal.
 interface EditUserModalProps {
@@ -35,6 +36,9 @@ function EditUserModal({ isOpen, onClose, user, onSave, isLoading }: EditUserMod
     surname: '',
     bio: ''
   });
+  const [showWarningModal, setShowWarningModal] = useState(false);
+  const { token, logout } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (user) {
@@ -64,89 +68,135 @@ function EditUserModal({ isOpen, onClose, user, onSave, isLoading }: EditUserMod
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const isCurrentUser = () => {
+    if (!token || !user) return false;
+    const decodedToken = jwtDecode(token) as { user_id: string };
+    return decodedToken.user_id === user.user_id;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (user) {
-      onSave(user.user_id, formData);
+    if (!user) return;
+
+    // Si es el usuario actual y se están modificando credenciales sensibles
+    if (isCurrentUser() && (formData.username !== user.username || formData.email !== user.email)) {
+      setShowWarningModal(true);
+      return;
+    }
+
+    // Si no es el usuario actual o no se modificaron credenciales sensibles
+    await handleSave();
+  };
+
+  const handleSave = async () => {
+    if (!user) return;
+
+    try {
+      await onSave(user.user_id, formData);
+      
+      // Si es el usuario actual y se modificaron credenciales sensibles
+      if (isCurrentUser() && (formData.username !== user.username || formData.email !== user.email)) {
+        // Cerrar sesión y redirigir al login
+        await logout();
+        navigate('/login');
+      } else {
+        // Cerrar el modal normalmente
+        onClose();
+      }
+    } catch (error) {
+      console.error('Error al guardar:', error);
     }
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-gray-900 rounded-lg shadow-2xl w-full max-w-md mx-4 p-6" onClick={e => e.stopPropagation()}>
-        <h2 className="text-2xl font-bold text-white mb-6 text-center">Editar Usuario</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1 text-gray-300">Nombre de usuario</label>
-            <input
-              type="text"
-              name="username"
-              value={formData.username}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-white"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1 text-gray-300">Correo electrónico</label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-white"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1 text-gray-300">Nombre</label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-white"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1 text-gray-300">Apellido</label>
-            <input
-              type="text"
-              name="surname"
-              value={formData.surname}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-white"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1 text-gray-300">Biografía</label>
-            <textarea
-              name="bio"
-              value={formData.bio}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white resize-none min-h-[100px]"
-            />
-          </div>
-          <div className="flex justify-end space-x-4 mt-6">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
-              disabled={isLoading}
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-              disabled={isLoading}
-            >
-              {isLoading ? 'Guardando...' : 'Guardar Cambios'}
-            </button>
-          </div>
-        </form>
+    <>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={onClose}>
+        <div className="bg-gray-900 rounded-lg shadow-2xl w-full max-w-md mx-4 p-6" onClick={e => e.stopPropagation()}>
+          <h2 className="text-2xl font-bold text-white mb-6 text-center">Editar Usuario</h2>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1 text-gray-300">Nombre de usuario</label>
+              <input
+                type="text"
+                name="username"
+                value={formData.username}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-white"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1 text-gray-300">Correo electrónico</label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-white"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1 text-gray-300">Nombre</label>
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-white"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1 text-gray-300">Apellido</label>
+              <input
+                type="text"
+                name="surname"
+                value={formData.surname}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-white"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1 text-gray-300">Biografía</label>
+              <textarea
+                name="bio"
+                value={formData.bio}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white resize-none min-h-[100px]"
+              />
+            </div>
+            <div className="flex justify-end space-x-4 mt-6">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
+                disabled={isLoading}
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Guardando...' : 'Guardar Cambios'}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
+
+      {/* Modal de advertencia para el usuario actual */}
+      <ConfirmModal
+        isOpen={showWarningModal}
+        onClose={() => setShowWarningModal(false)}
+        onConfirm={handleSave}
+        title="Advertencia"
+        message="Estás editando tu propio perfil y has modificado credenciales sensibles (nombre de usuario o correo electrónico). Después de guardar los cambios, tu sesión actual se cerrará y deberás iniciar sesión nuevamente. ¿Deseas continuar?"
+        confirmText="Sí, continuar"
+        cancelText="Cancelar"
+      />
+    </>
   );
 }
 
