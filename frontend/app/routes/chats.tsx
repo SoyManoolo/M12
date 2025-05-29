@@ -247,7 +247,7 @@ export default function Chats() {
           </div>
 
           {/* Lista de chats */}
-          <div className="space-y-4 custom-scrollbar max-h-[calc(100vh-200px)] overflow-y-auto">
+          <div className="space-y-4 max-h-[calc(100vh-200px)] overflow-y-auto">
             {filteredChats.map((chat) => (
               <ChatItem
                 key={chat.chat_id}
@@ -279,28 +279,6 @@ export default function Chats() {
               </div>
             )}
           </div>
-
-          <style>
-            {`
-              .custom-scrollbar::-webkit-scrollbar {
-                width: 6px;
-              }
-              
-              .custom-scrollbar::-webkit-scrollbar-track {
-                background: #1f2937;
-                border-radius: 3px;
-              }
-              
-              .custom-scrollbar::-webkit-scrollbar-thumb {
-                background: #4b5563;
-                border-radius: 3px;
-              }
-              
-              .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-                background: #6b7280;
-              }
-            `}
-          </style>
         </div>
       </div>
 

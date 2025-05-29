@@ -434,7 +434,7 @@ export default function Post({
               {/* Contenedor de la lista de comentarios con scrollbar */}
               <div className={`flex-1 ${
                 media_url || comments.length > 3 
-                  ? 'overflow-y-auto custom-scrollbar' 
+                  ? 'overflow-y-auto' 
                   : ''
               }`}>
                 {comments.length === 0 ? (
@@ -561,28 +561,6 @@ export default function Post({
           </div>
         </div>
       </div>
-
-      <style>
-        {`
-          .custom-scrollbar::-webkit-scrollbar {
-            width: 6px;
-          }
-          
-          .custom-scrollbar::-webkit-scrollbar-track {
-            background: #1f2937;
-            border-radius: 3px;
-          }
-          
-          .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #4b5563;
-            border-radius: 3px;
-          }
-          
-          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #6b7280;
-          }
-        `}
-      </style>
 
       {/* Modal para imagen expandida */}
       {/* Eliminar completamente el modal local */}
