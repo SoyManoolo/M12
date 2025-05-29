@@ -141,7 +141,7 @@ export default function Publicar() {
       {/* Contenido principal */}
       <div className="flex-1 p-8 flex items-center justify-center">
         <div className="w-[900px] bg-gray-900 rounded-lg shadow-lg p-8 border border-gray-800">
-          <h1 className="text-2xl font-bold mb-8 text-white text-center">Crear Nueva Publicación</h1>
+          <h1 className="text-2xl font-bold mb-8 text-center bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Crear Nueva Publicación</h1>
           
           <div className="flex gap-8">
             {/* Área de imagen */}

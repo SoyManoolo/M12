@@ -229,7 +229,7 @@ export default function Chats() {
         <div className="p-6">
           {/* Encabezado */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">Mensajes</h1>
+            <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Mensajes</h1>
           </div>
 
           {/* Barra de búsqueda */}

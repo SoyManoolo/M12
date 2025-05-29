@@ -44,7 +44,7 @@ export default function RedirectModal({
           </div>
 
           <div className="space-y-2">
-            <h3 className="text-xl font-bold text-white">
+            <h3 className="text-xl font-bold text-center bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
               {message}
             </h3>
             <p className="text-gray-400">

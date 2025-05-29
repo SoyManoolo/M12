@@ -133,7 +133,9 @@ function EditUserModal({ isOpen, onClose, user, onSave, isLoading }: EditUserMod
     <>
       <div className="fixed inset-0 backdrop-blur-sm bg-black/30 flex items-center justify-center z-50">
         <div className="bg-gray-900/95 rounded-xl p-6 max-w-md w-full mx-4 border border-gray-800 shadow-xl" onClick={e => e.stopPropagation()}>
-          <h2 className="text-2xl font-bold text-white mb-6 text-center">Editar Usuario</h2>
+          <h2 className="text-2xl font-bold mb-6 text-center bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Editar Usuario
+          </h2>
           {notification && (
             <Notification
               message={notification.message}

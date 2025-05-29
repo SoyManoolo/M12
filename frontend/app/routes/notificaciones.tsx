@@ -248,7 +248,7 @@ export default function Notificaciones(): React.ReactElement {
       {/* Contenido central */}
       <div className="w-2/3 ml-[16.666667%] border-r border-gray-800">
         <div className="p-6">
-          <h1 className="text-3xl font-bold mb-6">Notificaciones</h1>
+          <h1 className="text-3xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Notificaciones</h1>
 
           {/* Lista de notificaciones */}
           <div className="space-y-4">
