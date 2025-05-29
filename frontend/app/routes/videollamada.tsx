@@ -31,11 +31,11 @@ import RatingModal from '~/components/Videollamada/RatingModal';
  * @property {boolean} isOwn - Indica si el mensaje es del usuario actual
  */
 interface Message {
-  id: string;
-  content: string;
-  sender: string;
-  timestamp: string;
-  isOwn: boolean;
+    id: string;
+    content: string;
+    sender: string;
+    timestamp: string;
+    isOwn: boolean;
 }
 
 /**
@@ -46,9 +46,9 @@ interface Message {
  * @property {string | null} profilePictureUrl - URL de la imagen de perfil del usuario
  */
 interface RemoteUser {
-  name: string;
-  username: string;
-  profilePictureUrl: string | null;
+    name: string;
+    username: string;
+    profilePictureUrl: string | null;
 }
 
 /**
@@ -60,213 +60,211 @@ interface RemoteUser {
  * @state {boolean} isCallActive - Estado de la llamada
  */
 export default function VideollamadaPage() {
-  const navigate = useNavigate();
-  const { userId } = useParams();
-  const socketService = SocketService.getInstance();
-  const {
-    state: videoCallState,
-    startCall,
-    endCall,
-    toggleVideo,
-    toggleAudio,
-    localStream,
-    remoteStream
-  } = useVideoCall();
+    const navigate = useNavigate();
+    const { userId } = useParams();
+    const socketService = SocketService.getInstance();
+    const {
+        state: videoCallState,
+        startCall,
+        endCall,
+        toggleVideo,
+        toggleAudio,
+        localStream,
+        remoteStream
+    } = useVideoCall();
 
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [showRatingModal, setShowRatingModal] = useState(false);
+    const [messages, setMessages] = useState<Message[]>([]);
+    const [showRatingModal, setShowRatingModal] = useState(false);
 
-  // Iniciar la llamada cuando se monta el componente
-  useEffect(() => {
-    if (userId) {
-      startCall();
-    }
-    return () => {
-      endCall();
+    // Iniciar la llamada cuando se monta el componente
+    useEffect(() => {
+        if (userId) {
+            startCall();
+        }
+        return () => {
+            endCall();
+        };
+    }, [userId]);
+
+    // Escuchar eventos de chat
+    useEffect(() => {
+        socketService.on(VideoCallEvent.CHAT_MESSAGE, (message: Message) => {
+            setMessages(prev => [...prev, message]);
+        });
+
+        return () => {
+            socketService.off(VideoCallEvent.CHAT_MESSAGE);
+        };
+    }, []);
+
+    // Función para formatear el tiempo
+    const formatTime = (seconds: number) => {
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const remainingSeconds = seconds % 60;
+
+        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
     };
-  }, [userId]);
 
-  // Escuchar eventos de chat
-  useEffect(() => {
-    socketService.on(VideoCallEvent.CHAT_MESSAGE, (message: Message) => {
-      setMessages(prev => [...prev, message]);
-    });
+    const handleSendMessage = (content: string) => {
+        const newMessage: Message = {
+            id: Date.now().toString(),
+            content,
+            sender: 'Tú',
+            timestamp: new Date().toISOString(),
+            isOwn: true
+        };
 
-    return () => {
-      socketService.off(VideoCallEvent.CHAT_MESSAGE);
+        socketService.emit(VideoCallEvent.CHAT_MESSAGE, {
+            ...newMessage,
+            to: userId
+        });
+
+        setMessages(prev => [...prev, newMessage]);
     };
-  }, []);
 
-  // Función para formatear el tiempo
-  const formatTime = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const remainingSeconds = seconds % 60;
-
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
-  };
-
-  const handleSendMessage = (content: string) => {
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      content,
-      sender: 'Tú',
-      timestamp: new Date().toISOString(),
-      isOwn: true
+    const handleEndCall = () => {
+        endCall();
+        setShowRatingModal(true);
     };
-    
-    socketService.emit(VideoCallEvent.CHAT_MESSAGE, {
-      ...newMessage,
-      to: userId
-    });
-    
-    setMessages(prev => [...prev, newMessage]);
-  };
 
-  const handleEndCall = () => {
-    endCall();
-    setShowRatingModal(true);
-  };
+    const handleNextCall = () => {
+        endCall();
+        navigate('/inicio');
+    };
 
-  const handleNextCall = () => {
-    endCall();
-    navigate('/inicio');
-  };
+    const handleRatingSubmit = (rating: number) => {
+        socketService.emit(VideoCallEvent.CALL_RATING, {
+            rating,
+            to: userId
+        });
+        navigate('/inicio');
+    };
 
-  const handleRatingSubmit = (rating: number) => {
-    socketService.emit(VideoCallEvent.CALL_RATING, {
-      rating,
-      to: userId
-    });
-    navigate('/inicio');
-  };
+    return (
+        <div className="min-h-screen bg-black text-white p-8">
+            <div className="max-w-[1920px] mx-auto h-[calc(100vh-4rem)]">
+                <div className="flex flex-col h-full">
+                    {/* Main content */}
+                    <div className="flex-1 flex gap-6">
+                        {/* Left section - Controls */}
+                        <div className="w-1/4 flex flex-col gap-4">
+                            {/* Contador de tiempo */}
+                            <div className="bg-gray-900 border border-gray-700 rounded-lg p-3 flex items-center justify-center gap-2">
+                                <FaClock className="text-gray-400" />
+                                <span className="font-mono text-lg">{formatTime(videoCallState.callDuration)}</span>
+                            </div>
 
-  return (
-    <div className="min-h-screen bg-black text-white p-8">
-      <div className="max-w-[1920px] mx-auto h-[calc(100vh-4rem)]">
-        <div className="flex flex-col h-full">
-          {/* Main content */}
-          <div className="flex-1 flex gap-6">
-            {/* Left section - Controls */}
-            <div className="w-1/4 flex flex-col gap-4">
-              {/* Contador de tiempo */}
-              <div className="bg-gray-900 border border-gray-700 rounded-lg p-3 flex items-center justify-center gap-2">
-                <FaClock className="text-gray-400" />
-                <span className="font-mono text-lg">{formatTime(videoCallState.callDuration)}</span>
-              </div>
+                            <button
+                                onClick={handleEndCall}
+                                className="bg-red-600 border border-red-700 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center gap-2 cursor-pointer transition-colors"
+                            >
+                                <FaVideo className="text-xl" />
+                                <span>FINALIZAR VIDEOLLAMADA</span>
+                            </button>
 
-              <button
-                onClick={handleEndCall}
-                className="bg-red-600 border border-red-700 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center gap-2 cursor-pointer transition-colors"
-              >
-                <FaVideo className="text-xl" />
-                <span>FINALIZAR VIDEOLLAMADA</span>
-              </button>
+                            <button
+                                onClick={handleNextCall}
+                                className="bg-gray-900 border border-gray-700 hover:bg-gray-800 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center gap-2 cursor-pointer transition-colors"
+                            >
+                                <FaArrowRight className="text-xl" />
+                                <span>SIGUIENTE VIDEOLLAMADA</span>
+                            </button>
 
-              <button
-                onClick={handleNextCall}
-                className="bg-gray-900 border border-gray-700 hover:bg-gray-800 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center gap-2 cursor-pointer transition-colors"
-              >
-                <FaArrowRight className="text-xl" />
-                <span>SIGUIENTE VIDEOLLAMADA</span>
-              </button>
+                            {/* Video local */}
+                            <div className="flex-1 relative">
+                                <div className="absolute inset-0 bg-gray-900 border border-gray-700 rounded-lg overflow-hidden">
+                                    <video
+                                        ref={video => {
+                                            if (video && localStream) {
+                                                video.srcObject = localStream;
+                                            }
+                                        }}
+                                        autoPlay
+                                        playsInline
+                                        muted
+                                        className="w-full h-full object-cover"
+                                    />
+                                    <div className="absolute bottom-2 left-2 text-sm bg-black bg-opacity-50 px-2 py-1 rounded">
+                                        TU CÁMARA
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-              {/* Video local */}
-              <div className="flex-1 relative">
-                <div className="absolute inset-0 bg-gray-900 border border-gray-700 rounded-lg overflow-hidden">
-                  <video
-                    ref={video => {
-                      if (video && localStream) {
-                        video.srcObject = localStream;
-                      }
-                    }}
-                    autoPlay
-                    playsInline
-                    muted
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute bottom-2 left-2 text-sm bg-black bg-opacity-50 px-2 py-1 rounded">
-                    TU CÁMARA
-                  </div>
+                        {/* Center section - Main video */}
+                        <div className="flex-1 bg-gray-900 border border-gray-700 rounded-lg overflow-hidden relative">
+                            <video
+                                ref={video => {
+                                    if (video && remoteStream) {
+                                        video.srcObject = remoteStream;
+                                    }
+                                }}
+                                autoPlay
+                                playsInline
+                                className="w-full h-full object-cover"
+                            />
+
+                            {/* Indicador de estado */}
+                            {videoCallState.isConnecting && (
+                                <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-4 py-2 rounded">
+                                    Conectando...
+                                </div>
+                            )}
+
+                            {/* Mensaje de error */}
+                            {videoCallState.error && (
+                                <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-red-600 text-white px-4 py-2 rounded">
+                                    {videoCallState.error}
+                                </div>
+                            )}
+
+                            {/* Controles de video/audio */}
+                            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-4 bg-gray-900/50 p-3 rounded-full backdrop-blur-sm">
+                                <button
+                                    onClick={toggleAudio}
+                                    className={`p-3 rounded-full transition-all duration-200 hover:bg-gray-700 ${videoCallState.isAudioEnabled
+                                            ? 'bg-gray-800 text-white hover:text-gray-300'
+                                            : 'bg-red-600/80 text-white hover:bg-red-700'
+                                        }`}
+                                >
+                                    {videoCallState.isAudioEnabled ? <FaMicrophone size={20} /> : <FaMicrophoneSlash size={20} />}
+                                </button>
+                                <button
+                                    onClick={toggleVideo}
+                                    className={`p-3 rounded-full transition-all duration-200 hover:bg-gray-700 ${videoCallState.isVideoEnabled
+                                            ? 'bg-gray-800 text-white hover:text-gray-300'
+                                            : 'bg-red-600/80 text-white hover:bg-red-700'
+                                        }`}
+                                >
+                                    {videoCallState.isVideoEnabled ? <FaVideo size={20} /> : <FaVideoSlash size={20} />}
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Right section - Chat */}
+                        <div className="w-1/4">
+                            <ChatVideollamada
+                                messages={messages}
+                                onSendMessage={handleSendMessage}
+                            />
+                        </div>
+                    </div>
                 </div>
-              </div>
             </div>
 
-            {/* Center section - Main video */}
-            <div className="flex-1 bg-gray-900 border border-gray-700 rounded-lg overflow-hidden relative">
-              <video
-                ref={video => {
-                  if (video && remoteStream) {
-                    video.srcObject = remoteStream;
-                  }
-                }}
-                autoPlay
-                playsInline
-                className="w-full h-full object-cover"
-              />
-
-              {/* Indicador de estado */}
-              {videoCallState.isConnecting && (
-                <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-50 text-white px-4 py-2 rounded">
-                  Conectando...
-                </div>
-              )}
-
-              {/* Mensaje de error */}
-              {videoCallState.error && (
-                <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-red-600 text-white px-4 py-2 rounded">
-                  {videoCallState.error}
-                </div>
-              )}
-
-              {/* Controles de video/audio */}
-              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-4 bg-gray-900/50 p-3 rounded-full backdrop-blur-sm">
-                <button
-                  onClick={toggleAudio}
-                  className={`p-3 rounded-full transition-all duration-200 hover:bg-gray-700 ${
-                    videoCallState.isAudioEnabled 
-                      ? 'bg-gray-800 text-white hover:text-gray-300' 
-                      : 'bg-red-600/80 text-white hover:bg-red-700'
-                  }`}
-                >
-                  {videoCallState.isAudioEnabled ? <FaMicrophone size={20} /> : <FaMicrophoneSlash size={20} />}
-                </button>
-                <button
-                  onClick={toggleVideo}
-                  className={`p-3 rounded-full transition-all duration-200 hover:bg-gray-700 ${
-                    videoCallState.isVideoEnabled 
-                      ? 'bg-gray-800 text-white hover:text-gray-300' 
-                      : 'bg-red-600/80 text-white hover:bg-red-700'
-                  }`}
-                >
-                  {videoCallState.isVideoEnabled ? <FaVideo size={20} /> : <FaVideoSlash size={20} />}
-                </button>
-              </div>
-            </div>
-
-            {/* Right section - Chat */}
-            <div className="w-1/4">
-              <ChatVideollamada 
-                messages={messages}
-                onSendMessage={handleSendMessage}
-              />
-            </div>
-          </div>
+            <RatingModal
+                isOpen={showRatingModal}
+                onClose={() => setShowRatingModal(false)}
+                onSubmit={handleRatingSubmit}
+            />
         </div>
-      </div>
-
-      <RatingModal
-        isOpen={showRatingModal}
-        onClose={() => setShowRatingModal(false)}
-        onSubmit={handleRatingSubmit}
-      />
-    </div>
-  );
+    );
 }
 
 export const loader = async ({ request }: { request: Request }) => {
-  const cookieHeader = request.headers.get("Cookie");
-  const token = cookieHeader?.split(";").find((c: string) => c.trim().startsWith("token="))?.split("=")[1];
-  if (!token) return redirect("/login");
-  return null;
+    const cookieHeader = request.headers.get("Cookie");
+    const token = cookieHeader?.split(";").find((c: string) => c.trim().startsWith("token="))?.split("=")[1];
+    if (!token) return redirect("/login");
+    return null;
 }; 
