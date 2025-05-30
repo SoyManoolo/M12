@@ -399,71 +399,34 @@ class ChatService {
 
   public async getActiveChats(token: string): Promise<Chat[]> {
     try {
-      // Primero obtenemos la lista de usuarios
-      const usersResponse = await fetch(`${this.baseUrl}/users`, {
+      const response = await fetch(`${this.baseUrl}/chat/list`, {
+        method: 'GET',
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
       });
 
-      if (!usersResponse.ok) {
-        throw new Error('Error al obtener los usuarios');
+      if (!response.ok) {
+        throw new Error('Error al obtener los chats');
       }
 
-      const usersData = await usersResponse.json();
-      const users = usersData.data.users;
-
-      // Luego obtenemos los chats activos
-      const chatsResponse = await fetch(`${this.baseUrl}/chat/list`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      let activeChats: Chat[] = [];
-      if (chatsResponse.ok) {
-        const chatsData = await chatsResponse.json();
-        activeChats = chatsData.data;
+      const responseData = await response.json();
+      
+      if (!responseData.success || !responseData.data) {
+        throw new Error('Formato de respuesta inválido');
       }
 
-      // Creamos un mapa de chats activos por user_id para búsqueda rápida
-      const activeChatsMap = new Map(
-        activeChats.map(chat => [chat.other_user.user_id, chat])
-      );
-
-      // Para cada usuario, creamos un chat si no existe
-      const allChats = users.map((user: ChatUser) => {
-        const existingChat = activeChatsMap.get(user.user_id);
-        if (existingChat) {
-          return existingChat;
+      // Procesar los chats para incluir el sender_id en el último mensaje
+      return responseData.data.map((chat: any) => ({
+        ...chat,
+        last_message: {
+          ...chat.last_message,
+          sender_id: chat.last_message.sender_id // Asegurarnos de que el sender_id esté incluido
         }
-
-        // Si no existe un chat, creamos uno vacío
-        return {
-          other_user: {
-            user_id: user.user_id,
-            username: user.username,
-            name: user.name,
-            surname: user.surname,
-            profile_picture: user.profile_picture
-          },
-          last_message: {
-            id: '',
-            content: '',
-            sender_id: '',
-            receiver_id: '',
-            created_at: new Date().toISOString(),
-            is_delivered: false,
-            delivered_at: null,
-            read_at: null
-          },
-          unread_count: 0
-        };
-      });
-
-      return allChats;
+      }));
     } catch (error) {
-      console.error('Error al obtener chats:', error);
+      console.error('Error al obtener los chats:', error);
       return [];
     }
   }

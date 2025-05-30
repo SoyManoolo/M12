@@ -13,6 +13,7 @@
 
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { useAuth } from "~/hooks/useAuth";
 
 interface ChatItemProps {
   chat: {
@@ -25,6 +26,7 @@ interface ChatItemProps {
     last_message: {
       content: string;
       timestamp: string;
+      sender_id: string;
     };
     unread_count: number;
   };
@@ -32,6 +34,8 @@ interface ChatItemProps {
 }
 
 export default function ChatItem({ chat, onClick }: ChatItemProps) {
+  const { user } = useAuth();
+
   const formatTime = (timestamp: string) => {
     try {
       return formatDistanceToNow(new Date(timestamp), {
@@ -45,6 +49,9 @@ export default function ChatItem({ chat, onClick }: ChatItemProps) {
 
   // Determinar si el chat está vacío
   const isEmpty = !chat.last_message.content;
+
+  // Determinar quién envió el último mensaje
+  const isLastMessageFromMe = user?.user_id === chat.last_message.sender_id;
 
   return (
     <div 
@@ -86,9 +93,18 @@ export default function ChatItem({ chat, onClick }: ChatItemProps) {
               <h3 className="text-white font-semibold text-base group-hover:text-blue-400 transition-colors">
                 {chat.user.username}
               </h3>
-              <p className={`text-sm mt-0.5 truncate max-w-[200px] ${isEmpty ? 'text-transparent' : 'text-gray-400 group-hover:text-gray-300'} transition-colors`}>
-                {isEmpty ? 'Nuevo chat' : chat.last_message.content}
-              </p>
+              <div className="flex items-center mt-0.5">
+                {!isEmpty && (
+                  <>
+                    <span className="text-sm text-gray-500 mr-1">
+                      {isLastMessageFromMe ? 'Tú: ' : `${chat.user.username}: `}
+                    </span>
+                    <p className={`text-sm truncate max-w-[200px] text-gray-400 group-hover:text-gray-300 transition-colors`}>
+                      {chat.last_message.content}
+                    </p>
+                  </>
+                )}
+              </div>
             </div>
             <span className="text-xs text-gray-500 group-hover:text-gray-400 whitespace-nowrap ml-2 transition-colors">
               {isEmpty ? '' : formatTime(chat.last_message.timestamp)}

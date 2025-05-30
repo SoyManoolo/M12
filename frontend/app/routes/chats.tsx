@@ -17,7 +17,6 @@ import ChatItem from '~/components/Chats/ChatItem';
 import RightPanel from '~/components/Shared/RightPanel';
 import { FaSearch, FaEnvelope } from 'react-icons/fa';
 import { useAuth } from "~/hooks/useAuth";
-import { userService } from "~/services/user.service";
 import { chatService } from '~/services/chat.service';
 import { friendshipService } from '~/services/friendship.service';
 
@@ -45,6 +44,7 @@ interface Chat {
   last_message: {
     content: string;
     timestamp: string;
+    sender_id: string;
   };
   unread_count: number;
 }
@@ -101,21 +101,24 @@ export default function Chats() {
       try {
         // Cargar chats activos
         const activeChats = await chatService.getActiveChats(token);
+        console.log('Chats activos recibidos:', activeChats);
         const formattedChats: Chat[] = activeChats
-          .filter((chat: ChatResponse) => chat.other_user.user_id !== user.user_id) // Filtrar chats con uno mismo
-          .map((chat: ChatResponse) => ({
-          chat_id: `${user.user_id}-${chat.other_user.user_id}`,
-          user: {
-            user_id: chat.other_user.user_id,
-            username: chat.other_user.username,
-            profile_picture: chat.other_user.profile_picture
-          },
-          last_message: {
-            content: chat.last_message.content,
-            timestamp: chat.last_message.created_at
-          },
-          unread_count: chat.unread_count
-        }));
+          .filter((chat: any) => chat.other_user && chat.other_user.user_id !== user.user_id) // Filtrar chats con uno mismo
+          .map((chat: any) => ({
+            chat_id: `${user.user_id}-${chat.other_user.user_id}`,
+            user: {
+              user_id: chat.other_user.user_id,
+              username: chat.other_user.username,
+              profile_picture: chat.other_user.profile_picture
+            },
+            last_message: {
+              content: chat.last_message.content,
+              timestamp: chat.last_message.created_at,
+              sender_id: chat.last_message.sender_id
+            },
+            unread_count: chat.unread_count
+          }));
+        console.log('Chats formateados:', formattedChats);
         setChats(formattedChats);
 
         // Cargar solo amigos reales
@@ -151,53 +154,59 @@ export default function Chats() {
       }
     };
 
-    const handleNewMessage = (message: any) => {
-      setChats(prevChats => {
-        const existingChatIndex = prevChats.findIndex(
-          chat => chat.user.user_id === message.sender_id || chat.user.user_id === message.receiver_id
-        );
+    // Manejar mensajes nuevos
+    const unsubscribeNewMessage = chatService.onNewMessage((message) => {
+      console.log('Nuevo mensaje recibido:', message);
+      if (message.sender_id === user.user_id || message.receiver_id === user.user_id) {
+        setChats(prevChats => {
+          const otherUserId = message.sender_id === user.user_id ? message.receiver_id : message.sender_id;
+          const existingChatIndex = prevChats.findIndex(chat => 
+            chat.user.user_id === otherUserId
+          );
 
-        if (existingChatIndex >= 0) {
-          const updatedChats = [...prevChats];
-          updatedChats[existingChatIndex] = {
-            ...updatedChats[existingChatIndex],
-            last_message: {
-              content: message.content,
-              timestamp: message.created_at
-            },
-            unread_count: message.sender_id !== user.user_id 
-              ? updatedChats[existingChatIndex].unread_count + 1 
-              : updatedChats[existingChatIndex].unread_count
-          };
-          return updatedChats;
-        }
-
-        // Si es un nuevo chat, necesitamos obtener la información del usuario
-        const otherUserId = message.sender_id === user.user_id ? message.receiver_id : message.sender_id;
-        const otherUser = friends.find(f => f.user.user_id === otherUserId)?.user;
-
-        if (otherUser) {
-          return [...prevChats, {
-            chat_id: `${user.user_id}-${otherUserId}`,
-            user: {
-              user_id: otherUser.user_id,
-              username: otherUser.username,
-              profile_picture: otherUser.profile_picture
-            },
-            last_message: {
-              content: message.content,
-              timestamp: message.created_at
-            },
-            unread_count: message.sender_id !== user.user_id ? 1 : 0
-          }];
-        }
-
-        return prevChats;
-      });
-    };
+          if (existingChatIndex >= 0) {
+            // Actualizar chat existente
+            const updatedChats = [...prevChats];
+            updatedChats[existingChatIndex] = {
+              ...updatedChats[existingChatIndex],
+              last_message: {
+                content: message.content,
+                timestamp: message.created_at,
+                sender_id: message.sender_id
+              },
+              unread_count: message.sender_id === user.user_id ? 0 : updatedChats[existingChatIndex].unread_count + 1
+            };
+            return updatedChats;
+          } else {
+            // Buscar la información del usuario en la lista de amigos
+            const otherUser = friends.find(f => f.user.user_id === otherUserId)?.user;
+            
+            if (otherUser) {
+              // Crear nuevo chat con la información del amigo
+              return [{
+                chat_id: `${user.user_id}-${otherUserId}`,
+                user: {
+                  user_id: otherUser.user_id,
+                  username: otherUser.username,
+                  profile_picture: otherUser.profile_picture
+                },
+                last_message: {
+                  content: message.content,
+                  timestamp: message.created_at,
+                  sender_id: message.sender_id
+                },
+                unread_count: message.sender_id === user.user_id ? 0 : 1
+              }, ...prevChats];
+            }
+            
+            // Si no encontramos al usuario en la lista de amigos, no creamos el chat
+            return prevChats;
+          }
+        });
+      }
+    });
 
     // Registrar el handler y guardar la función de limpieza
-    const unsubscribeNewMessage = chatService.onNewMessage(handleNewMessage);
     unsubscribeFunctions.push(unsubscribeNewMessage);
 
     fetchData();
@@ -288,12 +297,6 @@ export default function Chats() {
               <p className="text-gray-400 text-center max-w-md mb-6">
                 {searchQuery ? 'No se encontraron mensajes con esa búsqueda' : 'No tienes conversaciones activas con tus amigos'}
               </p>
-              <button
-                onClick={handleStartNewChat}
-                className="px-6 py-3 bg-blue-600 text-white rounded-full hover:bg-blue-500 transition-colors duration-200 font-semibold"
-              >
-                Iniciar conversación
-              </button>
             </div>
           ) : (
             <div className="space-y-2">
