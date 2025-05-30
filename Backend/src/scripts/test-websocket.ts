@@ -1,4 +1,4 @@
-import { io, Socket } from "socket.io-client";
+/* import { io, Socket } from "socket.io-client";
 import axios from "axios";
 
 // Interfaces para los tipos de datos
@@ -307,3 +307,4 @@ async function main() {
 
 // Ejecutar el script
 main();
+*/

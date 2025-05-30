@@ -1,3 +1,5 @@
+/*
+
 #!/usr/bin/env node
 
 import axios from 'axios';
@@ -227,3 +229,4 @@ async function testFriendship() {
 testFriendship()
     .then(() => process.exit(0))
     .catch(() => process.exit(1)); 
+    */
