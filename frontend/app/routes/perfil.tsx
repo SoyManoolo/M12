@@ -27,6 +27,7 @@ import EditPostModal from "~/components/Shared/EditPostModal";
 import { userService } from "~/services/user.service";
 import { postService } from "~/services/post.service";
 import { friendshipService } from "~/services/friendship.service";
+import type { Friend } from "~/services/friendship.service";
 import { useAuth } from "~/hooks/useAuth";
 import type { User } from "~/types/user.types";
 
@@ -54,14 +55,6 @@ interface Post {
     profile_picture: string | null;
     name: string;
   };
-}
-
-interface Friend {
-  friendship_id: string;
-  user1_id: string;
-  user2_id: string;
-  created_at: string;
-  user: User;
 }
 
 interface LoaderData {
@@ -121,6 +114,7 @@ export default function Perfil() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(false);
   const [friends, setFriends] = useState<Friend[]>([]);
+  const [suggestedUsers, setSuggestedUsers] = useState<User[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -131,6 +125,12 @@ export default function Perfil() {
     message: string;
     type: 'success' | 'error';
   } | null>(null);
+  const [showZoomModal, setShowZoomModal] = useState(false);
+  const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
+  const [showEditPostModal, setShowEditPostModal] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [showImageZoomModal, setShowImageZoomModal] = useState(false);
+  const [zoomImageUrl, setZoomImageUrl] = useState('');
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -139,58 +139,57 @@ export default function Perfil() {
     }
   }, [isAuthenticated, navigate]);
 
-  // Efecto para cargar datos cuando cambia la URL o el usuario
   useEffect(() => {
-    const loadData = async () => {
-      if (!token || !data.user) return;
-      
+    const fetchData = async () => {
+      if (!token) {
+        setError('Por favor, inicia sesión para ver el perfil');
+        setLoading(false);
+        return;
+      }
+
       try {
-        setLoading(true);
-        setPosts([]); // Limpiar posts actuales
-        setNextCursor(null); // Resetear cursor
-
-        // Cargar posts iniciales del usuario actual usando el username
-        const postsResponse = await postService.getPosts(token, undefined, data.user.username);
-        if (postsResponse.success) {
-          setPosts(postsResponse.data.posts as unknown as Post[]);
-          setNextCursor(postsResponse.data.nextCursor);
-        }
-
         // Cargar amigos
         const friendsResponse = await friendshipService.getUserFriends(token);
-        if (friendsResponse.success && friendsResponse.data && Array.isArray(friendsResponse.data)) {
-          const friendsData = friendsResponse.data.map(friend => ({
-            friendship_id: friend.friendship_id,
-            user1_id: friend.user1_id,
-            user2_id: friend.user2_id,
-            created_at: friend.created_at,
+        if (friendsResponse.success && friendsResponse.data) {
+          // Asegurarnos de que los usuarios tengan todos los campos requeridos
+          const friendsWithCompleteUser = friendsResponse.data.map(friend => ({
+            ...friend,
             user: {
-              user_id: friend.user.user_id,
-              username: friend.user.username,
-              name: friend.user.name,
-              surname: friend.user.surname,
-              email: friend.user.email,
-              profile_picture: friend.user.profile_picture,
-              bio: friend.user.bio,
-              email_verified: friend.user.email_verified,
-              is_moderator: friend.user.is_moderator,
+              ...friend.user,
               deleted_at: null,
-              created_at: friend.user.created_at,
-              updated_at: friend.user.updated_at,
-              active_video_call: (friend.user as any).active_video_call ?? false
+              active_video_call: false
             }
           }));
-          setFriends(friendsData);
+          setFriends(friendsWithCompleteUser);
+
+          // Cargar usuarios sugeridos
+          const suggestedResponse = await userService.getAllUsers(token);
+          if (suggestedResponse.success && suggestedResponse.data && Array.isArray(suggestedResponse.data.users)) {
+            // Filtrar los usuarios que ya son amigos
+            const friendIds = new Set(friendsResponse.data.map(friend => friend.user.user_id));
+            const filteredSuggestedUsers = suggestedResponse.data.users.filter(
+              user => !friendIds.has(user.user_id)
+            ).map(user => ({
+              ...user,
+              deleted_at: null,
+              active_video_call: false
+            }));
+            setSuggestedUsers(filteredSuggestedUsers);
+          }
+        } else {
+          setFriends([]);
+          setSuggestedUsers([]);
         }
       } catch (err) {
-        setError('Error al cargar los datos iniciales');
+        console.error('Error al cargar los amigos:', err);
+        setError('Error al cargar la lista de amigos');
       } finally {
         setLoading(false);
       }
     };
 
-    loadData();
-  }, [token, data.user, location.search]);
+    fetchData();
+  }, [token]);
 
   const handleEditProfile = () => {
     navigate('/configuracion?section=cuenta');
@@ -313,6 +312,39 @@ export default function Perfil() {
       setLoading(false);
       setDeleteModalOpen(false);
       setPostToDelete(null);
+    }
+  };
+
+  const handleRemoveFriend = async (userId: string) => {
+    if (!token) return;
+
+    try {
+      const response = await friendshipService.removeFriendship(token, userId);
+      if (response.success) {
+        // Actualizar el estado local de amigos inmediatamente
+        const friendToRemove = friends.find(friend => friend.user.user_id === userId);
+        if (friendToRemove) {
+          // Eliminar de la lista de amigos
+          setFriends(prev => prev.filter(friend => friend.user.user_id !== userId));
+          // Agregar a la lista de usuarios sugeridos
+          setSuggestedUsers(prev => [...prev, {
+            ...friendToRemove.user,
+            deleted_at: null,
+            active_video_call: false
+          }]);
+        }
+        setNotification({
+          message: 'Amistad eliminada correctamente',
+          type: 'success'
+        });
+      } else {
+        throw new Error(response.message);
+      }
+    } catch (err) {
+      setNotification({
+        message: err instanceof Error ? err.message : 'Error al eliminar la amistad',
+        type: 'error'
+      });
     }
   };
 

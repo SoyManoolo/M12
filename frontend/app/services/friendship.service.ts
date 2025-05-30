@@ -1,4 +1,5 @@
 import { environment } from '~/config/environment';
+import type { User } from '~/types/user.types';
 
 interface FriendshipStatus {
   status: 'none' | 'pending' | 'friends';
@@ -31,19 +32,7 @@ export interface Friend {
   user1_id: string;
   user2_id: string;
   created_at: string;
-  user: {
-    user_id: string;
-    username: string;
-    name: string;
-    surname: string;
-    email: string;
-    profile_picture: string | null;
-    bio: string | null;
-    email_verified: boolean;
-    is_moderator: boolean;
-    created_at: string;
-    updated_at: string;
-  };
+  user: User;
 }
 
 class FriendshipService {

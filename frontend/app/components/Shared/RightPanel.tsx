@@ -74,7 +74,15 @@ export default function RightPanel({
   const { token } = useAuth();
   const [friendshipStatuses, setFriendshipStatuses] = useState<Record<string, FriendshipStatus>>({});
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [localFriends, setLocalFriends] = useState<Friend[]>(friends);
   
+  // Actualizar el estado local cuando cambien los props
+  useEffect(() => {
+    if (JSON.stringify(friends) !== JSON.stringify(localFriends)) {
+      setLocalFriends(friends);
+    }
+  }, [friends]);
+
   const title = customTitle || (mode === 'suggested' 
     ? 'Amigos sugeridos' 
     : mode === 'common' 
@@ -104,14 +112,25 @@ export default function RightPanel({
   useEffect(() => {
     const fetchFriendshipStatuses = async () => {
       if (!token || !users.length) return;
-      const statuses: Record<string, FriendshipStatus> = {};
-      for (const user of users) {
-        const response = await friendshipService.getFriendshipStatus(token, user.user_id);
-        if (response.success && response.data) {
-          statuses[user.user_id] = response.data as FriendshipStatus;
+      
+      try {
+        const statuses: Record<string, FriendshipStatus> = {};
+        for (const user of users) {
+          const response = await friendshipService.getFriendshipStatus(token, user.user_id);
+          if (response.success && response.data) {
+            statuses[user.user_id] = response.data as FriendshipStatus;
+          }
         }
+        setFriendshipStatuses(prev => {
+          // Solo actualizar si hay cambios reales
+          if (JSON.stringify(prev) !== JSON.stringify(statuses)) {
+            return statuses;
+          }
+          return prev;
+        });
+      } catch (error) {
+        console.error('Error fetching friendship statuses:', error);
       }
-      setFriendshipStatuses(statuses);
     };
     fetchFriendshipStatuses();
   }, [token, users]);
@@ -153,6 +172,13 @@ export default function RightPanel({
         case 'remove':
           response = await friendshipService.removeFriendship(token, userId);
           defaultMessage = 'Amistad eliminada';
+          // Actualizar el estado local inmediatamente
+          setLocalFriends(prev => prev.filter(friend => friend.user.user_id !== userId));
+          // Actualizar el estado de la amistad
+          setFriendshipStatuses(prev => ({
+            ...prev,
+            [userId]: { status: 'none' }
+          }));
           break;
       }
 
@@ -245,7 +271,7 @@ export default function RightPanel({
   };
 
   // Convertir users a friends si es necesario
-  const displayFriends = friends.length > 0 ? friends : users.map(user => ({
+  const displayFriends = localFriends.length > 0 ? localFriends : users.map(user => ({
     friendship_id: user.user_id,
     user1_id: user.user_id,
     user2_id: user.user_id,

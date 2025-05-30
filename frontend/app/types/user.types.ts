@@ -50,9 +50,9 @@ export interface User {
   bio: string | null;
   email_verified: boolean;
   is_moderator: boolean;
-  deleted_at: string | null;
   created_at: string;
   updated_at: string;
+  deleted_at: string | null;
   active_video_call: boolean;
 }
 
