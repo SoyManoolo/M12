@@ -281,12 +281,6 @@ export default function Chats() {
               <p className="text-gray-400 text-center max-w-md mb-6">
                 Para poder chatear necesitas tener amigos. ¡Conecta con personas y empieza a conversar!
               </p>
-              <button
-                onClick={handleStartNewChat}
-                className="px-6 py-3 bg-blue-600 text-white rounded-full hover:bg-blue-500 transition-colors duration-200 font-semibold"
-              >
-                Buscar amigos
-              </button>
             </div>
           ) : filteredChats.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12">
