@@ -209,10 +209,11 @@ export default function Chats() {
     };
   }, [token, user]);
 
-  // Filtrar chats basado en la búsqueda
-  const filteredChats = chats.filter(chat =>
-    chat.user.username.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Filtrar chats basado en la búsqueda y solo mostrar chats con amigos
+  const filteredChats = chats.filter(chat => {
+    const isFriend = friends.some(friend => friend.user.user_id === chat.user.user_id);
+    return isFriend && chat.user.username.toLowerCase().includes(searchQuery.toLowerCase());
+  });
 
   const handleChatClick = (userId: string) => {
     window.location.href = `/chat?userId=${userId}`;
@@ -248,7 +249,7 @@ export default function Chats() {
               <input
                 type="text"
                 placeholder="Buscar en mensajes..."
-                className="w-full bg-gray-900 rounded-xl py-3 pl-12 pr-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+                className="w-full bg-gray-900 rounded-full py-3 pl-12 pr-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -256,46 +257,60 @@ export default function Chats() {
           </div>
 
           {/* Lista de chats */}
-          <div className="space-y-2 max-h-[calc(100vh-250px)] overflow-y-auto custom-scrollbar">
-            {filteredChats.map((chat) => (
-              <div
-                key={chat.chat_id}
-                onClick={() => handleChatClick(chat.user.user_id)}
-                className="group bg-gray-900/50 hover:bg-gray-800/80 rounded-xl p-4 cursor-pointer transition-all duration-200 border border-transparent hover:border-gray-700"
+          {loading ? (
+            <div className="flex justify-center items-center h-64">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+            </div>
+          ) : error ? (
+            <div className="text-red-500 text-center py-8">{error}</div>
+          ) : friends.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="w-24 h-24 bg-gradient-to-br from-blue-600/20 to-purple-600/20 rounded-full flex items-center justify-center mb-6">
+                <FaEnvelope className="text-5xl text-blue-500" />
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-3">No tienes amigos aún</h3>
+              <p className="text-gray-400 text-center max-w-md mb-6">
+                Para poder chatear necesitas tener amigos. ¡Conecta con personas y empieza a conversar!
+              </p>
+              <button
+                onClick={handleStartNewChat}
+                className="px-6 py-3 bg-blue-600 text-white rounded-full hover:bg-blue-500 transition-colors duration-200 font-semibold"
               >
+                Buscar amigos
+              </button>
+            </div>
+          ) : filteredChats.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="w-24 h-24 bg-gradient-to-br from-blue-600/20 to-purple-600/20 rounded-full flex items-center justify-center mb-6">
+                <FaEnvelope className="text-5xl text-blue-500" />
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-3">No hay mensajes</h3>
+              <p className="text-gray-400 text-center max-w-md mb-6">
+                {searchQuery ? 'No se encontraron mensajes con esa búsqueda' : 'No tienes conversaciones activas con tus amigos'}
+              </p>
+              <button
+                onClick={handleStartNewChat}
+                className="px-6 py-3 bg-blue-600 text-white rounded-full hover:bg-blue-500 transition-colors duration-200 font-semibold"
+              >
+                Iniciar conversación
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {filteredChats.map((chat) => (
                 <ChatItem
+                  key={chat.chat_id}
                   chat={chat}
-                  onClick={() => {}}
-              />
-              </div>
-            ))}
-
-            {/* Mensaje cuando no hay chats */}
-            {filteredChats.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-16 bg-gray-900/50 rounded-xl border border-gray-800">
-                <div className="w-24 h-24 bg-gradient-to-br from-blue-600/20 to-purple-600/20 rounded-full flex items-center justify-center mb-6">
-                  <FaEnvelope className="text-4xl text-blue-500" />
-                </div>
-                <h3 className="text-xl font-semibold text-white mb-2">
-                  {searchQuery ? 'No se encontraron chats' : 'No tienes chats activos'}
-                </h3>
-                <p className="text-gray-400 text-center max-w-md mb-6">
-                  {searchQuery 
-                    ? 'Intenta con otros términos de búsqueda'
-                    : 'Comienza una conversación con tus amigos'}
-                </p>
-              </div>
-            )}
-          </div>
+                  onClick={() => handleChatClick(chat.user.user_id)}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Panel lateral derecho */}
-      <RightPanel
-        friends={friends}
-        mode="friends"
-        customTitle="Mis amigos"
-      />
+      {/* Panel derecho */}
+      <RightPanel mode="friends" friends={friends} />
 
       <style>
         {`
