@@ -14,7 +14,7 @@
 
 // src/components/Navbar.tsx
 import { Link, useNavigate } from "@remix-run/react";
-import { FaVideo, FaUpload, FaBell, FaEnvelope, FaCog, FaUser, FaShieldAlt, FaNewspaper, FaUsers, FaChartBar, FaChevronDown } from 'react-icons/fa';
+import { FaVideo, FaUpload, FaBell, FaEnvelope, FaCog, FaUser, FaShieldAlt, FaNewspaper, FaUsers, FaChartBar, FaChevronDown, FaSearch } from 'react-icons/fa';
 import { useAuth } from "~/hooks/useAuth";
 import { useState, useEffect } from 'react';
 
@@ -63,6 +63,15 @@ export default function Navbar() {
           <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-purple-600/20 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"></div>
           <FaVideo className="text-3xl mb-1" />
           <span className="text-xs font-semibold tracking-wider">VIDEOLLAMADA</span>
+        </Link>
+
+        {/* Enlace a búsqueda */}
+        <Link 
+          to="/buscar"
+          className="flex items-center space-x-2 text-gray-400 hover:text-white w-full p-2 rounded hover:bg-gray-800/50 cursor-pointer"
+        >
+          <FaSearch className="text-lg" />
+          <span className="tracking-wider text-sm">BUSCAR</span>
         </Link>
 
         {/* Enlace a sección de publicaciones */}
