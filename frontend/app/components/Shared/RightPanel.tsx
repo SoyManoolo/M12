@@ -79,7 +79,7 @@ export default function RightPanel({
   // Actualizar el estado local cuando cambien los props
   useEffect(() => {
     if (JSON.stringify(friends) !== JSON.stringify(localFriends)) {
-      setLocalFriends(friends);
+    setLocalFriends(friends);
     }
   }, [friends]);
 
@@ -114,13 +114,13 @@ export default function RightPanel({
       if (!token || !users.length) return;
       
       try {
-        const statuses: Record<string, FriendshipStatus> = {};
-        for (const user of users) {
-          const response = await friendshipService.getFriendshipStatus(token, user.user_id);
-          if (response.success && response.data) {
-            statuses[user.user_id] = response.data as FriendshipStatus;
-          }
+      const statuses: Record<string, FriendshipStatus> = {};
+      for (const user of users) {
+        const response = await friendshipService.getFriendshipStatus(token, user.user_id);
+        if (response.success && response.data) {
+          statuses[user.user_id] = response.data as FriendshipStatus;
         }
+      }
         setFriendshipStatuses(prev => {
           // Solo actualizar si hay cambios reales
           if (JSON.stringify(prev) !== JSON.stringify(statuses)) {

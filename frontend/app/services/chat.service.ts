@@ -1,5 +1,6 @@
 import { io, Socket } from 'socket.io-client';
 import { jwtDecode } from 'jwt-decode';
+import { environment } from '../config/environment';
 
 interface Message {
   id: string;
@@ -45,7 +46,6 @@ class ChatService {
   private readHandlers: ((data: ReadStatus) => void)[] = [];
   private typingHandlers: ((data: { userId: string; isTyping: boolean }) => void)[] = [];
   private connectionHandlers: ((status: 'connected' | 'disconnected' | 'reconnecting') => void)[] = [];
-  private baseUrl = 'http://localhost:3000';
   private isConnecting = false;
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
@@ -54,7 +54,7 @@ class ChatService {
   private lastUserId: string | null = null;
 
   constructor() {
-    this.socket = io(this.baseUrl, {
+    this.socket = io(environment.apiUrl, {
       autoConnect: false,
       reconnection: true,
       reconnectionAttempts: 5,
@@ -399,7 +399,7 @@ class ChatService {
 
   public async getActiveChats(token: string): Promise<Chat[]> {
     try {
-      const response = await fetch(`${this.baseUrl}/chat/list`, {
+      const response = await fetch(`${environment.apiUrl}/chat/list`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -433,7 +433,7 @@ class ChatService {
 
   public async getMessages(userId: string, token: string, limit: number = 20, cursor?: string): Promise<{ messages: Message[], nextCursor: string | null }> {
     try {
-      let url = `${this.baseUrl}/chat?receiver_id=${userId}&limit=${limit}`;
+      let url = `${environment.apiUrl}/chat?receiver_id=${userId}&limit=${limit}`;
       if (cursor) {
         url += `&cursor=${cursor}`;
       }
@@ -493,24 +493,24 @@ class ChatService {
       } else {
         // Si no hay socket, usar HTTP
         console.log('Socket no conectado, usando HTTP');
-      const response = await fetch(`${this.baseUrl}/chat`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          receiver_id: receiverId,
-          content
-        })
-      });
+        const response = await fetch(`${environment.apiUrl}/chat`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            receiver_id: receiverId,
+            content
+          })
+        });
 
-      if (!response.ok) {
-        throw new Error('Error al crear el mensaje');
-      }
+        if (!response.ok) {
+          throw new Error('Error al crear el mensaje');
+        }
 
-      const data = await response.json();
-      return data.data;
+        const data = await response.json();
+        return data.data;
       }
     } catch (error) {
       console.error('Error al crear mensaje:', error);
@@ -520,7 +520,7 @@ class ChatService {
 
   public async deleteMessage(messageId: string, token: string): Promise<{ result: boolean, message_id: string }> {
     try {
-      const response = await fetch(`${this.baseUrl}/chat/${messageId}`, {
+      const response = await fetch(`${environment.apiUrl}/chat/${messageId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -541,7 +541,7 @@ class ChatService {
 
   public async markMessageAsDeliveredHttp(messageId: string, token: string): Promise<Message> {
     try {
-      const response = await fetch(`${this.baseUrl}/chat/${messageId}/delivered`, {
+      const response = await fetch(`${environment.apiUrl}/chat/${messageId}/delivered`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -562,7 +562,7 @@ class ChatService {
 
   public async markMessageAsReadHttp(messageId: string, token: string): Promise<Message> {
     try {
-      const response = await fetch(`${this.baseUrl}/chat/${messageId}/read`, {
+      const response = await fetch(`${environment.apiUrl}/chat/${messageId}/read`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`

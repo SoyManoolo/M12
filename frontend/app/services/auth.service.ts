@@ -73,7 +73,7 @@ export const authService = {
                 };
             }
 
-            const response = await fetch(`${environment.apiUrl}${environment.apiEndpoints.auth.login}`, {
+            const response = await fetch(`${environment.apiUrl}/auth/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -182,7 +182,7 @@ export const authService = {
                 };
             }
 
-            const response = await fetch(`${environment.apiUrl}${environment.apiEndpoints.auth.register}`, {
+            const response = await fetch(`${environment.apiUrl}/auth/register`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -250,7 +250,7 @@ export const authService = {
                 };
             }
 
-            const response = await fetch(`${environment.apiUrl}${environment.apiEndpoints.auth.logout}`, {
+            const response = await fetch(`${environment.apiUrl}/auth/logout`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',

@@ -5,6 +5,7 @@ import { redirect } from "@remix-run/node";
 import Notification from '~/components/Shared/Notification';
 import { useNavigate } from '@remix-run/react';
 import { FaCamera, FaTimes, FaSpinner, FaImage, FaArrowLeft } from 'react-icons/fa';
+import { environment } from '../config/environment';
 
 interface CreatePostResponse {
   success: boolean;
@@ -137,7 +138,7 @@ export default function Publicar() {
         formData.append('media', selectedFile);
       }
 
-      const response = await fetch('http://localhost:3000/posts', {
+      const response = await fetch(`${environment.apiUrl}/posts`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`

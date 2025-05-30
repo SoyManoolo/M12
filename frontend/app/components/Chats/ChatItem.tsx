@@ -58,41 +58,41 @@ export default function ChatItem({ chat, onClick }: ChatItemProps) {
       onClick={onClick}
       className="group bg-gray-900/50 hover:bg-gray-800/80 rounded-xl p-4 cursor-pointer transition-all duration-200 border border-transparent hover:border-gray-700"
     >
-      <div className="flex items-center space-x-4">
-        {/* Avatar con indicador de estado */}
-        <div className="relative flex-shrink-0">
-          {chat.user.profile_picture ? (
-            <img
-              src={chat.user.profile_picture}
-              alt={chat.user.username}
-              className="w-14 h-14 rounded-full object-cover border-2 border-gray-800 group-hover:border-blue-500/50 transition-colors"
+    <div className="flex items-center space-x-4">
+      {/* Avatar con indicador de estado */}
+      <div className="relative flex-shrink-0">
+        {chat.user.profile_picture ? (
+          <img
+            src={chat.user.profile_picture}
+            alt={chat.user.username}
+            className="w-14 h-14 rounded-full object-cover border-2 border-gray-800 group-hover:border-blue-500/50 transition-colors"
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
                 target.src = "/default-avatar.png";
               }}
-            />
-          ) : (
-            <div className="w-14 h-14 rounded-full border-2 border-gray-800 group-hover:border-blue-500/50 bg-gray-800 flex items-center justify-center transition-colors">
-              <span className="text-gray-400 text-xl group-hover:text-blue-400 transition-colors">
-                {chat.user.username.charAt(0).toUpperCase()}
-              </span>
-            </div>
-          )}
-          {/* Indicador de mensajes no leídos */}
-          {chat.unread_count > 0 && (
-            <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1 shadow-lg">
-              {chat.unread_count}
+          />
+        ) : (
+          <div className="w-14 h-14 rounded-full border-2 border-gray-800 group-hover:border-blue-500/50 bg-gray-800 flex items-center justify-center transition-colors">
+            <span className="text-gray-400 text-xl group-hover:text-blue-400 transition-colors">
+              {chat.user.username.charAt(0).toUpperCase()}
             </span>
-          )}
-        </div>
+          </div>
+        )}
+        {/* Indicador de mensajes no leídos */}
+        {chat.unread_count > 0 && (
+          <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1 shadow-lg">
+            {chat.unread_count}
+          </span>
+        )}
+      </div>
 
-        {/* Información del chat */}
-        <div className="flex-1 min-w-0">
-          <div className="flex justify-between items-start">
-            <div>
-              <h3 className="text-white font-semibold text-base group-hover:text-blue-400 transition-colors">
-                {chat.user.username}
-              </h3>
+      {/* Información del chat */}
+      <div className="flex-1 min-w-0">
+        <div className="flex justify-between items-start">
+          <div>
+            <h3 className="text-white font-semibold text-base group-hover:text-blue-400 transition-colors">
+              {chat.user.username}
+            </h3>
               <div className="flex items-center mt-0.5">
                 {!isEmpty && (
                   <>
@@ -101,14 +101,14 @@ export default function ChatItem({ chat, onClick }: ChatItemProps) {
                     </span>
                     <p className={`text-sm truncate max-w-[200px] text-gray-400 group-hover:text-gray-300 transition-colors`}>
                       {chat.last_message.content}
-                    </p>
+            </p>
                   </>
                 )}
               </div>
-            </div>
-            <span className="text-xs text-gray-500 group-hover:text-gray-400 whitespace-nowrap ml-2 transition-colors">
-              {isEmpty ? '' : formatTime(chat.last_message.timestamp)}
-            </span>
+        </div>
+          <span className="text-xs text-gray-500 group-hover:text-gray-400 whitespace-nowrap ml-2 transition-colors">
+            {isEmpty ? '' : formatTime(chat.last_message.timestamp)}
+          </span>
           </div>
         </div>
       </div>
