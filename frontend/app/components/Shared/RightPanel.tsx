@@ -300,14 +300,14 @@ export default function RightPanel({
                           <img 
                             src={imageUrl}
                             alt={friend.user.username}
-                            className="w-12 h-12 rounded-full object-cover border-2 border-gray-800 transition-transform duration-200 hover:scale-110 hover:shadow-lg cursor-pointer"
+                            className="w-12 h-12 rounded-full object-cover border-2 border-gray-800 transition-all duration-200 hover:scale-110 hover:border-blue-500 hover:shadow-lg cursor-pointer"
                             onError={(e) => {
                               const target = e.target as HTMLImageElement;
                               target.src = "/default-avatar.png";
                             }}
                           />
                         ) : (
-                          <div className="w-12 h-12 rounded-full border-2 border-gray-800 bg-gray-800 flex items-center justify-center transition-transform duration-200 hover:scale-110 hover:shadow-lg cursor-pointer">
+                          <div className="w-12 h-12 rounded-full border-2 border-gray-800 bg-gray-800 flex items-center justify-center transition-all duration-200 hover:scale-110 hover:border-blue-500 hover:shadow-lg cursor-pointer">
                             <span className="text-gray-400 text-sm">{friend.user.username.charAt(0).toUpperCase()}</span>
                           </div>
                         )}
