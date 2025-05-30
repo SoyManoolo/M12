@@ -112,11 +112,11 @@ export default function Chats() {
               profile_picture: chat.other_user.profile_picture
             },
             last_message: {
-              content: chat.last_message.content,
-              timestamp: chat.last_message.created_at,
-              sender_id: chat.last_message.sender_id
+              content: chat.last_message?.content || '',
+              timestamp: chat.last_message?.created_at || new Date().toISOString(),
+              sender_id: chat.last_message?.sender_id || user.user_id
             },
-            unread_count: chat.unread_count
+            unread_count: chat.unread_count || 0
           }));
         console.log('Chats formateados:', formattedChats);
         setChats(formattedChats);

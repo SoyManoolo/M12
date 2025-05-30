@@ -89,39 +89,6 @@ export class ChatService {
                 return [];
             }
 
-            // Obtener todos los chats donde el usuario es remitente o receptor y el otro usuario es un amigo
-            const chats: ChatMessages[] = await ChatMessages.findAll({
-                where: {
-                    [Op.or]: [
-                        {
-                            sender_id: user_id,
-                            receiver_id: { [Op.in]: friendIds }
-                        },
-                        {
-                            sender_id: { [Op.in]: friendIds },
-                            receiver_id: user_id
-                        }
-                    ]
-                },
-                include: [
-                    {
-                        model: User,
-                        as: 'sender',
-                        attributes: ['user_id', 'username', 'name', 'surname', 'profile_picture']
-                    },
-                    {
-                        model: User,
-                        as: 'receiver',
-                        attributes: ['user_id', 'username', 'name', 'surname', 'profile_picture']
-                    }
-                ],
-                order: [['created_at', 'DESC']]
-            });
-
-            if (!chats || chats.length === 0) {
-                return [];
-            }
-
             // Procesar los chats para obtener el último mensaje y la información del otro usuario
             const processedChats = await Promise.all(friendIds.map(async (friendId) => {
                 // Obtener el último mensaje entre el usuario y el amigo
@@ -153,10 +120,6 @@ export class ChatService {
                     ]
                 });
 
-                if (!lastMessage) {
-                    return null;
-                }
-
                 // Contar mensajes no leídos
                 const unreadCount: number = await ChatMessages.count({
                     where: {
@@ -177,7 +140,11 @@ export class ChatService {
 
                 return {
                     other_user: friend,
-                    last_message: lastMessage,
+                    last_message: lastMessage || {
+                        content: '',
+                        created_at: new Date().toISOString(),
+                        sender_id: user_id
+                    },
                     unread_count: unreadCount
                 };
             }));
