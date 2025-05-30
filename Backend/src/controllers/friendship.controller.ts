@@ -111,7 +111,7 @@ export class FriendshipController {
             const user_id = (req as any).user.user_id;
             const { other_user_id } = req.params;
             const status = await friendshipService.getFriendshipStatus(user_id, other_user_id);
-            res.json(status);
+            res.json({ success: true, data: status });
         } catch (error) {
             next(error);
         }

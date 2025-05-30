@@ -25,8 +25,9 @@ import ConfirmModal from "~/components/Shared/ConfirmModal";
 import Notification from "~/components/Shared/Notification";
 import EditPostModal from "~/components/Shared/EditPostModal";
 import { userService } from "~/services/user.service";
-import { useAuth } from "~/hooks/useAuth";
 import { postService } from "~/services/post.service";
+import { friendshipService } from "~/services/friendship.service";
+import { useAuth } from "~/hooks/useAuth";
 import type { User } from "~/types/user.types";
 
 interface Post {
@@ -156,26 +157,26 @@ export default function Perfil() {
         }
 
         // Cargar amigos
-        const friendsResponse = await userService.getAllUsers(token);
-        if (friendsResponse.success && friendsResponse.data && Array.isArray(friendsResponse.data.users)) {
-          const friendsData = friendsResponse.data.users.map(user => ({
-            friendship_id: user.user_id,
-            user1_id: user.user_id,
-            user2_id: user.user_id,
-            created_at: new Date().toISOString(),
+        const friendsResponse = await friendshipService.getUserFriends(token);
+        if (friendsResponse.success && friendsResponse.data && Array.isArray(friendsResponse.data)) {
+          const friendsData = friendsResponse.data.map(friend => ({
+            friendship_id: friend.friendship_id,
+            user1_id: friend.user1_id,
+            user2_id: friend.user2_id,
+            created_at: friend.created_at,
             user: {
-              user_id: user.user_id,
-              username: user.username,
-              name: user.name,
-              surname: user.surname,
-              email: user.email,
-              profile_picture: user.profile_picture ?? null,
-              bio: user.bio ?? null,
-              email_verified: user.email_verified,
-              is_moderator: user.is_moderator,
+              user_id: friend.user.user_id,
+              username: friend.user.username,
+              name: friend.user.name,
+              surname: friend.user.surname,
+              email: friend.user.email,
+              profile_picture: friend.user.profile_picture,
+              bio: friend.user.bio,
+              email_verified: friend.user.email_verified,
+              is_moderator: friend.user.is_moderator,
               deleted_at: null,
-              created_at: user.created_at,
-              updated_at: user.updated_at,
+              created_at: friend.user.created_at,
+              updated_at: friend.user.updated_at,
               active_video_call: false
             }
           }));
@@ -419,7 +420,7 @@ export default function Perfil() {
       {/* Panel lateral derecho con amigos */}
       <RightPanel
         friends={friends}
-        mode="online"
+        mode="friends"
         customTitle="Mis amigos"
       />
 

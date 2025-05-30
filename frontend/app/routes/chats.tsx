@@ -19,6 +19,7 @@ import { FaSearch, FaEnvelope } from 'react-icons/fa';
 import { useAuth } from "~/hooks/useAuth";
 import { userService } from "~/services/user.service";
 import { chatService } from '~/services/chat.service';
+import { friendshipService } from '~/services/friendship.service';
 
 export const meta: MetaFunction = () => {
   return [
@@ -117,21 +118,24 @@ export default function Chats() {
         }));
         setChats(formattedChats);
 
-        // Cargar amigos excluyendo al usuario actual
-        const friendsResponse = await userService.getAllUsers(token);
-        if (friendsResponse.success && friendsResponse.data && Array.isArray(friendsResponse.data.users)) {
-          const friendsData = friendsResponse.data.users
-            .filter(friend => friend.user_id !== user.user_id) // Excluir al usuario actual
-            .map(user => ({
-            friendship_id: user.user_id,
-            user1_id: user.user_id,
-            user2_id: user.user_id,
-            created_at: new Date().toISOString(),
+        // Cargar solo amigos reales
+        const friendsResponse = await friendshipService.getUserFriends(token);
+        if (friendsResponse.success && friendsResponse.data) {
+          const friendsData = friendsResponse.data.map(friend => ({
+            ...friend,
             user: {
-              ...user,
-              profile_picture: user.profile_picture || null,
-              bio: user.bio ?? null,
+              user_id: friend.user.user_id,
+              username: friend.user.username,
+              name: friend.user.name || '',
+              surname: '',
+              email: '',
+              profile_picture: friend.user.profile_picture || null,
+              bio: '',
+              email_verified: false,
+              is_moderator: false,
               deleted_at: null,
+              created_at: '',
+              updated_at: '',
               active_video_call: false
             }
           }));
@@ -289,7 +293,7 @@ export default function Chats() {
       {/* Panel lateral derecho */}
       <RightPanel
         friends={friends}
-        mode="online"
+        mode="friends"
         customTitle="Mis amigos"
       />
 

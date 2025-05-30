@@ -119,6 +119,7 @@ export default function Notificaciones(): React.ReactElement {
   const { token } = useAuth();
   const [currentNotifications, setCurrentNotifications] = useState<Notification[]>(notifications);
   const [friends, setFriends] = useState<Friend[]>([]);
+  const [suggestedUsers, setSuggestedUsers] = useState<User[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -151,9 +152,11 @@ export default function Notificaciones(): React.ReactElement {
           }));
           console.log('Datos transformados de amigos:', friendsData);
           setFriends(friendsData);
+          setSuggestedUsers(friendsResponse.data.users);
         } else {
           console.error('La respuesta de amigos no tiene el formato esperado:', friendsResponse);
           setFriends([]);
+          setSuggestedUsers([]);
         }
       } catch (err) {
         console.error('Error al cargar los amigos:', err);
@@ -478,6 +481,7 @@ export default function Notificaciones(): React.ReactElement {
       {/* Panel lateral derecho */}
       <RightPanel
         friends={friends}
+        users={suggestedUsers}
         mode="online"
       />
 

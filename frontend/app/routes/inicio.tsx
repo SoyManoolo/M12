@@ -194,10 +194,11 @@ export default function InicioPage() {
   const [showImageZoomModal, setShowImageZoomModal] = useState(false);
   const [zoomImageUrl, setZoomImageUrl] = useState('');
 
+  const [suggestedUsers, setSuggestedUsers] = useState<User[]>([]);
+
   if (token) {
     const decodedToken = decodeToken(token);
     currentUserId = decodedToken?.user_id;
-    console.log('Token decodificado en inicio:', decodedToken);
   }
 
   useEffect(() => {
@@ -223,7 +224,16 @@ export default function InicioPage() {
             likes_count: post.likes_count,
             author: post.author,
             is_saved: false,
-            comments: []
+            comments: (post.comments || []).map((c: any) => ({
+              comment_id: c.comment_id,
+              author: {
+                user_id: c.user_id,
+                username: c.username,
+                profile_picture: c.profile_picture || null
+              },
+              content: c.content,
+              created_at: c.created_at
+            }))
           }));
           setPosts(transformedPosts);
           setNextCursor(response.data.nextCursor);
@@ -233,7 +243,6 @@ export default function InicioPage() {
 
         // Cargar amigos
         const friendsResponse = await userService.getAllUsers(token);
-        console.log('Respuesta del servidor para amigos:', friendsResponse);
         if (friendsResponse.success && friendsResponse.data && Array.isArray(friendsResponse.data.users)) {
           const friendsData = friendsResponse.data.users.map(user => ({
             friendship_id: user.user_id,
@@ -248,14 +257,14 @@ export default function InicioPage() {
               active_video_call: false
             }
           }));
-          console.log('Datos transformados de amigos:', friendsData);
           setFriends(friendsData);
+          // También cargar usuarios sugeridos
+          setSuggestedUsers(friendsResponse.data.users);
         } else {
-          console.error('La respuesta de amigos no tiene el formato esperado:', friendsResponse);
           setFriends([]);
+          setSuggestedUsers([]);
         }
       } catch (err) {
-        console.error('Error al cargar los datos:', err);
         let errorMessage = 'Lo sentimos, algo salió mal';
         
         if (err instanceof Error) {
@@ -295,7 +304,16 @@ export default function InicioPage() {
           likes_count: post.likes_count,
           author: post.author,
           is_saved: false,
-          comments: []
+          comments: (post.comments || []).map((c: any) => ({
+            comment_id: c.comment_id,
+            author: {
+              user_id: c.user_id,
+              username: c.username,
+              profile_picture: c.profile_picture || null
+            },
+            content: c.content,
+            created_at: c.created_at
+          }))
         }));
         setPosts(prev => [...prev, ...transformedPosts]);
         setNextCursor(response.data.nextCursor);
@@ -303,7 +321,6 @@ export default function InicioPage() {
         throw new Error(response.message || 'Error al cargar más posts');
       }
     } catch (err) {
-      console.error('Error al cargar más posts:', err);
       setError(err instanceof Error ? err.message : 'Error al conectar con el servidor');
     } finally {
       setLoading(false);
@@ -312,7 +329,6 @@ export default function InicioPage() {
 
   const handleLike = async (postId: string) => {
     try {
-      console.log('Dando like al post:', postId);
       setPosts(prev =>
         prev.map(post =>
           post.post_id === postId
@@ -327,7 +343,6 @@ export default function InicioPage() {
 
   const handleSave = async (postId: string) => {
     try {
-      console.log('Guardando post:', postId);
       setPosts(prev =>
         prev.map(post =>
           post.post_id === postId
@@ -491,6 +506,7 @@ export default function InicioPage() {
       </div>
       <RightPanel
         friends={friends}
+        users={suggestedUsers}
         mode="online"
       />
       <ConfirmModal
