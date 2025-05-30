@@ -1,133 +1,167 @@
-# M12 - Frontend Architecture
-Desarrollo del proyecto final de curso - FriendsGo
+# Documentación Técnica Frontend - FriendsGo
 
-## Arquitectura y Stack Tecnológico
+> **Nota**: Este documento es parte de la documentación técnica del proyecto FriendsGo y se encuentra en la carpeta `docs/frontend/`. Para la documentación general del proyecto, consulta el [README principal](https://github.com/SoyManoolo/M12) en la raíz del repositorio.
 
-### Stack Tecnológico Principal
-- **Framework**: React 18.2.0
-- **Lenguaje**: TypeScript 5.7.2
-- **Bundler**: Vite 6.2.3
-- **Framework Web**: Remix 2.16.2
-- **Estilos**: Tailwind CSS 4.0.15
-- **Linting**: ESLint 9.21.0
-- **Comunicación en Tiempo Real**: Socket.IO Client 4.8.1
+## Descripción General
+FriendsGo es una aplicación web moderna construida con React, TypeScript y Tailwind CSS. La aplicación proporciona una plataforma social completa con funcionalidades de chat, videollamadas, gestión de amigos y más.
 
-### Configuración del Proyecto
-- **TypeScript Configuration**
-  - `tsconfig.json`: Configuración base
-  - `tsconfig.app.json`: Configuración específica para la aplicación
-  - `tsconfig.node.json`: Configuración para Node.js
-- **Build Configuration**
-  - `vite.config.ts`: Configuración de Vite
-  - `tailwind.config.ts`: Configuración de Tailwind CSS
-- **Code Quality**
-  - `.eslintrc.cjs`: Reglas de linting
-  - `eslint.config.js`: Configuración extendida de ESLint
+## Tecnologías Utilizadas
 
-### Estructura de Directorios
+<div align="center">
+  <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/react/react-original.svg" alt="React" width="50" height="50"/>
+  <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/typescript/typescript-original.svg" alt="TypeScript" width="50" height="50"/>
+  <img src="https://www.vectorlogo.zone/logos/tailwindcss/tailwindcss-icon.svg" alt="Tailwind" width="50" height="50"/>
+  <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/vitejs/vitejs-original.svg" alt="Vite" width="50" height="50"/>
+  <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/socketio/socketio-original.svg" alt="Socket.IO" width="50" height="50"/>
+  <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/git/git-original.svg" alt="Git" width="50" height="50"/>
+  <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/github/github-original.svg" alt="GitHub" width="50" height="50"/>
+</div>
+
+## Estructura del Proyecto
 ```
 frontend/
-├── app/              # Componentes y rutas de la aplicación
-│   ├── components/   # Componentes reutilizables
-│   ├── routes/       # Configuración de rutas y páginas
-│   ├── services/     # Servicios API y lógica de negocio
-│   ├── styles/       # Estilos globales
-│   ├── types/        # Definiciones de tipos TypeScript
-│   ├── config/       # Configuraciones de la aplicación
-│   ├── assets/       # Recursos estáticos
-│   ├── entry.client.tsx  # Punto de entrada del cliente
-│   ├── entry.server.tsx  # Punto de entrada del servidor
-│   └── root.tsx      # Componente raíz de la aplicación
-├── public/           # Archivos estáticos
-├── vite.config.ts    # Configuración de Vite
-├── tailwind.config.ts # Configuración de Tailwind
-├── tsconfig.json     # Configuración base de TypeScript
-├── tsconfig.app.json # Configuración de TypeScript para la app
-├── tsconfig.node.json # Configuración de TypeScript para Node
-├── eslint.config.js  # Configuración de ESLint
-└── .eslintrc.cjs     # Reglas de ESLint
+├── app/
+│   ├── components/     # Componentes reutilizables
+│   ├── config/        # Configuraciones
+│   ├── hooks/         # Hooks personalizados
+│   ├── routes/        # Páginas y rutas
+│   ├── services/      # Servicios de API
+│   └── types/         # Definiciones de tipos
+├── public/            # Archivos estáticos
+└── package.json       # Dependencias y scripts
 ```
 
-### Scripts Disponibles
+## Configuración del Entorno
+
+### Configuración del Backend
+La URL del backend se configura directamente en el archivo `app/config/environment.ts`:
+
+```typescript
+export const environment = {
+  apiUrl: 'http://localhost:3000'  // Cambia esta URL según tu configuración
+};
+```
+
+Para cambiar la URL del backend:
+1. Abre el archivo `app/config/environment.ts`
+2. Modifica el valor de `apiUrl` con la URL de tu backend
+3. Guarda los cambios y reinicia la aplicación
+
+## Instalación
+
+1. Clona el repositorio:
 ```bash
-npm run dev     # Inicia el servidor de desarrollo con Vite
-npm run build   # Construye la aplicación con Remix y Vite
-npm run lint    # Ejecuta ESLint para verificar el código
-npm run preview # Previsualiza la build de producción
-npm run analyze # Analiza el bundle de producción
+git clone [URL_DEL_REPOSITORIO]
+cd frontend
 ```
 
-### Características Implementadas
+2. Instala las dependencias:
+```bash
+npm install
+```
 
-#### Sistema de Autenticación
-- Autenticación JWT
-- Gestión de sesiones
-- Protección de rutas
-- Manejo de tokens
+3. Inicia el servidor de desarrollo:
+```bash
+npm run dev
+```
 
-#### Comunicación en Tiempo Real
-- Chat en tiempo real con Socket.IO
-- Notificaciones instantáneas
-- Sistema de videollamadas
-- Estado de conexión de usuarios
+## Scripts Disponibles
 
-#### Interfaz de Usuario
-- Diseño responsive con Tailwind CSS
-- Tema oscuro
-- Componentes reutilizables
-- Animaciones y transiciones
-- Loading states y feedback visual
+- `npm run dev`: Inicia el servidor de desarrollo
+- `npm run build`: Construye la aplicación para producción
+- `npm run preview`: Previsualiza la versión de producción
+- `npm run lint`: Ejecuta el linter
+- `npm run type-check`: Verifica los tipos de TypeScript
 
-#### Funcionalidades Principales
-- Sistema de publicaciones
-- Gestión de perfiles de usuario
+## Características Principales
+
+### Autenticación
+- Registro de usuarios
+- Inicio de sesión
+- Recuperación de contraseña
+- Gestión de tokens JWT
+
+### Perfil de Usuario
+- Foto de perfil personalizable
+- Información personal editable
+- Biografía
+- Estadísticas de actividad
+
+### Sistema de Amigos
 - Búsqueda de usuarios
-- Sistema de amigos
-- Moderación de contenido
-- Gestión de notificaciones
+- Envío de solicitudes de amistad
+- Gestión de amigos
+- Lista de amigos
 
-#### Optimizaciones
-- Lazy loading de componentes
-- Code splitting con Vite
-- Optimización de imágenes
-- Caché de assets
-- Compresión de bundles
+### Chat
+- Mensajería en tiempo real
+- Notificaciones de mensajes nuevos
+- Indicador de escritura
+- Historial de mensajes
 
-### Dependencias Principales
-```json
-{
-  "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "@remix-run/react": "^2.16.2",
-    "@remix-run/node": "^2.16.2",
-    "socket.io-client": "^4.8.1",
-    "tailwindcss": "^4.0.15"
-  },
-  "devDependencies": {
-    "typescript": "~5.7.2",
-    "vite": "^6.2.3",
-    "eslint": "^9.21.0",
-    "@vitejs/plugin-react": "^4.3.4"
-  }
-}
-```
+### Videollamadas
+- Llamadas de video en tiempo real
+- Chat durante la llamada
+- Control de audio/video
+- Calidad de video adaptable
 
-### Características Técnicas
-- **Performance**
-  - Lazy loading de componentes
-  - Optimización de imágenes
-  - Caché de assets
-  - Code splitting con Vite
+### Publicaciones
+- Creación de posts
+- Soporte para imágenes
+- Sistema de likes
+- Comentarios
+- Compartir posts
 
-- **Seguridad**
-  - Sanitización de inputs
-  - Protección contra XSS
-  - Headers de seguridad configurados
-  - Validación de datos
+## Componentes Principales
 
-- **Accesibilidad**
-  - ARIA labels implementados
-  - Navegación por teclado
-  - Contraste de colores WCAG 2.1
-  - Semántica HTML correcta
+### Navbar
+- Navegación principal
+- Notificaciones
+- Menú de usuario
+- Búsqueda global
+
+### RightPanel
+- Lista de amigos
+- Solicitudes de amistad
+- Usuarios sugeridos
+- Estado de conexión
+
+### ChatItem
+- Vista previa de conversación
+- Último mensaje
+- Indicador de no leídos
+- Estado de conexión
+
+## Servicios de API
+
+### AuthService
+- Gestión de autenticación
+- Tokens JWT
+- Sesiones de usuario
+
+### UserService
+- Gestión de perfiles
+- Búsqueda de usuarios
+- Actualización de datos
+
+### ChatService
+- Mensajería en tiempo real
+- Historial de chats
+- Estado de mensajes
+
+### FriendshipService
+- Gestión de amistades
+- Solicitudes
+- Lista de amigos
+
+### PostService
+- Creación de posts
+- Interacciones
+- Comentarios
+
+## Estilos y Temas
+
+### Colores Principales
+- Azul primario: `#3B82F6` (blue-600)
+- Púrpura: `#9333EA` (purple-600)
+- Gris oscuro: `#1F2937`
