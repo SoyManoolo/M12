@@ -1,201 +1,503 @@
-import { json } from "@remix-run/node";
+/**
+ * Página de Notificaciones
+ * 
+ * Muestra todas las notificaciones del usuario en una lista mezclada.
+ * Incluye:
+ * - Notificaciones de solicitudes de amistad
+ * - Notificaciones de mensajes
+ * - Notificaciones de comentarios
+ * - Notificaciones de likes
+ * - Notificaciones de videollamadas
+ * 
+ * @module Notificaciones
+ */
+
+import { json, redirect } from "@remix-run/node";
 import { useLoaderData, Link } from "@remix-run/react";
-import { useState } from "react";
-import type { Notification, User } from "~/types/notifications";
+import { useState, useEffect } from "react";
+import type { Notification } from "~/types/notifications";
+import type { User } from "~/types/user.types";
+import type { Friend } from "~/services/friendship.service";
 import Navbar from "~/components/Inicio/Navbar";
 import RightPanel from "~/components/Shared/RightPanel";
-
-interface Friend {
-  friendship_id: string;
-  user1_id: string;
-  user2_id: string;
-  created_at: string;
-  user: User;
-}
+import { FaUserFriends, FaComment, FaHeart, FaVideo, FaCheck, FaTimes, FaSearch, FaTrash, FaCheckDouble, FaBell } from 'react-icons/fa';
+import { useAuth } from "~/hooks/useAuth";
+import { userService } from "~/services/user.service";
+import { formatDistanceToNow, isToday, isYesterday, isThisWeek, isThisMonth } from 'date-fns';
+import { es } from 'date-fns/locale';
+import { friendshipService } from "~/services/friendship.service";
 
 interface LoaderData {
   notifications: (Notification & { user: User })[];
-  friends: Friend[];
   currentUser: User;
 }
 
-export const loader = async () => {
+export const loader = async ({ request }: { request: Request }) => {
+  const cookieHeader = request.headers.get("Cookie");
+  const token = cookieHeader?.split(";").find((c: string) => c.trim().startsWith("token="))?.split("=")[1];
+  if (!token) return redirect("/login");
   try {
-    // Datos mock para pruebas que coinciden con el esquema de la base de datos
+    // Datos mock para pruebas
+    const mockUser: User = {
+      user_id: "1",
+      username: "mariagarcia",
+      name: "María",
+      surname: "García",
+      email: "maria@example.com",
+      profile_picture: "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg",
+      bio: "¡Hola! Me encanta compartir momentos especiales",
+      email_verified: true,
+      is_moderator: false,
+      deleted_at: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      active_video_call: false
+    };
+
     const mockNotifications: (Notification & { user: User })[] = [
       {
-        notification_id: '550e8400-e29b-41d4-a716-446655440000',
-        type: 'post_like',
-        user_id: '123e4567-e89b-12d3-a456-426614174000',
-        related_id: '098f6bcd-4621-3373-8ade-4e832627b000',
+        notification_id: "1",
+        type: "friend_request",
+        user_id: "2",
+        related_id: "1",
+        post_id: null,
         is_read: false,
-        created_at: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
-        user: {
-          user_id: '123e4567-e89b-12d3-a456-426614174000',
-          first_name: 'María',
-          last_name: 'García',
-          username: 'maria_garcia',
-          email: 'maria@example.com',
-          password: 'hashed_password',
-          profile_picture_url: 'https://i.pravatar.cc/150?img=1',
-          bio: 'Me gusta la fotografía',
-          email_verified: true,
-          is_moderator: false,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }
-      }
-    ];
-
-    const mockFriends: Friend[] = [
-      {
-        friendship_id: '1',
-        user1_id: '123e4567-e89b-12d3-a456-426614174000',
-        user2_id: '123e4567-e89b-12d3-a456-426614174001',
+        severity: "info",
         created_at: new Date().toISOString(),
         user: {
-          user_id: '123e4567-e89b-12d3-a456-426614174001',
-          first_name: 'Juan',
-          last_name: 'Pérez',
-          username: 'juan_perez',
-          email: 'juan@example.com',
-          password: 'hashed_password',
-          profile_picture_url: 'https://i.pravatar.cc/150?img=2',
-          bio: 'Amante de la música',
+          user_id: "2",
+          username: "carlos123",
+          name: "Carlos",
+          surname: "Pérez",
+          email: "carlos@example.com",
+          profile_picture: "https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg",
+          bio: "Amante de la música",
           email_verified: true,
           is_moderator: false,
+          deleted_at: null,
           created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
+          active_video_call: false
+        }
+      },
+      {
+        notification_id: "2",
+        type: "message",
+        user_id: "3",
+        related_id: "1",
+        post_id: null,
+        is_read: false,
+        severity: "info",
+        created_at: new Date().toISOString(),
+        user: {
+          user_id: "3",
+          username: "analopez",
+          name: "Ana",
+          surname: "López",
+          email: "ana@example.com",
+          profile_picture: "https://images.pexels.com/photos/733872/pexels-photo-733872.jpeg",
+          bio: "Viajera y fotógrafa",
+          email_verified: true,
+          is_moderator: false,
+          deleted_at: null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          active_video_call: false
         }
       }
     ];
 
     return json<LoaderData>({
       notifications: mockNotifications,
-      friends: mockFriends,
-      currentUser: {} as User
+      currentUser: mockUser
     });
   } catch (error) {
     throw new Error('Error al cargar las notificaciones');
   }
 };
 
-export default function Notificaciones() {
-  const { notifications, friends } = useLoaderData<typeof loader>();
-  const [searchTerm, setSearchTerm] = useState<string>("");
+export default function Notificaciones(): React.ReactElement {
+  const { notifications, currentUser } = useLoaderData<LoaderData>();
+  const { token } = useAuth();
+  const [currentNotifications, setCurrentNotifications] = useState<Notification[]>(notifications);
+  const [friends, setFriends] = useState<Friend[]>([]);
+  const [suggestedUsers, setSuggestedUsers] = useState<User[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedFilter, setSelectedFilter] = useState<string>('all');
 
-  const formatTimeAgo = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+  useEffect(() => {
+    const fetchFriends = async () => {
+      if (!token) {
+        setError('Por favor, inicia sesión para ver las notificaciones');
+        setLoading(false);
+        return;
+      }
 
-    if (seconds < 60) return 'Hace un momento';
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `Hace ${minutes} minutos`;
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `Hace ${hours} horas`;
-    const days = Math.floor(hours / 24);
-    if (days < 30) return `Hace ${days} días`;
-    return date.toLocaleDateString();
-  };
+      try {
+        // Cargar amigos
+        const friendsResponse = await friendshipService.getUserFriends(token);
+        if (friendsResponse.success && friendsResponse.data) {
+          setFriends(friendsResponse.data);
 
-  const getNotificationContent = (notification: Notification & { user: User }) => {
-    switch (notification.type) {
-      case 'friend_request':
-        return {
-          title: 'Nueva solicitud de amistad',
-          description: `${notification.user.first_name} quiere ser tu amigo`
-        };
-      case 'message':
-        return {
-          title: 'Nuevo mensaje',
-          description: `${notification.user.first_name} te ha enviado un mensaje`
-        };
-      case 'comment':
-        return {
-          title: 'Nuevo comentario',
-          description: `${notification.user.first_name} comentó en tu publicación`
-        };
-      case 'post_like':
-        return {
-          title: 'Me gusta en tu publicación',
-          description: `A ${notification.user.first_name} le gustó tu publicación`
-        };
-      case 'video_call':
-        return {
-          title: 'Llamada perdida',
-          description: `${notification.user.first_name} intentó iniciar una videollamada contigo`
-        };
-      default:
-        return {
-          title: 'Nueva notificación',
-          description: 'Tienes una nueva notificación'
-        };
+          // Cargar usuarios sugeridos
+          const suggestedResponse = await userService.getAllUsers(token);
+          if (suggestedResponse.success && suggestedResponse.data && Array.isArray(suggestedResponse.data.users)) {
+            // Filtrar los usuarios que ya son amigos
+            const friendIds = new Set(friendsResponse.data.map(friend => friend.user.user_id));
+            const filteredSuggestedUsers = suggestedResponse.data.users.filter(
+              user => !friendIds.has(user.user_id)
+            );
+            setSuggestedUsers(filteredSuggestedUsers);
+          }
+        } else {
+          setFriends([]);
+          setSuggestedUsers([]);
+        }
+      } catch (err) {
+        console.error('Error al cargar los amigos:', err);
+        setError('Error al cargar la lista de amigos');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFriends();
+  }, [token]);
+
+  const handleAcceptFriend = async (friendshipId: string) => {
+    try {
+      console.log('Aceptando solicitud de amistad:', friendshipId);
+      setFriends(prev =>
+        prev.map(friend =>
+          friend.friendship_id === friendshipId
+            ? { ...friend, status: 'accepted' }
+            : friend
+        )
+      );
+    } catch (error) {
+      console.error('Error al aceptar solicitud:', error);
     }
   };
 
+  const handleRejectFriend = async (friendshipId: string) => {
+    try {
+      console.log('Rechazando solicitud de amistad:', friendshipId);
+      setFriends(prev =>
+        prev.filter(friend => friend.friendship_id !== friendshipId)
+      );
+    } catch (error) {
+      console.error('Error al rechazar solicitud:', error);
+    }
+  };
+
+  const handleMarkAsRead = async (notificationId: string) => {
+    try {
+      console.log('Marcando notificación como leída:', notificationId);
+      setCurrentNotifications(prev =>
+        prev.map(notification =>
+          notification.notification_id === notificationId
+            ? { ...notification, is_read: true }
+            : notification
+        )
+      );
+    } catch (error) {
+      console.error('Error al marcar como leída:', error);
+    }
+  };
+
+  const handleMarkAllAsRead = async () => {
+    try {
+      setCurrentNotifications(prev =>
+        prev.map(notification => ({ ...notification, is_read: true }))
+      );
+    } catch (error) {
+      console.error('Error al marcar todas como leídas:', error);
+    }
+  };
+
+  const handleDeleteNotification = async (notificationId: string) => {
+    try {
+      setCurrentNotifications(prev =>
+        prev.filter(notification => notification.notification_id !== notificationId)
+      );
+    } catch (error) {
+      console.error('Error al eliminar notificación:', error);
+    }
+  };
+
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'friend_request':
+        return <FaUserFriends className="text-blue-500" />;
+      case 'message':
+        return <FaComment className="text-green-500" />;
+      case 'comment':
+        return <FaComment className="text-yellow-500" />;
+      case 'post_like':
+        return <FaHeart className="text-red-500" />;
+      case 'video_call':
+        return <FaVideo className="text-purple-500" />;
+      default:
+        return null;
+    }
+  };
+
+  const getNotificationStyle = (type: string, isRead: boolean) => {
+    const baseStyle = 'p-4 rounded-lg border transition-colors';
+    const readStyle = isRead ? 'border-gray-800 bg-gray-900/50' : 'border-blue-500 bg-blue-500/10';
+    
+    switch (type) {
+      case 'friend_request':
+        return `${baseStyle} ${readStyle}`;
+      case 'message':
+        return `${baseStyle} ${isRead ? 'border-gray-800 bg-gray-900/50' : 'border-green-500 bg-green-500/10'}`;
+      case 'comment':
+        return `${baseStyle} ${isRead ? 'border-gray-800 bg-gray-900/50' : 'border-yellow-500 bg-yellow-500/10'}`;
+      case 'post_like':
+        return `${baseStyle} ${isRead ? 'border-gray-800 bg-gray-900/50' : 'border-red-500 bg-red-500/10'}`;
+      case 'video_call':
+        return `${baseStyle} ${isRead ? 'border-gray-800 bg-gray-900/50' : 'border-purple-500 bg-purple-500/10'}`;
+      default:
+        return `${baseStyle} ${readStyle}`;
+    }
+  };
+
+  const getNotificationGroup = (date: string) => {
+    const notificationDate = new Date(date);
+    if (isToday(notificationDate)) return 'Hoy';
+    if (isYesterday(notificationDate)) return 'Ayer';
+    if (isThisWeek(notificationDate)) return 'Esta semana';
+    if (isThisMonth(notificationDate)) return 'Este mes';
+    return 'Anteriores';
+  };
+
+  const filteredNotifications = currentNotifications
+    .filter(notification => {
+      const matchesSearch = notification.user?.username.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesFilter = selectedFilter === 'all' || notification.type === selectedFilter;
+      return matchesSearch && matchesFilter;
+    })
+    .reduce((groups, notification) => {
+      const group = getNotificationGroup(notification.created_at);
+      if (!groups[group]) {
+        groups[group] = [];
+      }
+      groups[group].push(notification);
+      return groups;
+    }, {} as Record<string, Notification[]>);
+
   return (
     <div className="min-h-screen bg-black text-white flex">
-      {/* Barra lateral izquierda */}
       <Navbar />
 
-      {/* Contenido central - Notificaciones */}
+      {/* Contenido central */}
       <div className="w-2/3 ml-[16.666667%] border-r border-gray-800">
         <div className="p-6">
-          <h1 className="text-2xl font-bold mb-6 text-white">Notificaciones</h1>
-          <div className="space-y-4">
-            {notifications.length === 0 ? (
-              <div className="bg-gray-800/50 rounded-lg p-6 text-center">
-                <p className="text-gray-400">No tienes notificaciones nuevas</p>
+          {/* Encabezado */}
+          <div className="mb-8">
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Notificaciones</h1>
+                <p className="text-gray-400 mt-1">Mantente al día con tus actividades</p>
               </div>
-            ) : (
-              notifications.map((notification) => {
-                const content = getNotificationContent(notification);
-                return (
-                  <Link 
-                    to={
-                      notification.type === 'post_like' || notification.type === 'comment'
-                        ? `/post/${notification.related_id}`
-                        : notification.type === 'message'
-                        ? `/mensajes/${notification.user.username}`
-                        : notification.type === 'friend_request'
-                        ? `/amigos`
-                        : '#'
-                    }
-                    key={notification.notification_id} 
-                    className="block bg-gray-800/50 p-4 rounded-lg border border-gray-700 hover:bg-gray-700/50 transition-all"
-                  >
-                    <div className="flex items-start gap-4">
-                      <img 
-                        src={notification.user.profile_picture_url || '/images/default-avatar.png'} 
-                        alt={notification.user.username}
-                        className="w-12 h-12 rounded-full object-cover border-2 border-gray-700"
-                      />
-                      <div>
-                        <p className="font-medium text-white">{content.title}</p>
-                        <p className="text-gray-400">{content.description}</p>
-                        <p className="text-sm text-gray-500 mt-2">
-                          {formatTimeAgo(notification.created_at)}
-                        </p>
+              <button
+                onClick={handleMarkAllAsRead}
+                className="px-4 py-2 bg-blue-600/20 text-blue-400 rounded-lg hover:bg-blue-600/30 transition-colors flex items-center space-x-2"
+              >
+                <FaCheckDouble className="text-sm" />
+                <span>Marcar todas como leídas</span>
+              </button>
+            </div>
+
+            {/* Barra de búsqueda y filtros */}
+          <div className="space-y-4">
+              <div className="relative">
+                <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Buscar en notificaciones..."
+                  className="w-full bg-gray-900 rounded-xl py-3 pl-12 pr-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              <div className="flex space-x-2 overflow-x-auto pb-2 custom-scrollbar">
+                <button
+                  onClick={() => setSelectedFilter('all')}
+                  className={`px-3 py-1.5 rounded-lg text-sm transition-colors whitespace-nowrap ${
+                    selectedFilter === 'all' 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                  }`}
+                >
+                  Todas
+                </button>
+                <button
+                  onClick={() => setSelectedFilter('friend_request')}
+                  className={`px-3 py-1.5 rounded-lg text-sm transition-colors whitespace-nowrap ${
+                    selectedFilter === 'friend_request' 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                  }`}
+                >
+                  Solicitudes
+                </button>
+                <button
+                  onClick={() => setSelectedFilter('message')}
+                  className={`px-3 py-1.5 rounded-lg text-sm transition-colors whitespace-nowrap ${
+                    selectedFilter === 'message' 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                  }`}
+                >
+                  Mensajes
+                </button>
+                <button
+                  onClick={() => setSelectedFilter('post_like')}
+                  className={`px-3 py-1.5 rounded-lg text-sm transition-colors whitespace-nowrap ${
+                    selectedFilter === 'post_like' 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                  }`}
+                >
+                  Likes
+                </button>
+                <button
+                  onClick={() => setSelectedFilter('comment')}
+                  className={`px-3 py-1.5 rounded-lg text-sm transition-colors whitespace-nowrap ${
+                    selectedFilter === 'comment' 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                  }`}
+                >
+                  Comentarios
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Lista de notificaciones agrupadas */}
+          <div className="space-y-6">
+            {Object.entries(filteredNotifications).map(([group, notifications]) => (
+              <div key={group} className="space-y-2">
+                <h2 className="text-sm font-semibold text-gray-400 mb-3">{group}</h2>
+                {notifications.map((notification) => (
+              <div
+                key={notification.notification_id}
+                    className={`group relative ${getNotificationStyle(notification.type, notification.is_read)} hover:scale-[1.02] transition-all duration-200`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 flex items-center justify-center">
+                      {getNotificationIcon(notification.type)}
+                    </div>
+                    <div>
+                      <p className="text-sm">
+                        <span className="font-semibold">{notification.user?.username}</span>
+                        {notification.type === 'friend_request' && ' te envió una solicitud de amistad'}
+                        {notification.type === 'message' && ' te envió un mensaje'}
+                        {notification.type === 'comment' && ' comentó tu publicación'}
+                        {notification.type === 'post_like' && ' le gustó tu publicación'}
+                        {notification.type === 'video_call' && ' te llamó'}
+                      </p>
+                      <p className="text-xs text-gray-400">
+                            {formatDistanceToNow(new Date(notification.created_at), {
+                              addSuffix: true,
+                              locale: es
+                            })}
+                      </p>
+                    </div>
+                  </div>
+
+                      <div className="flex items-center space-x-2">
+                  {notification.type === 'friend_request' ? (
+                          <>
+                      <button
+                        onClick={() => handleAcceptFriend(notification.related_id)}
+                              className="p-2 bg-green-500/20 text-green-400 rounded-full hover:bg-green-500/30 transition-colors"
+                              title="Aceptar solicitud"
+                      >
+                        <FaCheck />
+                      </button>
+                      <button
+                        onClick={() => handleRejectFriend(notification.related_id)}
+                              className="p-2 bg-red-500/20 text-red-400 rounded-full hover:bg-red-500/30 transition-colors"
+                              title="Rechazar solicitud"
+                      >
+                        <FaTimes />
+                      </button>
+                          </>
+                  ) : !notification.is_read && (
+                    <button
+                      onClick={() => handleMarkAsRead(notification.notification_id)}
+                            className="text-blue-400 hover:text-blue-300 text-sm transition-colors"
+                            title="Marcar como leída"
+                    >
+                      Marcar como leída
+                    </button>
+                        )}
+                        <button
+                          onClick={() => handleDeleteNotification(notification.notification_id)}
+                          className="p-2 text-gray-400 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all duration-200"
+                          title="Eliminar notificación"
+                        >
+                          <FaTrash className="w-4 h-4" />
+                        </button>
                       </div>
                     </div>
-                  </Link>
-                );
-              })
+                    {!notification.is_read && (
+                      <div className="absolute top-0 right-0 w-2 h-2 bg-blue-500 rounded-full transform translate-x-1 -translate-y-1" />
+                  )}
+                </div>
+                ))}
+              </div>
+            ))}
+
+            {/* Mensaje cuando no hay notificaciones */}
+            {Object.keys(filteredNotifications).length === 0 && (
+              <div className="flex flex-col items-center justify-center py-16 bg-gray-900/50 rounded-xl border border-gray-800">
+                <div className="w-24 h-24 bg-gradient-to-br from-blue-600/20 to-purple-600/20 rounded-full flex items-center justify-center mb-6">
+                  <FaBell className="text-4xl text-blue-500" />
+                </div>
+                <h3 className="text-xl font-semibold text-white mb-2">
+                  {searchQuery ? 'No se encontraron notificaciones' : 'No tienes notificaciones'}
+                </h3>
+                <p className="text-gray-400 text-center max-w-md">
+                  {searchQuery 
+                    ? 'Intenta con otros términos de búsqueda'
+                    : 'Las notificaciones aparecerán aquí cuando tengas nuevas interacciones'}
+                </p>
+              </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* Barra lateral derecha - Amigos en línea */}
+      {/* Panel lateral derecho */}
       <RightPanel
-        users={friends.map((friend: Friend) => ({
-          ...friend.user,
-          is_online: true // Esto debería venir del backend
-        }))}
-        mode="online"
-        onSearch={setSearchTerm}
+        users={suggestedUsers}
+        mode="suggested"
       />
+
+      <style>
+        {`
+          .custom-scrollbar::-webkit-scrollbar {
+            height: 4px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #374151;
+            border-radius: 2px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #4B5563;
+          }
+        `}
+      </style>
     </div>
   );
 } 

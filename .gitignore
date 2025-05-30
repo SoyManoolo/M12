@@ -136,3 +136,6 @@ frontend/build
 frontend/.env
 
 frontend/.git-commit-automation.json
+
+images/
+videos/

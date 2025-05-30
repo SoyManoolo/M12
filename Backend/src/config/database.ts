@@ -2,11 +2,101 @@ import { Sequelize } from "sequelize";
 import { AppError } from "../middlewares/errors/AppError";
 import dbLogger from "./logger";
 import { Client } from "pg"; // Importar el cliente de PostgreSQL
+import { User } from "../models";
+import { hash } from "bcryptjs";
+import { Op } from "sequelize";
 
 const isTestEnv = process.env.NODE_ENV === "test";
 const dbName = isTestEnv ? process.env.DB_NAME_TEST : process.env.DB_NAME;
 const dbUpdate: boolean = process.env.DB_UPDATE === "true" || false;
 
+// Datos del usuario administrador por defecto
+const DEFAULT_ADMIN = {
+    username: "admin",
+    email: "admin@example.com",
+    password: "admin123",
+    is_moderator: true,
+    name: "Admin",
+    surname: "System"
+};
+
+// Datos de los usuarios por defecto
+const DEFAULT_USERS = [
+    {
+        username: "Jaider",
+        email: "jaider@example.com",
+        password: "Jaider123",
+        is_moderator: false,
+        name: "Jaider",
+        surname: "User"
+    },
+    {
+        username: "Erik",
+        email: "erik@example.com",
+        password: "Erik123",
+        is_moderator: false,
+        name: "Erik",
+        surname: "User"
+    }
+];
+
+async function createDefaultAdmin() {
+    try {
+        // Verificar si ya existe un usuario administrador
+        const existingAdmin = await User.findOne({
+            where: {
+                [Op.or]: [
+                    { username: DEFAULT_ADMIN.username },
+                    { email: DEFAULT_ADMIN.email }
+                ]
+            }
+        });
+
+        if (!existingAdmin) {
+            // Crear el usuario administrador
+            const hashedPassword = await hash(DEFAULT_ADMIN.password, 10);
+            await User.create({
+                ...DEFAULT_ADMIN,
+                password: hashedPassword
+            });
+            dbLogger.info("Default admin user created successfully.");
+        } else {
+            dbLogger.info("Default admin user already exists.");
+        }
+    } catch (error) {
+        dbLogger.error("Error creating default admin user.", { error });
+    }
+}
+
+async function createDefaultUsers() {
+    try {
+        for (const userData of DEFAULT_USERS) {
+            // Verificar si ya existe el usuario
+            const existingUser = await User.findOne({
+                where: {
+                    [Op.or]: [
+                        { username: userData.username },
+                        { email: userData.email }
+                    ]
+                }
+            });
+
+            if (!existingUser) {
+                // Crear el usuario
+                const hashedPassword = await hash(userData.password, 10);
+                await User.create({
+                    ...userData,
+                    password: hashedPassword
+                });
+                dbLogger.info(`Default user ${userData.username} created successfully.`);
+            } else {
+                dbLogger.info(`Default user ${userData.username} already exists.`);
+            }
+        }
+    } catch (error) {
+        dbLogger.error("Error creating default users.", { error });
+    }
+}
 
 async function createDatabase(): Promise<boolean> {
     try {
@@ -59,6 +149,9 @@ async function initializeDatabase() {
         if (dbUpdate) {
             await sequelize.sync({ alter: true });
             dbLogger.info("All models were synchronized successfully.");
+            // Crear usuarios por defecto después de sincronizar
+            await createDefaultAdmin();
+            await createDefaultUsers();
         } else {
             dbLogger.info("Skipping model synchronization (DB_UPDATE is not 'true')");
         }

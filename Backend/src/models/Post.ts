@@ -1,8 +1,10 @@
 import { sequelize } from "../config/database";
 import { Model, DataTypes } from "sequelize";
 import { User } from "./User";
+import { PostCreationAttributes } from "../types/custom";
+import { PostAttributes } from "../types/custom";
 
-export class Post extends Model {};
+export class Post extends Model <PostAttributes, PostCreationAttributes>{};
 
 Post.init(
     {
@@ -28,17 +30,9 @@ Post.init(
                 notEmpty: true,
             },
         },
-        media_url: {
+        media: {
             type: DataTypes.STRING(255),
             allowNull: true,
-            validate: {
-                isUrl: true,
-            },
-        },
-        is_deleted: {
-            type: DataTypes.BOOLEAN,
-            allowNull: false,
-            defaultValue: false
         }
     },
     {
@@ -47,6 +41,8 @@ Post.init(
         timestamps: true,
         createdAt: "created_at",
         updatedAt: "updated_at",
+        deletedAt: "deleted_at",
+        paranoid: true,
         indexes: [
             {
                 fields: ["user_id"],

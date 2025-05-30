@@ -11,13 +11,18 @@
  * @requires @remix-run/react
  * @requires @remix-run/node
  * @requires ~/services/auth.service
+ * @requires ~/hooks/useAuth.tsx
+ * @requires ~/hooks/useMessage
+ * @requires ~/components/Shared/Message
  */
 
-import { useState } from 'react';
-import { Form, useNavigate, Link } from "@remix-run/react";
+import { useState, useEffect } from 'react';
+import { Form, Link, useSearchParams } from "@remix-run/react";
 import type { ActionFunction } from "@remix-run/node";
 import { redirect } from "@remix-run/node";
 import { authService } from '../services/auth.service';
+import { useAuth } from '../hooks/useAuth.tsx';
+import Notification from '../components/Shared/Notification';
 
 /**
  * @function action
@@ -27,11 +32,11 @@ import { authService } from '../services/auth.service';
  */
 export const action: ActionFunction = async ({ request }) => {
   const formData = await request.formData();
-  const identifier = formData.get('identifier') as string;
+  const id = formData.get('id') as string;
   const password = formData.get('password') as string;
 
   try {
-    const response = await authService.login({ identifier, password });
+    const response = await authService.login({ id, password });
     
     if (response.success && response.token) {
       return redirect('/inicio', {
@@ -40,10 +45,10 @@ export const action: ActionFunction = async ({ request }) => {
         }
       });
     } else {
-      return redirect('/login?error=' + encodeURIComponent(response.message || 'Error al iniciar sesión'));
+      return redirect('/login');
     }
   } catch (error) {
-    return redirect('/login?error=' + encodeURIComponent('Error al conectar con el servidor'));
+    return redirect('/login');
   }
 };
 
@@ -52,19 +57,33 @@ export const action: ActionFunction = async ({ request }) => {
  * @description Componente principal de la página de inicio de sesión
  * @returns {JSX.Element} Formulario de inicio de sesión con opciones de autenticación
  * 
- * @state {string} identifier - Estado para el email o nombre de usuario
+ * @state {string} id - Estado para el email o nombre de usuario
  * @state {string} password - Estado para la contraseña
  * @state {string} error - Estado para mensajes de error
+ * @state {string} message - Estado para mensajes de éxito
  * 
  * @method handleSubmit - Maneja el envío del formulario de inicio de sesión
- * @method handleGoogleLogin - Maneja el inicio de sesión con Google (pendiente)
- * @method handleFacebookLogin - Maneja el inicio de sesión con Facebook (pendiente)
  */
 export default function LoginPage() {
-  const [identifier, setIdentifier] = useState('');
+  const [id, setId] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const navigate = useNavigate();
+  const { setToken } = useAuth();
+  const [notification, setNotification] = useState<{
+    message: string;
+    type: 'success' | 'error';
+  } | null>(null);
+
+  useEffect(() => {
+    // Verificar si hay un mensaje de éxito del registro
+    const signupSuccess = localStorage.getItem('signupSuccess');
+    if (signupSuccess) {
+      setNotification({
+        message: signupSuccess,
+        type: 'success'
+      });
+      localStorage.removeItem('signupSuccess');
+    }
+  }, []);
 
   /**
    * @function handleSubmit
@@ -73,70 +92,64 @@ export default function LoginPage() {
    */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    console.log('📤 Datos enviados al backend:', { identifier, password: '****' });
+    console.log('📤 Datos enviados al backend:', { id, password: '****' });
     console.log('🔄 Iniciando proceso de login...');
 
     try {
-      const response = await authService.login({ identifier, password });
+      const response = await authService.login({ id, password });
       console.log('📥 Respuesta del backend:', response);
       
       if (response.success && response.token) {
         console.log('✅ Login exitoso, token recibido');
         localStorage.setItem('token', response.token);
-        navigate('/inicio');
+        setToken(response.token);
+        setNotification({
+          message: response.message || '¡Bienvenido de nuevo!',
+          type: 'success'
+        });
+        // Dejamos que el action de Remix maneje la redirección
+        const form = e.target as HTMLFormElement;
+        form.submit();
       } else {
         console.log('❌ Error en el login:', response.message);
-        setError(response.message || 'Error al iniciar sesión');
+        setNotification({
+          message: response.message || 'No pudimos iniciar tu sesión',
+          type: 'error'
+        });
       }
     } catch (error) {
       console.error('⚠️ Error al conectar con el servidor:', error);
-      setError('Error al conectar con el servidor');
+      setNotification({
+        message: 'No pudimos conectarnos al servidor. Por favor, verifica tu conexión a internet',
+        type: 'error'
+      });
     }
-  };
-
-  /**
-   * @function handleGoogleLogin
-   * @description Maneja el inicio de sesión con Google (pendiente de implementación)
-   */
-  const handleGoogleLogin = () => {
-    console.log('🔵 Iniciando login con Google...');
-    // Implementar login con Google
-    navigate('/inicio');
-  };
-
-  /**
-   * @function handleFacebookLogin
-   * @description Maneja el inicio de sesión con Facebook (pendiente de implementación)
-   */
-  const handleFacebookLogin = () => {
-    console.log('🔵 Iniciando login con Facebook...');
-    // Implementar login con Facebook
-    navigate('/inicio');
   };
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-black border border-gray-800 rounded-lg p-8">
-        <h1 className="text-4xl text-white text-center mb-8 font-bold tracking-wider">LOG IN</h1>
+        <h1 className="text-4xl text-white text-center mb-8 font-bold tracking-wider">INICIA SESIÓN</h1>
         
-        {error && (
-          <div className="mb-4 p-3 bg-red-500/10 border border-red-500 text-red-500 rounded-md text-sm">
-            {error}
-          </div>
+        {notification && (
+          <Notification
+            message={notification.message}
+            type={notification.type}
+            onClose={() => setNotification(null)}
+          />
         )}
         
         <Form method="post" onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label htmlFor="identifier" className="block text-gray-300 text-sm font-medium mb-2 tracking-wider">
+            <label htmlFor="id" className="block text-gray-300 text-sm font-medium mb-2 tracking-wider">
               EMAIL O USUARIO
             </label>
             <input
               type="text"
-              id="identifier"
-              name="identifier"
-              value={identifier}
-              onChange={(e) => setIdentifier(e.target.value)}
+              id="id"
+              name="id"
+              value={id}
+              onChange={(e) => setId(e.target.value)}
               className="w-full px-3 py-2 bg-transparent border border-gray-600 rounded-md text-white focus:outline-none focus:border-white cursor-text"
               required
               placeholder="Ingresa tu email o nombre de usuario"
@@ -145,7 +158,7 @@ export default function LoginPage() {
 
           <div>
             <label htmlFor="password" className="block text-gray-300 text-sm font-medium mb-2 tracking-wider">
-              PASSWORD
+              CONTRASEÑA
             </label>
             <input
               type="password"
@@ -160,44 +173,27 @@ export default function LoginPage() {
           </div>
 
           <div className="text-right">
-            <a href="#" className="text-sm text-gray-400 hover:text-white tracking-wider cursor-pointer">
-              FORGOT PASSWORD?
-            </a>
+            <Link
+              to="/forgot-password"
+              className="text-sm text-gray-400 hover:text-white tracking-wider cursor-pointer"
+            >
+              HAS OLVIDADO TU CONTRASEÑA?
+            </Link>
           </div>
 
           <button
             type="submit"
             className="w-full bg-white text-black py-2 px-4 rounded-md hover:bg-gray-200 transition-colors tracking-wider cursor-pointer"
           >
-            LOG IN
+            INICIA SESIÓN
           </button>
-
-          <div className="mt-6">
-            <p className="text-gray-400 text-center mb-4 tracking-wider">LOG IN WITH:</p>
-            <div className="flex justify-center space-x-4">
-              <button
-                type="button"
-                onClick={handleGoogleLogin}
-                className="text-white hover:text-gray-300 tracking-wider cursor-pointer"
-              >
-                GOOGLE
-              </button>
-              <button
-                type="button"
-                onClick={handleFacebookLogin}
-                className="text-white hover:text-gray-300 tracking-wider cursor-pointer"
-              >
-                FACEBOOK
-              </button>
-            </div>
-          </div>
 
           <div className="text-center mt-6">
             <Link
               to="/signup"
               className="inline-block text-gray-400 hover:text-white text-sm tracking-wider border border-gray-600 px-6 py-2 rounded-md cursor-pointer"
             >
-              OR SIGN UP
+              O REGISTRATE
             </Link>
           </div>
         </Form>

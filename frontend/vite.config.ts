@@ -22,12 +22,58 @@ export default defineConfig({
         v3_lazyRouteDiscovery: true,
       },
     }),
-    react(),
+    react({
+      jsxRuntime: 'automatic',
+      babel: {
+        plugins: [
+          ['@babel/plugin-transform-react-jsx', { runtime: 'automatic' }]
+        ]
+      }
+    }),
     tsconfigPaths(),
     tailwindcss()
   ],
   server: {
+    host: true,
     hmr: false,
+    watch: {
+      usePolling: false,
+      interval: 1000,
+    },
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api/, '')
+      },
+      '/media': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        secure: false,
+        ws: true,
+        headers: {
+          'Access-Control-Allow-Origin': '*'
+        }
+      }
+    }
+  },
+  build: {
+    target: 'esnext',
+    minify: 'terser',
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('react/') || id.includes('react-dom/')) {
+              return 'vendor-react';
+            }
+            return 'vendor';
+          }
+        }
+      }
+    }
   },
   resolve: {
     alias: {
@@ -35,4 +81,8 @@ export default defineConfig({
     },
   },
   publicDir: 'public',
+  optimizeDeps: {
+    include: ['react', 'react-dom'],
+    exclude: ['@remix-run/react']
+  },
 });

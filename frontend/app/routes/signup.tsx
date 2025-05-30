@@ -13,12 +13,12 @@
  * @requires ~/services/auth.service
  */
 
-import * as React from 'react';
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Form, useNavigate, Link } from "@remix-run/react";
 import type { ActionFunction } from "@remix-run/node";
 import { redirect } from "@remix-run/node";
 import { authService } from '../services/auth.service';
+import Notification from '../components/Shared/Notification';
 
 /**
  * @function action
@@ -45,17 +45,13 @@ export const action: ActionFunction = async ({ request }) => {
       password
     });
     
-    if (response.success && response.token) {
-      return redirect('/inicio', {
-        headers: {
-          'Set-Cookie': `token=${response.token}; Path=/; HttpOnly; SameSite=Lax`
-        }
-      });
+    if (response.success) {
+      return redirect('/login');
     } else {
-      return redirect('/signup?error=' + encodeURIComponent(response.message || 'Error al registrarse'));
+      return redirect('/signup');
     }
   } catch (error) {
-    return redirect('/signup?error=' + encodeURIComponent('Error al conectar con el servidor'));
+    return redirect('/signup');
   }
 };
 
@@ -76,13 +72,30 @@ export const action: ActionFunction = async ({ request }) => {
  * @method handleFacebookSignUp - Maneja el registro con Facebook (pendiente)
  */
 export default function SignUpPage(): React.ReactElement {
+  const [mounted, setMounted] = useState(false);
   const [name, setName] = useState('');
   const [surname, setSurname] = useState('');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const navigate = useNavigate();
+  const [notification, setNotification] = useState<{
+    message: string;
+    type: 'success' | 'error';
+  } | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="text-white">Cargando...</div>
+    </div>;
+  }
+
+  // Regex para validar contraseñas (al menos 8 caracteres, mayúscula, minúscula, número, caracter especial)
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&.#])[A-Za-z\d@$!%*?&.#]{8,}$/;
 
   /**
    * @function handleSubmit
@@ -91,7 +104,6 @@ export default function SignUpPage(): React.ReactElement {
    */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
     console.log('📤 Datos enviados al backend:', { 
       name, 
       surname, 
@@ -100,6 +112,15 @@ export default function SignUpPage(): React.ReactElement {
       password: '****' 
     });
     console.log('🔄 Iniciando proceso de registro...');
+
+    // Validar contraseña con el regex
+    if (!passwordRegex.test(password)) {
+      setNotification({
+        message: 'La contraseña debe tener al menos 8 caracteres, incluyendo una mayúscula, una minúscula, un número y un caracter especial (@$!%*?&.#)',
+        type: 'error'
+      });
+      return;
+    }
 
     try {
       const response = await authService.register({
@@ -112,55 +133,48 @@ export default function SignUpPage(): React.ReactElement {
       
       console.log('📥 Respuesta del backend:', response);
       
-      if (response.success && response.token) {
-        console.log('✅ Registro exitoso, token recibido');
-        localStorage.setItem('token', response.token);
-        navigate('/inicio');
+      if (response.success) {
+        console.log('✅ Registro exitoso');
+        setNotification({
+          message: response.message || '¡Cuenta creada con éxito! Ya puedes iniciar sesión',
+          type: 'success'
+        });
+        // Guardamos el mensaje en localStorage antes de navegar
+        localStorage.setItem('signupSuccess', response.message || '¡Cuenta creada con éxito! Ya puedes iniciar sesión');
+        navigate('/login');
       } else {
         console.log('❌ Error en el registro:', response.message);
-        setError(response.message || 'Error al registrarse');
+        setNotification({
+          message: response.message || 'No pudimos crear tu cuenta',
+          type: 'error'
+        });
       }
     } catch (error) {
       console.error('⚠️ Error al conectar con el servidor:', error);
-      setError('Error al conectar con el servidor');
+      setNotification({
+        message: 'No pudimos conectarnos al servidor. Por favor, verifica tu conexión a internet',
+        type: 'error'
+      });
     }
-  };
-
-  /**
-   * @function handleGoogleSignUp
-   * @description Maneja el registro con Google (pendiente de implementación)
-   */
-  const handleGoogleSignUp = () => {
-    console.log('🔵 Iniciando registro con Google...');
-    // Implementar signup con Google
-    navigate('/inicio');
-  };
-
-  /**
-   * @function handleFacebookSignUp
-   * @description Maneja el registro con Facebook (pendiente de implementación)
-   */
-  const handleFacebookSignUp = () => {
-    console.log('🔵 Iniciando registro con Facebook...');
-    // Implementar signup con Facebook
-    navigate('/inicio');
   };
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-black border border-gray-800 rounded-lg p-8">
-        <h1 className="text-4xl text-white text-center mb-8 font-bold tracking-wider">SIGN UP</h1>
+        <h1 className="text-4xl text-white text-center mb-8 font-bold tracking-wider">REGISTRARSE</h1>
         
-        {error && (
-          <div className="mb-4 p-3 bg-red-500/10 border border-red-500 text-red-500 rounded-md text-sm">
-            {error}
-          </div>
+        {notification && (
+          <Notification
+            message={notification.message}
+            type={notification.type}
+            onClose={() => setNotification(null)}
+          />
         )}
         
         <Form method="post" onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label htmlFor="name" className="block text-gray-300 text-sm font-medium mb-2 tracking-wider">
-              NAME
+              NOMBRE
             </label>
             <input
               type="text"
@@ -175,7 +189,7 @@ export default function SignUpPage(): React.ReactElement {
 
           <div>
             <label htmlFor="surname" className="block text-gray-300 text-sm font-medium mb-2 tracking-wider">
-              SURNAME
+              APELLIDOS
             </label>
             <input
               type="text"
@@ -190,7 +204,7 @@ export default function SignUpPage(): React.ReactElement {
 
           <div>
             <label htmlFor="username" className="block text-gray-300 text-sm font-medium mb-2 tracking-wider">
-              USERNAME
+              NOMBRE DE USUARIO
             </label>
             <input
               type="text"
@@ -205,7 +219,7 @@ export default function SignUpPage(): React.ReactElement {
 
           <div>
             <label htmlFor="email" className="block text-gray-300 text-sm font-medium mb-2 tracking-wider">
-              EMAIL
+              CORREO ELECTRÓNICO
             </label>
             <input
               type="email"
@@ -220,7 +234,7 @@ export default function SignUpPage(): React.ReactElement {
 
           <div>
             <label htmlFor="password" className="block text-gray-300 text-sm font-medium mb-2 tracking-wider">
-              PASSWORD
+              CONTRASEÑA
             </label>
             <input
               type="password"
@@ -237,35 +251,15 @@ export default function SignUpPage(): React.ReactElement {
             type="submit"
             className="w-full bg-white text-black py-2 px-4 rounded-md hover:bg-gray-200 transition-colors tracking-wider cursor-pointer"
           >
-            SIGN UP
+            REGISTRARSE
           </button>
-
-          <div className="mt-6">
-            <p className="text-gray-400 text-center mb-4 tracking-wider">SIGN UP WITH:</p>
-            <div className="flex justify-center space-x-4">
-              <button
-                type="button"
-                onClick={handleGoogleSignUp}
-                className="text-white hover:text-gray-300 tracking-wider cursor-pointer"
-              >
-                GOOGLE
-              </button>
-              <button
-                type="button"
-                onClick={handleFacebookSignUp}
-                className="text-white hover:text-gray-300 tracking-wider cursor-pointer"
-              >
-                FACEBOOK
-              </button>
-            </div>
-          </div>
 
           <div className="text-center mt-6">
             <Link
               to="/login"
               className="inline-block text-gray-400 hover:text-white text-sm tracking-wider border border-gray-600 px-6 py-2 rounded-md cursor-pointer"
             >
-              BACK TO LOGIN
+              VOLVER A INICIAR SESIÓN
             </Link>
           </div>
         </Form>

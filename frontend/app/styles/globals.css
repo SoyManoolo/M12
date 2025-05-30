@@ -1,0 +1,40 @@
+/* Estilos globales para la barra de scroll */
+:root {
+  /* Para Chrome, Safari y navegadores basados en WebKit */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #1f2937;
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #4b5563;
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #6b7280;
+  }
+
+  /* Para Firefox */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #4b5563 #1f2937;
+  }
+}
+
+/* Asegurar que los estilos se apliquen a todos los elementos scrollables */
+html, body, div, section, main, aside, nav, ul, ol, li, table, tbody, thead, tr, td, th {
+  scrollbar-width: thin;
+  scrollbar-color: #4b5563 #1f2937;
+}
+
+/* Asegurar que los estilos se apliquen a elementos con overflow */
+.overflow-y-auto, .overflow-x-auto, .overflow-auto {
+  scrollbar-width: thin;
+  scrollbar-color: #4b5563 #1f2937;
+}

@@ -1,7 +1,24 @@
 import { sequelize } from "../config/database";
-import { Model, DataTypes } from "sequelize";
+import { Model, DataTypes, Optional } from "sequelize";
+import { UserAttributes } from "../types/custom";
+import { UserCreationAttributes } from "../types/custom";
 
-export class User extends Model { }
+export class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
+    public user_id!: string;
+    public name!: string;
+    public surname!: string;
+    public username!: string;
+    public email!: string;
+    public password!: string;
+    public profile_picture!: string | null;
+    public bio!: string | null;
+    public email_verified!: boolean;
+    public is_moderator!: boolean;
+    public active_video_call!: boolean;
+    public readonly created_at!: Date;
+    public readonly updated_at!: Date;
+    public readonly deleted_at!: Date | null;
+}
 
 User.init(
     {
@@ -37,10 +54,9 @@ User.init(
             allowNull: false,
             validate: { notEmpty: true },
         },
-        profile_picture_url: {
+        profile_picture: {
             type: DataTypes.STRING(255),
             allowNull: true,
-            validate: { isUrl: true },
         },
         bio: {
             type: DataTypes.TEXT,
@@ -60,11 +76,6 @@ User.init(
             type: DataTypes.BOOLEAN,
             allowNull: false,
             defaultValue: false,
-        },
-        is_deleted: {
-            type: DataTypes.BOOLEAN,
-            allowNull: false,
-            defaultValue: false
         }
     },
     {
@@ -73,6 +84,8 @@ User.init(
         timestamps: true,
         createdAt: "created_at",
         updatedAt: "updated_at",
+        deletedAt: "deleted_at",
+        paranoid: true,
         indexes: [
             {
                 unique: true,

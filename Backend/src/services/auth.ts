@@ -1,45 +1,83 @@
 import { AppError } from "../middlewares/errors/AppError";
-import { User } from "../models";
+import { User, JWT } from "../models";
 import { compare, hash } from "bcryptjs";
 import { AuthToken } from "../middlewares/validation/authentication/jwt";
-import { existsUser } from "../utils/modelExists";
+import { Op } from "sequelize";
+import dbLogger from "../config/logger";
 
 export class AuthService {
 
+    // Método para iniciar sesión
     public async login(id: string, password: string): Promise<string> {
         try {
-            const user = await existsUser(id);
+            dbLogger.info(`[AuthService] Login attempt for ID: ${id}`);
 
-            if (!user) throw new AppError(404, 'UserNotFound');
+            // Encontrar al usuario por username o email
+            const user = await User.findOne({ where: { [Op.or]: [{ username: id }, { email: id }] } });
 
-            const correctPassword = await compare(password, user.dataValues.password);
+            // Si no se encuentra el usuario, lanzar un error
+            if (!user) {
+                dbLogger.error(`[AuthService] User not found for ID: ${id}`);
+                throw new AppError(404, 'UserNotFound')
+            };
 
-            if (!correctPassword) throw new AppError(401, 'IncorrectPassword');
+            // Verificar si la contraseña es correcta
+            const correctPassword = await compare(password, user.getDataValue("password"));
 
-            const token = new AuthToken().generateToken(user);
+            // Si la contraseña es incorrecta, lanzar un error
+            if (!correctPassword) {
+                dbLogger.error(`[AuthService] Incorrect password for user ID: ${id}`);
+                throw new AppError(401, 'IncorrectPassword')
+            };
 
-            if (!token) throw new AppError(500, 'TokenGenerationError');
+            // Generar el token de autenticación
+            const token: string = new AuthToken().generateToken(user);
+
+            // Verificar si el token fue generado correctamente
+            if (!token) {
+                dbLogger.error(`[AuthService] Token generation failed for user ID: ${id}`);
+                throw new AppError(500, 'TokenGenerationError')
+            };
+
+            // Guardar el token en la base de datos
+            await JWT.findOrCreate({
+                where: { token },
+                defaults: { token }
+            });
 
             return token;
         } catch (error) {
             if (error instanceof AppError) {
+                dbLogger.error("[AuthService] Error during login:", {error});
                 throw error;
-            }
+            };
+            dbLogger.error("[AuthService] Unexpected error during login:", {error});
             throw new AppError(500, 'InternalServerError');
         };
     };
 
+    // Método para registrar un nuevo usuario
     public async register(email: string, username: string, name: string, surname: string, password: string): Promise<string> {
         try {
-            const userEmail = await existsUser(email);
-            if (userEmail) throw new AppError(409, 'UserEmailAlreadyExists');
+            dbLogger.info(`[AuthService] Register attempt for email: ${email}`);
 
-            const userUsername = await existsUser(username);
-            if (userUsername) throw new AppError(409, 'UserUsernameAlreadyExists');
+            // Verificar si el usuario ya existe
+            const existingUser = await User.findOne({ where: { [Op.or]: [{ username }, { email }] } });
+            if (existingUser) {
+                if (existingUser.email === email) {
+                    dbLogger.error(`[AuthService] User with email already exists: ${email}`);
+                    throw new AppError(409, 'UserEmailAlreadyExists');
+                } else {
+                    dbLogger.error(`[AuthService] User with username already exists: ${username}`);
+                    throw new AppError(409, 'UserUsernameAlreadyExists');
+                }
+            }
 
+            // Hashear la contraseña
             const hashedPassword = await hash(password, 10);
 
-            const user = await User.create({
+            // Crear el nuevo usuario
+            const newUser: User = await User.create({
                 email,
                 username,
                 name,
@@ -47,18 +85,59 @@ export class AuthService {
                 password: hashedPassword
             });
 
-            if (!user) throw new AppError(500, 'InternalServerError');
+            // Verificar si la creación del usuario fue exitosa
+            if (!newUser) {
+                dbLogger.error("User creation failed unexpectedly."); // Log para depuración
+                throw new AppError(500, 'UserCreationError');
+            }
 
-            const token = new AuthToken().generateToken(user);
+            // Generar el token de autenticación
+            const token = new AuthToken().generateToken(newUser);
 
-            if (!token) throw new AppError(500, 'TokenGenerationError');
+            // Verificar si el token fue generado correctamente
+            if (!token) {
+                dbLogger.error(`[AuthService] Token generation failed for new user: ${email}`);
+                throw new AppError(500, 'TokenGenerationError');
+            }
+
+            // Guardar el token en la base de datos
+            await JWT.findOrCreate({
+                where: { token },
+                defaults: { token }
+            });
 
             return token;
         } catch (error) {
             if (error instanceof AppError) {
+                dbLogger.error(`[AuthService] Error during registration: ${error.message}`);
                 throw error;
-            }
+            };
+            dbLogger.error("[AuthService] Unexpected error during registration:", {error});
             throw new AppError(500, 'InternalServerError');
         };
     };
+
+    public async logout(token: string) {
+        try {
+            dbLogger.info(`[AuthService] Logout attempt`);
+
+            // Encontrar el token en la base de datos
+            const jwt = await JWT.findOne({ where: { token } });
+
+            // Si no se encuentra el token, lanzar un error
+            if (!jwt) throw new AppError(404, 'TokenNotFound');
+
+            // Destruir el token
+            await jwt.destroy();
+
+            return true;
+        } catch (error) {
+            if (error instanceof AppError) {
+                dbLogger.error("[AuthService] Error during logout:", {error});
+                throw error;
+            };
+            dbLogger.error("[AuthService] Unexpected error during logout:", {error});
+            throw new AppError(500, 'InternalServerError');
+        };
+    }
 };

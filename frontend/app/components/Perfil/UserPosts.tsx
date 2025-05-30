@@ -10,31 +10,37 @@
  */
 
 import Post from '~/components/Inicio/Post';
+import { useAuth } from '~/hooks/useAuth';
+import ImageZoomModal from '~/components/Shared/ImageZoomModal';
+import { useState } from 'react';
+import { decodeToken } from '~/utils/token';
 
 interface User {
   user_id: string;
-  first_name: string;
-  last_name: string;
+  name: string;
+  surname: string;
   username: string;
   email: string;
-  password: string;
   profile_picture_url: string | null;
   bio: string | null;
   email_verified: boolean;
   is_moderator: boolean;
+  deleted_at: string | null;
   created_at: string;
   updated_at: string;
+  active_video_call: boolean;
 }
 
 interface UserPostsProps {
   posts: Array<{
     post_id: string;
     user_id: string;
-    user: User;
     description: string;
     media_url: string | null;
+    media?: string | null;
     created_at: string;
     updated_at: string;
+    deleted_at: string | null;
     likes_count: number;
     is_saved: boolean;
     comments: Array<{
@@ -44,13 +50,34 @@ interface UserPostsProps {
       content: string;
       created_at: string;
     }>;
+    author: {
+      user_id: string;
+      username: string;
+      profile_picture: string | null;
+      name: string;
+    };
   }>;
   onLike: (postId: string) => void;
   onSave: (postId: string) => void;
+  onDelete: (postId: string) => void;
+  onEdit: (postId: string) => void;
 }
 
-export default function UserPosts({ posts, onLike, onSave }: UserPostsProps) {
-  if (posts.length === 0) {
+export default function UserPosts({ posts = [], onLike, onSave, onDelete, onEdit }: UserPostsProps) {
+  const { token } = useAuth();
+  let currentUserId: string | undefined = undefined;
+  
+  // Estados para el ImageZoomModal global
+  const [showImageZoomModal, setShowImageZoomModal] = useState(false);
+  const [zoomImageUrl, setZoomImageUrl] = useState('');
+
+  if (token) {
+    const decodedToken = decodeToken(token);
+    currentUserId = decodedToken?.user_id;
+    console.log('Token decodificado:', decodedToken);
+  }
+
+  if (!posts || posts.length === 0) {
     return (
       <div className="bg-gray-900 rounded-lg p-6 text-center border border-gray-800">
         <p className="text-gray-400">No hay publicaciones para mostrar</p>
@@ -65,23 +92,37 @@ export default function UserPosts({ posts, onLike, onSave }: UserPostsProps) {
           key={post.post_id}
           post_id={post.post_id}
           user={{
-            user_id: post.user.user_id,
-            username: post.user.username,
-            profile_picture_url: post.user.profile_picture_url
+            user_id: post.author.user_id,
+            username: post.author.username,
+            profile_picture: post.author.profile_picture,
+            name: post.author.name
           }}
           description={post.description}
-          media_url={post.media_url}
-          comments={post.comments.map(comment => ({
+          media_url={post.media_url || ''}
+          comments={post.comments?.map(comment => ({
             ...comment,
-            username: post.user.username // Usamos el username del usuario del post
-          }))}
+            username: post.author.username
+          })) || []}
           created_at={post.created_at}
-          likes_count={post.likes_count}
+          likes_count={post.likes_count.toString()}
           is_saved={post.is_saved}
           onLike={() => onLike(post.post_id)}
           onSave={() => onSave(post.post_id)}
+          onDelete={() => onDelete(post.post_id)}
+          onEdit={() => onEdit(post.post_id)}
+          currentUserId={currentUserId}
+          onImageClick={(imageUrl) => {
+            setZoomImageUrl(imageUrl);
+            setShowImageZoomModal(true);
+          }}
         />
       ))}
+      <ImageZoomModal
+        isOpen={showImageZoomModal}
+        onClose={() => setShowImageZoomModal(false)}
+        imageUrl={zoomImageUrl}
+        alt="Imagen de la publicación ampliada"
+      />
     </div>
   );
 } 

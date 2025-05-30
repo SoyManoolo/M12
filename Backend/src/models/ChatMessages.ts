@@ -1,57 +1,77 @@
+import { Model, DataTypes, Optional } from "sequelize";
 import { sequelize } from "../config/database";
-import { Model, DataTypes } from "sequelize";
 import { User } from "./User";
+import { IChatMessages, ChatMessagesCreationAttributes } from "../types/custom";
 
-export class ChatMessages extends Model {};
+class ChatMessages extends Model<IChatMessages, ChatMessagesCreationAttributes> implements IChatMessages {
+    public id!: string;
+    public sender_id!: string;
+    public receiver_id!: string;
+    public content!: string;
+    public is_delivered!: boolean;
+    public delivered_at!: Date | null;
+    public read_at!: Date | null;
+    public created_at!: Date;
+    public updated_at!: Date;
+    public sender?: User;
+    public receiver?: User;
+};
 
 ChatMessages.init(
-  {
-    message_id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-      primaryKey: true,
+    {
+        id: {
+            type: DataTypes.UUID,
+            defaultValue: DataTypes.UUIDV4,
+            primaryKey: true,
+        },
+        sender_id: {
+            type: DataTypes.UUID,
+            allowNull: false,
+            references: {
+                model: User,
+                key: "user_id",
+            },
+        },
+        receiver_id: {
+            type: DataTypes.UUID,
+            allowNull: false,
+            references: {
+                model: User,
+                key: "user_id",
+            },
+        },
+        content: {
+            type: DataTypes.TEXT,
+            allowNull: false,
+        },
+        is_delivered: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false,
+        },
+        delivered_at: {
+            type: DataTypes.DATE,
+            allowNull: true,
+            defaultValue: null,
+        },
+        read_at: {
+            type: DataTypes.DATE,
+            allowNull: true,
+            defaultValue: null,
+        }
     },
-    sender_id: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: User,
-        key: "user_id",
-      },
-      onUpdate: "CASCADE",
-      onDelete: "CASCADE",
-    },
-    receiver_id: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: User,
-        key: "user_id",
-      },
-      onUpdate: "CASCADE",
-      onDelete: "CASCADE",
-    },
-    content: {
-      type: DataTypes.TEXT,
-      allowNull: false,
-    },
-    is_read: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false,
-      allowNull: false,
-    },
-  },
-  {
-    sequelize,
-    tableName: "chat_messages",
-    timestamps: true,
-    createdAt: "created_at",
-    updatedAt: false,
-    indexes: [
-      {
-        fields: ["sender_id", "receiver_id"],
-        name: "idx_chat_messages_sender_receiver",
-      },
-    ],
-  }
+    {
+        sequelize,
+        tableName: "chat_messages",
+        timestamps: true,
+        createdAt: "created_at",
+        updatedAt: "updated_at",
+        indexes: [
+            {
+                fields: ["sender_id", "receiver_id"],
+                name: "idx_chat_messages_sender_receiver",
+            },
+        ],
+    }
 );
+
+export default ChatMessages;
