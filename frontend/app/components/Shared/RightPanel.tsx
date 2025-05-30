@@ -335,7 +335,15 @@ export default function RightPanel({
                         )}
                       </div>
                     </div>
-                    {mode !== 'friends' && getFriendButton(friend.user.user_id)}
+                    {mode === 'friends' ? (
+                      <button 
+                        onClick={() => handleFriendAction(friend.user.user_id, 'remove')}
+                        className="px-2 py-1 bg-red-500/90 text-white rounded-full shadow-md hover:bg-red-400 transition-all duration-200 text-xs font-semibold flex items-center justify-center gap-1 ml-4 cursor-pointer"
+                      >
+                        <FaUserMinus className="text-xs" />
+                        <span>Eliminar</span>
+                      </button>
+                    ) : getFriendButton(friend.user.user_id)}
                   </div>
                 );
               })}
