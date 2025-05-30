@@ -8,4 +8,5 @@
 export const environment = {
     // URL base del backend, con fallback a localhost
     apiUrl: import.meta.env.VITE_API_URL || 'http://localhost:3000'
+    // apiUrl: import.meta.env.VITE_API_URL || 'https://4a3b-37-133-29-123.ngrok-free.app'
 }; 

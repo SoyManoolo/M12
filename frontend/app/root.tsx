@@ -1,3 +1,5 @@
+import "./utils/fetchWithNgrok.client";
+
 import {
   Links,
   Meta,
