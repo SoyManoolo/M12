@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from '@remix-run/react';
 import { environment } from '~/config/environment';
 import Navbar from './Inicio/Navbar';
+import { FaUser } from 'react-icons/fa';
 
 interface User {
   user_id: string;
@@ -85,7 +86,7 @@ export default function SearchPage() {
           <div className="mb-8">
             <input
               type="text"
-              placeholder="Buscar por nombre de usuario, nombre o apellido..."
+              placeholder="Buscar por nombre de usuario..."
               className="w-full px-4 py-3 rounded-lg bg-gray-900 border border-gray-800 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -98,8 +99,16 @@ export default function SearchPage() {
             </div>
           ) : (
             displayedUsers.length === 0 && searchTerm !== '' ? (
-              <div className="text-center text-gray-500 mt-8">
-                No se encontraron usuarios que coincidan con la búsqueda.
+              <div className="flex flex-col items-center justify-center py-12 bg-gray-900/50 rounded-xl border border-gray-800">
+                <div className="w-24 h-24 bg-gradient-to-br from-blue-600/20 to-purple-600/20 rounded-full flex items-center justify-center mb-6">
+                  <FaUser className="text-5xl text-blue-500" />
+                </div>
+                <h3 className="text-xl font-semibold text-white mb-2">
+                  No se encontraron usuarios
+                </h3>
+                <p className="text-gray-400 text-center max-w-md">
+                  Intenta buscar con un nombre de usuario, nombre o apellido diferente.
+                </p>
               </div>
             ) : (
               <div className="space-y-4">
