@@ -275,7 +275,15 @@ export default function RightPanel({
         <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
           <h3 className="text-lg font-semibold mb-4 text-white">{title}</h3>
           {displayFriends.length === 0 ? (
-            <div>{emptyMessage}</div>
+            <div className="flex flex-col items-center justify-center py-8">
+              <div className="w-20 h-20 bg-gradient-to-br from-blue-600/20 to-purple-600/20 rounded-full flex items-center justify-center mb-4">
+                <FaUserFriends className="text-4xl text-blue-500" />
+              </div>
+              <h4 className="text-lg font-semibold text-white mb-2">¡Aún no tienes amigos!</h4>
+              <p className="text-gray-400 text-center max-w-xs">
+                Conecta con personas, envía solicitudes de amistad y tu lista de amigos aparecerá aquí. ¡Empieza a crear tu red!
+              </p>
+            </div>
           ) : (
             <div className="space-y-2">
               {displayFriends.map((friend) => {
@@ -284,10 +292,10 @@ export default function RightPanel({
                 return (
                   <div key={friend.friendship_id} className="flex items-center justify-between py-2">
                     <div className="flex items-center p-2 rounded-lg transition-colors w-full">
-                      <div 
+                    <div 
                         className="relative cursor-pointer"
-                        onClick={() => handleUserClick(friend.user.username)}
-                      >
+                      onClick={() => handleUserClick(friend.user.username)}
+                    >
                         {imageUrl ? (
                           <img 
                             src={imageUrl}

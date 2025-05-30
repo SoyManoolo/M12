@@ -193,18 +193,21 @@ export class FriendshipService {
             });
 
             // Transformar el resultado para devolver la relación y el usuario amigo
-            return friendships.map(friendship => {
-                const f = friendship.toJSON() as any;
-                const isUser1 = f.user1.user_id === user_id;
-                const amigo = isUser1 ? f.user2 : f.user1;
-                return {
-                    friendship_id: f.friendship_id,
-                    user1_id: f.user1_id,
-                    user2_id: f.user2_id,
-                    created_at: f.created_at,
-                    user: amigo
-                };
-            });
+            return {
+                success: true,
+                data: friendships.map(friendship => {
+                    const f = friendship.toJSON() as any;
+                    const isUser1 = f.user1.user_id === user_id;
+                    const amigo = isUser1 ? f.user2 : f.user1;
+                    return {
+                        friendship_id: f.friendship_id,
+                        user1_id: f.user1_id,
+                        user2_id: f.user2_id,
+                        created_at: f.created_at,
+                        user: amigo
+                    };
+                })
+            };
         } catch (error) {
             dbLogger.error('[FriendshipService] Error en getUserFriends:', { error });
             throw new AppError(500, 'InternalServerError');

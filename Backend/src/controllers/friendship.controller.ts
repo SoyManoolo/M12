@@ -84,7 +84,10 @@ export class FriendshipController {
             const { friend_id } = req.params;
 
             await friendshipService.removeFriendship(user_id, friend_id);
-            res.status(204).send();
+            res.status(200).json({
+                success: true,
+                message: 'Amistad eliminada correctamente'
+            });
         } catch (error) {
             next(error);
         }
