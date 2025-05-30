@@ -180,24 +180,30 @@ export class FriendshipService {
                     {
                         model: User,
                         as: 'user1',
-                        attributes: ['user_id', 'username', 'name', 'profile_picture'],
+                        attributes: ['user_id', 'username', 'name', 'surname', 'email', 'profile_picture', 'bio', 'email_verified', 'is_moderator', 'deleted_at', 'created_at', 'updated_at'],
                         required: true
                     },
                     {
                         model: User,
                         as: 'user2',
-                        attributes: ['user_id', 'username', 'name', 'profile_picture'],
+                        attributes: ['user_id', 'username', 'name', 'surname', 'email', 'profile_picture', 'bio', 'email_verified', 'is_moderator', 'deleted_at', 'created_at', 'updated_at'],
                         required: true
                     }
                 ]
             });
 
-            // Transformar el resultado para obtener solo los amigos
+            // Transformar el resultado para devolver la relación y el usuario amigo
             return friendships.map(friendship => {
-                // Si el usuario actual es user1, devolver user2 y viceversa
-                return (friendship as any).user1.user_id === user_id 
-                    ? (friendship as any).user2 
-                    : (friendship as any).user1;
+                const f = friendship.toJSON() as any;
+                const isUser1 = f.user1.user_id === user_id;
+                const amigo = isUser1 ? f.user2 : f.user1;
+                return {
+                    friendship_id: f.friendship_id,
+                    user1_id: f.user1_id,
+                    user2_id: f.user2_id,
+                    created_at: f.created_at,
+                    user: amigo
+                };
             });
         } catch (error) {
             dbLogger.error('[FriendshipService] Error en getUserFriends:', { error });

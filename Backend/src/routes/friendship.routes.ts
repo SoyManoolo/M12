@@ -32,6 +32,6 @@ router.get('/friends', friendshipController.getUserFriends);
 router.get('/status/:other_user_id', friendshipController.getFriendshipStatus);
 
 // Eliminar amistad
-router.delete('/friends/:friend_id', friendshipController.removeFriendship);
+router.delete('/remove/:friend_id', friendshipController.removeFriendship);
 
 export default router; 

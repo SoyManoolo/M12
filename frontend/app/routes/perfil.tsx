@@ -177,7 +177,7 @@ export default function Perfil() {
               deleted_at: null,
               created_at: friend.user.created_at,
               updated_at: friend.user.updated_at,
-              active_video_call: false
+              active_video_call: (friend.user as any).active_video_call ?? false
             }
           }));
           setFriends(friendsData);
