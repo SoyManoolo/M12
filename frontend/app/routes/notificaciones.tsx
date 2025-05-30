@@ -16,7 +16,8 @@ import { json, redirect } from "@remix-run/node";
 import { useLoaderData, Link } from "@remix-run/react";
 import { useState, useEffect } from "react";
 import type { Notification } from "~/types/notifications";
-import type { User, Friend } from "~/types/user.types";
+import type { User } from "~/types/user.types";
+import type { Friend } from "~/services/friendship.service";
 import Navbar from "~/components/Inicio/Navbar";
 import RightPanel from "~/components/Shared/RightPanel";
 import { FaUserFriends, FaComment, FaHeart, FaVideo, FaCheck, FaTimes, FaSearch, FaTrash, FaCheckDouble, FaBell } from 'react-icons/fa';
@@ -24,6 +25,7 @@ import { useAuth } from "~/hooks/useAuth";
 import { userService } from "~/services/user.service";
 import { formatDistanceToNow, isToday, isYesterday, isThisWeek, isThisMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { friendshipService } from "~/services/friendship.service";
 
 interface LoaderData {
   notifications: (Notification & { user: User })[];
@@ -134,27 +136,22 @@ export default function Notificaciones(): React.ReactElement {
       }
 
       try {
-        const friendsResponse = await userService.getAllUsers(token);
-        console.log('Respuesta del servidor para amigos:', friendsResponse);
-        if (friendsResponse.success && friendsResponse.data && Array.isArray(friendsResponse.data.users)) {
-          const friendsData = friendsResponse.data.users.map(user => ({
-            friendship_id: user.user_id,
-            user1_id: user.user_id,
-            user2_id: user.user_id,
-            created_at: new Date().toISOString(),
-            user: {
-              ...user,
-              profile_picture: user.profile_picture || null,
-              bio: user.bio ?? null,
-              deleted_at: null,
-              active_video_call: false
-            }
-          }));
-          console.log('Datos transformados de amigos:', friendsData);
-          setFriends(friendsData);
-          setSuggestedUsers(friendsResponse.data.users);
+        // Cargar amigos
+        const friendsResponse = await friendshipService.getUserFriends(token);
+        if (friendsResponse.success && friendsResponse.data) {
+          setFriends(friendsResponse.data);
+
+          // Cargar usuarios sugeridos
+          const suggestedResponse = await userService.getAllUsers(token);
+          if (suggestedResponse.success && suggestedResponse.data && Array.isArray(suggestedResponse.data.users)) {
+            // Filtrar los usuarios que ya son amigos
+            const friendIds = new Set(friendsResponse.data.map(friend => friend.user.user_id));
+            const filteredSuggestedUsers = suggestedResponse.data.users.filter(
+              user => !friendIds.has(user.user_id)
+            );
+            setSuggestedUsers(filteredSuggestedUsers);
+          }
         } else {
-          console.error('La respuesta de amigos no tiene el formato esperado:', friendsResponse);
           setFriends([]);
           setSuggestedUsers([]);
         }
@@ -480,9 +477,8 @@ export default function Notificaciones(): React.ReactElement {
 
       {/* Panel lateral derecho */}
       <RightPanel
-        friends={friends}
         users={suggestedUsers}
-        mode="online"
+        mode="suggested"
       />
 
       <style>

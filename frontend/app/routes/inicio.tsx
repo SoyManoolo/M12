@@ -36,6 +36,8 @@ import ImageZoomModal from '~/components/Shared/ImageZoomModal';
 import { useAuth } from "~/hooks/useAuth";
 import { postService } from "~/services/post.service";
 import { userService } from "~/services/user.service";
+import { friendshipService } from "~/services/friendship.service";
+import type { Friend } from "~/services/friendship.service";
 import { FaCamera } from 'react-icons/fa';
 
 /**
@@ -105,29 +107,14 @@ interface Post {
   is_saved?: boolean;
   comments?: Array<{
     comment_id: string;
-    user_id: string;
-    username: string;
+    author: {
+      user_id: string;
+      username: string;
+      profile_picture: string | null;
+    };
     content: string;
     created_at: string;
   }>;
-}
-
-/**
- * @interface Friend
- * @description Define la estructura de datos de una amistad entre usuarios
- * @property {string} friendship_id - Identificador único de la amistad
- * @property {string} user1_id - Identificador del primer usuario en la amistad
- * @property {string} user2_id - Identificador del segundo usuario en la amistad
- * @property {string} created_at - Fecha de creación de la amistad
- * @property {User} user - Objeto con la información del segundo usuario en la amistad
- */
-
-interface Friend {
-  friendship_id: string;
-  user1_id: string;
-  user2_id: string;
-  created_at: string;
-  user: User;
 }
 
 /**
@@ -204,16 +191,16 @@ export default function InicioPage() {
   useEffect(() => {
     const fetchData = async () => {
       if (!token) {
-        setError('Por favor, inicia sesión para ver las publicaciones');
+        setError('Por favor, inicia sesión para ver el contenido');
         setLoading(false);
         return;
       }
 
       try {
         // Cargar posts
-        const response = await postService.getPosts(token);
-        if (response.success) {
-          const transformedPosts: Post[] = response.data.posts.map((post: any) => ({
+        const postsResponse = await postService.getPosts(token);
+        if (postsResponse.success && postsResponse.data) {
+          const transformedPosts: Post[] = postsResponse.data.posts.map((post: any) => ({
             post_id: post.post_id,
             user_id: post.user_id,
             description: post.description,
@@ -236,30 +223,24 @@ export default function InicioPage() {
             }))
           }));
           setPosts(transformedPosts);
-          setNextCursor(response.data.nextCursor);
-        } else {
-          throw new Error(response.message || 'No pudimos cargar las publicaciones');
+          setNextCursor(postsResponse.data.nextCursor);
         }
 
         // Cargar amigos
-        const friendsResponse = await userService.getAllUsers(token);
-        if (friendsResponse.success && friendsResponse.data && Array.isArray(friendsResponse.data.users)) {
-          const friendsData = friendsResponse.data.users.map(user => ({
-            friendship_id: user.user_id,
-            user1_id: user.user_id,
-            user2_id: user.user_id,
-            created_at: new Date().toISOString(),
-            user: {
-              ...user,
-              profile_picture: user.profile_picture || null,
-              bio: user.bio ?? null,
-              deleted_at: null,
-              active_video_call: false
-            }
-          }));
-          setFriends(friendsData);
-          // También cargar usuarios sugeridos
-          setSuggestedUsers(friendsResponse.data.users);
+        const friendsResponse = await friendshipService.getUserFriends(token);
+        if (friendsResponse.success && friendsResponse.data) {
+          setFriends(friendsResponse.data);
+
+          // Cargar usuarios sugeridos
+          const suggestedResponse = await userService.getAllUsers(token);
+          if (suggestedResponse.success && suggestedResponse.data && Array.isArray(suggestedResponse.data.users)) {
+            // Filtrar los usuarios que ya son amigos
+            const friendIds = new Set(friendsResponse.data.map(friend => friend.user.user_id));
+            const filteredSuggestedUsers = suggestedResponse.data.users.filter(
+              user => !friendIds.has(user.user_id)
+            );
+            setSuggestedUsers(filteredSuggestedUsers);
+          }
         } else {
           setFriends([]);
           setSuggestedUsers([]);
@@ -505,9 +486,8 @@ export default function InicioPage() {
         </div>
       </div>
       <RightPanel
-        friends={friends}
         users={suggestedUsers}
-        mode="online"
+        mode="suggested"
       />
       <ConfirmModal
         isOpen={showDeleteModal}
