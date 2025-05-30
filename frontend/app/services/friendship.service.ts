@@ -77,7 +77,7 @@ class FriendshipService {
 
   async acceptFriendRequest(token: string, request_id: string): Promise<{ success: boolean; message: string }> {
     try {
-      const response = await fetch(`${this.baseUrl}/friendship/accept/${request_id}`, {
+      const response = await fetch(`${this.baseUrl}/friendship/request/${request_id}/accept`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -100,7 +100,7 @@ class FriendshipService {
 
   async rejectFriendRequest(token: string, request_id: string): Promise<{ success: boolean; message: string }> {
     try {
-      const response = await fetch(`${this.baseUrl}/friendship/reject/${request_id}`, {
+      const response = await fetch(`${this.baseUrl}/friendship/request/${request_id}/reject`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
