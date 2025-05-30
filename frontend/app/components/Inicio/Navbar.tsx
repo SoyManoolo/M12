@@ -71,7 +71,7 @@ export default function Navbar() {
           className="flex items-center space-x-2 text-gray-400 hover:text-white w-full p-2 rounded hover:bg-gray-800/50 cursor-pointer"
         >
           <FaSearch className="text-lg" />
-          <span className="tracking-wider text-sm">BUSCAR</span>
+          <span className="tracking-wider text-sm">BÚSQUEDA</span>
         </Link>
 
         {/* Enlace a sección de publicaciones */}
