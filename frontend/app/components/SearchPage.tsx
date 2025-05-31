@@ -176,8 +176,8 @@ export default function SearchPage() {
     }
   };
 
-  const handleUserClick = (userId: string) => {
-    navigate(`/profile/${userId}`);
+  const handleUserClick = (username: string) => {
+    navigate(`/perfil?username=${username}`);
   };
 
   const handleFriendAction = async (userId: string, action: 'send' | 'cancel' | 'accept' | 'reject' | 'remove') => {
@@ -331,45 +331,45 @@ export default function SearchPage() {
               friends.map((friend) => (
                 <div
                   key={friend.friendship_id}
-                  className="flex items-center justify-between p-4 bg-gray-900 rounded-lg border border-gray-800 hover:border-blue-500 transition-all duration-300 group min-h-[90px]"
+                  className="relative p-4 bg-gray-900 rounded-lg border border-gray-800 hover:border-blue-500 transition-all duration-300 group min-h-[90px] cursor-pointer"
+                  onClick={() => handleUserClick(friend.user.username)}
                 >
-                  <div 
-                    className="flex items-center space-x-4 cursor-pointer"
-                    onClick={() => handleUserClick(friend.user.user_id)}
-                  >
-                    {friend.user.profile_picture ? (
-                      <img
-                        src={friend.user.profile_picture}
-                        alt={friend.user.username}
-                        className="w-12 h-12 rounded-full object-cover border-2 border-gray-800 group-hover:border-blue-500 transition-all duration-300"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 rounded-full border-2 border-gray-800 bg-gray-800 flex items-center justify-center group-hover:border-blue-500 transition-all duration-300">
-                        <span className="text-gray-400 text-lg group-hover:text-blue-400 transition-colors">
-                          {friend.user.username.charAt(0).toUpperCase()}
-                        </span>
+                  <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center space-x-4">
+                      {friend.user.profile_picture ? (
+                        <img
+                          src={friend.user.profile_picture}
+                          alt={friend.user.username}
+                          className="w-12 h-12 rounded-full object-cover border-2 border-gray-800 group-hover:border-blue-500 transition-all duration-300"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-full border-2 border-gray-800 bg-gray-800 flex items-center justify-center group-hover:border-blue-500 transition-all duration-300">
+                          <span className="text-gray-400 text-lg group-hover:text-blue-400 transition-colors">
+                            {friend.user.username.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <h2 className="text-lg font-semibold text-white group-hover:text-blue-400 transition-colors truncate">
+                          {friend.user.username}
+                        </h2>
+                        <p className="text-sm text-gray-400 truncate flex items-center gap-2">
+                          <FaUserCircle className="text-xs" />
+                          {friend.user.name} {friend.user.surname}
+                        </p>
                       </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <h2 className="text-lg font-semibold text-white group-hover:text-blue-400 transition-colors truncate">
-                        {friend.user.username}
-                      </h2>
-                      <p className="text-sm text-gray-400 truncate flex items-center gap-2">
-                        <FaUserCircle className="text-xs" />
-                        {friend.user.name} {friend.user.surname}
-                      </p>
                     </div>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleFriendAction(friend.user.user_id, 'remove');
+                      }}
+                      className="relative z-10 px-3 py-1.5 bg-red-500/90 text-white rounded-full shadow-md hover:bg-red-400 transition-all duration-200 text-xs font-semibold flex items-center justify-center gap-1.5 ml-4 cursor-pointer"
+                    >
+                      <FaUserMinus className="text-xs" />
+                      <span>Eliminar</span>
+                    </button>
                   </div>
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleFriendAction(friend.user.user_id, 'remove');
-                    }}
-                    className="px-3 py-1.5 bg-red-500/90 text-white rounded-full shadow-md hover:bg-red-400 transition-all duration-200 text-xs font-semibold flex items-center justify-center gap-1.5 ml-4 cursor-pointer"
-                  >
-                    <FaUserMinus className="text-xs" />
-                    <span>Eliminar</span>
-                  </button>
                 </div>
               ))
             )}
@@ -400,36 +400,38 @@ export default function SearchPage() {
               suggestedFriends.map((user) => (
                 <div
                   key={user.user_id}
-                  className="flex items-center justify-between p-4 bg-gray-900 rounded-lg border border-gray-800 hover:border-purple-500 transition-all duration-300 group min-h-[90px]"
+                  className="relative p-4 bg-gray-900 rounded-lg border border-gray-800 hover:border-purple-500 transition-all duration-300 group min-h-[90px] cursor-pointer"
+                  onClick={() => handleUserClick(user.username)}
                 >
-                  <div 
-                    className="flex items-center space-x-4 cursor-pointer"
-                    onClick={() => handleUserClick(user.user_id)}
-                  >
-                    {user.profile_picture ? (
-                      <img
-                        src={user.profile_picture}
-                        alt={user.username}
-                        className="w-12 h-12 rounded-full object-cover border-2 border-gray-800 group-hover:border-purple-500 transition-all duration-300"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 rounded-full border-2 border-gray-800 bg-gray-800 flex items-center justify-center group-hover:border-purple-500 transition-all duration-300">
-                        <span className="text-gray-400 text-lg group-hover:text-purple-400 transition-colors">
-                          {user.username.charAt(0).toUpperCase()}
-                        </span>
+                  <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center space-x-4">
+                      {user.profile_picture ? (
+                        <img
+                          src={user.profile_picture}
+                          alt={user.username}
+                          className="w-12 h-12 rounded-full object-cover border-2 border-gray-800 group-hover:border-purple-500 transition-all duration-300"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-full border-2 border-gray-800 bg-gray-800 flex items-center justify-center group-hover:border-purple-500 transition-all duration-300">
+                          <span className="text-gray-400 text-lg group-hover:text-purple-400 transition-colors">
+                            {user.username.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <h2 className="text-lg font-semibold text-white group-hover:text-purple-400 transition-colors truncate">
+                          {user.username}
+                        </h2>
+                        <p className="text-sm text-gray-400 truncate flex items-center gap-2">
+                          <FaUserCircle className="text-xs" />
+                          {user.name} {user.surname}
+                        </p>
                       </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <h2 className="text-lg font-semibold text-white group-hover:text-purple-400 transition-colors truncate">
-                        {user.username}
-                      </h2>
-                      <p className="text-sm text-gray-400 truncate flex items-center gap-2">
-                        <FaUserCircle className="text-xs" />
-                        {user.name} {user.surname}
-                      </p>
+                    </div>
+                    <div className="relative z-10" onClick={(e) => e.stopPropagation()}>
+                      {getFriendButton(user.user_id)}
                     </div>
                   </div>
-                  {getFriendButton(user.user_id)}
                 </div>
               ))
             )}
@@ -483,36 +485,38 @@ export default function SearchPage() {
                 {users.map((user) => (
                   <div
                     key={user.user_id}
-                    className="flex items-center justify-between p-4 bg-gray-900 rounded-lg border border-gray-800 hover:border-green-500 transition-all duration-300 group min-h-[90px]"
+                    className="relative p-4 bg-gray-900 rounded-lg border border-gray-800 hover:border-green-500 transition-all duration-300 group min-h-[90px] cursor-pointer"
+                    onClick={() => handleUserClick(user.username)}
                   >
-                    <div 
-                      className="flex items-center space-x-4 cursor-pointer"
-                      onClick={() => handleUserClick(user.user_id)}
-                    >
-                      {user.profile_picture ? (
-                        <img
-                          src={user.profile_picture}
-                          alt={user.username}
-                          className="w-12 h-12 rounded-full object-cover border-2 border-gray-800 group-hover:border-green-500 transition-all duration-300"
-                        />
-                      ) : (
-                        <div className="w-12 h-12 rounded-full border-2 border-gray-800 bg-gray-800 flex items-center justify-center group-hover:border-green-500 transition-all duration-300">
-                          <span className="text-gray-400 text-lg group-hover:text-green-400 transition-colors">
-                            {user.username.charAt(0).toUpperCase()}
-                          </span>
+                    <div className="flex items-center justify-between w-full">
+                      <div className="flex items-center space-x-4">
+                        {user.profile_picture ? (
+                          <img
+                            src={user.profile_picture}
+                            alt={user.username}
+                            className="w-12 h-12 rounded-full object-cover border-2 border-gray-800 group-hover:border-green-500 transition-all duration-300"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded-full border-2 border-gray-800 bg-gray-800 flex items-center justify-center group-hover:border-green-500 transition-all duration-300">
+                            <span className="text-gray-400 text-lg group-hover:text-green-400 transition-colors">
+                              {user.username.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <h2 className="text-lg font-semibold text-white group-hover:text-green-400 transition-colors truncate">
+                            {user.username}
+                          </h2>
+                          <p className="text-sm text-gray-400 truncate flex items-center gap-2">
+                            <FaUserCircle className="text-xs" />
+                            {user.name} {user.surname}
+                          </p>
                         </div>
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <h2 className="text-lg font-semibold text-white group-hover:text-green-400 transition-colors truncate">
-                          {user.username}
-                        </h2>
-                        <p className="text-sm text-gray-400 truncate flex items-center gap-2">
-                          <FaUserCircle className="text-xs" />
-                          {user.name} {user.surname}
-                        </p>
+                      </div>
+                      <div className="relative z-10" onClick={(e) => e.stopPropagation()}>
+                        {getFriendButton(user.user_id)}
                       </div>
                     </div>
-                    {getFriendButton(user.user_id)}
                   </div>
                 ))}
               </div>

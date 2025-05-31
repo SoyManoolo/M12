@@ -14,7 +14,7 @@
 
 // src/components/Navbar.tsx
 import { Link, useNavigate } from "@remix-run/react";
-import { FaVideo, FaUpload, FaBell, FaEnvelope, FaCog, FaUser, FaShieldAlt, FaNewspaper, FaUsers, FaChartBar, FaChevronDown, FaSearch } from 'react-icons/fa';
+import { FaVideo, FaUpload, FaBell, FaEnvelope, FaCog, FaUser, FaShieldAlt, FaNewspaper, FaUsers, FaChevronDown, FaSearch } from 'react-icons/fa';
 import { useAuth } from "~/hooks/useAuth";
 import { useState, useEffect } from 'react';
 
@@ -151,14 +151,6 @@ export default function Navbar() {
               >
                   <FaUsers className="text-base" />
                   <span className="tracking-wider text-xs">Usuarios</span>
-              </Link>
-
-              <Link 
-                to="/admin/estadisticas"
-                  className="flex items-center space-x-2 text-gray-400 hover:text-white w-full p-1.5 rounded hover:bg-gray-800/50 cursor-pointer"
-              >
-                  <FaChartBar className="text-base" />
-                  <span className="tracking-wider text-xs">Estadísticas</span>
               </Link>
             </div>
           )}
