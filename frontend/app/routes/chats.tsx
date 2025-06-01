@@ -234,13 +234,13 @@ export default function Chats() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex">
+    <div className="min-h-screen bg-black text-white flex flex-col lg:flex-row">
       {/* Navbar */}
       <Navbar />
 
       {/* Contenido principal */}
-      <div className="w-2/3 ml-[16.666667%] border-r border-gray-800">
-        <div className="p-6">
+      <div className="w-full lg:w-2/3 lg:ml-[16.666667%] lg:border-r border-gray-800">
+        <div className="pt-16 pb-16 p-3 sm:p-6">
           {/* Encabezado */}
           <div className="mb-8">
             <div className="flex justify-between items-center mb-6">

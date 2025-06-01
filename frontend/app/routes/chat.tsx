@@ -436,14 +436,14 @@ export default function Chat() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white flex">
+    <div className="min-h-screen bg-black text-white flex flex-col lg:flex-row">
       {/* Navbar */}
       <Navbar />
 
       {/* Contenido principal */}
-      <div className="w-2/3 ml-[16.666667%] border-r border-gray-800">
+      <div className="w-full lg:w-2/3 lg:ml-[16.666667%] lg:border-r border-gray-800">
         {/* Área de chat */}
-        <div className="flex flex-col h-screen">
+        <div className="flex flex-col h-[calc(100vh-4rem)] lg:h-screen pt-16 p-3 sm:p-6">
           {/* Encabezado del chat con estado de conexión */}
           <div className="p-4 border-b border-gray-800">
             <div className="flex justify-between items-center">
@@ -604,8 +604,10 @@ export default function Chat() {
         </div>
       </div>
 
-      {/* Información del usuario */}
-      <ChatUserInfo user={chatUser} />
+      {/* Información del usuario solo en escritorio */}
+      <div className="hidden lg:block">
+        <ChatUserInfo user={chatUser} />
+      </div>
     </div>
   );
 }
