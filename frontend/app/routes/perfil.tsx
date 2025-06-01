@@ -443,11 +443,11 @@ export default function Perfil() {
 
       {/* Panel lateral derecho con amigos */}
       <div className="hidden lg:block">
-        <RightPanel
-          friends={friends}
-          mode="friends"
-          customTitle="Mis amigos"
-        />
+      <RightPanel
+        friends={friends}
+        mode="friends"
+        customTitle="Mis amigos"
+      />
       </div>
 
       <ConfirmModal

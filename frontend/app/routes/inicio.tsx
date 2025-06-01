@@ -496,10 +496,10 @@ export default function InicioPage() {
         </div>
       </div>
       <div className="hidden lg:block">
-        <RightPanel
-          users={suggestedUsers}
-          mode="suggested"
-        />
+      <RightPanel
+        users={suggestedUsers}
+        mode="suggested"
+      />
       </div>
       <ConfirmModal
         isOpen={showDeleteModal}

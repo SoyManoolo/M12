@@ -477,10 +477,10 @@ export default function Notificaciones(): React.ReactElement {
 
       {/* Panel lateral derecho */}
       <div className="hidden lg:block">
-        <RightPanel
-          users={suggestedUsers}
-          mode="suggested"
-        />
+      <RightPanel
+        users={suggestedUsers}
+        mode="suggested"
+      />
       </div>
 
       <style>
