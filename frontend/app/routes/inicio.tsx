@@ -39,6 +39,7 @@ import { userService } from "~/services/user.service";
 import { friendshipService } from "~/services/friendship.service";
 import type { Friend } from "~/services/friendship.service";
 import { FaCamera } from 'react-icons/fa';
+import { environment } from '~/config/environment';
 
 /**
  * @interface User
@@ -463,7 +464,7 @@ export default function InicioPage() {
                     name: post.author?.name || 'Usuario'
                   }}
                   description={post.description}
-                  media_url={post.media || ''}
+                  media_url={postService.getMediaUrl(post.media) || ''}
                   comments={post.comments || []}
                   created_at={post.created_at}
                   likes_count={post.likes_count}

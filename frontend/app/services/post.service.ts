@@ -28,23 +28,30 @@ interface PostsResponse {
 }
 
 class PostService {
-  private getMediaUrl(mediaUrl: string | null): string | null {
+  public getMediaUrl(mediaUrl: string | null): string | null {
     if (!mediaUrl) return null;
-    // Si la URL ya es relativa, la devolvemos tal cual
-    if (mediaUrl.startsWith('/')) return mediaUrl;
-    // Si es una URL completa del servidor local, extraemos la parte relativa
-    if (mediaUrl.startsWith(environment.apiUrl)) {
-      return mediaUrl.replace(environment.apiUrl, '');
+
+    // Si ya es una URL absoluta (comienza con http o https), la devolvemos tal cual
+    if (mediaUrl.startsWith('http')) {
+      console.log("URL en getMediaUrl", mediaUrl);
+      return mediaUrl
+    };
+
+    // Si es una ruta relativa, le añadimos la URL base de la API
+    if (mediaUrl.startsWith('/')) {
+      console.log(`URL en getMediaUrl ${environment.apiUrl}${mediaUrl}`)
+      return `${environment.apiUrl}${mediaUrl}`;
     }
-    // Si no coincide con ninguno de los casos anteriores, asumimos que es relativa
-    return `/${mediaUrl}`;
+    console.log(`URL en getMediaUrl ${environment.apiUrl}/${mediaUrl}`);
+    // Si no tiene la barra inicial, se la añadimos
+    return `${environment.apiUrl}/${mediaUrl}`;
   }
 
   async getPosts(token: string, cursor?: string, username?: string): Promise<PostsResponse> {
     try {
       let endpoint = username ? '/posts/username' : '/posts';
       let url = new URL(`${environment.apiUrl}${endpoint}`);
-      
+
       if (username) {
         url.searchParams.append('username', username);
       } else {
@@ -67,6 +74,8 @@ class PostService {
       }
 
       const data = await response.json();
+
+      console.log('getPosts response:', data);
 
       if (response.status === 404 && data.message === "PostNotFound") {
         return {
