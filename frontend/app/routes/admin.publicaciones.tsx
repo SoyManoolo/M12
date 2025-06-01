@@ -141,8 +141,8 @@ function PostDetailModal({ isOpen, onClose, post, onImageClick }: PostDetailModa
 
   if (!isOpen || !post) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-gray-900 rounded-2xl shadow-2xl max-w-7xl w-[95%] h-[90vh] mx-4 p-0 relative overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-2 sm:p-0" onClick={onClose}>
+      <div className="bg-gray-900 rounded-2xl shadow-2xl w-full max-w-7xl h-[95vh] sm:h-[90vh] mx-auto p-0 relative overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
         <button 
           onClick={onClose} 
           className="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl z-10 cursor-pointer bg-gray-800/50 hover:bg-gray-800 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200"
@@ -150,10 +150,10 @@ function PostDetailModal({ isOpen, onClose, post, onImageClick }: PostDetailModa
           ×
         </button>
         
-        <div className="flex h-full">
-          {/* Lado izquierdo - Imagen (solo si hay) */}
+        <div className="flex flex-col sm:flex-row h-full">
+          {/* Imagen arriba en móvil, izquierda en escritorio */}
           {post.media && (
-            <div className="w-1/2 bg-black flex items-center justify-center relative">
+            <div className="w-full sm:w-1/2 bg-black flex items-center justify-center relative max-h-72 sm:max-h-none">
               <div 
                 className="w-full h-full flex items-center justify-center cursor-zoom-in group" 
                 onClick={() => {
@@ -164,7 +164,7 @@ function PostDetailModal({ isOpen, onClose, post, onImageClick }: PostDetailModa
                 <img 
                   src={post.media} 
                   alt="Imagen publicación" 
-                  className="max-h-[90vh] w-auto object-contain transition-transform duration-300 group-hover:scale-105" 
+                  className="max-h-72 sm:max-h-[90vh] w-auto object-contain transition-transform duration-300 group-hover:scale-105 mx-auto" 
                 />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center">
                   <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -175,8 +175,8 @@ function PostDetailModal({ isOpen, onClose, post, onImageClick }: PostDetailModa
             </div>
           )}
 
-          {/* Lado derecho - Contenido y comentarios */}
-          <div className={`${post.media ? 'w-1/2' : 'w-full'} flex flex-col h-full bg-gray-900`}>
+          {/* Detalles y comentarios */}
+          <div className={`${post.media ? 'w-full sm:w-1/2' : 'w-full'} flex flex-col h-full bg-gray-900`}>
             {/* Cabecera con información del usuario */}
             <div className="p-6 border-b border-gray-800 bg-gray-900/95 backdrop-blur-sm">
               <div className="flex items-center gap-3">
@@ -531,13 +531,13 @@ export default function AdminPublicaciones() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex">
+    <div className="min-h-screen bg-black text-white flex flex-col lg:flex-row">
       <Navbar />
       
-      <div className="w-5/6 ml-[16.666667%] p-8">
+      <div className="w-full lg:w-5/6 lg:ml-[16.666667%] pt-16 pb-16 p-3 sm:p-6">
         <div className="max-w-7xl mx-auto">
           {/* Encabezado */}
-          <div className="flex justify-between items-center mb-8">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-8 gap-4 sm:gap-0">
             <div>
               <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 Gestión de Publicaciones
@@ -546,7 +546,7 @@ export default function AdminPublicaciones() {
             </div>
             
             {/* Barra de búsqueda */}
-            <div className="relative w-96">
+            <div className="relative w-full sm:w-96">
               <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
@@ -596,7 +596,7 @@ export default function AdminPublicaciones() {
           </div>
 
           {/* Lista de publicaciones */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {error ? (
               <div className="col-span-3 bg-red-500/10 text-red-500 p-4 rounded-lg">
                 {error}

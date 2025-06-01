@@ -448,13 +448,13 @@ export default function AdminUsuarios() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex">
+    <div className="min-h-screen bg-black text-white flex flex-col lg:flex-row">
       <Navbar />
       
-      <div className="w-5/6 ml-[16.666667%] p-8">
+      <div className="w-full lg:w-5/6 lg:ml-[16.666667%] pt-16 pb-16 p-3 sm:p-6">
         <div className="max-w-7xl mx-auto">
           {/* Encabezado */}
-          <div className="flex justify-between items-center mb-8">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-8 gap-4 sm:gap-0">
             <div>
               <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 Gestión de Usuarios
@@ -463,7 +463,7 @@ export default function AdminUsuarios() {
             </div>
             
             {/* Barra de búsqueda */}
-            <div className="relative w-96">
+            <div className="relative w-full sm:w-96">
               <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
@@ -477,7 +477,7 @@ export default function AdminUsuarios() {
 
           {/* Filtros */}
           <div className="bg-gray-900 rounded-lg p-4 mb-6 border border-gray-800">
-            <div className="flex items-center space-x-4">
+            <div className="flex flex-wrap gap-2 items-center">
               <FaFilter className="text-gray-400" />
               <button 
                 onClick={() => setActiveFilter('all')}
