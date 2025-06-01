@@ -12,7 +12,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { FaVideo, FaArrowRight, FaClock, FaMicrophone, FaMicrophoneSlash, FaVideoSlash, FaSearch } from 'react-icons/fa';
+import { FaVideo, FaArrowRight, FaClock, FaMicrophone, FaMicrophoneSlash, FaVideoSlash, FaSearch, FaHome } from 'react-icons/fa';
 import ChatVideollamada from '~/components/Videollamada/ChatVideollamada';
 import { useNavigate, useParams } from '@remix-run/react';
 import { redirect } from "@remix-run/node";
@@ -140,7 +140,7 @@ export default function VideollamadaPage() {
             handleSearchCall();
         }
     };
-    
+
     // MODIFICADO: Ahora implementa correctamente la lógica de búsqueda
     const handleSearchCall = () => {
         console.log("Buscando nueva videollamada...");
@@ -165,6 +165,7 @@ export default function VideollamadaPage() {
         navigate('/inicio');
     };
 
+
     return (
         <div className="min-h-screen bg-black text-white p-8">
             <div className="max-w-[1920px] mx-auto h-[calc(100vh-4rem)]">
@@ -173,31 +174,34 @@ export default function VideollamadaPage() {
                     <div className="flex-1 flex gap-6">
                         {/* Left section - Controls */}
                         <div className="w-1/4 flex flex-col gap-4">
-                            {/* Contador de tiempo */}
-                            <div className="bg-gray-900 border border-gray-700 rounded-lg p-3 flex items-center justify-center gap-2">
-                                <FaClock className="text-gray-400" />
-                                <span className="font-mono text-lg">{formatTime(videoCallState.callDuration)}</span>
+                            {/* Fila que contiene el botón Inicio y el contador de tiempo */}
+                            <div className="flex gap-2">
+                                {/* Botón Volver a Inicio al lado izquierdo del contador */}
+                                <button
+                                    onClick={() => navigate('/inicio')}
+                                    className="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-medium py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors"
+                                >
+                                    <FaHome className="text-lg" />
+                                    <span>INICIO</span>
+                                </button>
+
+                                {/* Contador de tiempo */}
+                                <div className="flex-1 bg-gray-900 border border-gray-700 rounded-lg p-3 flex items-center justify-center gap-2">
+                                    <FaClock className="text-gray-400" />
+                                    <span className="font-mono text-lg">{formatTime(videoCallState.callDuration)}</span>
+                                </div>
                             </div>
 
-                            <button
-                                onClick={handleEndCall}
-                                className={`bg-red-600 border border-red-700 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center gap-2 cursor-pointer transition-colors ${!videoCallState.isCallActive ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                disabled={!videoCallState.isCallActive}
-                            >
-                                <FaVideo className="text-xl" />
-                                <span>FINALIZAR VIDEOLLAMADA</span>
-                            </button>
-                            
-                            {/* Fila con dos botones */}
+                            {/* REORDENADO: Fila con dos botones */}
                             <div className="flex gap-2">
                                 {/* MODIFICADO: Botón de buscar/cancelar llamada */}
                                 <button
                                     onClick={handleSearchCall}
-                                    className={`flex-1 ${videoCallState.inQueue 
-                                        ? 'bg-orange-600 border border-orange-700 hover:bg-orange-700' 
+                                    className={`flex-1 ${videoCallState.inQueue
+                                        ? 'bg-orange-600 border border-orange-700 hover:bg-orange-700'
                                         : 'bg-blue-600 border border-blue-700 hover:bg-blue-700'} 
-                                        text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2 cursor-pointer transition-colors 
-                                        ${videoCallState.isCallActive ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2 cursor-pointer transition-colors 
+                                    ${videoCallState.isCallActive ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     disabled={videoCallState.isCallActive}
                                 >
                                     <FaSearch className="text-xl" />
@@ -214,6 +218,16 @@ export default function VideollamadaPage() {
                                     <span>SIGUIENTE</span>
                                 </button>
                             </div>
+
+                            {/* REORDENADO: Botón de finalizar llamada */}
+                            <button
+                                onClick={handleEndCall}
+                                className={`bg-red-600 border border-red-700 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center gap-2 cursor-pointer transition-colors ${!videoCallState.isCallActive ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                disabled={!videoCallState.isCallActive}
+                            >
+                                <FaVideo className="text-xl" />
+                                <span>FINALIZAR VIDEOLLAMADA</span>
+                            </button>
 
                             {/* Video local */}
                             <div className="flex-1 relative">
@@ -279,8 +293,8 @@ export default function VideollamadaPage() {
                                 <button
                                     onClick={toggleAudio}
                                     className={`p-3 rounded-full transition-all duration-200 hover:bg-gray-700 ${videoCallState.isAudioEnabled
-                                            ? 'bg-gray-800 text-white hover:text-gray-300'
-                                            : 'bg-red-600/80 text-white hover:bg-red-700'
+                                        ? 'bg-gray-800 text-white hover:text-gray-300'
+                                        : 'bg-red-600/80 text-white hover:bg-red-700'
                                         }`}
                                 >
                                     {videoCallState.isAudioEnabled ? <FaMicrophone size={20} /> : <FaMicrophoneSlash size={20} />}
@@ -288,8 +302,8 @@ export default function VideollamadaPage() {
                                 <button
                                     onClick={toggleVideo}
                                     className={`p-3 rounded-full transition-all duration-200 hover:bg-gray-700 ${videoCallState.isVideoEnabled
-                                            ? 'bg-gray-800 text-white hover:text-gray-300'
-                                            : 'bg-red-600/80 text-white hover:bg-red-700'
+                                        ? 'bg-gray-800 text-white hover:text-gray-300'
+                                        : 'bg-red-600/80 text-white hover:bg-red-700'
                                         }`}
                                 >
                                     {videoCallState.isVideoEnabled ? <FaVideo size={20} /> : <FaVideoSlash size={20} />}

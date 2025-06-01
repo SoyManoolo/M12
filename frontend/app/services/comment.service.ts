@@ -30,7 +30,7 @@ interface CommentsResponse {
 }
 
 class CommentService {
-  private baseUrl = 'http://localhost:3000';
+  private baseUrl = 'https://332f-37-133-29-123.ngrok-free.app';
 
   async createComment(token: string, postId: string, content: string): Promise<CommentResponse> {
     try {

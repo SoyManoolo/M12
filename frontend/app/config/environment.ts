@@ -10,7 +10,7 @@
 
 export const environment = {
     // URL base de la API, con fallback a localhost
-    apiUrl: import.meta.env.VITE_API_URL || 'http://localhost:3000',
+    apiUrl: import.meta.env.VITE_API_URL || 'https://332f-37-133-29-123.ngrok-free.app',
     // Configuración de endpoints de la API
     apiEndpoints: {
         // Endpoints relacionados con autenticación

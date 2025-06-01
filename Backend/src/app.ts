@@ -11,10 +11,26 @@ import { celebrateErrorHandler } from './middlewares/errors/CelebrateErrorHandle
 import path from 'path';
 import helmet from 'helmet';
 
+const corsOptions = {
+    origin: [
+        'http://localhost:5173',
+        'https://39e1-37-133-29-123.ngrok-free.app',
+        /\.ngrok-free\.app$/
+    ],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    credentials: true
+};
+
 export const app = express();
+
 app.use(express.json());
-app.use(cors());
-app.use(helmet());
+app.use(cors(corsOptions));
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginEmbedderPolicy: false,
+  crossOriginOpenerPolicy: false,
+  crossOriginResourcePolicy: { policy: 'cross-origin' }
+}));
 app.set('trust proxy', true);
 
 // Configurar middleware para servir archivos estáticos desde la carpeta 'media'

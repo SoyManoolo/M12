@@ -137,7 +137,7 @@ export default function Publicar() {
         formData.append('media', selectedFile);
       }
 
-      const response = await fetch('http://localhost:3000/posts', {
+      const response = await fetch('https://332f-37-133-29-123.ngrok-free.app/posts', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`

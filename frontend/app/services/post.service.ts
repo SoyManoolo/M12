@@ -26,7 +26,7 @@ interface PostsResponse {
 }
 
 class PostService {
-  private baseUrl = 'http://localhost:3000';
+  private baseUrl = 'https://332f-37-133-29-123.ngrok-free.app';
   private apiUrl = '/api';
 
   private getMediaUrl(mediaUrl: string | null): string | null {

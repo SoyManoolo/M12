@@ -10,9 +10,10 @@
  * @requires react-icons/fa
  */
 
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { FaVideo, FaMicrophone, FaMicrophoneSlash, FaVideoSlash } from 'react-icons/fa';
 import { useVideoCall } from '~/hooks/useVideoCall';
+import { DebugVideo } from './DebugVideo';
 
 /**
  * @interface VideoCallProps
@@ -24,7 +25,6 @@ interface VideoCallProps {
     remoteUserId: string;
     onEndCall: () => void;
 }
-
 
 /**
  * @function VideoCall
@@ -46,21 +46,6 @@ export default function VideoCall({ remoteUserId, onEndCall }: VideoCallProps) {
         remoteStream
     } = useVideoCall();
 
-    const localVideoRef = useRef<HTMLVideoElement>(null);
-    const remoteVideoRef = useRef<HTMLVideoElement>(null);
-
-    useEffect(() => {
-        if (localStream && localVideoRef.current) {
-            localVideoRef.current.srcObject = localStream;
-        }
-    }, [localStream]);
-
-    useEffect(() => {
-        if (remoteStream && remoteVideoRef.current) {
-            remoteVideoRef.current.srcObject = remoteStream;
-        }
-    }, [remoteStream]);
-
     useEffect(() => {
         startCall(remoteUserId);
         return () => {
@@ -76,21 +61,18 @@ export default function VideoCall({ remoteUserId, onEndCall }: VideoCallProps) {
         <div className="relative w-full h-full bg-gray-900 rounded-lg overflow-hidden">
             {/* Video remoto */}
             <div className="absolute inset-0">
-                <video
-                    ref={remoteVideoRef}
-                    autoPlay
-                    playsInline
+                <DebugVideo
+                    stream={remoteStream}
+                    type="remote"
                     className="w-full h-full object-cover"
                 />
             </div>
 
             {/* Video local */}
             <div className="absolute bottom-4 right-4 w-48 h-36 bg-gray-800 rounded-lg overflow-hidden">
-                <video
-                    ref={localVideoRef}
-                    autoPlay
-                    playsInline
-                    muted
+                <DebugVideo
+                    stream={localStream}
+                    type="local"
                     className="w-full h-full object-cover"
                 />
             </div>

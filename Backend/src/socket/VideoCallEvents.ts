@@ -181,7 +181,7 @@ export function videoCallEvents(socket: Socket, io: Server) {
             // Enviar oferta al destinatario
             io.to(recipientData.socketId).emit("receive_offer", {
                 offer,
-                from: user_id,
+                from: socket.id,
                 callId: recipientData.callId
             });
 
@@ -225,7 +225,7 @@ export function videoCallEvents(socket: Socket, io: Server) {
             // Enviar respuesta al destinatario
             io.to(recipientData.socketId).emit("receive_answer", {
                 answer,
-                from: user_id,
+                from: socket.id,
                 callId: recipientData.callId
             });
 
@@ -269,7 +269,7 @@ export function videoCallEvents(socket: Socket, io: Server) {
             // Enviar candidato ICE al destinatario
             io.to(recipientData.socketId).emit("receive_ice_candidate", {
                 candidate,
-                from: user_id,
+                from: socket.id,
                 callId: recipientData.callId
             });
 

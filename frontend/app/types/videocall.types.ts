@@ -18,6 +18,9 @@ export enum VideoCallEvent {
     SEND_ANSWER_RESULT = 'send_answer_result',
     SEND_ICE_CANDIDATE = 'send_ice_candidate',
     SEND_ICE_CANDIDATE_RESULT = 'send_ice_candidate_result',
+    RECEIVE_OFFER = 'receive_offer',
+    RECEIVE_ANSWER = 'receive_answer',
+    RECEIVE_ICE_CANDIDATE = 'receive_ice_candidate',
 
     // Eventos de emparejamiento
     REQUEST_MATCH = 'request_match',
@@ -65,18 +68,21 @@ export interface VideoCallOffer {
     offer: RTCSessionDescriptionInit;
     from: string;
     to: string;
+    token: string;
 }
 
 export interface VideoCallAnswer {
     answer: RTCSessionDescriptionInit;
     from: string;
     to: string;
+    token: string;
 }
 
 export interface VideoCallIceCandidate {
     candidate: RTCIceCandidateInit;
     from: string;
     to: string;
+    token: string;
 }
 
 export interface VideoCallError {

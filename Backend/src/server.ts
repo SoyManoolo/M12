@@ -5,7 +5,9 @@ import { Server } from 'socket.io';
 import { app } from "./app";
 import { createServer } from "http";
 import { chatEvents } from "./socket/ChatEvents";
-import { videoCallEvents } from "./socket/VideoCall";
+import { videoCallEvents } from "./socket/VideoCallEvents";
+import './services/chat';
+import { VideoCallService } from "./services/videoCall";
 
 // Cargar variables de entorno desde el archivo .env
 
@@ -52,5 +54,4 @@ const port = parseInt(process.env.PORT || "3000");
 server.listen(port, () => { });
 
 export { io }
-import './services/chat';
-import { VideoCallService } from "./services/videoCall";
+

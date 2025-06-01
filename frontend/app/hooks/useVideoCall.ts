@@ -32,11 +32,11 @@ export function useVideoCall() {
                 socketService.connect(token);
             }
 
-            webRTCService.initializeService(); // Debe llamarse después de conectar el socket o manejar la conexión asíncrona
+            webRTCService.initializeService(token); // Debe llamarse después de conectar el socket o manejar la conexión asíncrona
 
             webRTCService.setUICallbacks(
-                (stream) => { setRemoteStreamForUI(stream); }, // onRemoteStreamArrived
-                () => { // onCallEndedByService
+                (stream) => { setRemoteStreamForUI(stream); },
+                () => {
                     setState(initialState);
                     setLocalStreamForUI(null);
                     setRemoteStreamForUI(null);
@@ -85,8 +85,9 @@ export function useVideoCall() {
         };
 
         const handleMatchFound = (data: MatchFoundData & { isInitiator: boolean }) => {
-            console.log("Hook: MATCH_FOUND (para UI)", data);
-            setState(prev => ({
+            console.log("Hook: MATCH_FOUND recibido con datos completos:", JSON.stringify(data));
+            console.log("isInitiator:", data.isInitiator);
+            console.log("callId:", data.call_id); setState(prev => ({
                 ...prev,
                 isConnecting: true,
                 inQueue: false,

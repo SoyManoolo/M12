@@ -45,7 +45,7 @@ class ChatService {
   private readHandlers: ((data: ReadStatus) => void)[] = [];
   private typingHandlers: ((data: { userId: string; isTyping: boolean }) => void)[] = [];
   private connectionHandlers: ((status: 'connected' | 'disconnected' | 'reconnecting') => void)[] = [];
-  private baseUrl = 'http://localhost:3000';
+  private baseUrl = 'https://332f-37-133-29-123.ngrok-free.app';
   private isConnecting = false;
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;

@@ -36,19 +36,24 @@ export default defineConfig({
   server: {
     host: true,
     hmr: false,
+    allowedHosts: [
+      'localhost',
+      '127.0.0.1',
+      '39e1-37-133-29-123.ngrok-free.app',
+    ],
     watch: {
       usePolling: false,
       interval: 1000,
     },
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: 'https://332f-37-133-29-123.ngrok-free.app',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/api/, '')
       },
       '/media': {
-        target: 'http://localhost:3000',
+        target: 'https://332f-37-133-29-123.ngrok-free.app',
         changeOrigin: true,
         secure: false,
         ws: true,

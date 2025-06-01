@@ -72,6 +72,7 @@ export class VideoCallService {
     // Añadir este método a tu clase VideoCallService
     public static async performMatchingRound(io: Server) {
         try {
+            dbLogger.info("[VideoCallService] Starting matching round...");
             // Si no hay suficientes usuarios en la cola, salir
             if (VideoCallService.waitingQueue.size < 2) return;
 
@@ -116,14 +117,18 @@ export class VideoCallService {
                 io.to(socket_id1).emit("match_found", {
                     call_id: newVideoCall.dataValues.call_id,
                     match: { id: user2_id, socketId: socket_id2 },
-                    self: { id: user1_id, socketId: socket_id1 }
+                    self: { id: user1_id, socketId: socket_id1 },
+                    isInitiator: true
                 });
+                dbLogger.info(`[VideoCallService] Emitted match_found to ${socket_id1} for call ${newVideoCall.dataValues.call_id}`);
 
                 io.to(socket_id2).emit("match_found", {
                     call_id: newVideoCall.dataValues.call_id,
                     match: { id: user1_id, socketId: socket_id1 },
-                    self: { id: user2_id, socketId: socket_id2 }
+                    self: { id: user2_id, socketId: socket_id2 },
+                    isInitiator: false
                 });
+                dbLogger.info(`[VideoCallService] Emitted match_found to ${socket_id2} for call ${newVideoCall.dataValues.call_id}`);
             };
 
             return {
@@ -196,49 +201,65 @@ export class VideoCallService {
         };
     }
 
-    // Añadir estos métodos al final de tu clase VideoCallService
-
     /**
      * Obtiene la información necesaria para enviar mensajes de señalización WebRTC al destinatario de una llamada
      * @param fromUserId ID del usuario que inicia la solicitud
-     * @param toUserId ID del usuario destinatario
+     * @param toSocketId Socket ID del usuario destinatario
      * @returns Objeto con socketId y callId del destinatario
      */
-    public async getCallRecipient(fromUserId: string, toUserId: string) {
+    public async getCallRecipient(fromUserId: string, toSocketId: string) {
         try {
-            dbLogger.info(`[VideoCallService] Getting call recipient data for user ${toUserId} requested by ${fromUserId}`);
+            dbLogger.info(`[VideoCallService] Getting call recipient data for user ${toSocketId} requested by ${fromUserId}`);
 
-            // Buscar una llamada activa donde participen ambos usuarios
-            let callId: string | undefined;
-            let recipientSocketId: string | undefined;
+            // Registrar información de depuración para entender qué datos tenemos
+            dbLogger.info(`[VideoCallService] Active calls: ${VideoCallService.activeCalls.size}`);
 
-            // Buscar en las llamadas activas en memoria
+            // Buscar una llamada activa donde participe el usuario solicitante
             for (const [activeCallId, callData] of VideoCallService.activeCalls.entries()) {
-                const fromUser = callData.users.find(u => u.id === fromUserId);
-                const toUser = callData.users.find(u => u.id === toUserId);
+                dbLogger.info(`[VideoCallService] Checking call ${activeCallId} with ${callData.users.length} users`);
 
-                if (fromUser && toUser) {
-                    callId = activeCallId;
-                    recipientSocketId = toUser.socketId;
-                    break;
+                // Registrar información de cada participante en la llamada
+                callData.users.forEach((user, index) => {
+                    dbLogger.info(`[VideoCallService] Call ${activeCallId} - User ${index}: ID=${user.id}, SocketID=${user.socketId}`);
+                });
+
+                // Buscar por dos estrategias: ID de usuario y socketID
+                const fromUserInCall = callData.users.find(u => u.id === fromUserId || u.socketId === toSocketId);
+
+                if (fromUserInCall) {
+                    dbLogger.info(`[VideoCallService] Found user ${fromUserId} in call ${activeCallId}`);
+
+                    // Buscar al otro participante
+                    const toUser = callData.users.find(u => u.id !== fromUserId && u.socketId === toSocketId);
+
+                    if (toUser) {
+                        dbLogger.info(`[VideoCallService] Found recipient ${toSocketId} in call ${activeCallId}`);
+                        return {
+                            socketId: toSocketId,
+                            callId: activeCallId
+                        };
+                    } else {
+                        // Si no encontramos exactamente al destinatario, asumimos que es el otro participante
+                        const otherUser = callData.users.find(u => u.id !== fromUserId);
+                        if (otherUser) {
+                            dbLogger.info(`[VideoCallService] Assuming recipient is the other user in call: socketID=${otherUser.socketId}`);
+                            return {
+                                socketId: otherUser.socketId,
+                                callId: activeCallId
+                            };
+                        }
+                    }
                 }
             }
 
-            if (!callId || !recipientSocketId) {
-                dbLogger.error(`[VideoCallService] No active call found between ${fromUserId} and ${toUserId}`);
-                return null;
-            }
-
-            return {
-                socketId: recipientSocketId,
-                callId: callId
-            };
+            dbLogger.error(`[VideoCallService] No active call found between user ${fromUserId} and socket ${toSocketId}`);
+            return null;
         } catch (error) {
             if (error instanceof AppError) {
                 dbLogger.error("[VideoCallService] Error in getCallRecipient:", { error });
                 throw error;
             }
-            dbLogger.error("[VideoCallService] Unexpected error in getCallRecipient:", { error });
+            dbLogger.error("[VideoCallService] Error in getCallRecipient:", { error });
             throw new AppError(500, 'InternalServerError');
         }
     }

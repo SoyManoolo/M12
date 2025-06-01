@@ -13,6 +13,7 @@ import { ContentModeration } from './ContentModeration';
 import { Notifications } from './Notifications';
 import { Logs } from './Logs';
 import { JWT } from './JWT';
+import { SavedPosts } from './SavedPosts';
 
 // User & Post relationships
 User.hasMany(Post, {
@@ -301,6 +302,32 @@ Notifications.belongsTo(User, {
     as: 'user'
 });
 
+// User & SavedPosts relationships
+User.hasMany(SavedPosts, {
+    foreignKey: 'user_id',
+    sourceKey: 'user_id',
+    as: 'savedPosts'
+});
+
+SavedPosts.belongsTo(User, {
+    foreignKey: 'user_id',
+    targetKey: 'user_id',
+    as: 'user'
+});
+
+// Post & SavedPosts relationships
+Post.hasMany(SavedPosts, {
+    foreignKey: 'post_id',
+    sourceKey: 'post_id',
+    as: 'savedBy'
+});
+
+SavedPosts.belongsTo(Post, {
+    foreignKey: 'post_id',
+    targetKey: 'post_id',
+    as: 'post'
+});
+
 export {
     User,
     Post,
@@ -316,5 +343,6 @@ export {
     ContentModeration,
     Notifications,
     Logs,
-    JWT
+    JWT,
+    SavedPosts
 };

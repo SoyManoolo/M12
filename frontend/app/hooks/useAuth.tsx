@@ -65,10 +65,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const initializeAuth = async () => {
             if (token) {
                 try {
+                    console.log('Inicializando autenticación con token:', token);
                     const decodedToken = decodeToken(token);
+                    console.log('Token decodificado:', decodedToken);
                     if (decodedToken) {
                         // Obtener la información completa del usuario
                         const userInfo = await getUserInfo(decodedToken.user_id);
+                        console.log('Información del usuario devuelta al inicializador:', userInfo);
                         if (userInfo?.success) {
                             setUser(userInfo.data);
                         } else {

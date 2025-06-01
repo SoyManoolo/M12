@@ -54,84 +54,109 @@ export const authService = {
      * @param {LoginCredentials} credentials - Credenciales de inicio de sesión
      * @returns {Promise<AuthResponse>} Respuesta del servidor
      */
-    async login(credentials: LoginCredentials): Promise<AuthResponse> {
-        try {
-            // Validación básica en el frontend
-            if (!credentials.id.trim()) {
-                return {
-                    success: false,
-                    status: 400,
-                    message: 'Por favor, ingresa tu email o nombre de usuario'
-                };
-            }
-
-            if (!credentials.password.trim()) {
-                return {
-                    success: false,
-                    status: 400,
-                    message: 'Por favor, ingresa tu contraseña'
-                };
-            }
-
-            const response = await fetch(`${environment.apiUrl}${environment.apiEndpoints.auth.login}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    id: credentials.id,
-                    password: credentials.password
-                }),
-            });
-
-            const data = await response.json();
-            
-            if (!response.ok) {
-                // Mensajes de error más amigables
-                let errorMessage = 'No pudimos iniciar tu sesión';
-                
-                switch (data.error) {
-                    case 'IncorrectPassword':
-                        errorMessage = 'La contraseña que ingresaste no es correcta';
-                        break;
-                    case 'UserNotFound':
-                        errorMessage = 'No encontramos una cuenta con ese email o nombre de usuario';
-                        break;
-                    case 'DatabaseError':
-                        errorMessage = 'Estamos teniendo problemas técnicos. Por favor, intenta más tarde';
-                        break;
-                    case 'MissingIdentifier':
-                        errorMessage = 'Necesitamos tu email o nombre de usuario para continuar';
-                        break;
-                    case 'MissingPassword':
-                        errorMessage = 'Por favor, ingresa tu contraseña para continuar';
-                        break;
-                    default:
-                        errorMessage = data.message || 'No pudimos iniciar tu sesión. Por favor, intenta de nuevo';
-                }
-
-                return {
-                    success: false,
-                    status: response.status,
-                    message: errorMessage
-                };
-            }
-
-            return {
-                success: true,
-                status: response.status,
-                token: data.token,
-                message: '¡Bienvenido de nuevo!'
-            };
-        } catch (error) {
-            console.error('Error en login:', error);
+async login(credentials: LoginCredentials): Promise<AuthResponse> {
+    try {
+        // Validación básica en el frontend
+        if (!credentials.id.trim()) {
             return {
                 success: false,
-                status: 500,
-                message: 'No pudimos conectarnos al servidor. Por favor, verifica tu conexión a internet'
+                status: 400,
+                message: 'Por favor, ingresa tu email o nombre de usuario'
             };
         }
-    },
+
+        if (!credentials.password.trim()) {
+            return {
+                success: false,
+                status: 400,
+                message: 'Por favor, ingresa tu contraseña'
+            };
+        }
+
+        const response = await fetch(`${environment.apiUrl}${environment.apiEndpoints.auth.login}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                id: credentials.id,
+                password: credentials.password
+            }),
+        });
+
+        console.log('📊 Headers recibidos:', {
+            contentType: response.headers.get('content-type'),
+            statusCode: response.status,
+            statusText: response.statusText
+        });
+
+        // Obtener la respuesta como texto para ver exactamente qué llega
+        const rawText = await response.text();
+        console.log('📥 Respuesta raw del backend:', rawText);
+
+        // Intentar parsear como JSON
+        let data: any;
+        try {
+            data = JSON.parse(rawText);
+            console.log('✅ Respuesta parseada correctamente:', data);
+        } catch (parseError) {
+            console.error('❌ Error al parsear respuesta JSON:', parseError);
+            console.log('❌ Primeros 500 caracteres de la respuesta:', rawText.substring(0, 500));
+            return {
+                success: false,
+                status: response.status,
+                message: 'Error al procesar la respuesta del servidor'
+            };
+        }
+
+        if (!response.ok) {
+            // Mensajes de error más amigables
+            let errorMessage = 'No pudimos iniciar tu sesión';
+
+            switch (data.error) {
+                case 'IncorrectPassword':
+                    errorMessage = 'La contraseña que ingresaste no es correcta';
+                    break;
+                case 'UserNotFound':
+                    errorMessage = 'No encontramos una cuenta con ese email o nombre de usuario';
+                    break;
+                case 'DatabaseError':
+                    errorMessage = 'Estamos teniendo problemas técnicos. Por favor, intenta más tarde';
+                    break;
+                case 'MissingIdentifier':
+                    errorMessage = 'Necesitamos tu email o nombre de usuario para continuar';
+                    break;
+                case 'MissingPassword':
+                    errorMessage = 'Por favor, ingresa tu contraseña para continuar';
+                    break;
+                default:
+                    errorMessage = data.message || 'No pudimos iniciar tu sesión. Por favor, intenta de nuevo';
+            }
+
+            return {
+                success: false,
+                status: response.status,
+                message: errorMessage
+            };
+        }
+
+        // Si todo va bien, devuelve el objeto data (puedes ajustar según tu backend)
+        return {
+            success: true,
+            status: response.status,
+            token: data.token,
+            message: data.message || 'Inicio de sesión exitoso'
+        };
+
+    } catch (error) {
+        console.error("❌ Error en la petición:", error);
+        return {
+            success: false,
+            status: 500,
+            message: error instanceof Error ? error.message : 'Error desconocido'
+        };
+    }
+},
 
     /**
      * Registra un nuevo usuario
@@ -191,11 +216,11 @@ export const authService = {
             });
 
             const data = await response.json();
-            
+
             if (!response.ok) {
                 // Mensajes de error más amigables
                 let errorMessage = 'No pudimos crear tu cuenta';
-                
+
                 switch (data.error) {
                     case 'EmailAlreadyExists':
                         errorMessage = 'Ya existe una cuenta con ese correo electrónico';
@@ -259,7 +284,7 @@ export const authService = {
             });
 
             const data = await response.json();
-            
+
             if (!response.ok) {
                 return {
                     success: false,
