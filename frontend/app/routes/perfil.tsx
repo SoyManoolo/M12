@@ -442,11 +442,13 @@ export default function Perfil() {
       </div>
 
       {/* Panel lateral derecho con amigos */}
-      <RightPanel
-        friends={friends}
-        mode="friends"
-        customTitle="Mis amigos"
-      />
+      <div className="hidden lg:block">
+        <RightPanel
+          friends={friends}
+          mode="friends"
+          customTitle="Mis amigos"
+        />
+      </div>
 
       <ConfirmModal
         isOpen={deleteModalOpen}

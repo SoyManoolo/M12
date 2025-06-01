@@ -53,6 +53,8 @@ interface PostProps {
   onDelete?: (postId: string) => void; // Función para eliminar el post
   onEdit?: (postId: string) => void; // Nueva prop para manejar la edición
   onImageClick: (imageUrl: string) => void; // Nueva prop para abrir el modal de zoom
+  is_saved?: boolean; // Propiedad para indicar si el post está guardado
+  onSave?: (postId: string) => void; // Función para guardar o descomponer el post
 }
 
 /**
@@ -73,7 +75,9 @@ export default function Post({
   currentUserId,
   onDelete,
   onEdit,
-  onImageClick
+  onImageClick,
+  is_saved,
+  onSave
 }: PostProps) {
   // Estados para controlar las interacciones del usuario
   const [isLiked, setIsLiked] = useState(false);

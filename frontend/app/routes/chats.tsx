@@ -307,7 +307,9 @@ export default function Chats() {
       </div>
 
       {/* Panel derecho */}
-      <RightPanel mode="friends" friends={friends} />
+      <div className="hidden lg:block">
+        <RightPanel mode="friends" friends={friends} />
+      </div>
 
       <style>
         {`
