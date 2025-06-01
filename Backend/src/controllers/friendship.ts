@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { friendshipService } from '../services/friendship.service';
+import { friendshipService } from '../services/friendship';
 import { AppError } from '../middlewares/errors/AppError';
 import dbLogger from '../config/logger';
 

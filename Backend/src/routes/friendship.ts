@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { friendshipController } from '../controllers/friendship.controller';
+import { friendshipController } from '../controllers/friendship';
 import { AuthToken } from '../middlewares/validation/authentication/jwt';
 
 const router = Router();
