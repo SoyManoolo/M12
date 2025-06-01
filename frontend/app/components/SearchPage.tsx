@@ -176,8 +176,8 @@ export default function SearchPage() {
     }
   };
 
-  const handleUserClick = (userId: string) => {
-    navigate(`/profile/${userId}`);
+  const handleUserClick = (username: string) => {
+    navigate(`/perfil?username=${username}`);
   };
 
   const handleFriendAction = async (userId: string, action: 'send' | 'cancel' | 'accept' | 'reject' | 'remove') => {
@@ -331,12 +331,11 @@ export default function SearchPage() {
               friends.map((friend) => (
                 <div
                   key={friend.friendship_id}
-                  className="flex items-center justify-between p-4 bg-gray-900 rounded-lg border border-gray-800 hover:border-blue-500 transition-all duration-300 group min-h-[90px]"
-                >
-                  <div 
-                    className="flex items-center space-x-4 cursor-pointer"
-                    onClick={() => handleUserClick(friend.user.user_id)}
+                  className="relative p-4 bg-gray-900 rounded-lg border border-gray-800 hover:border-blue-500 transition-all duration-300 group min-h-[90px] cursor-pointer"
+                  onClick={() => handleUserClick(friend.user.username)}
                   >
+                  <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center space-x-4">
                     {friend.user.profile_picture ? (
                       <img
                         src={friend.user.profile_picture}
@@ -365,11 +364,12 @@ export default function SearchPage() {
                       e.stopPropagation();
                       handleFriendAction(friend.user.user_id, 'remove');
                     }}
-                    className="px-3 py-1.5 bg-red-500/90 text-white rounded-full shadow-md hover:bg-red-400 transition-all duration-200 text-xs font-semibold flex items-center justify-center gap-1.5 ml-4 cursor-pointer"
+                      className="relative z-10 px-3 py-1.5 bg-red-500/90 text-white rounded-full shadow-md hover:bg-red-400 transition-all duration-200 text-xs font-semibold flex items-center justify-center gap-1.5 ml-4 cursor-pointer"
                   >
                     <FaUserMinus className="text-xs" />
                     <span>Eliminar</span>
                   </button>
+                  </div>
                 </div>
               ))
             )}
@@ -400,12 +400,11 @@ export default function SearchPage() {
               suggestedFriends.map((user) => (
                 <div
                   key={user.user_id}
-                  className="flex items-center justify-between p-4 bg-gray-900 rounded-lg border border-gray-800 hover:border-purple-500 transition-all duration-300 group min-h-[90px]"
-                >
-                  <div 
-                    className="flex items-center space-x-4 cursor-pointer"
-                    onClick={() => handleUserClick(user.user_id)}
+                  className="relative p-4 bg-gray-900 rounded-lg border border-gray-800 hover:border-purple-500 transition-all duration-300 group min-h-[90px] cursor-pointer"
+                  onClick={() => handleUserClick(user.username)}
                   >
+                  <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center space-x-4">
                     {user.profile_picture ? (
                       <img
                         src={user.profile_picture}
@@ -429,7 +428,10 @@ export default function SearchPage() {
                       </p>
                     </div>
                   </div>
+                    <div className="relative z-10" onClick={(e) => e.stopPropagation()}>
                   {getFriendButton(user.user_id)}
+                    </div>
+                  </div>
                 </div>
               ))
             )}
@@ -439,23 +441,23 @@ export default function SearchPage() {
       case 'search':
         return (
           <>
-            <form onSubmit={handleSearch} className="mb-8">
-              <div className="flex gap-2">
+            <form onSubmit={handleSearch} className="mb-6 sm:mb-8">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <div className="relative flex-1">
                   <input
                     type="text"
                     placeholder="Buscar por nombre de usuario... (presiona Enter)"
-                    className="w-full pl-12 pr-4 py-3 rounded-lg bg-gray-900 border border-gray-800 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full pl-10 sm:pl-12 pr-4 py-2 sm:py-3 rounded-lg bg-gray-900 border border-gray-800 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
-                  <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500" />
+                  <FaSearch className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm sm:text-base" />
                 </div>
                 <button
                   type="submit"
-                  className="px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-500 hover:to-green-600 transition-all duration-300 shadow-lg shadow-green-500/20 flex items-center gap-2"
+                  className="px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-500 hover:to-green-600 transition-all duration-300 shadow-lg shadow-green-500/20 flex items-center justify-center gap-2 text-sm sm:text-base"
                 >
-                  <FaSearch className="text-lg" />
+                  <FaSearch className="text-base sm:text-lg" />
                   <span>Buscar</span>
                 </button>
               </div>
@@ -483,36 +485,38 @@ export default function SearchPage() {
                 {users.map((user) => (
                   <div
                     key={user.user_id}
-                    className="flex items-center justify-between p-4 bg-gray-900 rounded-lg border border-gray-800 hover:border-green-500 transition-all duration-300 group min-h-[90px]"
-                  >
-                    <div 
-                      className="flex items-center space-x-4 cursor-pointer"
-                      onClick={() => handleUserClick(user.user_id)}
+                    className="relative p-3 sm:p-4 bg-gray-900 rounded-lg border border-gray-800 hover:border-green-500 transition-all duration-300 group min-h-[80px] sm:min-h-[90px] cursor-pointer"
+                    onClick={() => handleUserClick(user.username)}
                     >
+                    <div className="flex items-center justify-between w-full">
+                      <div className="flex items-center space-x-3 sm:space-x-4">
                       {user.profile_picture ? (
                         <img
                           src={user.profile_picture}
                           alt={user.username}
-                          className="w-12 h-12 rounded-full object-cover border-2 border-gray-800 group-hover:border-green-500 transition-all duration-300"
+                          className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-gray-800 group-hover:border-green-500 transition-all duration-300"
                         />
                       ) : (
-                        <div className="w-12 h-12 rounded-full border-2 border-gray-800 bg-gray-800 flex items-center justify-center group-hover:border-green-500 transition-all duration-300">
-                          <span className="text-gray-400 text-lg group-hover:text-green-400 transition-colors">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 border-gray-800 bg-gray-800 flex items-center justify-center group-hover:border-green-500 transition-all duration-300">
+                          <span className="text-gray-400 text-base sm:text-lg group-hover:text-green-400 transition-colors">
                             {user.username.charAt(0).toUpperCase()}
                           </span>
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <h2 className="text-lg font-semibold text-white group-hover:text-green-400 transition-colors truncate">
+                        <h2 className="text-base sm:text-lg font-semibold text-white group-hover:text-green-400 transition-colors truncate">
                           {user.username}
                         </h2>
-                        <p className="text-sm text-gray-400 truncate flex items-center gap-2">
+                        <p className="text-xs sm:text-sm text-gray-400 truncate flex items-center gap-2">
                           <FaUserCircle className="text-xs" />
                           {user.name} {user.surname}
                         </p>
                       </div>
                     </div>
+                      <div className="relative z-10" onClick={(e) => e.stopPropagation()}>
                     {getFriendButton(user.user_id)}
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -523,54 +527,58 @@ export default function SearchPage() {
   };
 
   return (
-    <div className="h-screen bg-black text-white flex">
+    <div className="h-screen bg-black text-white flex flex-col sm:flex-row">
       <Navbar />
       
-      <div className="w-5/6 ml-[16.666667%] p-6">
+      <div className="w-full sm:w-5/6 sm:ml-[16.666667%] pt-16 pb-16 p-4 sm:p-6">
         <div className="max-w-3xl mx-auto">
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
-              Gestión de Contactos
-            </h1>
-            <p className="text-gray-400 text-sm flex items-center gap-2">
-              <FaUsers className="text-blue-500" />
-              Conecta y gestiona tus relaciones sociales
-            </p>
+          <div className="mb-6 sm:mb-8">
+            <div className="flex flex-col items-center sm:items-start text-center sm:text-left mb-4">
+              <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-3">
+                Amigos
+              </h1>
+              <div className="flex items-center gap-2 bg-gray-900/50 px-4 py-2 rounded-full border border-gray-800 mt-3 sm:mt-0">
+                <FaUsers className="text-blue-500 text-lg" />
+                <p className="text-gray-300 text-sm">
+                  Conecta y comparte con tus amigos
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* Tabs */}
-          <div className="flex space-x-4 mb-8">
+          <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-2 sm:space-y-0 mb-6 sm:mb-8">
             <button
               onClick={() => setActiveTab('friends')}
-              className={`px-6 py-3 rounded-lg transition-all duration-300 flex items-center gap-2 ${
+              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg transition-all duration-300 flex items-center justify-center sm:justify-start gap-2 ${
                 activeTab === 'friends'
                   ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-500/20'
                   : 'bg-gray-900 text-gray-400 hover:bg-gray-800 hover:text-white'
               }`}
             >
-              <FaUserFriends className="text-lg" />
+              <FaUserFriends className="text-base sm:text-lg" />
               <span>Mis Amigos</span>
             </button>
             <button
               onClick={() => setActiveTab('suggestions')}
-              className={`px-6 py-3 rounded-lg transition-all duration-300 flex items-center gap-2 ${
+              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg transition-all duration-300 flex items-center justify-center sm:justify-start gap-2 ${
                 activeTab === 'suggestions'
                   ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-lg shadow-purple-500/20'
                   : 'bg-gray-900 text-gray-400 hover:bg-gray-800 hover:text-white'
               }`}
             >
-              <FaLightbulb className="text-lg" />
+              <FaLightbulb className="text-base sm:text-lg" />
               <span>Sugerencias</span>
             </button>
             <button
               onClick={() => setActiveTab('search')}
-              className={`px-6 py-3 rounded-lg transition-all duration-300 flex items-center gap-2 ${
+              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg transition-all duration-300 flex items-center justify-center sm:justify-start gap-2 ${
                 activeTab === 'search'
                   ? 'bg-gradient-to-r from-green-600 to-green-700 text-white shadow-lg shadow-green-500/20'
                   : 'bg-gray-900 text-gray-400 hover:bg-gray-800 hover:text-white'
               }`}
             >
-              <FaSearchIcon className="text-lg" />
+              <FaSearchIcon className="text-base sm:text-lg" />
               <span>Buscar Usuarios</span>
             </button>
           </div>
@@ -581,17 +589,17 @@ export default function SearchPage() {
 
       {/* Notificación */}
       {notification && (
-        <div className={`fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 ${
+        <div className={`fixed bottom-4 right-4 px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-lg flex items-center gap-2 text-sm sm:text-base ${
           notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'
         } text-white transform transition-all duration-300 animate-fade-in`}>
           {notification.type === 'success' ? (
-            <FaUserCheck className="text-xl" />
+            <FaUserCheck className="text-lg sm:text-xl" />
           ) : (
-            <FaUserTimes className="text-xl" />
+            <FaUserTimes className="text-lg sm:text-xl" />
           )}
           {notification.message}
         </div>
       )}
     </div>
   );
-} 
+}

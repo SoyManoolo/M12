@@ -234,21 +234,20 @@ export default function UserProfile({ user, isOwnProfile, onEditProfile }: UserP
 
                 {/* Información del usuario */}
                 <div className="flex-1">
-                    <div className="flex items-center justify-between mb-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2 sm:gap-0">
                         <div>
                             <h1 className="text-2xl font-bold text-white">
                                 {user.name} {user.surname}
                             </h1>
                             <p className="text-gray-400">@{user.username}</p>
                         </div>
-                        
-                        <div className="flex items-center space-x-3">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3 w-full sm:w-auto mt-3 sm:mt-0">
                             {!isOwnProfile && (
                                 <>
                                     {friendshipStatus === 'none' && (
                                         <button
                                             onClick={handleAddFriend}
-                                            className="px-4 py-2 bg-blue-600/90 hover:bg-blue-500 text-white rounded-lg flex items-center space-x-2 transition-colors cursor-pointer"
+                                            className="px-4 py-2 bg-blue-600/90 hover:bg-blue-500 text-white rounded-lg flex items-center justify-center space-x-2 transition-colors cursor-pointer w-full sm:w-auto"
                                         >
                                             <FaUserPlus />
                                             <span>Añadir amigo</span>
@@ -257,7 +256,7 @@ export default function UserProfile({ user, isOwnProfile, onEditProfile }: UserP
                                     {friendshipStatus === 'pending' && (
                                         <button
                                             disabled
-                                            className="px-4 py-2 bg-yellow-500/90 text-white rounded-lg flex items-center space-x-2 cursor-not-allowed"
+                                            className="px-4 py-2 bg-yellow-500/90 text-white rounded-lg flex items-center justify-center space-x-2 cursor-not-allowed w-full sm:w-auto"
                                         >
                                             <FaCheck />
                                             <span>Solicitud enviada</span>
@@ -266,7 +265,7 @@ export default function UserProfile({ user, isOwnProfile, onEditProfile }: UserP
                                     {friendshipStatus === 'friends' && (
                                         <button
                                             onClick={handleRemoveFriend}
-                                            className="px-4 py-2 bg-red-500/90 hover:bg-red-400 text-white rounded-lg flex items-center space-x-2 transition-colors cursor-pointer"
+                                            className="px-4 py-2 bg-red-500/90 hover:bg-red-400 text-white rounded-lg flex items-center justify-center space-x-2 transition-colors cursor-pointer w-full sm:w-auto"
                                         >
                                             <FaUserMinus />
                                             <span>Eliminar amigo</span>

@@ -366,21 +366,31 @@ export default function Perfil() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white flex">
+    <div className="min-h-screen bg-black text-white flex flex-col lg:flex-row">
       <Navbar />
-      
-      <div className="w-2/3 ml-[16.666667%] border-r border-gray-800">
-        <div className="p-6 space-y-6">
-          {/* Perfil del usuario */}
+      <div className="w-full lg:w-2/3 lg:ml-[16.666667%] lg:border-r border-gray-800">
+        <div className="pt-16 pb-16 p-3 sm:p-6 space-y-6">
+          {/* Espacio extra en móvil */}
+          <div className="h-2 sm:h-0" />
           <UserProfile
             user={data.user}
             isOwnProfile={data.isOwnProfile ?? false}
             onEditProfile={handleEditProfile}
           />
 
+          {/* Espacio extra entre perfil y publicaciones */}
+          <div className="h-4 lg:h-2" />
+
+          {/* Título de publicaciones */}
+          <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">
+            {data.isOwnProfile
+              ? 'Mis publicaciones'
+              : `Publicaciones de ${data.user.name ? data.user.name : '@' + data.user.username}`}
+          </h2>
+
           {/* Publicaciones del usuario */}
           {posts.length === 0 ? (
-            <div className="bg-gray-900 rounded-lg p-6 text-center border border-gray-800">
+            <div className="bg-gray-900 rounded-xl p-4 sm:p-6 text-center border border-gray-800 shadow-md mb-4">
               {data.isOwnProfile ? (
                 <>
                   <div className="w-24 h-24 bg-gradient-to-br from-blue-600/20 to-purple-600/20 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -442,11 +452,13 @@ export default function Perfil() {
       </div>
 
       {/* Panel lateral derecho con amigos */}
+      <div className="hidden lg:block">
       <RightPanel
         friends={friends}
         mode="friends"
         customTitle="Mis amigos"
       />
+      </div>
 
       <ConfirmModal
         isOpen={deleteModalOpen}

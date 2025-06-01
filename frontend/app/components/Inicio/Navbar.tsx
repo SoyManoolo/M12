@@ -14,7 +14,7 @@
 
 // src/components/Navbar.tsx
 import { Link, useNavigate } from "@remix-run/react";
-import { FaVideo, FaUpload, FaBell, FaEnvelope, FaCog, FaUser, FaShieldAlt, FaNewspaper, FaUsers, FaChartBar, FaChevronDown, FaSearch } from 'react-icons/fa';
+import { FaVideo, FaUpload, FaBell, FaEnvelope, FaCog, FaUser, FaShieldAlt, FaNewspaper, FaUsers, FaChevronDown, FaSearch, FaHome } from 'react-icons/fa';
 import { useAuth } from "~/hooks/useAuth";
 import { useState, useEffect } from 'react';
 
@@ -41,7 +41,9 @@ export default function Navbar() {
   };
 
   return (
-    <div className="w-1/6 h-screen bg-black border-r border-gray-800 p-4 fixed left-0 top-0 overflow-y-auto">
+    <>
+      {/* Navbar Lateral (Escritorio) */}
+      <div className="w-1/6 h-screen bg-black border-r border-gray-800 p-4 fixed left-0 top-0 overflow-y-auto hidden lg:block">
       {/* Contenedor del logo */}
       <div className="mb-6 flex justify-center">
         <Link to="/inicio">
@@ -152,19 +154,89 @@ export default function Navbar() {
                   <FaUsers className="text-base" />
                   <span className="tracking-wider text-xs">Usuarios</span>
               </Link>
-
-              <Link 
-                to="/admin/estadisticas"
-                  className="flex items-center space-x-2 text-gray-400 hover:text-white w-full p-1.5 rounded hover:bg-gray-800/50 cursor-pointer"
-              >
-                  <FaChartBar className="text-base" />
-                  <span className="tracking-wider text-xs">Estadísticas</span>
-              </Link>
             </div>
           )}
         </div>
         )}
       </nav>
     </div>
+
+      {/* Header Móvil (Solo en móviles) */}
+      <div className="fixed top-0 left-0 right-0 h-16 bg-black border-b border-gray-800 flex items-center justify-between px-4 lg:hidden z-50">
+        {/* Logo */}
+        <Link to="/inicio" className="flex items-center">
+          <img 
+            src="/images/logo.png"
+            alt="Logo FriendsGo"
+            className="h-10 cursor-pointer"
+          />
+        </Link>
+
+        {/* Iconos de la derecha */}
+        <div className="flex items-center space-x-4">
+          {/* Icono Notificaciones */}
+          <Link to="/notificaciones" className="text-gray-400 hover:text-white transition-colors">
+            <FaBell className="text-2xl" />
+          </Link>
+          {/* Icono Mensajes */}
+          <Link to="/chats" className="text-gray-400 hover:text-white transition-colors">
+            <FaEnvelope className="text-2xl" />
+          </Link>
+          {/* Icono Administración (solo para moderadores) */}
+          {isModerator && (
+            <div className="relative">
+              <button 
+                onClick={() => setIsAdminOpen(!isAdminOpen)}
+                className="text-gray-400 hover:text-white transition-colors focus:outline-none"
+              >
+                <FaShieldAlt className="text-2xl" />
+              </button>
+              {isAdminOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg py-1 z-20">
+                  <Link
+                    to="/admin/publicaciones"
+                    className="block px-4 py-2 text-sm text-gray-200 hover:bg-gray-700 hover:text-white"
+                    onClick={() => setIsAdminOpen(false)}
+                  >
+                    Publicaciones
+                  </Link>
+                  <Link
+                    to="/admin/usuarios"
+                    className="block px-4 py-2 text-sm text-gray-200 hover:bg-gray-700 hover:text-white"
+                    onClick={() => setIsAdminOpen(false)}
+                  >
+                    Usuarios
+                  </Link>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Navbar Inferior Móvil (Solo en móviles) */}
+      <div className="fixed bottom-0 left-0 right-0 h-16 bg-black border-t border-gray-800 flex items-center justify-around lg:hidden z-50">
+        {/* Icono Inicio */}
+        <Link to="/inicio" className="flex flex-col items-center justify-center text-gray-400 hover:text-white transition-colors">
+          <FaHome className="text-2xl" />
+        </Link>
+        {/* Icono Buscador */}
+        <Link to="/buscar" className="flex flex-col items-center justify-center text-gray-400 hover:text-white transition-colors">
+          <FaSearch className="text-2xl" />
+        </Link>
+        {/* Icono Videollamada */}
+        <Link to="/videollamada" className="flex flex-col items-center justify-center text-gray-400 hover:text-white transition-colors">
+          <FaVideo className="text-2xl" />
+        </Link>
+        {/* Icono Publicación */}
+        <Link to="/publicar" className="flex flex-col items-center justify-center text-gray-400 hover:text-white transition-colors">
+          <FaUpload className="text-2xl" />
+        </Link>
+        {/* Icono Perfil */}
+        <Link to="/perfil" className="flex flex-col items-center justify-center text-gray-400 hover:text-white transition-colors">
+          <FaUser className="text-2xl" />
+        </Link>
+      </div>
+    </>
   );
 }

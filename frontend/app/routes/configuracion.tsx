@@ -327,10 +327,10 @@ export default function ConfiguracionPage() {
   }
 
   return (
-    <div className="h-screen bg-black text-white flex overflow-hidden">
+    <div className="min-h-screen bg-black text-white flex flex-col lg:flex-row overflow-hidden">
       <Navbar />
       
-      <div className="w-5/6 ml-[16.666667%] p-4">
+      <div className="w-full lg:w-5/6 lg:ml-[16.666667%] pt-16 pb-16 p-3 sm:p-6">
         {/* Encabezado con título y mensajes */}
         <div className="max-w-4xl mx-auto h-full flex flex-col">
           <div className="mb-2">
@@ -349,7 +349,7 @@ export default function ConfiguracionPage() {
           )}
 
           {/* Contenedor principal con grid de dos columnas */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1 h-[calc(100vh-12rem)]">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 h-auto lg:h-[calc(100vh-12rem)]">
             {/* Columna izquierda - Foto de perfil y biografía */}
             <div className="flex flex-col space-y-6 h-full">
               {/* Bloque circular para la foto de perfil */}
