@@ -530,7 +530,7 @@ export default function SearchPage() {
     <div className="h-screen bg-black text-white flex flex-col sm:flex-row">
       <Navbar />
       
-      <div className="w-full sm:w-5/6 sm:ml-[16.666667%] p-4 sm:p-6">
+      <div className="w-full sm:w-5/6 sm:ml-[16.666667%] pt-16 pb-16 p-4 sm:p-6">
         <div className="max-w-3xl mx-auto">
           <div className="mb-6 sm:mb-8">
             <div className="flex flex-col items-center sm:items-start text-center sm:text-left mb-4">
@@ -602,4 +602,4 @@ export default function SearchPage() {
       )}
     </div>
   );
-} 
+}

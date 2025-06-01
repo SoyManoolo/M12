@@ -180,7 +180,7 @@ export default function Publicar() {
     <div className="flex min-h-screen bg-black flex-col">
         <Navbar />
 
-      <div className="flex-1 p-3 sm:p-8 flex flex-col items-center justify-center w-full">
+      <div className="flex-1 pt-16 pb-16 p-3 sm:p-8 flex flex-col items-center justify-center w-full">
         <div className="w-full sm:w-[900px] bg-gray-900 rounded-xl shadow-xl p-3 sm:p-8 border border-gray-800">
           {/* Encabezado */}
           <div className="flex flex-col sm:flex-row items-center justify-between mb-6 sm:mb-8 gap-2 sm:gap-0">
