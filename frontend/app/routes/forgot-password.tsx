@@ -39,55 +39,20 @@ export default function ForgotPassword() {
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-black border border-gray-800 rounded-lg p-8">
-        <h1 className="text-4xl text-white text-center mb-8 font-bold tracking-wider">RECUPERAR CONTRASEÑA</h1>
-        
-        {message && (
-          <Message
-            type={message.type}
-            message={message.text}
-            onClose={clearMessage}
-          />
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label htmlFor="email" className="block text-gray-300 text-sm font-medium mb-2 tracking-wider">
-              CORREO ELECTRÓNICO
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FaEnvelope className="text-gray-400" />
-              </div>
-              <input
-                type="email"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-10 px-3 py-2 bg-transparent border border-gray-600 rounded-md text-white focus:outline-none focus:border-white cursor-text"
-                required
-                placeholder="Ingresa tu correo electrónico"
-              />
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            className="w-full bg-white text-black py-2 px-4 rounded-md hover:bg-gray-200 transition-colors tracking-wider cursor-pointer"
+      <div className="w-full max-w-md bg-black border border-gray-800 rounded-lg p-8 flex flex-col items-center justify-center">
+        <h1 className="text-4xl text-white text-center mb-6 font-bold tracking-wider">RECUPERAR CONTRASEÑA</h1>
+        <div className="flex flex-col items-center justify-center">
+          <span className="text-6xl mb-4">🚧</span>
+          <p className="text-lg text-gray-300 text-center mb-2 font-semibold">Esta opción está en mantenimiento</p>
+          <p className="text-gray-400 text-center mb-6">La recuperación de contraseña estará disponible próximamente.<br />¡Gracias por tu paciencia!</p>
+          <Link
+            to="/login"
+            className="inline-flex items-center text-blue-400 hover:text-white text-base tracking-wider border border-blue-600 rounded-lg px-4 py-2 transition-colors"
           >
-            ENVIAR INSTRUCCIONES
-          </button>
-
-          <div className="text-center">
-            <Link
-              to="/login"
-              className="inline-flex items-center text-gray-400 hover:text-white text-sm tracking-wider"
-            >
-              <FaArrowLeft className="mr-2" />
-              VOLVER A INICIAR SESIÓN
-            </Link>
-          </div>
-        </form>
+            <FaArrowLeft className="mr-2" />
+            VOLVER A INICIAR SESIÓN
+          </Link>
+        </div>
       </div>
     </div>
   );
