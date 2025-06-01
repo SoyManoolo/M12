@@ -379,7 +379,14 @@ export default function Perfil() {
           />
 
           {/* Espacio extra entre perfil y publicaciones */}
-          <div className="h-4 sm:h-6" />
+          <div className="h-4 lg:h-2" />
+
+          {/* Título de publicaciones */}
+          <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">
+            {data.isOwnProfile
+              ? 'Mis publicaciones'
+              : `Publicaciones de ${data.user.name ? data.user.name : '@' + data.user.username}`}
+          </h2>
 
           {/* Publicaciones del usuario */}
           {posts.length === 0 ? (
