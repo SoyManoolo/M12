@@ -13,13 +13,14 @@
  */
 
 import { useEffect, useState } from 'react';
-import { FaEdit, FaCamera, FaTimes } from 'react-icons/fa';
+import { FaEdit, FaCamera, FaTimes, FaUserPlus, FaUserMinus, FaCheck } from 'react-icons/fa';
 import { userService } from '../../services/user.service';
 import { useAuth } from '../../hooks/useAuth.tsx';
 import { useNavigate } from 'react-router-dom';
 import type { User } from '~/types/user.types';
 import ImageZoomModal from '../Shared/ImageZoomModal';
 import Notification from '../Shared/Notification';
+import { friendshipService } from '../../services/friendship.service';
 
 interface UserProfileProps {
     user?: User;
@@ -37,18 +38,34 @@ export default function UserProfile({ user, isOwnProfile, onEditProfile }: UserP
         message: string;
         type: 'success' | 'error';
     } | null>(null);
+    const [friendshipStatus, setFriendshipStatus] = useState<'none' | 'pending' | 'friends'>('none');
 
-    if (!user) return null;
+    useEffect(() => {
+        const checkFriendshipStatus = async () => {
+            if (!token || !user?.user_id || isOwnProfile) return;
+            
+            try {
+                const response = await friendshipService.getFriendshipStatus(token, user.user_id);
+                if (response.success && response.data) {
+                    setFriendshipStatus(response.data.status);
+                }
+            } catch (error) {
+                console.error('Error al verificar estado de amistad:', error);
+            }
+        };
+
+        checkFriendshipStatus();
+    }, [token, user?.user_id, isOwnProfile]);
 
     const handleProfilePictureChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (!file || !token || !user.user_id) return;
+        if (!file || !token || !user?.user_id) return;
 
         try {
             const response = await userService.updateProfilePicture(user.user_id, file, token);
             if (response.success) {
                 const updatedUser = await userService.getUser({ user_id: user.user_id }, token);
-                if (updatedUser.success) {
+                if (updatedUser.success && updatedUser.data) {
                     // Actualizar la imagen en el DOM
                     const img = document.querySelector(`img[alt="${user.username} profile"]`) as HTMLImageElement;
                     if (img) {
@@ -75,13 +92,13 @@ export default function UserProfile({ user, isOwnProfile, onEditProfile }: UserP
     };
 
     const handleDeleteProfilePicture = async () => {
-        if (!token || !user.user_id) return;
+        if (!token || !user?.user_id) return;
 
         try {
             const response = await userService.deleteProfilePicture(user.user_id, token);
             if (response.success) {
                 const updatedUser = await userService.getUser({ user_id: user.user_id }, token);
-                if (updatedUser.success) {
+                if (updatedUser.success && updatedUser.data) {
                     // Actualizar la imagen en el DOM
                     const img = document.querySelector(`img[alt="${user.username} profile"]`) as HTMLImageElement;
                     if (img) {
@@ -107,28 +124,80 @@ export default function UserProfile({ user, isOwnProfile, onEditProfile }: UserP
         }
     };
 
+    const handleAddFriend = async () => {
+        if (!token || !user?.user_id) return;
+
+        try {
+            const response = await friendshipService.sendFriendRequest(token, user.user_id);
+            if (response.success) {
+                setFriendshipStatus('pending');
+                setNotification({
+                    message: 'Solicitud de amistad enviada',
+                    type: 'success'
+                });
+            } else {
+                setNotification({
+                    message: response.message || 'Error al enviar solicitud',
+                    type: 'error'
+                });
+            }
+        } catch (error) {
+            setNotification({
+                message: 'Error al enviar solicitud de amistad',
+                type: 'error'
+            });
+        }
+    };
+
+    const handleRemoveFriend = async () => {
+        if (!token || !user?.user_id) return;
+
+        try {
+            const response = await friendshipService.removeFriendship(token, user.user_id);
+            if (response.success) {
+                setFriendshipStatus('none');
+                setNotification({
+                    message: 'Amigo eliminado correctamente',
+                    type: 'success'
+                });
+            } else {
+                setNotification({
+                    message: response.message || 'Error al eliminar amigo',
+                    type: 'error'
+                });
+            }
+        } catch (error) {
+            setNotification({
+                message: 'Error al eliminar amigo',
+                type: 'error'
+            });
+        }
+    };
+
+    if (!user) return null;
+
     return (
         <>
-            <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
-                <div className="flex items-start space-x-6">
+        <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
+            <div className="flex items-start space-x-6">
                     {/* Foto de perfil con efecto hover */}
                     <div 
                         className="relative group"
                         onMouseEnter={() => setIsHovering(true)}
                         onMouseLeave={() => setIsHovering(false)}
                     >
-                        {user.profile_picture ? (
-                            <img
-                                src={user.profile_picture}
-                                alt={`${user.username} profile`}
+                    {user.profile_picture ? (
+                        <img
+                            src={user.profile_picture}
+                            alt={`${user.username} profile`}
                                 className="w-40 h-40 rounded-full object-cover border-4 border-gray-800 cursor-pointer transition-all duration-300 group-hover:border-blue-500/50 group-hover:scale-105"
-                                onClick={() => setShowZoomModal(true)}
-                                onError={(e) => {
-                                    const target = e.target as HTMLImageElement;
-                                    target.src = "/default-avatar.png";
-                                }}
-                            />
-                        ) : (
+                            onClick={() => setShowZoomModal(true)}
+                            onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.src = "/default-avatar.png";
+                            }}
+                        />
+                    ) : (
                             <div className="w-40 h-40 rounded-full border-4 border-gray-800 bg-gray-800 flex items-center justify-center cursor-pointer transition-all duration-300 group-hover:border-blue-500/50 group-hover:scale-105">
                                 <span className="text-gray-400 text-6xl group-hover:text-blue-500/50 transition-colors duration-300">
                                     {user.username.charAt(0).toUpperCase()}
@@ -159,30 +228,63 @@ export default function UserProfile({ user, isOwnProfile, onEditProfile }: UserP
                                         </button>
                                     )}
                                 </div>
-                            </div>
-                        )}
-                    </div>
+                        </div>
+                    )}
+                </div>
 
-                    {/* Información del usuario */}
-                    <div className="flex-1">
-                        <div className="flex items-center justify-between mb-4">
-                            <div>
-                                <h1 className="text-2xl font-bold text-white">
-                                    {user.name} {user.surname}
-                                </h1>
-                                <p className="text-gray-400">@{user.username}</p>
-                            </div>
-                            
+                {/* Información del usuario */}
+                <div className="flex-1">
+                    <div className="flex items-center justify-between mb-4">
+                        <div>
+                            <h1 className="text-2xl font-bold text-white">
+                                {user.name} {user.surname}
+                            </h1>
+                            <p className="text-gray-400">@{user.username}</p>
+                        </div>
+                        
+                        <div className="flex items-center space-x-3">
+                            {!isOwnProfile && (
+                                <>
+                                    {friendshipStatus === 'none' && (
+                                        <button
+                                            onClick={handleAddFriend}
+                                            className="px-4 py-2 bg-blue-600/90 hover:bg-blue-500 text-white rounded-lg flex items-center space-x-2 transition-colors cursor-pointer"
+                                        >
+                                            <FaUserPlus />
+                                            <span>Añadir amigo</span>
+                                        </button>
+                                    )}
+                                    {friendshipStatus === 'pending' && (
+                                        <button
+                                            disabled
+                                            className="px-4 py-2 bg-yellow-500/90 text-white rounded-lg flex items-center space-x-2 cursor-not-allowed"
+                                        >
+                                            <FaCheck />
+                                            <span>Solicitud enviada</span>
+                                        </button>
+                                    )}
+                                    {friendshipStatus === 'friends' && (
+                                        <button
+                                            onClick={handleRemoveFriend}
+                                            className="px-4 py-2 bg-red-500/90 hover:bg-red-400 text-white rounded-lg flex items-center space-x-2 transition-colors cursor-pointer"
+                                        >
+                                            <FaUserMinus />
+                                            <span>Eliminar amigo</span>
+                                        </button>
+                                    )}
+                                </>
+                            )}
                             {isOwnProfile && (
                                 <button
                                     onClick={onEditProfile}
-                                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center space-x-2 transition-colors"
+                                    className="px-4 py-2 bg-blue-600/90 hover:bg-blue-500 text-white rounded-lg flex items-center space-x-2 transition-colors cursor-pointer"
                                 >
                                     <FaEdit />
                                     <span>Editar perfil</span>
                                 </button>
                             )}
                         </div>
+                    </div>
 
                         {/* Biografía simple */}
                         <p className="text-gray-300 whitespace-pre-wrap">

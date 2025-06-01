@@ -208,7 +208,7 @@ export interface FriendRequestAttributes {
     request_id: string;
     sender_id: string;
     receiver_id: string;
-    status: 'pending' | 'accepted' | 'rejected';
+    status: 'pending' | 'accepted' | 'rejected' | 'cancelled';
     created_from?: 'search' | 'video_call' | 'suggestion';
     video_call_id?: string | null;
     created_at?: Date;

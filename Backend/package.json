@@ -44,17 +44,19 @@
     "dependencies": {
         "@types/bcrypt": "^5.0.2",
         "@types/socket.io-client": "^3.0.0",
-        "axios": "^1.9.0",
+        "@types/winston": "^2.4.4",
         "bcrypt": "^6.0.0",
         "bcryptjs": "^2.4.3",
         "celebrate": "^15.0.3",
         "cors": "^2.8.5",
         "dotenv": "^16.4.7",
         "express": "^5.0.1",
+        "express-validator": "^7.2.1",
         "helmet": "^8.1.0",
         "http-status-codes": "^2.3.0",
         "i18n": "^0.15.1",
         "jsonwebtoken": "^9.0.2",
+        "jwt-decode": "^4.0.0",
         "multer": "^1.4.5-lts.2",
         "node-cron": "^3.0.3",
         "pg": "^8.13.3",
@@ -63,7 +65,8 @@
         "sequelize": "^6.37.5",
         "socket.io": "^4.8.1",
         "socket.io-client": "^4.8.1",
-        "translate": "^3.0.1"
+        "translate": "^3.0.1",
+        "winston": "^3.17.0"
     },
     "devDependencies": {
         "@types/bcryptjs": "^2.4.6",
@@ -78,6 +81,7 @@
         "@types/pg": "^8.11.11",
         "@types/sequelize": "^4.28.20",
         "@types/supertest": "^6.0.2",
+        "axios": "^1.9.0",
         "cross-env": "^7.0.3",
         "jest": "^29.7.0",
         "nodemon": "^3.1.9",

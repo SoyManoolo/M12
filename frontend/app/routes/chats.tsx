@@ -17,8 +17,8 @@ import ChatItem from '~/components/Chats/ChatItem';
 import RightPanel from '~/components/Shared/RightPanel';
 import { FaSearch, FaEnvelope } from 'react-icons/fa';
 import { useAuth } from "~/hooks/useAuth";
-import { userService } from "~/services/user.service";
 import { chatService } from '~/services/chat.service';
+import { friendshipService } from '~/services/friendship.service';
 
 export const meta: MetaFunction = () => {
   return [
@@ -44,6 +44,7 @@ interface Chat {
   last_message: {
     content: string;
     timestamp: string;
+    sender_id: string;
   };
   unread_count: number;
 }
@@ -100,38 +101,44 @@ export default function Chats() {
       try {
         // Cargar chats activos
         const activeChats = await chatService.getActiveChats(token);
+        console.log('Chats activos recibidos:', activeChats);
         const formattedChats: Chat[] = activeChats
-          .filter((chat: ChatResponse) => chat.other_user.user_id !== user.user_id) // Filtrar chats con uno mismo
-          .map((chat: ChatResponse) => ({
-          chat_id: `${user.user_id}-${chat.other_user.user_id}`,
-          user: {
-            user_id: chat.other_user.user_id,
-            username: chat.other_user.username,
-            profile_picture: chat.other_user.profile_picture
-          },
-          last_message: {
-            content: chat.last_message.content,
-            timestamp: chat.last_message.created_at
-          },
-          unread_count: chat.unread_count
-        }));
+          .filter((chat: any) => chat.other_user && chat.other_user.user_id !== user.user_id) // Filtrar chats con uno mismo
+          .map((chat: any) => ({
+            chat_id: `${user.user_id}-${chat.other_user.user_id}`,
+            user: {
+              user_id: chat.other_user.user_id,
+              username: chat.other_user.username,
+              profile_picture: chat.other_user.profile_picture
+            },
+            last_message: {
+              content: chat.last_message?.content || '',
+              timestamp: chat.last_message?.created_at || new Date().toISOString(),
+              sender_id: chat.last_message?.sender_id || user.user_id
+            },
+            unread_count: chat.unread_count || 0
+          }));
+        console.log('Chats formateados:', formattedChats);
         setChats(formattedChats);
 
-        // Cargar amigos excluyendo al usuario actual
-        const friendsResponse = await userService.getAllUsers(token);
-        if (friendsResponse.success && friendsResponse.data && Array.isArray(friendsResponse.data.users)) {
-          const friendsData = friendsResponse.data.users
-            .filter(friend => friend.user_id !== user.user_id) // Excluir al usuario actual
-            .map(user => ({
-            friendship_id: user.user_id,
-            user1_id: user.user_id,
-            user2_id: user.user_id,
-            created_at: new Date().toISOString(),
+        // Cargar solo amigos reales
+        const friendsResponse = await friendshipService.getUserFriends(token);
+        if (friendsResponse.success && friendsResponse.data) {
+          const friendsData = friendsResponse.data.map(friend => ({
+            ...friend,
             user: {
-              ...user,
-              profile_picture: user.profile_picture || null,
-              bio: user.bio ?? null,
+              user_id: friend.user.user_id,
+              username: friend.user.username,
+              name: friend.user.name || '',
+              surname: '',
+              email: '',
+              profile_picture: friend.user.profile_picture || null,
+              bio: '',
+              email_verified: false,
+              is_moderator: false,
               deleted_at: null,
+              created_at: '',
+              updated_at: '',
               active_video_call: false
             }
           }));
@@ -147,53 +154,59 @@ export default function Chats() {
       }
     };
 
-    const handleNewMessage = (message: any) => {
-      setChats(prevChats => {
-        const existingChatIndex = prevChats.findIndex(
-          chat => chat.user.user_id === message.sender_id || chat.user.user_id === message.receiver_id
-        );
+    // Manejar mensajes nuevos
+    const unsubscribeNewMessage = chatService.onNewMessage((message) => {
+      console.log('Nuevo mensaje recibido:', message);
+      if (message.sender_id === user.user_id || message.receiver_id === user.user_id) {
+        setChats(prevChats => {
+          const otherUserId = message.sender_id === user.user_id ? message.receiver_id : message.sender_id;
+          const existingChatIndex = prevChats.findIndex(chat => 
+            chat.user.user_id === otherUserId
+          );
 
-        if (existingChatIndex >= 0) {
-          const updatedChats = [...prevChats];
-          updatedChats[existingChatIndex] = {
-            ...updatedChats[existingChatIndex],
-            last_message: {
-              content: message.content,
-              timestamp: message.created_at
-            },
-            unread_count: message.sender_id !== user.user_id 
-              ? updatedChats[existingChatIndex].unread_count + 1 
-              : updatedChats[existingChatIndex].unread_count
-          };
-          return updatedChats;
-        }
-
-        // Si es un nuevo chat, necesitamos obtener la información del usuario
-        const otherUserId = message.sender_id === user.user_id ? message.receiver_id : message.sender_id;
-        const otherUser = friends.find(f => f.user.user_id === otherUserId)?.user;
-
-        if (otherUser) {
-          return [...prevChats, {
-            chat_id: `${user.user_id}-${otherUserId}`,
-            user: {
-              user_id: otherUser.user_id,
-              username: otherUser.username,
-              profile_picture: otherUser.profile_picture
-            },
-            last_message: {
-              content: message.content,
-              timestamp: message.created_at
-            },
-            unread_count: message.sender_id !== user.user_id ? 1 : 0
-          }];
-        }
-
-        return prevChats;
-      });
-    };
+          if (existingChatIndex >= 0) {
+            // Actualizar chat existente
+            const updatedChats = [...prevChats];
+            updatedChats[existingChatIndex] = {
+              ...updatedChats[existingChatIndex],
+              last_message: {
+                content: message.content,
+                timestamp: message.created_at,
+                sender_id: message.sender_id
+              },
+              unread_count: message.sender_id === user.user_id ? 0 : updatedChats[existingChatIndex].unread_count + 1
+            };
+            return updatedChats;
+          } else {
+            // Buscar la información del usuario en la lista de amigos
+            const otherUser = friends.find(f => f.user.user_id === otherUserId)?.user;
+            
+            if (otherUser) {
+              // Crear nuevo chat con la información del amigo
+              return [{
+                chat_id: `${user.user_id}-${otherUserId}`,
+                user: {
+                  user_id: otherUser.user_id,
+                  username: otherUser.username,
+                  profile_picture: otherUser.profile_picture
+                },
+                last_message: {
+                  content: message.content,
+                  timestamp: message.created_at,
+                  sender_id: message.sender_id
+                },
+                unread_count: message.sender_id === user.user_id ? 0 : 1
+              }, ...prevChats];
+            }
+            
+            // Si no encontramos al usuario en la lista de amigos, no creamos el chat
+            return prevChats;
+          }
+        });
+      }
+    });
 
     // Registrar el handler y guardar la función de limpieza
-    const unsubscribeNewMessage = chatService.onNewMessage(handleNewMessage);
     unsubscribeFunctions.push(unsubscribeNewMessage);
 
     fetchData();
@@ -205,10 +218,11 @@ export default function Chats() {
     };
   }, [token, user]);
 
-  // Filtrar chats basado en la búsqueda
-  const filteredChats = chats.filter(chat =>
-    chat.user.username.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Filtrar chats basado en la búsqueda y solo mostrar chats con amigos
+  const filteredChats = chats.filter(chat => {
+    const isFriend = friends.some(friend => friend.user.user_id === chat.user.user_id);
+    return isFriend && chat.user.username.toLowerCase().includes(searchQuery.toLowerCase());
+  });
 
   const handleChatClick = (userId: string) => {
     window.location.href = `/chat?userId=${userId}`;
@@ -244,7 +258,7 @@ export default function Chats() {
               <input
                 type="text"
                 placeholder="Buscar en mensajes..."
-                className="w-full bg-gray-900 rounded-xl py-3 pl-12 pr-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+                className="w-full bg-gray-900 rounded-full py-3 pl-12 pr-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -252,46 +266,48 @@ export default function Chats() {
           </div>
 
           {/* Lista de chats */}
-          <div className="space-y-2 max-h-[calc(100vh-250px)] overflow-y-auto custom-scrollbar">
-            {filteredChats.map((chat) => (
-              <div
-                key={chat.chat_id}
-                onClick={() => handleChatClick(chat.user.user_id)}
-                className="group bg-gray-900/50 hover:bg-gray-800/80 rounded-xl p-4 cursor-pointer transition-all duration-200 border border-transparent hover:border-gray-700"
-              >
+          {loading ? (
+            <div className="flex justify-center items-center h-64">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+            </div>
+          ) : error ? (
+            <div className="text-red-500 text-center py-8">{error}</div>
+          ) : friends.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="w-24 h-24 bg-gradient-to-br from-blue-600/20 to-purple-600/20 rounded-full flex items-center justify-center mb-6">
+                <FaEnvelope className="text-5xl text-blue-500" />
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-3">No tienes amigos aún</h3>
+              <p className="text-gray-400 text-center max-w-md mb-6">
+                Para poder chatear necesitas tener amigos. ¡Conecta con personas y empieza a conversar!
+              </p>
+            </div>
+          ) : filteredChats.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="w-24 h-24 bg-gradient-to-br from-blue-600/20 to-purple-600/20 rounded-full flex items-center justify-center mb-6">
+                <FaEnvelope className="text-5xl text-blue-500" />
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-3">No hay mensajes</h3>
+              <p className="text-gray-400 text-center max-w-md mb-6">
+                {searchQuery ? 'No se encontraron mensajes con esa búsqueda' : 'No tienes conversaciones activas con tus amigos'}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {filteredChats.map((chat) => (
                 <ChatItem
+                  key={chat.chat_id}
                   chat={chat}
-                  onClick={() => {}}
+                  onClick={() => handleChatClick(chat.user.user_id)}
                 />
-              </div>
-            ))}
-
-            {/* Mensaje cuando no hay chats */}
-            {filteredChats.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-16 bg-gray-900/50 rounded-xl border border-gray-800">
-                <div className="w-24 h-24 bg-gradient-to-br from-blue-600/20 to-purple-600/20 rounded-full flex items-center justify-center mb-6">
-                  <FaEnvelope className="text-4xl text-blue-500" />
-                </div>
-                <h3 className="text-xl font-semibold text-white mb-2">
-                  {searchQuery ? 'No se encontraron chats' : 'No tienes chats activos'}
-                </h3>
-                <p className="text-gray-400 text-center max-w-md mb-6">
-                  {searchQuery 
-                    ? 'Intenta con otros términos de búsqueda'
-                    : 'Comienza una conversación con tus amigos'}
-                </p>
-              </div>
-            )}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Panel lateral derecho */}
-      <RightPanel
-        friends={friends}
-        mode="online"
-        customTitle="Mis amigos"
-      />
+      {/* Panel derecho */}
+      <RightPanel mode="friends" friends={friends} />
 
       <style>
         {`

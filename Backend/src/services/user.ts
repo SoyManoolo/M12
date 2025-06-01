@@ -46,7 +46,9 @@ export class UserService {
 
             // Verificar si no hay usuarios
             if (!users || users.length === 0) {
-                throw new AppError(404, 'No se encontraron usuarios');
+                // No lanzar error 404 si no hay usuarios en la carga inicial, solo si es una búsqueda paginada y no hay más.
+                // Considerar si este endpoint debe paginar o no. Por ahora, devuelve lo que encuentra.
+                // throw new AppError(404, 'No se encontraron usuarios');
             }
 
             // Determinar si hay más páginas
@@ -252,4 +254,49 @@ export class UserService {
             throw new AppError(500, 'Error interno del servidor');
         };
     };
+
+    // Nuevo método para buscar usuarios de forma flexible por username, name o surname
+    public async searchUsers(searchTerm: string, limit: number = 20) {
+        try {
+            dbLogger.info(`[UserService] Searching users with term: ${searchTerm}`);
+
+            // Usamos Op.iLike para búsqueda insensible a mayúsculas/minúsculas
+            // Agregamos el comodín % para buscar coincidencias parciales al inicio y al final
+            const searchPattern = `%${searchTerm}%`;
+
+            const users = await User.findAll({
+                where: {
+                    [Op.or]: [
+                        { username: { [Op.iLike]: searchPattern } },
+                        { name: { [Op.iLike]: searchPattern } },
+                        { surname: { [Op.iLike]: searchPattern } }
+                    ]
+                },
+                attributes: [
+                    'user_id',
+                    'username',
+                    'email',
+                    'name',
+                    'surname',
+                    'profile_picture',
+                    'bio',
+                    'is_moderator',
+                    'created_at'
+                ], // Seleccionar los mismos atributos que getUsers
+                limit: limit,
+                order: [
+                    // Considerar un ordenamiento más relevante para búsqueda, por ejemplo por relevancia
+                    // Por ahora, ordenamos por username alfabéticamente
+                    ['username', 'ASC']
+                ]
+            });
+
+            dbLogger.info(`[UserService] Found ${users.length} users for term: ${searchTerm}`);
+
+            return users;
+        } catch (error) {
+            dbLogger.error(`[UserService] Error searching users: ${error}`);
+            throw new AppError(500, 'Error interno del servidor al buscar usuarios');
+        }
+    }
 };

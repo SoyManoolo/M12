@@ -1,8 +1,8 @@
-import { ChatMessages, PostComments, User } from "../models";
+import { ChatMessages, PostComments, User, Friends } from "../models";
 import { AppError } from "../middlewares/errors/AppError";
 import { Op } from "sequelize";
 import { existsUser } from "../utils/modelExists";
-import { CreateMessageAttributes, ChatMessagesCreationAttributes } from "../types/custom";
+import { CreateMessageAttributes, ChatMessagesCreationAttributes, FriendsAttributes } from "../types/custom";
 import dbLogger from "../config/logger";
 
 export class ChatService {
@@ -70,84 +70,81 @@ export class ChatService {
                 throw new AppError(404, 'UserNotFound')
             };
 
-            // Obtener todos los chats donde el usuario es remitente o receptor
-            const chats: ChatMessages[] = await ChatMessages.findAll({
+            // Obtener la lista de amigos del usuario
+            const friendships = await Friends.findAll({
                 where: {
                     [Op.or]: [
-                        { sender_id: user_id },
-                        { receiver_id: user_id }
+                        { user1_id: user_id },
+                        { user2_id: user_id }
                     ]
-                },
-                include: [
-                    {
-                        model: User,
-                        as: 'sender',
-                        attributes: ['user_id', 'username', 'name', 'surname', 'profile_picture']
-                    },
-                    {
-                        model: User,
-                        as: 'receiver',
-                        attributes: ['user_id', 'username', 'name', 'surname', 'profile_picture']
-                    }
-                ],
-                order: [['created_at', 'DESC']],
-                group: [
-                    'ChatMessages.id',
-                    'ChatMessages.sender_id',
-                    'ChatMessages.receiver_id',
-                    'ChatMessages.content',
-                    'ChatMessages.is_delivered',
-                    'ChatMessages.delivered_at',
-                    'ChatMessages.read_at',
-                    'ChatMessages.created_at',
-                    'ChatMessages.updated_at',
-                    'sender.user_id',
-                    'receiver.user_id'
-                ]
+                }
             });
 
-            if (!chats || chats.length === 0) {
+            // Obtener los IDs de los amigos
+            const friendIds = friendships.map((friendship) => 
+                friendship.get('user1_id') === user_id ? friendship.get('user2_id') : friendship.get('user1_id')
+            ) as string[];
+
+            if (friendIds.length === 0) {
                 return [];
             }
 
             // Procesar los chats para obtener el último mensaje y la información del otro usuario
-            const processedChats = await Promise.all(chats.map(async (chat: ChatMessages & { sender?: User, receiver?: User }) => {
-                const otherUserId: string = chat.sender_id === user_id ? chat.receiver_id : chat.sender_id;
-                const otherUser: User | undefined = chat.sender_id === user_id ? chat.receiver : chat.sender;
-
-                if (!otherUser) {
-                    return null;
-                }
-
-                // Obtener el último mensaje
+            const processedChats = await Promise.all(friendIds.map(async (friendId) => {
+                // Obtener el último mensaje entre el usuario y el amigo
                 const lastMessage: ChatMessages | null = await ChatMessages.findOne({
                     where: {
                         [Op.or]: [
                             {
                                 sender_id: user_id,
-                                receiver_id: otherUserId
+                                receiver_id: friendId
                             },
                             {
-                                sender_id: otherUserId,
+                                sender_id: friendId,
                                 receiver_id: user_id
                             }
                         ]
                     },
-                    order: [['created_at', 'DESC']]
+                    order: [['created_at', 'DESC']],
+                    include: [
+                        {
+                            model: User,
+                            as: 'sender',
+                            attributes: ['user_id', 'username', 'name', 'surname', 'profile_picture']
+                        },
+                        {
+                            model: User,
+                            as: 'receiver',
+                            attributes: ['user_id', 'username', 'name', 'surname', 'profile_picture']
+                        }
+                    ]
                 });
 
                 // Contar mensajes no leídos
                 const unreadCount: number = await ChatMessages.count({
                     where: {
-                        sender_id: otherUserId,
+                        sender_id: friendId,
                         receiver_id: user_id,
                         read_at: null
                     }
                 });
 
+                // Obtener la información del amigo
+                const friend = await User.findByPk(friendId, {
+                    attributes: ['user_id', 'username', 'name', 'surname', 'profile_picture']
+                });
+
+                if (!friend) {
+                    return null;
+                }
+
                 return {
-                    other_user: otherUser,
-                    last_message: lastMessage,
+                    other_user: friend,
+                    last_message: lastMessage || {
+                        content: '',
+                        created_at: new Date().toISOString(),
+                        sender_id: user_id
+                    },
                     unread_count: unreadCount
                 };
             }));
@@ -156,7 +153,6 @@ export class ChatService {
         } catch (error) {
             dbLogger.error('Error en getUserChats:', {error});
             return [];
-
         }
     }
 

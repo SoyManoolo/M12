@@ -356,5 +356,30 @@ export const userService = {
                 data: {} as UserProfile
             };
         }
+    },
+
+    /**
+     * Busca usuarios por término de búsqueda
+     */
+    async searchUsers(searchTerm: string, token: string): Promise<ApiResponse<User[]>> {
+        try {
+            const response = await fetch(`${environment.apiUrl}/users/search?term=${encodeURIComponent(searchTerm)}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Error al buscar usuarios:', error);
+            return {
+                success: false,
+                status: 500,
+                message: 'Error al conectar con el servidor',
+                data: []
+            };
+        }
     }
 }; 

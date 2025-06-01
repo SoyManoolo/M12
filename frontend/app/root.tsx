@@ -1,4 +1,5 @@
-import './utils/fetchWithNgrok.client.ts';
+import "./utils/fetchWithNgrok.client";
+
 import {
     Links,
     Meta,

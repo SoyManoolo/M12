@@ -20,7 +20,7 @@ export class UserController {
             res.status(200).json({
                 success: true,
                 status: 200,
-                message: "hola",
+                message: "usuarios obtenidos correctamente",
                 data: users
             });
         } catch (error) {
@@ -48,7 +48,7 @@ export class UserController {
             res.status(200).json({
                 success: true,
                 status: 200,
-                message: "hola",
+                message: "usuario obtenido correctamente",
                 data: user
             });
         } catch (error) {
@@ -191,6 +191,49 @@ export class UserController {
             });
         } catch (error) {
             next(error);
+        }
+    }
+
+    // Nuevo método para manejar la búsqueda flexible de usuarios
+    public async searchUsers(req: Request, res: Response, next: NextFunction) {
+        try {
+            dbLogger.info('[UserController] Search users request received');
+
+            // Obtener el término de búsqueda del query param
+            const searchTerm = req.query.term as string;
+
+            if (!searchTerm || searchTerm.trim() === '') {
+                // Si no hay término de búsqueda, devolver lista vacía o quizás los usuarios iniciales paginados
+                // Por ahora, devolvemos vacío
+                return res.status(200).json({
+                    success: true,
+                    status: 200,
+                    message: "", // Mensaje vacío o indicando que no hay término de búsqueda
+                    data: []
+                });
+            }
+
+            // Elegir el locale del header 'accept-language' o por defecto 'en'
+            const locale = req.headers['accept-language'] || 'en';
+            i18n.setLocale(locale);
+
+            // Llamar al servicio para realizar la búsqueda
+            const users = await this.userService.searchUsers(searchTerm);
+
+            return res.status(200).json({
+                success: true,
+                status: 200,
+                message: "usuarios encontrados",
+                data: users
+            });
+        } catch (error) {
+            next(error);
+            return res.status(500).json({
+                success: false,
+                status: 500,
+                message: "Error al buscar usuarios",
+                data: null
+            });
         }
     }
 };

@@ -119,8 +119,14 @@ export class PostService {
             const posts = await Post.findAll(queryOptions)
             dbLogger.info(`[PostService] Posts found: ${JSON.stringify(posts)}`);
 
-            // Si no hay posts, lanzamos un error
-            if (!posts || posts.length === 0) throw new AppError(404, 'PostNotFound');
+            // Si no hay posts, devolvemos un array vacío
+            if (!posts || posts.length === 0) {
+                return {
+                    posts: [],
+                    hasNextPage: false,
+                    nextCursor: null
+                };
+            }
 
             // Si hay más posts, los paginamos
             const hasNextPage: boolean = posts.length > limit;
@@ -198,8 +204,14 @@ export class PostService {
 
             const posts: Post[] = await Post.findAll(queryOptions);
 
-            // Si no hay posts, lanzamos un error
-            if (!posts || posts.length === 0) throw new AppError(404, 'PostNotFound');
+            // Si no hay posts, devolvemos un array vacío
+            if (!posts || posts.length === 0) {
+                return {
+                    posts: [],
+                    hasNextPage: false,
+                    nextCursor: null
+                };
+            }
 
             // Transformamos los posts para el formato esperado por el frontend
             const postsWithLikes = posts.map(post => {

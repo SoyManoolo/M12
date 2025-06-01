@@ -27,17 +27,12 @@ export class PostController {
             // Llama al servicio para obtener los posts
             const posts = await this.postService.getPostsUser(filters, limit, cursor);
 
-            // Si no hay posts, lanza un error
-            if (!posts) {
-                throw new AppError(404, 'PostNotFound');
-            };
-
-            // Devuelve una respuesta JSON con los posts obtenidos
+            // Devuelve una respuesta JSON con los posts obtenidos (puede ser un array vacío)
             res.status(200).json({
                 success: true,
                 status: 200,
-                message: "hola",
-                data: posts
+                message: "Posts obtenidos correctamente",
+                data: posts || []
             })
         } catch (error) {
             next(error);
@@ -88,17 +83,12 @@ export class PostController {
             // Llama al servicio para obtener los posts
             const posts = await this.postService.getPosts(limit, cursor);
 
-            // Si no hay posts, lanza un error
-            if (!posts) {
-                throw new AppError(404, 'PostNotFound');
-            };
-
-            // Devuelve una respuesta JSON con los posts obtenidos
+            // Devuelve una respuesta JSON con los posts obtenidos (puede ser un array vacío)
             res.status(200).json({
                 success: true,
                 status: 200,
-                message: "hola",
-                data: posts
+                message: "Posts obtenidos correctamente",
+                data: posts || []
             })
         } catch (error) {
             next(error);

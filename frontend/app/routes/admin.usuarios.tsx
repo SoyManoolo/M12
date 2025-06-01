@@ -497,7 +497,7 @@ export default function AdminUsuarios() {
                     : 'bg-gray-800 text-white hover:bg-gray-700'
                 }`}
               >
-                Administrador
+                Moderador
               </button>
               <button 
                 onClick={() => setActiveFilter('recent')}

@@ -1,3 +1,5 @@
+import { environment } from '../config/environment';
+
 export interface Comment {
   comment_id: string;
   post_id: string;
@@ -30,11 +32,9 @@ interface CommentsResponse {
 }
 
 class CommentService {
-  private baseUrl = 'https://332f-37-133-29-123.ngrok-free.app';
-
   async createComment(token: string, postId: string, content: string): Promise<CommentResponse> {
     try {
-      const response = await fetch(`${this.baseUrl}/comments`, {
+      const response = await fetch(`${environment.apiUrl}/comments`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -69,7 +69,7 @@ class CommentService {
 
   async getComments(token: string, postId: string): Promise<CommentsResponse> {
     try {
-      const response = await fetch(`${this.baseUrl}/comments/${postId}`, {
+      const response = await fetch(`${environment.apiUrl}/comments/${postId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -98,7 +98,7 @@ class CommentService {
 
   async deleteComment(token: string, postId: string, commentId: string): Promise<{ success: boolean; message: string }> {
     try {
-      const response = await fetch(`${this.baseUrl}/comments/${commentId}`, {
+      const response = await fetch(`${environment.apiUrl}/comments/${commentId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`

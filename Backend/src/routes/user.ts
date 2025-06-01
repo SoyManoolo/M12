@@ -18,10 +18,16 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
     await userController.getUsers(req, res, next);
 });
 
-// Ruta para obtener un usuario por su username
+// Ruta para obtener un usuario por su username (búsqueda exacta)
 router.get('/username', UsernameValidator, async (req: Request, res: Response, next: NextFunction) => {
     dbLogger.info('[UserRouter] Get user by username');
     await userController.getUser(req, res, next);
+});
+
+// Nueva ruta para buscar usuarios de forma flexible
+router.get('/search', async (req: Request, res: Response, next: NextFunction) => {
+    dbLogger.info('[UserRouter] Search users route');
+    await userController.searchUsers(req, res, next);
 });
 
 router.patch('/username', UsernameValidator, updateUserValidator, async (req: Request, res: Response, next: NextFunction) => {

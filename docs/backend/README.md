@@ -1,4 +1,8 @@
-# Backend proyecto M12 - FriendsGO
+# Documentación Técnica Backend - FriendsGo
+
+> **Nota**: Este documento es parte de la documentación técnica del proyecto FriendsGo y se encuentra en la carpeta `docs/backend/`. Para la documentación general del proyecto, consulta el [README principal](https://github.com/SoyManoolo/M12) en la raíz del repositorio.
+
+## Descripción General
 
 ## Introducción
 

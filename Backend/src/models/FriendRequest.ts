@@ -4,13 +4,7 @@ import { User } from "./User";
 import { FriendRequestAttributes } from "../types/custom";
 import { FriendRequestCreationAttributes } from "../types/custom";
 
-export class FriendRequest extends Model <FriendRequestAttributes, FriendRequestCreationAttributes>{
-    request_id!: string;
-    sender_id!: string;
-    receiver_id!: string;
-    status!: string;
-    created_at!: Date;
-};
+export class FriendRequest extends Model<FriendRequestAttributes, FriendRequestCreationAttributes> {}
 
 FriendRequest.init(
     {

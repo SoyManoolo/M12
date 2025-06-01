@@ -1,3 +1,5 @@
+import { environment } from '../config/environment';
+
 interface Post {
   post_id: string;
   user_id: string;
@@ -26,16 +28,13 @@ interface PostsResponse {
 }
 
 class PostService {
-  private baseUrl = 'https://332f-37-133-29-123.ngrok-free.app';
-  private apiUrl = '/api';
-
   private getMediaUrl(mediaUrl: string | null): string | null {
     if (!mediaUrl) return null;
     // Si la URL ya es relativa, la devolvemos tal cual
     if (mediaUrl.startsWith('/')) return mediaUrl;
     // Si es una URL completa del servidor local, extraemos la parte relativa
-    if (mediaUrl.startsWith(this.baseUrl)) {
-      return mediaUrl.replace(this.baseUrl, '');
+    if (mediaUrl.startsWith(environment.apiUrl)) {
+      return mediaUrl.replace(environment.apiUrl, '');
     }
     // Si no coincide con ninguno de los casos anteriores, asumimos que es relativa
     return `/${mediaUrl}`;
@@ -44,7 +43,7 @@ class PostService {
   async getPosts(token: string, cursor?: string, username?: string): Promise<PostsResponse> {
     try {
       let endpoint = username ? '/posts/username' : '/posts';
-      let url = new URL(`${this.baseUrl}${endpoint}`);
+      let url = new URL(`${environment.apiUrl}${endpoint}`);
       
       if (username) {
         url.searchParams.append('username', username);
@@ -109,7 +108,7 @@ class PostService {
 
   async deletePost(token: string, postId: string): Promise<{ success: boolean; message: string }> {
     try {
-      const response = await fetch(`${this.baseUrl}/posts/${postId}`, {
+      const response = await fetch(`${environment.apiUrl}/posts/${postId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -143,7 +142,7 @@ class PostService {
 
   async updatePost(token: string, postId: string, description: string): Promise<{ success: boolean; message: string; data?: any }> {
     try {
-      const response = await fetch(`${this.baseUrl}/posts/${postId}`, {
+      const response = await fetch(`${environment.apiUrl}/posts/${postId}`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -174,7 +173,7 @@ class PostService {
 
   async likePost(token: string, postId: string): Promise<{ success: boolean; message: string }> {
     try {
-      const response = await fetch(`${this.baseUrl}/posts/${postId}/like`, {
+      const response = await fetch(`${environment.apiUrl}/posts/${postId}/like`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -202,7 +201,7 @@ class PostService {
 
   async unlikePost(token: string, postId: string): Promise<{ success: boolean; message: string }> {
     try {
-      const response = await fetch(`${this.baseUrl}/posts/${postId}/like`, {
+      const response = await fetch(`${environment.apiUrl}/posts/${postId}/like`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -230,7 +229,7 @@ class PostService {
 
   async checkUserLike(token: string, postId: string): Promise<{ hasLiked: boolean }> {
     try {
-      const response = await fetch(`${this.baseUrl}/posts/${postId}/like`, {
+      const response = await fetch(`${environment.apiUrl}/posts/${postId}/like`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

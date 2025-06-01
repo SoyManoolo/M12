@@ -25,18 +25,14 @@ import ConfirmModal from "~/components/Shared/ConfirmModal";
 import Notification from "~/components/Shared/Notification";
 import EditPostModal from "~/components/Shared/EditPostModal";
 import { userService } from "~/services/user.service";
-import { useAuth } from "~/hooks/useAuth";
 import { postService } from "~/services/post.service";
+import { friendshipService } from "~/services/friendship.service";
+import type { Friend } from "~/services/friendship.service";
+import { useAuth } from "~/hooks/useAuth";
 import type { User } from "~/types/user.types";
+import type { Post as BasePost } from "~/types/notifications";
 
-interface Post {
-  post_id: string;
-  user_id: string;
-  description: string;
-  media_url: string | null;
-  media?: string | null;
-  created_at: string;
-  updated_at: string;
+interface Post extends BasePost {
   deleted_at: string | null;
   likes_count: number;
   is_saved: boolean;
@@ -53,14 +49,6 @@ interface Post {
     profile_picture: string | null;
     name: string;
   };
-}
-
-interface Friend {
-  friendship_id: string;
-  user1_id: string;
-  user2_id: string;
-  created_at: string;
-  user: User;
 }
 
 interface LoaderData {
@@ -116,12 +104,10 @@ export default function Perfil() {
   const data = useLoaderData<typeof loader>() as LoaderData;
   const { token, isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(false);
   const [friends, setFriends] = useState<Friend[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -138,58 +124,67 @@ export default function Perfil() {
     }
   }, [isAuthenticated, navigate]);
 
-  // Efecto para cargar datos cuando cambia la URL o el usuario
   useEffect(() => {
-    const loadData = async () => {
-      if (!token || !data.user) return;
-      
-      try {
-        setLoading(true);
-        setPosts([]); // Limpiar posts actuales
-        setNextCursor(null); // Resetear cursor
+    const fetchData = async () => {
+      if (!token) {
+        setNotification({
+          message: 'Por favor, inicia sesión para ver el perfil',
+          type: 'error'
+        });
+        setLoading(false);
+        return;
+      }
 
-        // Cargar posts iniciales del usuario actual usando el username
-        const postsResponse = await postService.getPosts(token, undefined, data.user.username);
-        if (postsResponse.success) {
-          setPosts(postsResponse.data.posts as unknown as Post[]);
+      try {
+        // Cargar posts del usuario
+        const postsResponse = await postService.getPosts(token, undefined, data.user?.username);
+        if (postsResponse.success && postsResponse.data) {
+          // Transformar los posts para que coincidan con nuestra interfaz
+          const transformedPosts = postsResponse.data.posts.map(post => ({
+            ...post,
+            likes_count: 0, // Valor por defecto
+            is_saved: false, // Valor por defecto
+            comments: [], // Valor por defecto
+            author: post.author || {
+              user_id: post.user_id,
+              username: data.user?.username || '',
+              profile_picture: data.user?.profile_picture || null,
+              name: data.user?.name || ''
+            }
+          }));
+          setPosts(transformedPosts);
           setNextCursor(postsResponse.data.nextCursor);
         }
 
         // Cargar amigos
-        const friendsResponse = await userService.getAllUsers(token);
-        if (friendsResponse.success && friendsResponse.data && Array.isArray(friendsResponse.data.users)) {
-          const friendsData = friendsResponse.data.users.map(user => ({
-            friendship_id: user.user_id,
-            user1_id: user.user_id,
-            user2_id: user.user_id,
-            created_at: new Date().toISOString(),
+        const friendsResponse = await friendshipService.getUserFriends(token);
+        if (friendsResponse.success && friendsResponse.data) {
+          // Asegurarnos de que los usuarios tengan todos los campos requeridos
+          const friendsWithCompleteUser = friendsResponse.data.map(friend => ({
+            ...friend,
             user: {
-              user_id: user.user_id,
-              username: user.username,
-              name: user.name,
-              surname: user.surname,
-              email: user.email,
-              profile_picture: user.profile_picture ?? null,
-              bio: user.bio ?? null,
-              email_verified: user.email_verified,
-              is_moderator: user.is_moderator,
+              ...friend.user,
               deleted_at: null,
-              created_at: user.created_at,
-              updated_at: user.updated_at,
               active_video_call: false
             }
           }));
-          setFriends(friendsData);
+          setFriends(friendsWithCompleteUser);
+        } else {
+          setFriends([]);
         }
       } catch (err) {
-        setError('Error al cargar los datos iniciales');
+        console.error('Error al cargar los amigos:', err);
+        setNotification({
+          message: 'Error al cargar la lista de amigos',
+          type: 'error'
+        });
       } finally {
         setLoading(false);
       }
     };
 
-    loadData();
-  }, [token, data.user, location.search]);
+    fetchData();
+  }, [token, data.user]);
 
   const handleEditProfile = () => {
     navigate('/configuracion?section=cuenta');
@@ -208,7 +203,10 @@ export default function Perfil() {
         throw new Error(response.message || 'Error al cargar más posts');
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al conectar con el servidor');
+      setNotification({
+        message: err instanceof Error ? err.message : 'Error al conectar con el servidor',
+        type: 'error'
+      });
     } finally {
       setLoading(false);
     }
@@ -312,6 +310,33 @@ export default function Perfil() {
       setLoading(false);
       setDeleteModalOpen(false);
       setPostToDelete(null);
+    }
+  };
+
+  const handleRemoveFriend = async (userId: string) => {
+    if (!token) return;
+
+    try {
+      const response = await friendshipService.removeFriendship(token, userId);
+      if (response.success) {
+        // Actualizar el estado local de amigos inmediatamente
+        const friendToRemove = friends.find(friend => friend.user.user_id === userId);
+        if (friendToRemove) {
+          // Eliminar de la lista de amigos
+          setFriends(prev => prev.filter(friend => friend.user.user_id !== userId));
+        }
+        setNotification({
+          message: 'Amistad eliminada correctamente',
+          type: 'success'
+        });
+      } else {
+        throw new Error(response.message);
+      }
+    } catch (err) {
+      setNotification({
+        message: err instanceof Error ? err.message : 'Error al eliminar la amistad',
+        type: 'error'
+      });
     }
   };
 
@@ -419,7 +444,7 @@ export default function Perfil() {
       {/* Panel lateral derecho con amigos */}
       <RightPanel
         friends={friends}
-        mode="online"
+        mode="friends"
         customTitle="Mis amigos"
       />
 

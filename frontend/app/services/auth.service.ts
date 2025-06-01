@@ -73,16 +73,16 @@ async login(credentials: LoginCredentials): Promise<AuthResponse> {
             };
         }
 
-        const response = await fetch(`${environment.apiUrl}${environment.apiEndpoints.auth.login}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                id: credentials.id,
-                password: credentials.password
-            }),
-        });
+            const response = await fetch(`${environment.apiUrl}/auth/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    id: credentials.id,
+                    password: credentials.password
+                }),
+            });
 
         console.log('📊 Headers recibidos:', {
             contentType: response.headers.get('content-type'),
@@ -207,7 +207,7 @@ async login(credentials: LoginCredentials): Promise<AuthResponse> {
                 };
             }
 
-            const response = await fetch(`${environment.apiUrl}${environment.apiEndpoints.auth.register}`, {
+            const response = await fetch(`${environment.apiUrl}/auth/register`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -275,7 +275,7 @@ async login(credentials: LoginCredentials): Promise<AuthResponse> {
                 };
             }
 
-            const response = await fetch(`${environment.apiUrl}${environment.apiEndpoints.auth.logout}`, {
+            const response = await fetch(`${environment.apiUrl}/auth/logout`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',

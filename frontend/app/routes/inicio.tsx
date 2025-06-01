@@ -36,6 +36,8 @@ import ImageZoomModal from '~/components/Shared/ImageZoomModal';
 import { useAuth } from "~/hooks/useAuth";
 import { postService } from "~/services/post.service";
 import { userService } from "~/services/user.service";
+import { friendshipService } from "~/services/friendship.service";
+import type { Friend } from "~/services/friendship.service";
 import { FaCamera } from 'react-icons/fa';
 
 /**
@@ -105,29 +107,14 @@ interface Post {
   is_saved?: boolean;
   comments?: Array<{
     comment_id: string;
-    user_id: string;
-    username: string;
+    author: {
+      user_id: string;
+      username: string;
+      profile_picture: string | null;
+    };
     content: string;
     created_at: string;
   }>;
-}
-
-/**
- * @interface Friend
- * @description Define la estructura de datos de una amistad entre usuarios
- * @property {string} friendship_id - Identificador único de la amistad
- * @property {string} user1_id - Identificador del primer usuario en la amistad
- * @property {string} user2_id - Identificador del segundo usuario en la amistad
- * @property {string} created_at - Fecha de creación de la amistad
- * @property {User} user - Objeto con la información del segundo usuario en la amistad
- */
-
-interface Friend {
-  friendship_id: string;
-  user1_id: string;
-  user2_id: string;
-  created_at: string;
-  user: User;
 }
 
 /**
@@ -194,25 +181,26 @@ export default function InicioPage() {
   const [showImageZoomModal, setShowImageZoomModal] = useState(false);
   const [zoomImageUrl, setZoomImageUrl] = useState('');
 
+  const [suggestedUsers, setSuggestedUsers] = useState<User[]>([]);
+
   if (token) {
     const decodedToken = decodeToken(token);
     currentUserId = decodedToken?.user_id;
-    console.log('Token decodificado en inicio:', decodedToken);
   }
 
   useEffect(() => {
     const fetchData = async () => {
       if (!token) {
-        setError('Por favor, inicia sesión para ver las publicaciones');
+        setError('Por favor, inicia sesión para ver el contenido');
         setLoading(false);
         return;
       }
 
       try {
         // Cargar posts
-        const response = await postService.getPosts(token);
-        if (response.success) {
-          const transformedPosts: Post[] = response.data.posts.map((post: any) => ({
+        const postsResponse = await postService.getPosts(token);
+        if (postsResponse.success && postsResponse.data) {
+          const transformedPosts: Post[] = postsResponse.data.posts.map((post: any) => ({
             post_id: post.post_id,
             user_id: post.user_id,
             description: post.description,
@@ -223,39 +211,41 @@ export default function InicioPage() {
             likes_count: post.likes_count,
             author: post.author,
             is_saved: false,
-            comments: []
+            comments: (post.comments || []).map((c: any) => ({
+              comment_id: c.comment_id,
+              author: {
+                user_id: c.user_id,
+                username: c.username,
+                profile_picture: c.profile_picture || null
+              },
+              content: c.content,
+              created_at: c.created_at
+            }))
           }));
           setPosts(transformedPosts);
-          setNextCursor(response.data.nextCursor);
-        } else {
-          throw new Error(response.message || 'No pudimos cargar las publicaciones');
+          setNextCursor(postsResponse.data.nextCursor);
         }
 
         // Cargar amigos
-        const friendsResponse = await userService.getAllUsers(token);
-        console.log('Respuesta del servidor para amigos:', friendsResponse);
-        if (friendsResponse.success && friendsResponse.data && Array.isArray(friendsResponse.data.users)) {
-          const friendsData = friendsResponse.data.users.map(user => ({
-            friendship_id: user.user_id,
-            user1_id: user.user_id,
-            user2_id: user.user_id,
-            created_at: new Date().toISOString(),
-            user: {
-              ...user,
-              profile_picture: user.profile_picture || null,
-              bio: user.bio ?? null,
-              deleted_at: null,
-              active_video_call: false
-            }
-          }));
-          console.log('Datos transformados de amigos:', friendsData);
-          setFriends(friendsData);
+        const friendsResponse = await friendshipService.getUserFriends(token);
+        if (friendsResponse.success && friendsResponse.data) {
+          setFriends(friendsResponse.data);
+
+          // Cargar usuarios sugeridos
+          const suggestedResponse = await userService.getAllUsers(token);
+          if (suggestedResponse.success && suggestedResponse.data && Array.isArray(suggestedResponse.data.users)) {
+            // Filtrar los usuarios que ya son amigos
+            const friendIds = new Set(friendsResponse.data.map(friend => friend.user.user_id));
+            const filteredSuggestedUsers = suggestedResponse.data.users.filter(
+              user => !friendIds.has(user.user_id)
+            );
+            setSuggestedUsers(filteredSuggestedUsers);
+          }
         } else {
-          console.error('La respuesta de amigos no tiene el formato esperado:', friendsResponse);
           setFriends([]);
+          setSuggestedUsers([]);
         }
       } catch (err) {
-        console.error('Error al cargar los datos:', err);
         let errorMessage = 'Lo sentimos, algo salió mal';
         
         if (err instanceof Error) {
@@ -295,7 +285,16 @@ export default function InicioPage() {
           likes_count: post.likes_count,
           author: post.author,
           is_saved: false,
-          comments: []
+          comments: (post.comments || []).map((c: any) => ({
+            comment_id: c.comment_id,
+            author: {
+              user_id: c.user_id,
+              username: c.username,
+              profile_picture: c.profile_picture || null
+            },
+            content: c.content,
+            created_at: c.created_at
+          }))
         }));
         setPosts(prev => [...prev, ...transformedPosts]);
         setNextCursor(response.data.nextCursor);
@@ -303,7 +302,6 @@ export default function InicioPage() {
         throw new Error(response.message || 'Error al cargar más posts');
       }
     } catch (err) {
-      console.error('Error al cargar más posts:', err);
       setError(err instanceof Error ? err.message : 'Error al conectar con el servidor');
     } finally {
       setLoading(false);
@@ -312,7 +310,6 @@ export default function InicioPage() {
 
   const handleLike = async (postId: string) => {
     try {
-      console.log('Dando like al post:', postId);
       setPosts(prev =>
         prev.map(post =>
           post.post_id === postId
@@ -327,7 +324,6 @@ export default function InicioPage() {
 
   const handleSave = async (postId: string) => {
     try {
-      console.log('Guardando post:', postId);
       setPosts(prev =>
         prev.map(post =>
           post.post_id === postId
@@ -431,7 +427,7 @@ export default function InicioPage() {
                 <FaCamera className="text-4xl text-blue-500" />
               </div>
               <h3 className="text-xl font-semibold text-white mb-2">
-                No hay publicaciones para mostrar
+              No hay publicaciones para mostrar
               </h3>
               <p className="text-gray-400 text-center max-w-md">
                 Sé el primero en compartir un momento especial. ¡Comienza a publicar y conecta con tus amigos!
@@ -490,8 +486,8 @@ export default function InicioPage() {
         </div>
       </div>
       <RightPanel
-        friends={friends}
-        mode="online"
+        users={suggestedUsers}
+        mode="suggested"
       />
       <ConfirmModal
         isOpen={showDeleteModal}

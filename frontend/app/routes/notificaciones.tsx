@@ -16,7 +16,8 @@ import { json, redirect } from "@remix-run/node";
 import { useLoaderData, Link } from "@remix-run/react";
 import { useState, useEffect } from "react";
 import type { Notification } from "~/types/notifications";
-import type { User, Friend } from "~/types/user.types";
+import type { User } from "~/types/user.types";
+import type { Friend } from "~/services/friendship.service";
 import Navbar from "~/components/Inicio/Navbar";
 import RightPanel from "~/components/Shared/RightPanel";
 import { FaUserFriends, FaComment, FaHeart, FaVideo, FaCheck, FaTimes, FaSearch, FaTrash, FaCheckDouble, FaBell } from 'react-icons/fa';
@@ -24,6 +25,7 @@ import { useAuth } from "~/hooks/useAuth";
 import { userService } from "~/services/user.service";
 import { formatDistanceToNow, isToday, isYesterday, isThisWeek, isThisMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { friendshipService } from "~/services/friendship.service";
 
 interface LoaderData {
   notifications: (Notification & { user: User })[];
@@ -119,6 +121,7 @@ export default function Notificaciones(): React.ReactElement {
   const { token } = useAuth();
   const [currentNotifications, setCurrentNotifications] = useState<Notification[]>(notifications);
   const [friends, setFriends] = useState<Friend[]>([]);
+  const [suggestedUsers, setSuggestedUsers] = useState<User[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -133,27 +136,24 @@ export default function Notificaciones(): React.ReactElement {
       }
 
       try {
-        const friendsResponse = await userService.getAllUsers(token);
-        console.log('Respuesta del servidor para amigos:', friendsResponse);
-        if (friendsResponse.success && friendsResponse.data && Array.isArray(friendsResponse.data.users)) {
-          const friendsData = friendsResponse.data.users.map(user => ({
-            friendship_id: user.user_id,
-            user1_id: user.user_id,
-            user2_id: user.user_id,
-            created_at: new Date().toISOString(),
-            user: {
-              ...user,
-              profile_picture: user.profile_picture || null,
-              bio: user.bio ?? null,
-              deleted_at: null,
-              active_video_call: false
-            }
-          }));
-          console.log('Datos transformados de amigos:', friendsData);
-          setFriends(friendsData);
+        // Cargar amigos
+        const friendsResponse = await friendshipService.getUserFriends(token);
+        if (friendsResponse.success && friendsResponse.data) {
+          setFriends(friendsResponse.data);
+
+          // Cargar usuarios sugeridos
+          const suggestedResponse = await userService.getAllUsers(token);
+          if (suggestedResponse.success && suggestedResponse.data && Array.isArray(suggestedResponse.data.users)) {
+            // Filtrar los usuarios que ya son amigos
+            const friendIds = new Set(friendsResponse.data.map(friend => friend.user.user_id));
+            const filteredSuggestedUsers = suggestedResponse.data.users.filter(
+              user => !friendIds.has(user.user_id)
+            );
+            setSuggestedUsers(filteredSuggestedUsers);
+          }
         } else {
-          console.error('La respuesta de amigos no tiene el formato esperado:', friendsResponse);
           setFriends([]);
+          setSuggestedUsers([]);
         }
       } catch (err) {
         console.error('Error al cargar los amigos:', err);
@@ -312,7 +312,7 @@ export default function Notificaciones(): React.ReactElement {
             </div>
 
             {/* Barra de búsqueda y filtros */}
-            <div className="space-y-4">
+          <div className="space-y-4">
               <div className="relative">
                 <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 <input
@@ -384,59 +384,59 @@ export default function Notificaciones(): React.ReactElement {
               <div key={group} className="space-y-2">
                 <h2 className="text-sm font-semibold text-gray-400 mb-3">{group}</h2>
                 {notifications.map((notification) => (
-                  <div
-                    key={notification.notification_id}
+              <div
+                key={notification.notification_id}
                     className={`group relative ${getNotificationStyle(notification.type, notification.is_read)} hover:scale-[1.02] transition-all duration-200`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 flex items-center justify-center">
-                          {getNotificationIcon(notification.type)}
-                        </div>
-                        <div>
-                          <p className="text-sm">
-                            <span className="font-semibold">{notification.user?.username}</span>
-                            {notification.type === 'friend_request' && ' te envió una solicitud de amistad'}
-                            {notification.type === 'message' && ' te envió un mensaje'}
-                            {notification.type === 'comment' && ' comentó tu publicación'}
-                            {notification.type === 'post_like' && ' le gustó tu publicación'}
-                            {notification.type === 'video_call' && ' te llamó'}
-                          </p>
-                          <p className="text-xs text-gray-400">
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 flex items-center justify-center">
+                      {getNotificationIcon(notification.type)}
+                    </div>
+                    <div>
+                      <p className="text-sm">
+                        <span className="font-semibold">{notification.user?.username}</span>
+                        {notification.type === 'friend_request' && ' te envió una solicitud de amistad'}
+                        {notification.type === 'message' && ' te envió un mensaje'}
+                        {notification.type === 'comment' && ' comentó tu publicación'}
+                        {notification.type === 'post_like' && ' le gustó tu publicación'}
+                        {notification.type === 'video_call' && ' te llamó'}
+                      </p>
+                      <p className="text-xs text-gray-400">
                             {formatDistanceToNow(new Date(notification.created_at), {
                               addSuffix: true,
                               locale: es
                             })}
-                          </p>
-                        </div>
-                      </div>
+                      </p>
+                    </div>
+                  </div>
 
                       <div className="flex items-center space-x-2">
-                        {notification.type === 'friend_request' ? (
+                  {notification.type === 'friend_request' ? (
                           <>
-                            <button
-                              onClick={() => handleAcceptFriend(notification.related_id)}
+                      <button
+                        onClick={() => handleAcceptFriend(notification.related_id)}
                               className="p-2 bg-green-500/20 text-green-400 rounded-full hover:bg-green-500/30 transition-colors"
                               title="Aceptar solicitud"
-                            >
-                              <FaCheck />
-                            </button>
-                            <button
-                              onClick={() => handleRejectFriend(notification.related_id)}
+                      >
+                        <FaCheck />
+                      </button>
+                      <button
+                        onClick={() => handleRejectFriend(notification.related_id)}
                               className="p-2 bg-red-500/20 text-red-400 rounded-full hover:bg-red-500/30 transition-colors"
                               title="Rechazar solicitud"
-                            >
-                              <FaTimes />
-                            </button>
+                      >
+                        <FaTimes />
+                      </button>
                           </>
-                        ) : !notification.is_read && (
-                          <button
-                            onClick={() => handleMarkAsRead(notification.notification_id)}
+                  ) : !notification.is_read && (
+                    <button
+                      onClick={() => handleMarkAsRead(notification.notification_id)}
                             className="text-blue-400 hover:text-blue-300 text-sm transition-colors"
                             title="Marcar como leída"
-                          >
-                            Marcar como leída
-                          </button>
+                    >
+                      Marcar como leída
+                    </button>
                         )}
                         <button
                           onClick={() => handleDeleteNotification(notification.notification_id)}
@@ -449,8 +449,8 @@ export default function Notificaciones(): React.ReactElement {
                     </div>
                     {!notification.is_read && (
                       <div className="absolute top-0 right-0 w-2 h-2 bg-blue-500 rounded-full transform translate-x-1 -translate-y-1" />
-                    )}
-                  </div>
+                  )}
+                </div>
                 ))}
               </div>
             ))}
@@ -477,8 +477,8 @@ export default function Notificaciones(): React.ReactElement {
 
       {/* Panel lateral derecho */}
       <RightPanel
-        friends={friends}
-        mode="online"
+        users={suggestedUsers}
+        mode="suggested"
       />
 
       <style>
