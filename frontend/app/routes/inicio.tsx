@@ -411,8 +411,18 @@ export default function InicioPage() {
   return (
     <div className="min-h-screen bg-black text-white flex">
       <Navbar />
-      <div className="w-2/3 ml-[16.666667%] border-r border-gray-800">
-        <div className="p-6 space-y-6">
+      <div className="w-full lg:w-2/3 lg:ml-[16.666667%] border-r border-gray-800 min-h-screen flex flex-col"
+        style={{ minHeight: '100vh' }}>
+        <div
+          className="p-2 sm:p-4 md:p-6 space-y-6"
+          style={{
+            paddingTop: '4.5rem', // espacio para navbar superior móvil
+            paddingBottom: '4.5rem', // espacio para navbar inferior móvil
+            minHeight: '100vh',
+            boxSizing: 'border-box',
+            overflowX: 'hidden'
+          }}
+        >
           {error ? (
             <div className="bg-red-500/10 text-red-500 p-4 rounded-lg">
               {error}

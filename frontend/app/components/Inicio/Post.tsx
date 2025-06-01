@@ -304,280 +304,455 @@ export default function Post({
   return (
     <>
       {/* Contenedor principal del post */}
-      <div className={`bg-gray-900 rounded-lg p-4 mb-4 w-full ${
+      <div className={`bg-gray-900 rounded-lg p-2 sm:p-4 mb-4 w-full ${
         media_url 
-          ? 'h-[550px]'
-          : 'h-[450px] min-h-[450px] max-h-[450px]'
+          ? 'sm:h-[550px] sm:min-h-[550px] sm:max-h-[550px]'
+          : 'sm:h-[450px] sm:min-h-[450px] sm:max-h-[450px]'
       }`}>
-        <div className={`flex ${media_url ? 'h-full' : 'h-[calc(450px-2rem)]'}`}>
-          {/* Columna izquierda - Acciones y perfil */}
-          <div className="w-[90px] flex flex-col items-center space-y-4">
-            {/* Perfil y nombre del usuario */}
-            <div className="relative w-full flex justify-center">
-              {user.profile_picture ? (
-                <img 
-                  src={user.profile_picture}
-                  alt={user.username} 
-                  className="w-14 h-14 rounded-full cursor-pointer object-cover border-2 border-gray-800"
-                  onClick={() => window.location.href = `/perfil?username=${user.username}`}
-                />
-              ) : (
-                <div 
-                  className="w-14 h-14 rounded-full border-2 border-gray-800 bg-gray-800 flex items-center justify-center cursor-pointer"
-                  onClick={() => window.location.href = `/perfil?username=${user.username}`}
-                >
-                  <span className="text-gray-400 text-sm">{user.username.charAt(0).toUpperCase()}</span>
-                </div>
-              )}
-            </div>
-            <p 
-              className="font-semibold text-white cursor-pointer hover:underline text-center text-sm"
-              onClick={() => window.location.href = `/perfil?username=${user.username}`}
-            >
-              {user.username}
-            </p>
-
-            {/* Contenedor de acciones */}
-            <div className="flex flex-col space-y-5 mt-4">
-              {/* Botón de me gusta */}
-              <div className="flex flex-col items-center">
-                <button 
-                  onClick={handleLike}
-                  disabled={isLoading}
-                  className={`flex flex-col items-center cursor-pointer ${isLiked ? 'text-red-500' : 'text-gray-400 hover:text-white'} ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                  {isLiked ? <FaHeart className="text-2xl mb-1" /> : <FaRegHeart className="text-2xl mb-1" />}
-                  <span className="text-sm">{currentLikes}</span>
-                </button>
-              </div>
-
-              {/* Botones de editar y eliminar - solo si el post es del usuario actual */}
-              {currentUserId === user.user_id && (
-                <>
-                  <div className="flex flex-col items-center mt-2">
-                    <button
-                      onClick={() => onEdit?.(post_id)}
-                      title="Editar publicación"
-                      className="flex flex-col items-center cursor-pointer text-blue-500 hover:text-blue-700 focus:outline-none"
-                    >
-                      <FaPencilAlt className="text-2xl mb-1" />
-                      <span className="text-sm">Editar</span>
-                    </button>
-                  </div>
-                  <div className="flex flex-col items-center mt-2">
-                    <button
-                      onClick={handleDelete}
-                      title="Eliminar publicación"
-                      className="flex flex-col items-center cursor-pointer text-red-500 hover:text-red-700 focus:outline-none"
-                    >
-                      <FaTrash className="text-2xl mb-1" />
-                      <span className="text-sm">Eliminar</span>
-                    </button>
-                  </div>
-                </>
-              )}
+        {/* MOBILE: Imagen arriba */}
+        {media_url && (
+          <div className="block sm:hidden w-full mb-3">
+            <div className="rounded-lg overflow-hidden bg-gray-800 cursor-pointer relative">
+              <img 
+                src={media_url}
+                alt="Contenido del post"
+                className="w-full h-60 object-cover"
+                onClick={handleImageClick}
+              />
             </div>
           </div>
-
-          {/* Columna central - Contenido multimedia (solo si hay imagen) */}
-          {media_url && (
-            <div className="w-[520px] px-4">
-              <div 
-                className="rounded-lg overflow-hidden bg-gray-800 h-full cursor-pointer relative"
-                onClick={handleImageClick}
-              >
-                <img 
-                  src={media_url}
-                  alt="Contenido del post"
-                  className="w-full h-full object-cover"
-                />
-                {/* Fecha de publicación */}
-                <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 px-3 py-1.5 rounded text-sm text-gray-300">
-                  {formatDistanceToNow(new Date(created_at), { addSuffix: true, locale: es })}
-                </div>
-              </div>
+        )}
+        {/* MOBILE: Usuario y acciones principales */}
+        <div className="flex flex-row sm:hidden items-center gap-3 mb-2">
+          {/* Foto usuario */}
+          {user.profile_picture ? (
+            <img 
+              src={user.profile_picture}
+              alt={user.username} 
+              className="w-10 h-10 rounded-full object-cover border-2 border-gray-800"
+              onClick={() => window.location.href = `/perfil?username=${user.username}`}
+            />
+          ) : (
+            <div 
+              className="w-10 h-10 rounded-full border-2 border-gray-800 bg-gray-800 flex items-center justify-center cursor-pointer"
+              onClick={() => window.location.href = `/perfil?username=${user.username}`}
+            >
+              <span className="text-gray-400 text-sm">{user.username.charAt(0).toUpperCase()}</span>
             </div>
           )}
-
-          {/* Columna derecha - Descripción y comentarios */}
-          <div className={`flex-1 flex flex-col ${media_url ? 'pl-4' : 'px-4'} ${!media_url ? 'h-full' : ''}`}>
-
-            {/* Sección de descripción - Siempre visible y no scrollable */}
-            <div className="mb-5 flex-shrink-0">
-              <h3 className="text-white font-semibold mb-3 text-lg">Descripción</h3>
-              <div className="text-gray-300 text-base">
-                {showFullDescription ? (
-                  <p>{description}</p>
-                ) : (
-                  <p>{truncateText(description, media_url ? 120 : 220)}</p>
-                )}
-                {description.length > (media_url ? 120 : 220) && (
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-white cursor-pointer hover:underline text-base truncate" onClick={() => window.location.href = `/perfil?username=${user.username}`}>{user.username}</p>
+          </div>
+        </div>
+        {/* MOBILE: Descripción */}
+        <div className="block sm:hidden mb-2">
+          <div className="text-gray-300 text-base">
+            {showFullDescription ? (
+              <p>{description}</p>
+            ) : (
+              <p>{truncateText(description, 120)}</p>
+            )}
+            {description.length > 120 && (
+              <button
+                onClick={toggleDescription}
+                className="text-blue-400 hover:text-blue-300 text-sm font-medium block mt-2"
+              >
+                {showFullDescription ? 'Ver menos' : 'Leer más...'}
+              </button>
+            )}
+          </div>
+        </div>
+        {/* MOBILE: Acciones */}
+        <div className="flex flex-row sm:hidden items-center gap-6 mb-2">
+          {/* Like */}
+          <button 
+            onClick={handleLike}
+            disabled={isLoading}
+            className={`flex items-center gap-1 cursor-pointer ${isLiked ? 'text-red-500' : 'text-gray-400 hover:text-white'} ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            {isLiked ? <FaHeart className="text-xl" /> : <FaRegHeart className="text-xl" />}
+            <span className="text-sm">{currentLikes}</span>
+          </button>
+          {/* Editar y eliminar solo si es del usuario actual */}
+          {currentUserId === user.user_id && (
+            <>
+              <button
+                onClick={() => onEdit?.(post_id)}
+                title="Editar publicación"
+                className="flex items-center gap-1 text-blue-500 hover:text-blue-700 focus:outline-none"
+              >
+                <FaPencilAlt className="text-xl" />
+              </button>
+              <button
+                onClick={handleDelete}
+                title="Eliminar publicación"
+                className="flex items-center gap-1 text-red-500 hover:text-red-700 focus:outline-none"
+              >
+                <FaTrash className="text-xl" />
+              </button>
+            </>
+          )}
+        </div>
+        {/* MOBILE: Comentarios */}
+        <div className="block sm:hidden mb-2">
+          <div className="flex items-center gap-2 mb-2">
+            <h3 className="text-white font-semibold text-base">Comentarios</h3>
+            <span className="text-xs text-gray-400">({comments.length})</span>
+          </div>
+          <div className="max-h-32 overflow-y-auto">
+            {comments.length === 0 ? (
+              <div className="text-center text-gray-400 py-4 rounded-xl">
+                <span className="text-3xl mb-2 block">💭</span>
+                <p className="text-base">No hay comentarios aún</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {(showAllComments ? comments : comments.slice(0, 2)).map((comment) => (
+                  <div key={comment.comment_id} className="flex items-start gap-2">
+                    {/* Foto de perfil o inicial */}
+                    {comment.author && comment.author.profile_picture ? (
+                      <img
+                        src={String(comment.author.profile_picture)}
+                        alt={comment.author.username}
+                        className="w-8 h-8 rounded-full object-cover flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={() => window.location.href = `/perfil?username=${comment.author.username}`}
+                      />
+                    ) : (
+                      <div 
+                        className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={() => window.location.href = `/perfil?username=${comment.author.username}`}
+                      >
+                        <span className="text-gray-400 text-base font-bold">
+                          {comment.author?.username?.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <span className="font-semibold text-white text-xs cursor-pointer hover:underline" onClick={() => window.location.href = `/perfil?username=${comment.author.username}`}>{comment.author?.username}</span>
+                      <span className="text-gray-400 text-xs ml-2">{formatDistanceToNow(new Date(comment.created_at), { addSuffix: true, locale: es })}</span>
+                      <p className="text-gray-300 text-xs mt-0.5">{comment.content}</p>
+                    </div>
+                    {currentUserId === comment.author?.user_id && (
+                      <button
+                        onClick={() => handleDeleteComment(comment.comment_id)}
+                        className="text-red-500 hover:text-red-700 focus:outline-none ml-2 cursor-pointer"
+                        title="Eliminar comentario"
+                      >
+                        <FaTrash className="text-xs" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+                {comments.length > 2 && (
                   <button
-                    onClick={toggleDescription}
-                    className="text-blue-400 hover:text-blue-300 text-sm font-medium block mt-2"
+                    onClick={() => setShowAllComments(!showAllComments)}
+                    className="text-blue-400 hover:text-blue-300 text-xs font-medium w-full text-center py-1 cursor-pointer mt-2"
                   >
-                    {showFullDescription ? 'Ver menos' : 'Leer más...'}
+                    {showAllComments ? 'Ver menos comentarios' : 'Ver todos los comentarios'}
                   </button>
                 )}
               </div>
-            </div>
-
-            {/* Sección de comentarios - Con scroll si es necesario */}
-            <div className={`flex-1 flex flex-col ${
-              media_url 
-                ? 'overflow-hidden'
-                : comments.length > 3 
-                  ? 'overflow-hidden'
-                  : ''
-            }`}>
-              <div className="flex items-center gap-2 mb-3 flex-shrink-0">
-                <h3 className="text-white font-semibold text-lg">Comentarios</h3>
-                <span className="text-sm text-gray-400">({comments.length})</span>
+            )}
+          </div>
+        </div>
+        {/* MOBILE: Input de comentarios */}
+        <div className="block sm:hidden mt-2 pt-2 border-t border-gray-800">
+          <div className="flex items-center bg-gray-800 rounded-lg p-2 relative">
+            <input
+              type="text"
+              placeholder="Añadir un comentario..."
+              className="flex-1 bg-transparent border-none text-white placeholder-gray-500 focus:outline-none text-sm"
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter' && !isCommenting) {
+                  handleAddComment();
+                }
+              }}
+              disabled={isCommenting}
+            />
+            <button 
+              className={`ml-2 ${isCommenting ? 'text-gray-600' : 'text-gray-400 hover:text-white cursor-pointer'}`}
+              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+              disabled={isCommenting}
+            >
+              <FaSmile className="text-xl" />
+            </button>
+            <button 
+              className={`ml-2 ${isCommenting ? 'text-gray-600' : 'text-gray-400 hover:text-white cursor-pointer'}`}
+              onClick={handleAddComment}
+              disabled={isCommenting}
+            >
+              <FaComment className="text-xl" />
+            </button>
+            {showEmojiPicker && (
+              <div 
+                ref={emojiPickerRef}
+                className="absolute bottom-full right-0 mb-2 z-50"
+              >
+                <EmojiPicker
+                  onEmojiClick={onEmojiClick}
+                  theme={Theme.DARK}
+                  width={300}
+                  height={350}
+                  searchDisabled={false}
+                  skinTonesDisabled={true}
+                  previewConfig={{
+                    showPreview: false
+                  }}
+                />
               </div>
-              
-              {/* Contenedor de la lista de comentarios con scrollbar */}
-              <div className={`flex-1 ${
-                media_url || comments.length > 3 
-                  ? 'overflow-y-auto' 
-                  : ''
-              }`}>
-                {comments.length === 0 ? (
-                  <div className="text-center text-gray-400 py-6 rounded-xl">
-                    <span className="text-5xl mb-3 block">💭</span>
-                    <p className="text-xl">No hay comentarios aún</p>
-                    <p className="text-base mt-2">Sé el primero en comentar</p>
-                  </div>
+            )}
+          </div>
+        </div>
+
+        {/* ESCRITORIO: Layout original */}
+        <div className="hidden sm:block h-full">
+          <div className={`flex h-full ${media_url ? '' : 'sm:h-[calc(450px-2rem)]'}`}>
+            {/* Columna izquierda - Acciones y perfil */}
+            <div className="w-[90px] flex flex-col items-center space-y-4 h-full">
+              {/* Perfil y nombre del usuario */}
+              <div className="relative w-full flex justify-center">
+                {user.profile_picture ? (
+                  <img 
+                    src={user.profile_picture}
+                    alt={user.username} 
+                    className="w-14 h-14 rounded-full cursor-pointer object-cover border-2 border-gray-800"
+                    onClick={() => window.location.href = `/perfil?username=${user.username}`}
+                  />
                 ) : (
+                  <div 
+                    className="w-14 h-14 rounded-full border-2 border-gray-800 bg-gray-800 flex items-center justify-center cursor-pointer"
+                    onClick={() => window.location.href = `/perfil?username=${user.username}`}
+                  >
+                    <span className="text-gray-400 text-sm">{user.username.charAt(0).toUpperCase()}</span>
+                  </div>
+                )}
+              </div>
+              <p 
+                className="font-semibold text-white cursor-pointer hover:underline text-center text-sm"
+                onClick={() => window.location.href = `/perfil?username=${user.username}`}
+              >
+                {user.username}
+              </p>
+
+              {/* Contenedor de acciones */}
+              <div className="flex flex-col space-y-5 mt-4">
+                {/* Botón de me gusta */}
+                <div className="flex flex-col items-center">
+                  <button 
+                    onClick={handleLike}
+                    disabled={isLoading}
+                    className={`flex flex-col items-center cursor-pointer ${isLiked ? 'text-red-500' : 'text-gray-400 hover:text-white'} ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    {isLiked ? <FaHeart className="text-2xl mb-1" /> : <FaRegHeart className="text-2xl mb-1" />}
+                    <span className="text-sm">{currentLikes}</span>
+                  </button>
+                </div>
+
+                {/* Botones de editar y eliminar - solo si el post es del usuario actual */}
+                {currentUserId === user.user_id && (
                   <>
-                    <div className="space-y-5">
-                      {(showAllComments ? comments : comments.slice(0, 3)).map((comment) => (
-                        <div key={comment.comment_id} className="flex items-start gap-4">
-                          {/* Foto de perfil o inicial */}
-                          {comment.author && comment.author.profile_picture ? (
-                            <img
-                              src={String(comment.author.profile_picture)}
-                              alt={comment.author.username}
-                              className="w-10 h-10 rounded-full object-cover flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
-                              onClick={() => window.location.href = `/perfil?username=${comment.author.username}`}
-                            />
-                          ) : (
-                            <div 
-                              className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
-                              onClick={() => window.location.href = `/perfil?username=${comment.author.username}`}
-                            >
-                              <span className="text-gray-400 text-lg font-bold">
-                                {comment.author?.username?.charAt(0).toUpperCase()}
-                              </span>
-                            </div>
-                          )}
-                          {/* Contenido del comentario y botón de eliminar */}
-                          <div className="flex-1 flex justify-between items-start px-2">
-                            <div className="flex-1 pr-2">
-                              <div className="flex items-center gap-2">
-                                <span 
-                                  className="font-semibold text-white text-base cursor-pointer hover:underline"
-                                  onClick={() => window.location.href = `/perfil?username=${comment.author.username}`}
-                                >
-                                  {comment.author?.username}
-                                </span>
-                                <span className="text-gray-400 text-sm">
-                                  {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true, locale: es })}
-                                </span>
-                              </div>
-                              <p className="text-gray-300 text-base mt-1.5">{comment.content}</p>
-                            </div>
-                            {currentUserId === comment.author?.user_id && (
-                              <button
-                                onClick={() => handleDeleteComment(comment.comment_id)}
-                                className="text-red-500 hover:text-red-700 focus:outline-none ml-4 cursor-pointer"
-                                title="Eliminar comentario"
-                              >
-                                <FaTrash className="text-base" />
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    {comments.length > 3 && (
+                    <div className="flex flex-col items-center mt-2">
                       <button
-                        onClick={() => setShowAllComments(!showAllComments)}
-                        className="text-blue-400 hover:text-blue-300 text-base font-medium w-full text-center py-3 cursor-pointer mt-3"
+                        onClick={() => onEdit?.(post_id)}
+                        title="Editar publicación"
+                        className="flex flex-col items-center cursor-pointer text-blue-500 hover:text-blue-700 focus:outline-none"
                       >
-                        {showAllComments ? 'Ver menos comentarios' : 'Ver todos los comentarios'}
+                        <FaPencilAlt className="text-2xl mb-1" />
+                        <span className="text-sm">Editar</span>
                       </button>
-                    )}
+                    </div>
+                    <div className="flex flex-col items-center mt-2">
+                      <button
+                        onClick={handleDelete}
+                        title="Eliminar publicación"
+                        className="flex flex-col items-center cursor-pointer text-red-500 hover:text-red-700 focus:outline-none"
+                      >
+                        <FaTrash className="text-2xl mb-1" />
+                        <span className="text-sm">Eliminar</span>
+                      </button>
+                    </div>
                   </>
                 )}
               </div>
             </div>
 
-            {/* Input de comentarios - Siempre visible */}
-            <div className="mt-5 pt-4 border-t border-gray-800 flex-shrink-0">
-              <div className="flex items-center bg-gray-800 rounded-lg p-3 relative">
-                <input
-                  type="text"
-                  placeholder="Añadir un comentario..."
-                  className="flex-1 bg-transparent border-none text-white placeholder-gray-500 focus:outline-none text-base"
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter' && !isCommenting) {
-                      handleAddComment();
-                    }
-                  }}
-                  disabled={isCommenting}
-                />
-                <button 
-                  className={`ml-3 ${isCommenting ? 'text-gray-600' : 'text-gray-400 hover:text-white cursor-pointer'}`}
-                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                  disabled={isCommenting}
+            {/* Columna central - Contenido multimedia (solo si hay imagen) */}
+            {media_url && (
+              <div className="w-[520px] px-4 h-full flex items-center">
+                <div 
+                  className="rounded-lg overflow-hidden bg-gray-800 h-full w-full cursor-pointer relative flex items-center justify-center"
+                  onClick={handleImageClick}
                 >
-                  <FaSmile className="text-2xl" />
-                </button>
-                <button 
-                  className={`ml-3 ${isCommenting ? 'text-gray-600' : 'text-gray-400 hover:text-white cursor-pointer'}`}
-                  onClick={handleAddComment}
-                  disabled={isCommenting}
-                >
-                  <FaComment className="text-2xl" />
-                </button>
-                {showEmojiPicker && (
-                  <div 
-                    ref={emojiPickerRef}
-                    className="absolute bottom-full right-0 mb-3 z-50"
-                  >
-                    <EmojiPicker
-                      onEmojiClick={onEmojiClick}
-                      theme={Theme.DARK}
-                      width={350}
-                      height={400}
-                      searchDisabled={false}
-                      skinTonesDisabled={true}
-                      previewConfig={{
-                        showPreview: false
-                      }}
-                    />
+                  <img 
+                    src={media_url}
+                    alt="Contenido del post"
+                    className="w-full h-full object-cover"
+                  />
+                  {/* Fecha de publicación */}
+                  <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 px-3 py-1.5 rounded text-sm text-gray-300">
+                    {formatDistanceToNow(new Date(created_at), { addSuffix: true, locale: es })}
                   </div>
-                )}
+                </div>
+              </div>
+            )}
+
+            {/* Columna derecha - Descripción y comentarios */}
+            <div className={`flex-1 flex flex-col pl-4 h-full`}>
+              {/* Sección de descripción - Siempre visible y no scrollable */}
+              <div className="mb-5 flex-shrink-0">
+                <h3 className="text-white font-semibold mb-3 text-lg">Descripción</h3>
+                <div className="text-gray-300 text-base">
+                  {showFullDescription ? (
+                    <p>{description}</p>
+                  ) : (
+                    <p>{truncateText(description, media_url ? 120 : 220)}</p>
+                  )}
+                  {description.length > (media_url ? 120 : 220) && (
+                    <button
+                      onClick={toggleDescription}
+                      className="text-blue-400 hover:text-blue-300 text-sm font-medium block mt-2"
+                    >
+                      {showFullDescription ? 'Ver menos' : 'Leer más...'}
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Sección de comentarios - Con scroll si es necesario */}
+              <div className="flex-1 flex flex-col overflow-hidden">
+                <div className="flex items-center gap-2 mb-3 flex-shrink-0">
+                  <h3 className="text-white font-semibold text-lg">Comentarios</h3>
+                  <span className="text-sm text-gray-400">({comments.length})</span>
+                </div>
+                {/* Contenedor de la lista de comentarios con scrollbar */}
+                <div className="flex-1 overflow-y-auto pr-2">
+                  {comments.length === 0 ? (
+                    <div className="text-center text-gray-400 py-6 rounded-xl">
+                      <span className="text-5xl mb-3 block">💭</span>
+                      <p className="text-xl">No hay comentarios aún</p>
+                      <p className="text-base mt-2">Sé el primero en comentar</p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="space-y-5">
+                        {(showAllComments ? comments : comments.slice(0, 3)).map((comment) => (
+                          <div key={comment.comment_id} className="flex items-start gap-4">
+                            {/* Foto de perfil o inicial */}
+                            {comment.author && comment.author.profile_picture ? (
+                              <img
+                                src={String(comment.author.profile_picture)}
+                                alt={comment.author.username}
+                                className="w-10 h-10 rounded-full object-cover flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                                onClick={() => window.location.href = `/perfil?username=${comment.author.username}`}
+                              />
+                            ) : (
+                              <div 
+                                className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                                onClick={() => window.location.href = `/perfil?username=${comment.author.username}`}
+                              >
+                                <span className="text-gray-400 text-lg font-bold">
+                                  {comment.author?.username?.charAt(0).toUpperCase()}
+                                </span>
+                              </div>
+                            )}
+                            {/* Contenido del comentario y botón de eliminar */}
+                            <div className="flex-1 flex justify-between items-start px-2">
+                              <div className="flex-1 pr-2">
+                                <div className="flex items-center gap-2">
+                                  <span 
+                                    className="font-semibold text-white text-base cursor-pointer hover:underline"
+                                    onClick={() => window.location.href = `/perfil?username=${comment.author.username}`}
+                                  >
+                                    {comment.author?.username}
+                                  </span>
+                                  <span className="text-gray-400 text-sm">
+                                    {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true, locale: es })}
+                                  </span>
+                                </div>
+                                <p className="text-gray-300 text-base mt-1.5">{comment.content}</p>
+                              </div>
+                              {currentUserId === comment.author?.user_id && (
+                                <button
+                                  onClick={() => handleDeleteComment(comment.comment_id)}
+                                  className="text-red-500 hover:text-red-700 focus:outline-none ml-4 cursor-pointer"
+                                  title="Eliminar comentario"
+                                >
+                                  <FaTrash className="text-base" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      {comments.length > 3 && (
+                        <button
+                          onClick={() => setShowAllComments(!showAllComments)}
+                          className="text-blue-400 hover:text-blue-300 text-base font-medium w-full text-center py-3 cursor-pointer mt-3"
+                        >
+                          {showAllComments ? 'Ver menos comentarios' : 'Ver todos los comentarios'}
+                        </button>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Input de comentarios - Siempre visible */}
+              <div className="mt-5 pt-4 border-t border-gray-800 flex-shrink-0">
+                <div className="flex items-center bg-gray-800 rounded-lg p-3 relative">
+                  <input
+                    type="text"
+                    placeholder="Añadir un comentario..."
+                    className="flex-1 bg-transparent border-none text-white placeholder-gray-500 focus:outline-none text-base"
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter' && !isCommenting) {
+                        handleAddComment();
+                      }
+                    }}
+                    disabled={isCommenting}
+                  />
+                  <button 
+                    className={`ml-3 ${isCommenting ? 'text-gray-600' : 'text-gray-400 hover:text-white cursor-pointer'}`}
+                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                    disabled={isCommenting}
+                  >
+                    <FaSmile className="text-2xl" />
+                  </button>
+                  <button 
+                    className={`ml-3 ${isCommenting ? 'text-gray-600' : 'text-gray-400 hover:text-white cursor-pointer'}`}
+                    onClick={handleAddComment}
+                    disabled={isCommenting}
+                  >
+                    <FaComment className="text-2xl" />
+                  </button>
+                  {showEmojiPicker && (
+                    <div 
+                      ref={emojiPickerRef}
+                      className="absolute bottom-full right-0 mb-3 z-50"
+                    >
+                      <EmojiPicker
+                        onEmojiClick={onEmojiClick}
+                        theme={Theme.DARK}
+                        width={350}
+                        height={400}
+                        searchDisabled={false}
+                        skinTonesDisabled={true}
+                        previewConfig={{
+                          showPreview: false
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-
-      {/* Modal para imagen expandida */}
-      {/* Eliminar completamente el modal local */}
-      {/*
-      {media_url && (
-        <ImageZoomModal
-          isOpen={showImageZoomModal}
-          onClose={handleCloseModal}
-          imageUrl={media_url}
-          alt="Contenido del post"
-        />
-      )}
-      */}
     </>
   );
 } 
