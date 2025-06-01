@@ -177,31 +177,31 @@ export default function Publicar() {
   }
 
   return (
-    <div className="flex min-h-screen bg-black">
+    <div className="flex min-h-screen bg-black flex-col">
         <Navbar />
 
-      <div className="flex-1 p-8 flex items-center justify-center">
-        <div className="w-[900px] bg-gray-900 rounded-xl shadow-xl p-8 border border-gray-800">
+      <div className="flex-1 p-3 sm:p-8 flex flex-col items-center justify-center w-full">
+        <div className="w-full sm:w-[900px] bg-gray-900 rounded-xl shadow-xl p-3 sm:p-8 border border-gray-800">
           {/* Encabezado */}
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex flex-col sm:flex-row items-center justify-between mb-6 sm:mb-8 gap-2 sm:gap-0">
             <button
               onClick={() => navigate('/inicio')}
-              className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors"
+              className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors text-base sm:text-lg"
             >
               <FaArrowLeft />
               <span>Volver</span>
             </button>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent text-center w-full sm:w-auto">
               Crear Nueva Publicación
             </h1>
-            <div className="w-24"></div> {/* Espaciador para centrar el título */}
+            <div className="hidden sm:block w-24"></div> {/* Espaciador solo en escritorio */}
           </div>
           
-          <div className="flex gap-8">
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-8">
             {/* Área de imagen */}
-            <div className="flex-1">
+            <div className="flex-1 w-full">
               <div 
-                className={`border-2 border-dashed rounded-xl p-6 text-center min-h-[350px] flex items-center justify-center transition-all duration-300 ${
+                className={`border-2 border-dashed rounded-xl p-4 sm:p-6 text-center min-h-[200px] sm:min-h-[350px] flex items-center justify-center transition-all duration-300 ${
                   isDragging 
                     ? 'border-blue-500 bg-blue-500/10' 
                     : 'border-gray-700 bg-gray-800 hover:border-gray-600'
@@ -211,11 +211,11 @@ export default function Publicar() {
                 onDrop={handleDrop}
               >
                 {selectedImage ? (
-                  <div className="relative w-full h-full">
+                  <div className="relative w-full h-full flex items-center justify-center">
                     <img
                       src={selectedImage}
                       alt="Vista previa"
-                      className="w-full h-full object-contain rounded-lg"
+                      className="w-full max-h-60 sm:max-h-full object-contain rounded-lg"
                     />
                     <button
                       onClick={() => {
@@ -227,15 +227,15 @@ export default function Publicar() {
                       <FaTimes className="w-4 h-4" />
                     </button>
                   </div>
-                ) : (
-                  <div className="space-y-6">
-                    <div className="w-24 h-24 mx-auto bg-gradient-to-br from-blue-600/20 to-purple-600/20 rounded-full flex items-center justify-center">
-                      <FaImage className="text-4xl text-blue-500" />
+                ) :
+                  <div className="space-y-4 sm:space-y-6 w-full">
+                    <div className="w-20 h-20 sm:w-24 sm:h-24 mx-auto bg-gradient-to-br from-blue-600/20 to-purple-600/20 rounded-full flex items-center justify-center">
+                      <FaImage className="text-3xl sm:text-4xl text-blue-500" />
                     </div>
-                    <div className="flex flex-col items-center space-y-4">
+                    <div className="flex flex-col items-center space-y-2 sm:space-y-4">
                       <label
                         htmlFor="file-upload"
-                        className="cursor-pointer bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-lg hover:from-blue-500 hover:to-purple-500 transition-all duration-300 text-base font-medium shadow-lg transform hover:scale-105"
+                        className="cursor-pointer bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-lg hover:from-blue-500 hover:to-purple-500 transition-all duration-300 text-sm sm:text-base font-medium shadow-lg transform hover:scale-105"
                       >
                         Seleccionar imagen
                       </label>
@@ -247,7 +247,7 @@ export default function Publicar() {
                         accept="image/*"
                         onChange={handleImageChange}
                       />
-                      <p className="text-sm text-gray-400">
+                      <p className="text-xs sm:text-sm text-gray-400">
                         Arrastra una imagen o haz clic para seleccionar
                       </p>
                       <p className="text-xs text-gray-500">
@@ -255,35 +255,34 @@ export default function Publicar() {
                       </p>
                     </div>
                   </div>
-                )}
+                }
               </div>
             </div>
 
             {/* Área de descripción */}
-            <div className="flex-1 flex flex-col">
-            <div className="flex-1">
-              <textarea
-                  className="w-full h-[350px] p-6 bg-gray-800 border border-gray-700 rounded-xl resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-400 text-lg transition-all duration-300"
+            <div className="flex-1 flex flex-col w-full mt-4 sm:mt-0">
+              <div className="flex-1">
+                <textarea
+                  className="w-full h-32 sm:h-[350px] p-3 sm:p-6 bg-gray-800 border border-gray-700 rounded-xl resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-400 text-base sm:text-lg transition-all duration-300"
                   placeholder="¿Qué quieres compartir con tus amigos?..."
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-              />
-            </div>
-              
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  maxLength={500}
+                />
+              </div>
               {/* Contador de caracteres */}
               <div className="mt-2 text-right">
-                <span className={`text-sm ${description.length > 500 ? 'text-red-500' : 'text-gray-400'}`}>
+                <span className={`text-xs sm:text-sm ${description.length > 500 ? 'text-red-500' : 'text-gray-400'}`}> 
                   {description.length}/500
                 </span>
-          </div>
-
-          {/* Botón de publicar */}
-              <div className="mt-6 flex justify-end">
-            <button
-              onClick={handleSubmit}
+              </div>
+              {/* Botón de publicar */}
+              <div className="mt-4 sm:mt-6 flex justify-end">
+                <button
+                  onClick={handleSubmit}
                   disabled={isSubmitting || !description.trim()}
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-lg hover:from-blue-500 hover:to-purple-500 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-lg font-medium shadow-lg transform hover:scale-105 disabled:transform-none disabled:hover:scale-100 flex items-center space-x-2"
-            >
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 sm:px-8 py-2 sm:py-3 rounded-lg hover:from-blue-500 hover:to-purple-500 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-base sm:text-lg font-medium shadow-lg transform hover:scale-105 disabled:transform-none disabled:hover:scale-100 flex items-center space-x-2"
+                >
                   {isSubmitting ? (
                     <>
                       <FaSpinner className="animate-spin" />
@@ -295,7 +294,7 @@ export default function Publicar() {
                       <span>Publicar</span>
                     </>
                   )}
-            </button>
+                </button>
               </div>
             </div>
           </div>
