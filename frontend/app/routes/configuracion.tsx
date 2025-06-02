@@ -11,7 +11,7 @@ import { useNavigate, useSearchParams } from "@remix-run/react";
 import Navbar from "~/components/Inicio/Navbar";
 import { useAuth } from "~/hooks/useAuth";
 import { environment } from "~/config/environment";
-import { FaSignOutAlt, FaTrash, FaUser, FaEnvelope, FaLock, FaCamera, FaEdit, FaTimes } from 'react-icons/fa';
+import { FaSignOutAlt, FaTrash, FaUser, FaEnvelope, FaLock, FaCamera, FaEdit, FaTimes, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { userService } from "~/services/user.service";
 import type { UserProfile } from "~/types/user.types";
 import { redirect } from "@remix-run/node";
@@ -94,6 +94,7 @@ export default function ConfiguracionPage() {
   const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
   const [showCountdownModal, setShowCountdownModal] = useState(false);
   const [countdown, setCountdown] = useState(3);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Regex para validar contraseñas (al menos 8 caracteres, mayúscula, minúscula, número, caracter especial)
   const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&.#])[A-Za-z\d@$!%*?&.#]{8,}$/;
@@ -485,18 +486,26 @@ export default function ConfiguracionPage() {
                     <label className="block text-sm font-medium mb-2 text-gray-300">Nueva Contraseña</label>
                       <div className="relative">
                         <FaLock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="password"
-                      name="password"
-                      value={formData.password}
-                      onChange={handleInputChange}
-                          className="w-full pl-12 pr-4 py-3 bg-gray-800/50 border border-gray-700/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all duration-300"
-                      placeholder="••••••••"
-                    />
+                        <input
+                          type={showPassword ? "text" : "password"}
+                          name="password"
+                          value={formData.password}
+                          onChange={handleInputChange}
+                          className="w-full pl-12 pr-10 py-3 bg-gray-800/50 border border-gray-700/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all duration-300"
+                          placeholder="••••••••"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors cursor-pointer"
+                          tabIndex={-1}
+                        >
+                          {showPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
+                        </button>
                       </div>
                       <p className="text-xs text-gray-400 mt-2">
-                      Debe tener al menos 8 caracteres, incluyendo una mayúscula, una minúscula, un número y un caracter especial (@$!%*?&.#)
-                    </p>
+                        Debe tener al menos 8 caracteres, incluyendo una mayúscula, una minúscula, un número y un caracter especial (@$!%*?&.#)
+                      </p>
                     </div>
                   </div>
                 </form>

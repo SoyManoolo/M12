@@ -23,6 +23,7 @@ import { redirect } from "@remix-run/node";
 import { authService } from '../services/auth.service';
 import { useAuth } from '../hooks/useAuth.tsx';
 import Notification from '../components/Shared/Notification';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 
 /**
  * @function action
@@ -61,12 +62,14 @@ export const action: ActionFunction = async ({ request }) => {
  * @state {string} password - Estado para la contraseña
  * @state {string} error - Estado para mensajes de error
  * @state {string} message - Estado para mensajes de éxito
+ * @state {boolean} showPassword - Estado para mostrar/ocultar la contraseña
  * 
  * @method handleSubmit - Maneja el envío del formulario de inicio de sesión
  */
 export default function LoginPage() {
     const [id, setId] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const { setToken } = useAuth();
     const [notification, setNotification] = useState<{
         message: string;
@@ -160,16 +163,26 @@ export default function LoginPage() {
                         <label htmlFor="password" className="block text-gray-300 text-sm font-medium mb-2 tracking-wider">
                             CONTRASEÑA
                         </label>
-                        <input
-                            type="password"
-                            id="password"
-                            name="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="w-full px-3 py-2 bg-transparent border border-gray-600 rounded-md text-white focus:outline-none focus:border-white cursor-text"
-                            required
-                            placeholder="Ingresa tu contraseña"
-                        />
+                        <div className="relative">
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                id="password"
+                                name="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="w-full px-3 py-2 bg-transparent border border-gray-600 rounded-md text-white focus:outline-none focus:border-white cursor-text pr-10"
+                                required
+                                placeholder="Ingresa tu contraseña"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors cursor-pointer"
+                                tabIndex={-1}
+                            >
+                                {showPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
+                            </button>
+                        </div>
                     </div>
 
                     <div className="text-right">
