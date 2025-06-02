@@ -39,7 +39,7 @@ export default defineConfig({
     allowedHosts: [
       'localhost',
       '127.0.0.1',
-      'a73a-79-117-245-149.ngrok-free.app',
+      '6b77-138-2-143-84.ngrok-free.app',
     ],
     watch: {
       usePolling: false,
@@ -47,13 +47,13 @@ export default defineConfig({
     },
     proxy: {
       '/api': {
-        target: 'https://a73a-79-117-245-149.ngrok-free.app',
+        target: 'https://6b77-138-2-143-84.ngrok-free.app',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/api/, '')
       },
       '/media': {
-        target: 'https://a73a-79-117-245-149.ngrok-free.app',
+        target: 'https://6b77-138-2-143-84.ngrok-free.app',
         changeOrigin: true,
         secure: false,
         ws: true,

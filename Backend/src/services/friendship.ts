@@ -2,7 +2,7 @@ import { FriendRequest, Friends, User } from '../models';
 import { AppError } from '../middlewares/errors/AppError';
 import dbLogger from '../config/logger';
 import { Op } from 'sequelize';
-import { verifyFriendship } from '../utils/modelExists';
+import { verifyFriendship as verifyFriendshipUtil } from '../utils/modelExists';
 
 export class FriendshipService {
     /**
@@ -36,7 +36,7 @@ export class FriendshipService {
             }
 
             // Verificar que no sean ya amigos
-            const areFriends = await verifyFriendship(sender_id, receiver_id);
+            const areFriends = await verifyFriendshipUtil(sender_id, receiver_id);
             if (areFriends) {
                 throw new AppError(400, 'UsersAlreadyFriends');
             }
@@ -274,7 +274,7 @@ export class FriendshipService {
     public async getFriendshipStatus(user_id: string, other_user_id: string) {
         try {
             // Verificar si son amigos
-            const areFriends = await verifyFriendship(user_id, other_user_id);
+            const areFriends = await verifyFriendshipUtil(user_id, other_user_id);
             if (areFriends) {
                 return { status: 'friends' };
             }
@@ -331,6 +331,18 @@ export class FriendshipService {
             }
             dbLogger.error('[FriendshipService] Error en cancelFriendRequest:', { error });
             throw new AppError(500, 'InternalServerError');
+        }
+    }
+
+    /**
+     * Verifica si dos usuarios son amigos
+     */
+    public async verifyFriendship(user1_id: string, user2_id: string): Promise<boolean> {
+        try {
+            return await verifyFriendshipUtil(user1_id, user2_id);
+        } catch (error) {
+            dbLogger.error('[FriendshipService] Error en verifyFriendship:', { error });
+            return false;
         }
     }
 }

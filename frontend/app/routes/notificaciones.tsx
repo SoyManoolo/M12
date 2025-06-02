@@ -26,6 +26,9 @@ import { userService } from "~/services/user.service";
 import { formatDistanceToNow, isToday, isYesterday, isThisWeek, isThisMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { friendshipService } from "~/services/friendship.service";
+import { notificationService } from '~/services/notification.service';
+import { getToken } from '~/utils/auth.server';
+import { environment } from '~/config/environment';
 
 interface LoaderData {
   notifications: (Notification & { user: User })[];
@@ -33,83 +36,41 @@ interface LoaderData {
 }
 
 export const loader = async ({ request }: { request: Request }) => {
-  const cookieHeader = request.headers.get("Cookie");
-  const token = cookieHeader?.split(";").find((c: string) => c.trim().startsWith("token="))?.split("=")[1];
-  if (!token) return redirect("/login");
   try {
-    // Datos mock para pruebas
-    const mockUser: User = {
-      user_id: "1",
-      username: "mariagarcia",
-      name: "María",
-      surname: "García",
-      email: "maria@example.com",
-      profile_picture: "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg",
-      bio: "¡Hola! Me encanta compartir momentos especiales",
-      email_verified: true,
-      is_moderator: false,
+    const token = await getToken(request);
+    if (!token) {
+      return redirect('/login');
+    }
+
+    // Obtener notificaciones reales
+    const notificationsResponse = await notificationService.getUserNotifications(token);
+    if (!notificationsResponse.success) {
+      throw new Error(notificationsResponse.message || 'Error al cargar las notificaciones');
+    }
+
+    // Obtener datos del usuario actual
+    const userResponse = await userService.getUserById('me', token);
+    if (!userResponse.success || !userResponse.data) {
+      throw new Error('Error al cargar los datos del usuario');
+    }
+
+    // Convertir UserProfile a User
+    const currentUser: User = {
+      ...userResponse.data,
+      profile_picture: userResponse.data.profile_picture || null,
+      bio: userResponse.data.bio || null,
       deleted_at: null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
       active_video_call: false
     };
 
-    const mockNotifications: (Notification & { user: User })[] = [
-      {
-        notification_id: "1",
-        type: "friend_request",
-        user_id: "2",
-        related_id: "1",
-        post_id: null,
-        is_read: false,
-        severity: "info",
-        created_at: new Date().toISOString(),
-        user: {
-          user_id: "2",
-          username: "carlos123",
-          name: "Carlos",
-          surname: "Pérez",
-          email: "carlos@example.com",
-          profile_picture: "https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg",
-          bio: "Amante de la música",
-          email_verified: true,
-          is_moderator: false,
-          deleted_at: null,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          active_video_call: false
-        }
-      },
-      {
-        notification_id: "2",
-        type: "message",
-        user_id: "3",
-        related_id: "1",
-        post_id: null,
-        is_read: false,
-        severity: "info",
-        created_at: new Date().toISOString(),
-        user: {
-          user_id: "3",
-          username: "analopez",
-          name: "Ana",
-          surname: "López",
-          email: "ana@example.com",
-          profile_picture: "https://images.pexels.com/photos/733872/pexels-photo-733872.jpeg",
-          bio: "Viajera y fotógrafa",
-          email_verified: true,
-          is_moderator: false,
-          deleted_at: null,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          active_video_call: false
-        }
-      }
-    ];
+    // Asegurarnos de que las notificaciones tengan el usuario
+    const notificationsWithUser = notificationsResponse.data?.filter((notification): notification is Notification & { user: User } => 
+      notification.user !== undefined
+    ) || [];
 
     return json<LoaderData>({
-      notifications: mockNotifications,
-      currentUser: mockUser
+      notifications: notificationsWithUser,
+      currentUser
     });
   } catch (error) {
     throw new Error('Error al cargar las notificaciones');
@@ -166,42 +127,63 @@ export default function Notificaciones(): React.ReactElement {
     fetchFriends();
   }, [token]);
 
-  const handleAcceptFriend = async (friendshipId: string) => {
+  const handleAcceptFriend = async (requestId: string) => {
+    if (!token) return;
+
     try {
-      console.log('Aceptando solicitud de amistad:', friendshipId);
-      setFriends(prev =>
-        prev.map(friend =>
-          friend.friendship_id === friendshipId
-            ? { ...friend, status: 'accepted' }
-            : friend
-        )
-      );
+      const response = await notificationService.handleFriendRequest(token, requestId, 'accept');
+      if (response.success) {
+        // Actualizar la lista de notificaciones
+        setCurrentNotifications(prev =>
+          prev.filter(notification => notification.related_id !== requestId)
+        );
+        // Recargar la lista de amigos
+        const friendsResponse = await friendshipService.getUserFriends(token);
+        if (friendsResponse.success && friendsResponse.data) {
+          setFriends(friendsResponse.data);
+        }
+      } else {
+        console.error('Error al aceptar solicitud:', response.message);
+      }
     } catch (error) {
       console.error('Error al aceptar solicitud:', error);
     }
   };
 
-  const handleRejectFriend = async (friendshipId: string) => {
+  const handleRejectFriend = async (requestId: string) => {
+    if (!token) return;
+
     try {
-      console.log('Rechazando solicitud de amistad:', friendshipId);
-      setFriends(prev =>
-        prev.filter(friend => friend.friendship_id !== friendshipId)
-      );
+      const response = await notificationService.handleFriendRequest(token, requestId, 'reject');
+      if (response.success) {
+        // Actualizar la lista de notificaciones
+        setCurrentNotifications(prev =>
+          prev.filter(notification => notification.related_id !== requestId)
+        );
+      } else {
+        console.error('Error al rechazar solicitud:', response.message);
+      }
     } catch (error) {
       console.error('Error al rechazar solicitud:', error);
     }
   };
 
   const handleMarkAsRead = async (notificationId: string) => {
+    if (!token) return;
+
     try {
-      console.log('Marcando notificación como leída:', notificationId);
-      setCurrentNotifications(prev =>
-        prev.map(notification =>
-          notification.notification_id === notificationId
-            ? { ...notification, is_read: true }
-            : notification
-        )
-      );
+      const response = await notificationService.markNotificationAsRead(token, notificationId);
+      if (response.success) {
+        setCurrentNotifications(prev =>
+          prev.map(notification =>
+            notification.notification_id === notificationId
+              ? { ...notification, is_read: true }
+              : notification
+          )
+        );
+      } else {
+        console.error('Error al marcar como leída:', response.message);
+      }
     } catch (error) {
       console.error('Error al marcar como leída:', error);
     }
@@ -428,13 +410,6 @@ export default function Notificaciones(): React.ReactElement {
                             Marcar como leída
                           </button>
                         )}
-                        <button
-                          onClick={() => handleDeleteNotification(notification.notification_id)}
-                          className="p-2 text-gray-400 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all duration-200"
-                          title="Eliminar notificación"
-                        >
-                          <FaTrash className="w-4 h-4" />
-                        </button>
                       </div>
                     </div>
                     {!notification.is_read && (
