@@ -17,7 +17,8 @@ const DEFAULT_ADMIN = {
     password: "admin123",
     is_moderator: true,
     name: "Admin",
-    surname: "System"
+    surname: "System",
+    profile_picture: "/assets/images/profiles/admin.png"
 };
 
 // Datos de los usuarios por defecto

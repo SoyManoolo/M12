@@ -139,3 +139,9 @@ frontend/.git-commit-automation.json
 
 images/
 videos/
+
+# No ignorar las imágenes de perfiles del backend
+!backend/src/assets/images/
+!backend/src/assets/images/**# No ignorar las imágenes de perfiles del backend
+!backend/src/assets/images/
+!backend/src/assets/images/**
