@@ -239,15 +239,15 @@ export default function SignUpPage(): React.ReactElement {
               CONTRASEÑA
             </label>
             <div className="relative">
-              <input
+            <input
                 type={showPassword ? "text" : "password"}
-                id="password"
-                name="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+              id="password"
+              name="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-3 py-2 bg-transparent border border-gray-600 rounded-md text-white focus:outline-none focus:border-white cursor-text pr-10"
-                required
-              />
+              required
+            />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}

@@ -19,7 +19,6 @@ import type { Notification } from "~/types/notifications";
 import type { User } from "~/types/user.types";
 import type { Friend } from "~/services/friendship.service";
 import Navbar from "~/components/Inicio/Navbar";
-import RightPanel from "~/components/Shared/RightPanel";
 import { FaUserFriends, FaComment, FaHeart, FaVideo, FaCheck, FaTimes, FaSearch, FaTrash, FaCheckDouble, FaBell } from 'react-icons/fa';
 import { useAuth } from "~/hooks/useAuth";
 import { userService } from "~/services/user.service";
@@ -275,7 +274,7 @@ export default function Notificaciones(): React.ReactElement {
       <Navbar />
 
       {/* Contenido central */}
-      <div className="w-full lg:w-2/3 lg:ml-[16.666667%] lg:border-r border-gray-800">
+      <div className="flex-grow lg:w-2/3 lg:ml-[16.666667%] lg:border-r border-gray-800">
         <div className="pt-16 pb-16 p-3 sm:p-6">
           {/* Encabezado */}
           <div className="mb-6 sm:mb-8">
@@ -438,14 +437,6 @@ export default function Notificaciones(): React.ReactElement {
             )}
           </div>
         </div>
-      </div>
-
-      {/* Panel lateral derecho */}
-      <div className="hidden lg:block">
-        <RightPanel
-          users={suggestedUsers}
-          mode="suggested"
-        />
       </div>
 
       <style>

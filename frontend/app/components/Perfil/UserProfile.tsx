@@ -191,7 +191,7 @@ export default function UserProfile({ user, isOwnProfile, onEditProfile }: UserP
                         <SecureImage
                             src={user.profile_picture}
                             alt={`${user.username} profile`}
-                            className="w-40 h-40 rounded-full object-cover border-4 border-gray-800 cursor-pointer transition-all duration-300 group-hover:border-blue-500/50 group-hover:scale-105"
+                                className="w-40 h-40 rounded-full object-cover border-4 border-gray-800 cursor-pointer transition-all duration-300 group-hover:border-blue-500/50 group-hover:scale-105"
                             onClick={() => setShowZoomModal(true)}
                         />
                     ) : (

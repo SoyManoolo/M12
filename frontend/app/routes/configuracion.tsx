@@ -486,14 +486,14 @@ export default function ConfiguracionPage() {
                     <label className="block text-sm font-medium mb-2 text-gray-300">Nueva Contraseña</label>
                       <div className="relative">
                         <FaLock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                        <input
+                    <input
                           type={showPassword ? "text" : "password"}
-                          name="password"
-                          value={formData.password}
-                          onChange={handleInputChange}
+                      name="password"
+                      value={formData.password}
+                      onChange={handleInputChange}
                           className="w-full pl-12 pr-10 py-3 bg-gray-800/50 border border-gray-700/50 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all duration-300"
-                          placeholder="••••••••"
-                        />
+                      placeholder="••••••••"
+                    />
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
@@ -504,8 +504,8 @@ export default function ConfiguracionPage() {
                         </button>
                       </div>
                       <p className="text-xs text-gray-400 mt-2">
-                        Debe tener al menos 8 caracteres, incluyendo una mayúscula, una minúscula, un número y un caracter especial (@$!%*?&.#)
-                      </p>
+                      Debe tener al menos 8 caracteres, incluyendo una mayúscula, una minúscula, un número y un caracter especial (@$!%*?&.#)
+                    </p>
                     </div>
                   </div>
                 </form>
