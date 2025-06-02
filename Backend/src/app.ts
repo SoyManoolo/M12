@@ -37,6 +37,12 @@ app.set('trust proxy', true);
 // Configurar middleware para servir archivos estáticos desde la carpeta 'media'
 app.use('/media', express.static(path.join(process.cwd(), 'media')));
 
+// Configurar middleware para servir archivos estáticos desde la carpeta 'assets'
+app.use('/assets', express.static(path.join(process.cwd(), 'src/assets')));
+
+// Configurar middleware para servir archivos estáticos desde la carpeta 'public'
+app.use('/public', express.static(path.join(process.cwd(), 'public')));
+
 // Rutas
 app.use('/users', userRoutes);
 app.use('/auth', authRoutes);

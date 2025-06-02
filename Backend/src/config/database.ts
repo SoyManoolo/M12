@@ -28,7 +28,7 @@ const DEFAULT_USERS = [
         password: "Jaider123",
         is_moderator: false,
         name: "Jaider",
-        surname: "User"
+        surname: "Cabarcas"
     },
     {
         username: "Erik",
@@ -36,7 +36,34 @@ const DEFAULT_USERS = [
         password: "Erik123",
         is_moderator: false,
         name: "Erik",
-        surname: "User"
+        surname: "Saldaña"
+    },
+    {
+        username: "YagoM",
+        email: "yago@puig.com",
+        password: "YagoM",
+        is_moderator: false,
+        name: "Yago",
+        surname: "Morales",
+        profile_picture: "/assets/images/profiles/Yago.png"
+    },
+    {
+        username: "IsmaelJ",
+        email: "ismael@puig.com",
+        password: "IsmaelJ",
+        is_moderator: false,
+        name: "Ismael",
+        surname: "Jimenez",
+        profile_picture: "/assets/images/profiles/ismael.jpg"
+    },
+    {
+        username: "FernandoP",
+        email: "fernando@puig.com",
+        password: "FernandoP",
+        is_moderator: false,
+        name: "Fernando",
+        surname: "Porrino",
+        profile_picture: "/assets/images/profiles/fer.jpg"
     }
 ];
 
