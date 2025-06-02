@@ -15,7 +15,7 @@ import helmet from 'helmet';
 const corsOptions = {
     origin: [
         'http://localhost:5173',
-        'https://39e1-37-133-29-123.ngrok-free.app',
+        'https://0c3e-79-117-245-149.ngrok-free.app',
         /\.ngrok-free\.app$/
     ],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
