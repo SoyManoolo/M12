@@ -14,6 +14,8 @@
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useAuth } from "~/hooks/useAuth";
+import { FaCircle } from 'react-icons/fa';
+import SecureImage from '../Shared/SecureImage';
 
 interface ChatItemProps {
   chat: {
@@ -62,14 +64,10 @@ export default function ChatItem({ chat, onClick }: ChatItemProps) {
       {/* Avatar con indicador de estado */}
       <div className="relative flex-shrink-0">
         {chat.user.profile_picture ? (
-          <img
+          <SecureImage
             src={chat.user.profile_picture}
             alt={chat.user.username}
             className="w-14 h-14 rounded-full object-cover border-2 border-gray-800 group-hover:border-blue-500/50 transition-colors"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.src = "/default-avatar.png";
-              }}
           />
         ) : (
           <div className="w-14 h-14 rounded-full border-2 border-gray-800 group-hover:border-blue-500/50 bg-gray-800 flex items-center justify-center transition-colors">

@@ -18,6 +18,7 @@ import Notification from '~/components/Shared/Notification';
 import { useAuth } from '~/hooks/useAuth';
 import { Link, useNavigate } from '@remix-run/react';
 import { jwtDecode } from 'jwt-decode';
+import SecureImage from '../components/Shared/SecureImage';
 
 // El modal de edición espera UserProfile. Necesitaremos convertir User a UserProfile al abrir el modal.
 interface EditUserModalProps {
@@ -546,14 +547,10 @@ export default function AdminUsuarios() {
                         className="flex items-center space-x-3 cursor-pointer hover:opacity-80 transition-opacity"
                       >
                         {user.profile_picture ? (
-                          <img
+                          <SecureImage
                             src={user.profile_picture}
                             alt="Usuario"
                             className="w-10 h-10 rounded-full object-cover border border-gray-800"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.src = "/default-avatar.png";
-                            }}
                           />
                         ) : (
                           <div className="w-10 h-10 rounded-full border border-gray-800 bg-gray-800 flex items-center justify-center">

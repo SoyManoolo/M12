@@ -19,6 +19,7 @@ import {
 import { useAuth } from '~/hooks/useAuth';
 import { friendshipService } from '~/services/friendship.service';
 import { jwtDecode } from 'jwt-decode';
+import SecureImage from '~/components/Shared/SecureImage';
 
 interface User {
   user_id: string;
@@ -337,7 +338,7 @@ export default function SearchPage() {
                   <div className="flex items-center justify-between w-full">
                     <div className="flex items-center space-x-4">
                     {friend.user.profile_picture ? (
-                      <img
+                      <SecureImage
                         src={friend.user.profile_picture}
                         alt={friend.user.username}
                         className="w-12 h-12 rounded-full object-cover border-2 border-gray-800 group-hover:border-blue-500 transition-all duration-300"
@@ -406,7 +407,7 @@ export default function SearchPage() {
                   <div className="flex items-center justify-between w-full">
                     <div className="flex items-center space-x-4">
                     {user.profile_picture ? (
-                      <img
+                      <SecureImage
                         src={user.profile_picture}
                         alt={user.username}
                         className="w-12 h-12 rounded-full object-cover border-2 border-gray-800 group-hover:border-purple-500 transition-all duration-300"
@@ -491,7 +492,7 @@ export default function SearchPage() {
                     <div className="flex items-center justify-between w-full">
                       <div className="flex items-center space-x-3 sm:space-x-4">
                       {user.profile_picture ? (
-                        <img
+                        <SecureImage
                           src={user.profile_picture}
                           alt={user.username}
                           className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-gray-800 group-hover:border-green-500 transition-all duration-300"

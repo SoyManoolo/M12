@@ -20,6 +20,7 @@ import { useAuth } from "~/hooks/useAuth";
 import { useState, useEffect } from 'react';
 import { friendshipService } from "~/services/friendship.service";
 import Notification from "./Notification";
+import SecureImage from "./SecureImage";
 
 interface User {
   user_id: string;
@@ -323,14 +324,10 @@ export default function RightPanel({
                       onClick={() => handleUserClick(friend.user.username)}
                     >
                         {imageUrl ? (
-                          <img 
+                          <SecureImage 
                             src={imageUrl}
                             alt={friend.user.username}
                             className="w-12 h-12 rounded-full object-cover border-2 border-gray-800 transition-all duration-200 hover:scale-110 hover:border-blue-500 hover:shadow-lg cursor-pointer"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.src = "/default-avatar.png";
-                            }}
                           />
                         ) : (
                           <div className="w-12 h-12 rounded-full border-2 border-gray-800 bg-gray-800 flex items-center justify-center transition-all duration-200 hover:scale-110 hover:border-blue-500 hover:shadow-lg cursor-pointer">

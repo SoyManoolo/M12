@@ -35,6 +35,7 @@ import ImageZoomModal from "~/components/Shared/ImageZoomModal";
 import { postService } from "~/services/post.service";
 import { commentService } from "~/services/comment.service";
 import EmojiPicker, { EmojiClickData, Theme } from "emoji-picker-react";
+import SecureImage from '~/components/Shared/SecureImage';
 
 /**
  * Interfaz que define la estructura de datos de una publicación
@@ -339,11 +340,7 @@ export default function Post({
         {media_url && (
           <div className="block sm:hidden w-full mb-3">
             <div className="rounded-lg overflow-hidden bg-gray-800 cursor-pointer relative">
-              {(() => {
-                console.log("Media URL en render:", media_url); // Esto es válido
-                return null; // Asegúrate de devolver algo válido (como `null`)
-              })()}{" "}
-              <img
+              <SecureImage
                 src={media_url}
                 alt="Contenido del post"
                 className="w-full h-60 object-cover"
@@ -356,10 +353,10 @@ export default function Post({
         <div className="flex flex-row sm:hidden items-center gap-3 mb-2">
           {/* Foto usuario */}
           {user.profile_picture ? (
-            <img
+            <SecureImage
               src={user.profile_picture}
               alt={user.username}
-              className="w-10 h-10 rounded-full object-cover border-2 border-gray-800"
+              className="w-10 h-10 rounded-full cursor-pointer object-cover border-2 border-gray-800"
               onClick={() =>
                 (window.location.href = `/perfil?username=${user.username}`)
               }
@@ -464,7 +461,7 @@ export default function Post({
                     >
                       {/* Foto de perfil o inicial */}
                       {comment.author && comment.author.profile_picture ? (
-                        <img
+                        <SecureImage
                           src={String(comment.author.profile_picture)}
                           alt={comment.author.username}
                           className="w-8 h-8 rounded-full object-cover flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
@@ -602,7 +599,7 @@ export default function Post({
               {/* Perfil y nombre del usuario */}
               <div className="relative w-full flex justify-center">
                 {user.profile_picture ? (
-                  <img
+                  <SecureImage
                     src={user.profile_picture}
                     alt={user.username}
                     className="w-14 h-14 rounded-full cursor-pointer object-cover border-2 border-gray-800"
@@ -689,7 +686,7 @@ export default function Post({
                   className="rounded-lg overflow-hidden bg-gray-800 h-full w-full cursor-pointer relative flex items-center justify-center"
                   onClick={handleImageClick}
                 >
-                  <img
+                  <SecureImage
                     src={media_url}
                     alt="Contenido del post"
                     className="w-full h-full object-cover"
@@ -763,7 +760,7 @@ export default function Post({
                             {/* Foto de perfil o inicial */}
                             {comment.author &&
                             comment.author.profile_picture ? (
-                              <img
+                              <SecureImage
                                 src={String(comment.author.profile_picture)}
                                 alt={comment.author.username}
                                 className="w-10 h-10 rounded-full object-cover flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"

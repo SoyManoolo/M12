@@ -14,6 +14,7 @@
 
 import { FaVideo, FaPhone } from 'react-icons/fa';
 import type { User } from '~/types/user.types';
+import SecureImage from '../Shared/SecureImage';
 
 interface ChatUserInfoProps {
   user: User;
@@ -25,7 +26,7 @@ export default function ChatUserInfo({ user }: ChatUserInfoProps) {
       {/* Información del usuario sin cuadro */}
       <div className="flex flex-col items-center mb-4 w-full">
         {user.profile_picture ? (
-          <img
+          <SecureImage
             src={user.profile_picture}
             alt={user.username}
             className="w-32 h-32 rounded-full object-cover mb-4 border-2 border-gray-800"

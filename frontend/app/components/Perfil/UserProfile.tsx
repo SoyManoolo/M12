@@ -21,6 +21,7 @@ import type { User } from '~/types/user.types';
 import ImageZoomModal from '../Shared/ImageZoomModal';
 import Notification from '../Shared/Notification';
 import { friendshipService } from '../../services/friendship.service';
+import SecureImage from '../Shared/SecureImage';
 
 interface UserProfileProps {
     user?: User;
@@ -187,15 +188,11 @@ export default function UserProfile({ user, isOwnProfile, onEditProfile }: UserP
                         onMouseLeave={() => setIsHovering(false)}
                     >
                     {user.profile_picture ? (
-                        <img
+                        <SecureImage
                             src={user.profile_picture}
                             alt={`${user.username} profile`}
-                                className="w-40 h-40 rounded-full object-cover border-4 border-gray-800 cursor-pointer transition-all duration-300 group-hover:border-blue-500/50 group-hover:scale-105"
+                            className="w-40 h-40 rounded-full object-cover border-4 border-gray-800 cursor-pointer transition-all duration-300 group-hover:border-blue-500/50 group-hover:scale-105"
                             onClick={() => setShowZoomModal(true)}
-                            onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                target.src = "/default-avatar.png";
-                            }}
                         />
                     ) : (
                             <div className="w-40 h-40 rounded-full border-4 border-gray-800 bg-gray-800 flex items-center justify-center cursor-pointer transition-all duration-300 group-hover:border-blue-500/50 group-hover:scale-105">

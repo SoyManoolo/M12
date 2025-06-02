@@ -22,6 +22,7 @@ import RedirectModal from '~/components/Shared/RedirectModal';
 import Notification from '../components/Shared/Notification';
 import ConfirmModal from '../components/Shared/ConfirmModal';
 import { decodeToken } from '../utils/token';
+import SecureImage from '../components/Shared/SecureImage';
 
 /**
  * Función auxiliar para obtener el username del token JWT
@@ -358,14 +359,10 @@ export default function ConfiguracionPage() {
                 <div className="flex-1 flex items-center justify-center">
                   <div className="relative w-64 h-64 group">
                     {user?.profile_picture ? (
-                      <img
+                      <SecureImage
                         src={user.profile_picture}
                         alt="Foto de perfil"
                         className="w-full h-full rounded-full object-cover border-4 border-gray-700/50 shadow-lg transition-all duration-300 group-hover:border-blue-500/50"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = "/default-avatar.png";
-                        }}
                       />
                     ) : (
                       <div className="w-full h-full rounded-full border-4 border-gray-700/50 bg-gray-800/50 flex items-center justify-center shadow-lg group-hover:border-blue-500/50 transition-all duration-300">
@@ -393,10 +390,6 @@ export default function ConfiguracionPage() {
                                       const updatedUser = await userService.getUser({ user_id: userId }, t);
                                       if (updatedUser.success) {
                                         setUser(updatedUser.data);
-                                        const img = document.querySelector('img[alt="Foto de perfil"]') as HTMLImageElement;
-                                        if (img) {
-                                          img.src = `${updatedUser.data.profile_picture}?t=${new Date().getTime()}`;
-                                        }
                                       }
                                     } else {
                                       setNotification({ message: res.message || "Error al actualizar la foto de perfil", type: "error" });
@@ -420,10 +413,6 @@ export default function ConfiguracionPage() {
                                   const updatedUser = await userService.getUser({ user_id: userId }, t);
                                   if (updatedUser.success) {
                                     setUser(updatedUser.data);
-                                    const img = document.querySelector('img[alt="Foto de perfil"]') as HTMLImageElement;
-                                    if (img) {
-                                      img.src = "/default-avatar.png";
-                                    }
                                   }
                                 } else {
                                   setNotification({ message: res.message || "Error al eliminar la foto de perfil", type: "error" });

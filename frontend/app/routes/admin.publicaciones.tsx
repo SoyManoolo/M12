@@ -20,6 +20,7 @@ import ConfirmModal from '~/components/Shared/ConfirmModal';
 import EditPostModal from '~/components/Shared/EditPostModal';
 import ImageZoomModal from '~/components/Shared/ImageZoomModal';
 import { differenceInSeconds, differenceInMinutes, differenceInHours, differenceInDays } from 'date-fns';
+import SecureImage from '../components/Shared/SecureImage';
 
 interface Post {
   post_id: string;
@@ -161,7 +162,7 @@ function PostDetailModal({ isOpen, onClose, post, onImageClick }: PostDetailModa
                   onImageClick(post.media);
                 }}
               >
-                <img 
+                <SecureImage 
                   src={post.media} 
                   alt="Imagen publicación" 
                   className="max-h-72 sm:max-h-[90vh] w-auto object-contain transition-transform duration-300 group-hover:scale-105 mx-auto" 
@@ -185,7 +186,7 @@ function PostDetailModal({ isOpen, onClose, post, onImageClick }: PostDetailModa
                   onClick={() => { window.location.href = `/perfil?username=${post.author.username}`; }}
                 >
                   {post.author.profile_picture ? (
-                    <img
+                    <SecureImage
                       src={post.author.profile_picture}
                       alt={post.author.username}
                       className="w-12 h-12 rounded-full ring-2 ring-blue-500/50"
@@ -241,7 +242,7 @@ function PostDetailModal({ isOpen, onClose, post, onImageClick }: PostDetailModa
                       <div className="flex items-start gap-3 mb-1">
                         {/* Foto de perfil o inicial */}
                         {comment.author.profile_picture ? (
-                          <img
+                          <SecureImage
                             src={comment.author.profile_picture}
                             alt={comment.author.username}
                             className="w-9 h-9 rounded-full"
@@ -622,7 +623,7 @@ export default function AdminPublicaciones() {
                       <div className="flex justify-between items-start gap-2">
                         <div className="flex items-center gap-2 min-w-0">
                           {post.author.profile_picture ? (
-                            <img
+                            <SecureImage
                               src={post.author.profile_picture}
                               alt={post.author.username}
                               className="w-8 h-8 rounded-full flex-shrink-0 object-cover"
@@ -661,7 +662,7 @@ export default function AdminPublicaciones() {
                     {/* Imagen cuadrada */}
                     <div className="w-full h-[300px] aspect-square relative overflow-hidden bg-gray-800 flex items-center justify-center">
                       {post.media ? (
-                        <img 
+                        <SecureImage 
                           src={post.media} 
                           alt="Contenido multimedia" 
                           className="w-full h-full object-cover object-center"
