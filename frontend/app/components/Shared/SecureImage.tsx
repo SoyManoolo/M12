@@ -1,4 +1,5 @@
 import { useState, useEffect, MouseEvent } from 'react';
+import { environment } from '../../config/environment';
 
 interface SecureImageProps {
   src: string;
@@ -13,7 +14,13 @@ export default function SecureImage({ src, alt, className, onClick }: SecureImag
   useEffect(() => {
     const fetchImage = async () => {
       try {
-        const response = await fetch(src, {
+        // Construir la URL completa si es una ruta relativa
+        let fullUrl = src;
+        if (src.startsWith('/')) {
+          fullUrl = `${environment.apiUrl}${src}`;
+        }
+
+        const response = await fetch(fullUrl, {
           headers: {
             'Ngrok-Skip-Browser-Warning': 'true'
           }
