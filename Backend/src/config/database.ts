@@ -7,6 +7,7 @@ import { hash } from "bcryptjs";
 import { Op } from "sequelize";
 
 const DatabaseURL = process.env.DATABASE_URL;
+dbLogger.info("Valor de DATABASE_URL: ", {DatabaseURL})
 const isTestEnv = process.env.NODE_ENV === "test";
 const dbName = isTestEnv ? process.env.DB_NAME_TEST : process.env.DB_NAME;
 const dbUpdate: boolean = process.env.DB_UPDATE === "true" || false;
