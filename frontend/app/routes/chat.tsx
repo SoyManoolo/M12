@@ -21,7 +21,8 @@ import { chatService } from '~/services/chat.service';
 import { useAuth } from '~/hooks/useAuth';
 import { userService } from '~/services/user.service';
 import { jwtDecode } from 'jwt-decode';
-import EmojiPicker, { EmojiClickData, Theme } from 'emoji-picker-react';
+import ClientEmojiPicker from '~/components/Chats/ClientEmojiPicker';
+import type { EmojiClickData } from 'emoji-picker-react';
 
 interface Message {
   id: string;
@@ -60,19 +61,19 @@ export default function Chat() {
   // Efecto para manejar la carga inicial
   useEffect(() => {
     if (!token || !userId || !currentUser) {
-      console.log('Datos no disponibles:', { 
-        noToken: !token, 
+      console.log('Datos no disponibles:', {
+        noToken: !token,
         noUserId: !userId,
-        noCurrentUser: !currentUser 
+        noCurrentUser: !currentUser
       });
       setLoading(false);
       return;
     }
 
-    console.log('Datos disponibles:', { 
-      token: !!token, 
-      userId, 
-      currentUserId: currentUser.user_id 
+    console.log('Datos disponibles:', {
+      token: !!token,
+      userId,
+      currentUserId: currentUser.user_id
     });
 
     let isComponentMounted = true;
@@ -82,7 +83,7 @@ export default function Chat() {
     const handleNewMessage = (message: Message) => {
       console.log('Manejando nuevo mensaje:', message);
       if (!isComponentMounted) return;
-      
+
       setMessages(prev => {
         // Verificar si el mensaje ya existe usando el ID
         const messageExists = prev.some(msg => msg.id === message.id);
@@ -95,37 +96,37 @@ export default function Chat() {
         if (message.sender_id === currentUser.user_id) {
           const newMessages = prev.filter(msg => !msg.id.startsWith('temp-'));
           newMessages.push({ ...message, is_own: true });
-          return newMessages.sort((a, b) => 
+          return newMessages.sort((a, b) =>
             new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
           );
         }
-        
+
         // Para mensajes de otros usuarios, simplemente agregar
         const newMessages = [...prev, { ...message, is_own: message.sender_id === currentUser.user_id }];
-        return newMessages.sort((a, b) => 
+        return newMessages.sort((a, b) =>
           new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
         );
       });
 
-        // Hacer scroll solo si el mensaje es nuevo y no es nuestro
+      // Hacer scroll solo si el mensaje es nuevo y no es nuestro
       if (message.sender_id !== currentUser.user_id) {
-          setTimeout(scrollToBottom, 100);
-        }
+        setTimeout(scrollToBottom, 100);
+      }
     };
 
     const handleDeliveryStatus = (data: { message_id: string; status: string; delivered_at?: string }) => {
       console.log('Manejando estado de entrega:', data);
       if (!isComponentMounted) return;
-      
+
       setMessages(prev => {
         const messageExists = prev.some(msg => msg.id === data.message_id);
         if (!messageExists) {
           console.log('Mensaje no encontrado para actualizar entrega:', data.message_id);
           return prev;
         }
-        
-        return prev.map(msg => 
-          msg.id === data.message_id 
+
+        return prev.map(msg =>
+          msg.id === data.message_id
             ? { ...msg, is_delivered: true, delivered_at: data.delivered_at || new Date().toISOString() }
             : msg
         );
@@ -135,16 +136,16 @@ export default function Chat() {
     const handleReadStatus = (data: { message_id: string; status: string; read_at?: string }) => {
       console.log('Manejando estado de lectura:', data);
       if (!isComponentMounted) return;
-      
+
       setMessages(prev => {
         const messageExists = prev.some(msg => msg.id === data.message_id);
         if (!messageExists) {
           console.log('Mensaje no encontrado para actualizar lectura:', data.message_id);
           return prev;
         }
-        
-        return prev.map(msg => 
-          msg.id === data.message_id 
+
+        return prev.map(msg =>
+          msg.id === data.message_id
             ? { ...msg, read_at: data.read_at || new Date().toISOString() }
             : msg
         );
@@ -153,7 +154,7 @@ export default function Chat() {
 
     const handleTyping = (data: { userId: string; isTyping: boolean }) => {
       if (!isComponentMounted) return;
-      
+
       // Solo actualizar si es el usuario del chat actual
       if (data.userId === userId) {
         console.log('Actualizando estado de escritura:', data);
@@ -183,10 +184,10 @@ export default function Chat() {
     const loadChat = async () => {
       try {
         setLoading(true);
-        
+
         // Limpiar mensajes existentes
         setMessages([]);
-        
+
         // Conectar al WebSocket
         chatService.connect(token, currentUser.user_id);
 
@@ -200,8 +201,8 @@ export default function Chat() {
             }
             return acc;
           }, []);
-          
-          setMessages(uniqueMessages.sort((a, b) => 
+
+          setMessages(uniqueMessages.sort((a, b) =>
             new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
           ));
 
@@ -282,10 +283,10 @@ export default function Chat() {
       const container = messagesEndRef.current.parentElement;
       if (container) {
         // Siempre hacer scroll al final, sin importar la posición actual
-          messagesEndRef.current.scrollIntoView({ 
-            behavior: 'smooth',
-            block: 'end'
-          });
+        messagesEndRef.current.scrollIntoView({
+          behavior: 'smooth',
+          block: 'end'
+        });
       }
     }
   };
@@ -293,13 +294,13 @@ export default function Chat() {
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim() || !token || !userId || !chatUser || !currentUser || connectionStatus !== 'connected') {
-      console.log('No se puede enviar mensaje:', { 
-        messageEmpty: !newMessage.trim(), 
-        noToken: !token, 
+      console.log('No se puede enviar mensaje:', {
+        messageEmpty: !newMessage.trim(),
+        noToken: !token,
         noUserId: !userId,
         noChatUser: !chatUser,
         noCurrentUser: !currentUser,
-        connectionStatus 
+        connectionStatus
       });
       return;
     }
@@ -330,7 +331,7 @@ export default function Chat() {
 
       // Enviar mensaje real
       const sentMessage = await chatService.createMessage(chatUser.user_id, messageContent, token);
-      
+
       // Actualizar el mensaje temporal con el real
       setMessages(prev => {
         // Filtrar el mensaje temporal
@@ -342,7 +343,7 @@ export default function Chat() {
           filteredMessages.push({ ...sentMessage, is_own: true });
         }
         // Ordenar mensajes
-        return filteredMessages.sort((a, b) => 
+        return filteredMessages.sort((a, b) =>
           new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
         );
       });
@@ -484,46 +485,44 @@ export default function Chat() {
               messages.map((message, index) => {
                 // Determinar si este mensaje es parte de un grupo con el anterior
                 const prevMessage = messages[index - 1];
-                const isGrouped = prevMessage && 
-                  prevMessage.sender_id === message.sender_id && 
+                const isGrouped = prevMessage &&
+                  prevMessage.sender_id === message.sender_id &&
                   new Date(message.created_at).getTime() - new Date(prevMessage.created_at).getTime() < 60000; // 1 minuto
 
                 return (
-                <div
-                  key={message.id}
-                    className={`flex ${message.is_own ? 'justify-end' : 'justify-start'} ${
-                      !isGrouped ? 'mt-6' : 'mt-1'
-                    }`}
-                >
                   <div
-                      className={`max-w-[70%] p-3 rounded-2xl ${
-                      message.is_own
+                    key={message.id}
+                    className={`flex ${message.is_own ? 'justify-end' : 'justify-start'} ${!isGrouped ? 'mt-6' : 'mt-1'
+                      }`}
+                  >
+                    <div
+                      className={`max-w-[70%] p-3 rounded-2xl ${message.is_own
                           ? 'bg-blue-600 text-white rounded-br-none'
                           : 'bg-gray-800 text-white rounded-bl-none'
-                      } shadow-md hover:shadow-lg transition-shadow duration-200`}
-                  >
+                        } shadow-md hover:shadow-lg transition-shadow duration-200`}
+                    >
                       <p className="break-words text-[15px] leading-relaxed">{message.content}</p>
                       <div className="flex items-center justify-end space-x-2 mt-1.5">
-                      <p className="text-xs text-gray-400">
-                          {new Date(message.created_at).toLocaleTimeString([], { 
-                            hour: '2-digit', 
-                            minute: '2-digit' 
+                        <p className="text-xs text-gray-400">
+                          {new Date(message.created_at).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit'
                           })}
-                      </p>
-                      {message.is_own && (
-                        <span className="text-xs flex items-center space-x-1">
-                          {message.read_at ? (
-                            <span className="text-blue-300" title="Leído">✓✓</span>
-                          ) : message.is_delivered ? (
-                            <span className="text-gray-300" title="Entregado">✓</span>
-                          ) : (
-                            <span className="text-gray-500 animate-pulse" title="Enviando">•</span>
-                          )}
-                        </span>
-                      )}
+                        </p>
+                        {message.is_own && (
+                          <span className="text-xs flex items-center space-x-1">
+                            {message.read_at ? (
+                              <span className="text-blue-300" title="Leído">✓✓</span>
+                            ) : message.is_delivered ? (
+                              <span className="text-gray-300" title="Entregado">✓</span>
+                            ) : (
+                              <span className="text-gray-500 animate-pulse" title="Enviando">•</span>
+                            )}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
                 );
               })
             )}
@@ -548,42 +547,34 @@ export default function Chat() {
           <form onSubmit={handleSendMessage} className="p-4 border-t border-gray-800">
             <div className="flex items-center relative">
               <div className="relative flex-1">
-              <input
-                type="text"
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                onKeyPress={handleTyping}
-                placeholder={connectionStatus === 'connected' ? "Escribe un mensaje..." : "Conectando..."}
-                disabled={connectionStatus !== 'connected'}
-                  className={`w-full bg-gray-900 rounded-lg py-2 px-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  connectionStatus !== 'connected' ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
-              />
+                <input
+                  type="text"
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  onKeyPress={handleTyping}
+                  placeholder={connectionStatus === 'connected' ? "Escribe un mensaje..." : "Conectando..."}
+                  disabled={connectionStatus !== 'connected'}
+                  className={`w-full bg-gray-900 rounded-lg py-2 px-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 ${connectionStatus !== 'connected' ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
+                />
                 <button
                   type="button"
                   onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                   disabled={connectionStatus !== 'connected'}
-                  className={`absolute right-2 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-white transition-colors ${
-                    connectionStatus !== 'connected' ? 'opacity-50 cursor-not-allowed' : ''
-                  }`}
+                  className={`absolute right-2 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-white transition-colors ${connectionStatus !== 'connected' ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
                 >
                   <FaSmile className="text-xl" />
                 </button>
                 {showEmojiPicker && (
-                  <div 
+                  <div
                     ref={emojiPickerRef}
                     className="absolute bottom-12 right-0 z-50"
                   >
-                    <EmojiPicker
+                    <ClientEmojiPicker // <-- NUEVO COMPONENTE
                       onEmojiClick={onEmojiClick}
-                      theme={Theme.DARK}
                       width={350}
                       height={400}
-                      searchDisabled={false}
-                      skinTonesDisabled={true}
-                      previewConfig={{
-                        showPreview: false
-                      }}
                     />
                   </div>
                 )}
@@ -591,11 +582,10 @@ export default function Chat() {
               <button
                 type="submit"
                 disabled={connectionStatus !== 'connected' || !newMessage.trim()}
-                className={`ml-4 p-2 bg-blue-600 rounded-lg transition-colors ${
-                  connectionStatus === 'connected' && newMessage.trim()
+                className={`ml-4 p-2 bg-blue-600 rounded-lg transition-colors ${connectionStatus === 'connected' && newMessage.trim()
                     ? 'hover:bg-blue-700'
                     : 'opacity-50 cursor-not-allowed'
-                }`}
+                  }`}
               >
                 <FaPaperPlane className="text-white" />
               </button>
