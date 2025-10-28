@@ -61,7 +61,9 @@ VideoCalls.init(
     {
         sequelize,
         tableName: "video_calls",
-        timestamps: false,
+        timestamps: true,
+        createdAt: "created_at",
+        updatedAt: "updated_at",
         indexes: [
             {
                 fields: ["user1_id"],
