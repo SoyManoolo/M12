@@ -1,12 +1,14 @@
 /**
  * Configuración del entorno
  *
- * Este archivo contiene la URL base del backend.
- * Se puede cambiar fácilmente para apuntar a diferentes entornos.
+ * Se utiliza VITE_API_URL en todos los entornos
+ * Debe estar definida en el .env
  */
-
 export const environment = {
-    // URL base del backend, con fallback a localhost
-    apiUrl: import.meta.env.VITE_API_URL || 'https://332f-37-133-29-123.ngrok-free.app'
-    // apiUrl: import.meta.env.VITE_API_URL || 'https://4a3b-37-133-29-123.ngrok-free.app'
+    // Si VITE_API_URL no está definida, lanzamos un error claro.
+    apiUrl: import.meta.env.VITE_API_URL || '',
 };
+
+if (!environment.apiUrl) {
+    throw new Error('La variable de entorno VITE_API_URL no está definida.');
+}
