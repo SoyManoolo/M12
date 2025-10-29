@@ -1,13 +1,11 @@
 /**
  * Página de Chat Individual
- * 
- * Esta página muestra el chat con un usuario específico.
+ * * Esta página muestra el chat con un usuario específico.
  * Incluye:
  * - Navbar para navegación
  * - Área de chat con mensajes
  * - Información del usuario con quien se chatea
- * 
- * @module Chat
+ * * @module Chat
  */
 
 import { useState, useEffect, useRef } from 'react';
@@ -17,10 +15,11 @@ import ChatUserInfo from '~/components/Chats/ChatUserInfo';
 import { FaPaperPlane, FaSmile } from 'react-icons/fa';
 import { redirect } from "@remix-run/node";
 import type { User } from '~/types/user.types';
-import { chatService } from '~/services/chat.service';
+// Importación de la función Singleton segura para el cliente
+import { getChatService } from "~/services/chat.service"; 
 import { useAuth } from '~/hooks/useAuth';
 import { userService } from '~/services/user.service';
-import { jwtDecode } from 'jwt-decode';
+// import { jwtDecode } from 'jwt-decode'; // No se usa, se puede dejar comentado o eliminar.
 import ClientEmojiPicker from '~/components/Chats/ClientEmojiPicker';
 import type { EmojiClickData } from 'emoji-picker-react';
 
@@ -69,6 +68,10 @@ export default function Chat() {
       setLoading(false);
       return;
     }
+
+    // --- MODIFICACIÓN CLAVE: Obtener la instancia del ChatService aquí ---
+    const chatServiceInstance = getChatService();
+    // --------------------------------------------------------------------
 
     console.log('Datos disponibles:', {
       token: !!token,
@@ -162,16 +165,17 @@ export default function Chat() {
       }
     };
 
-    // Registrar los handlers una sola vez
-    const unsubscribeNewMessage = chatService.onNewMessage(handleNewMessage);
-    const unsubscribeDelivery = chatService.onDeliveryStatus(handleDeliveryStatus);
-    const unsubscribeRead = chatService.onReadStatus(handleReadStatus);
-    const unsubscribeTyping = chatService.onTyping(handleTyping);
-    const unsubscribeConnection = chatService.onConnectionStatus((status) => {
+    // --- MODIFICACIÓN: Usar la instancia para suscripciones ---
+    const unsubscribeNewMessage = chatServiceInstance.onNewMessage(handleNewMessage);
+    const unsubscribeDelivery = chatServiceInstance.onDeliveryStatus(handleDeliveryStatus);
+    const unsubscribeRead = chatServiceInstance.onReadStatus(handleReadStatus);
+    const unsubscribeTyping = chatServiceInstance.onTyping(handleTyping);
+    const unsubscribeConnection = chatServiceInstance.onConnectionStatus((status) => {
       if (!isComponentMounted) return;
       console.log('Estado de conexión actualizado:', status);
       setConnectionStatus(status);
     });
+    // --------------------------------------------------------
 
     unsubscribeFunctions.push(
       unsubscribeNewMessage,
@@ -188,11 +192,15 @@ export default function Chat() {
         // Limpiar mensajes existentes
         setMessages([]);
 
-        // Conectar al WebSocket
-        chatService.connect(token, currentUser.user_id);
+        // --- MODIFICACIÓN: Usar la instancia para conectar ---
+        chatServiceInstance.connect(token, currentUser.user_id);
+        // ----------------------------------------------------
 
         // Cargar mensajes del chat
-        const { messages: chatMessages } = await chatService.getMessages(userId, token);
+        // --- MODIFICACIÓN: Usar la instancia para getMessages ---
+        const { messages: chatMessages } = await chatServiceInstance.getMessages(userId, token);
+        // --------------------------------------------------------
+        
         if (isComponentMounted) {
           // Asegurarse de que no haya duplicados al cargar mensajes iniciales
           const uniqueMessages = chatMessages.reduce((acc: Message[], msg) => {
@@ -251,10 +259,12 @@ export default function Chat() {
       console.log('Limpiando suscripciones del chat...');
       isComponentMounted = false;
       unsubscribeFunctions.forEach(unsubscribe => unsubscribe());
-      chatService.disconnect();
+      // --- MODIFICACIÓN: Usar la instancia para desconectar ---
+      chatServiceInstance.disconnect();
+      // --------------------------------------------------------
     };
 
-  }, [token, userId, currentUser]);
+  }, [token, userId, currentUser]); // Dependencias del useEffect
 
   // Efecto para desplazarse al final cuando se carga el chat
   useEffect(() => {
@@ -293,6 +303,10 @@ export default function Chat() {
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Obtener la instancia de chatService aquí también para las funciones
+    const chatServiceInstance = getChatService(); 
+
     if (!newMessage.trim() || !token || !userId || !chatUser || !currentUser || connectionStatus !== 'connected') {
       console.log('No se puede enviar mensaje:', {
         messageEmpty: !newMessage.trim(),
@@ -330,7 +344,9 @@ export default function Chat() {
       scrollToBottom();
 
       // Enviar mensaje real
-      const sentMessage = await chatService.createMessage(chatUser.user_id, messageContent, token);
+      // --- MODIFICACIÓN: Usar la instancia para createMessage ---
+      const sentMessage = await chatServiceInstance.createMessage(chatUser.user_id, messageContent, token);
+      // ----------------------------------------------------------
 
       // Actualizar el mensaje temporal con el real
       setMessages(prev => {
@@ -356,12 +372,17 @@ export default function Chat() {
       setNewMessage(messageContent);
       // Intentar reconectar si hay error
       if (currentUser?.user_id) {
-        chatService.connect(token, currentUser.user_id);
+        // --- MODIFICACIÓN: Usar la instancia para reconectar ---
+        chatServiceInstance.connect(token, currentUser.user_id);
+        // --------------------------------------------------------
       }
     }
   };
 
   const handleTyping = () => {
+    // Obtener la instancia de chatService aquí también para las funciones
+    const chatServiceInstance = getChatService(); 
+
     if (!chatUser || !token || connectionStatus !== 'connected') {
       console.log('No se puede enviar estado de escritura:', {
         noChatUser: !chatUser,
@@ -371,14 +392,18 @@ export default function Chat() {
       return;
     }
 
-    chatService.setTyping(chatUser.user_id, true, token);
+    // --- MODIFICACIÓN: Usar la instancia para setTyping ---
+    chatServiceInstance.setTyping(chatUser.user_id, true, token);
+    // ------------------------------------------------------
 
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
     }
 
     typingTimeoutRef.current = setTimeout(() => {
-      chatService.setTyping(chatUser.user_id, false, token);
+      // --- MODIFICACIÓN: Usar la instancia para setTyping ---
+      chatServiceInstance.setTyping(chatUser.user_id, false, token);
+      // ------------------------------------------------------
     }, 2000);
   };
 
@@ -497,8 +522,8 @@ export default function Chat() {
                   >
                     <div
                       className={`max-w-[70%] p-3 rounded-2xl ${message.is_own
-                          ? 'bg-blue-600 text-white rounded-br-none'
-                          : 'bg-gray-800 text-white rounded-bl-none'
+                        ? 'bg-blue-600 text-white rounded-br-none'
+                        : 'bg-gray-800 text-white rounded-bl-none'
                         } shadow-md hover:shadow-lg transition-shadow duration-200`}
                     >
                       <p className="break-words text-[15px] leading-relaxed">{message.content}</p>
@@ -550,8 +575,11 @@ export default function Chat() {
                 <input
                   type="text"
                   value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  onKeyPress={handleTyping}
+                  onChange={(e) => {
+                    setNewMessage(e.target.value);
+                    handleTyping(); // Llama a handleTyping en cada cambio
+                  }}
+                  // onKeyPress={handleTyping} // Se puede quitar ya que onChange es suficiente para el debounce
                   placeholder={connectionStatus === 'connected' ? "Escribe un mensaje..." : "Conectando..."}
                   disabled={connectionStatus !== 'connected'}
                   className={`w-full bg-gray-900 rounded-lg py-2 px-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 ${connectionStatus !== 'connected' ? 'opacity-50 cursor-not-allowed' : ''
@@ -571,7 +599,7 @@ export default function Chat() {
                     ref={emojiPickerRef}
                     className="absolute bottom-12 right-0 z-50"
                   >
-                    <ClientEmojiPicker // <-- NUEVO COMPONENTE
+                    <ClientEmojiPicker 
                       onEmojiClick={onEmojiClick}
                       width={350}
                       height={400}

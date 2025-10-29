@@ -1,6 +1,12 @@
+// app/services/chat.service.ts
+
 import { io, Socket } from 'socket.io-client';
 import { jwtDecode } from 'jwt-decode';
 import { environment } from '../config/environment';
+
+// ===================================
+// INTERFACES
+// ===================================
 
 interface Message {
     id: string;
@@ -39,6 +45,10 @@ interface Chat {
     unread_count: number;
 }
 
+// ===================================
+// CLASE CHATSERVICE
+// ===================================
+
 class ChatService {
     private socket: Socket | null = null;
     private messageHandlers: ((message: Message) => void)[] = [];
@@ -53,16 +63,27 @@ class ChatService {
     private lastToken: string | null = null;
     private lastUserId: string | null = null;
 
-    constructor() {
-        this.socket = io(environment.apiUrl, {
-            autoConnect: false,
-            reconnection: true,
-            reconnectionAttempts: 5,
-            reconnectionDelay: 1000,
-            transports: ['websocket', 'polling']
-        });
+    // CONSTRUCTOR ELIMINADO para evitar inicialización global del socket en SSR.
+    // La inicialización se moverá a initSocket.
 
-        this.setupSocketListeners();
+    private initSocket() {
+        // Bloqueo de seguridad adicional: Si estamos en el servidor (SSR), no inicializamos el socket.
+        if (typeof window === 'undefined') {
+            console.warn('Intentando inicializar socket en el servidor (SSR). Ignorando.');
+            return;
+        }
+
+        if (!this.socket) {
+            console.log('Inicializando cliente de socket.io...');
+            this.socket = io(environment.apiUrl, {
+                autoConnect: false,
+                reconnection: true,
+                reconnectionAttempts: 5,
+                reconnectionDelay: 1000,
+                transports: ['websocket', 'polling']
+            });
+            this.setupSocketListeners();
+        }
     }
 
     private setupSocketListeners() {
@@ -144,7 +165,10 @@ class ChatService {
                 // Si el mensaje es nuestro, marcar como entregado
                 if (this.lastUserId && data.message.sender_id === this.lastUserId) {
                     console.log('Marcando mensaje como entregado:', data.message.id);
-                    this.markMessageAsDelivered(data.message.id, this.lastToken!);
+                    // Solo marcar como entregado si el token existe
+                    if (this.lastToken) {
+                        this.markMessageAsDelivered(data.message.id, this.lastToken);
+                    }
                 }
             } else {
                 console.log('Mensaje ignorado - no es para este usuario:', {
@@ -228,8 +252,11 @@ class ChatService {
     }
 
     public connect(token: string, userId: string) {
+        // Asegura la inicialización solo en el cliente
+        this.initSocket();
+
         if (!this.socket) {
-            console.error('Socket no inicializado');
+            console.error('Socket no inicializado, posiblemente llamado en SSR');
             return;
         }
 
@@ -261,7 +288,7 @@ class ChatService {
                 this.socket.disconnect();
             }
 
-            // Configurar los listeners antes de conectar
+            // Configurar los listeners antes de conectar (llamado por initSocket, pero lo dejamos por si acaso)
             this.setupSocketListeners();
 
             // Conectar el socket
@@ -298,10 +325,18 @@ class ChatService {
     }
 
     public sendMessage(receiverId: string, content: string, token: string) {
-        if (!this.socket) return;
+        // Asegura la inicialización del socket si es la primera llamada
+        this.initSocket();
+
+        if (!this.socket) {
+            console.error('Socket no disponible. No se pudo enviar el mensaje.');
+            return;
+        }
 
         if (!this.socket.connected) {
-            console.log('Socket no conectado, reconectando...');
+            console.log('Socket no conectado, intentando reconectar...');
+            // Llama a connect para reconectar y luego, si tiene éxito, se envía.
+            // Por simplicidad, solo llamamos a connect y dejamos el reenvío a la lógica de chat/reconexión.
             this.connect(token, receiverId);
             return;
         }
@@ -315,6 +350,8 @@ class ChatService {
             token
         });
     }
+
+    // --- MÉTODOS DE MANEJO DE ESTADO ---
 
     public markMessageAsDelivered(messageId: string, token: string) {
         if (!this.socket) return;
@@ -339,6 +376,9 @@ class ChatService {
     }
 
     public setTyping(receiverId: string, isTyping: boolean, token: string) {
+        // Asegura la inicialización del socket si es la primera llamada
+        this.initSocket();
+
         if (!this.socket || !token) return;
 
         // Verificar que el socket está conectado
@@ -346,10 +386,10 @@ class ChatService {
             console.log('Socket no conectado, reconectando...');
             // Obtener el userId del token
             try {
-                const decodedToken = JSON.parse(atob(token.split('.')[1]));
-                this.connect(token, decodedToken.id);
+                const decodedToken = jwtDecode(token) as { user_id: string }; // Usamos jwtDecode importado
+                this.connect(token, decodedToken.user_id);
             } catch (error) {
-                console.error('Error al decodificar el token:', error);
+                console.error('Error al decodificar el token para reconexión:', error);
                 return;
             }
             return;
@@ -361,6 +401,8 @@ class ChatService {
             token
         });
     }
+
+    // --- HANDLERS ---
 
     public onNewMessage(handler: (message: Message) => void) {
         this.messageHandlers.push(handler);
@@ -397,7 +439,10 @@ class ChatService {
         };
     }
 
+    // --- MÉTODOS HTTP ---
+
     public async getActiveChats(token: string): Promise<Chat[]> {
+        // [ ... Implementación de fetch ... ]
         try {
             const response = await fetch(`${environment.apiUrl}/chat/list`, {
                 method: 'GET',
@@ -432,6 +477,7 @@ class ChatService {
     }
 
     public async getMessages(userId: string, token: string, limit: number = 20, cursor?: string): Promise<{ messages: Message[], nextCursor: string | null }> {
+        // [ ... Implementación de fetch ... ]
         try {
             let url = `${environment.apiUrl}/chat?receiver_id=${userId}&limit=${limit}`;
             if (cursor) {
@@ -460,8 +506,12 @@ class ChatService {
     }
 
     public async createMessage(receiverId: string, content: string, token: string): Promise<Message> {
+        // [ ... Implementación de fetch y socket ... ]
         try {
             console.log('Creando mensaje:', { receiverId, content });
+
+            // Asegura la inicialización del socket si es la primera llamada
+            this.initSocket();
 
             // Solo enviar por socket si está conectado, y dejar que el backend maneje la persistencia
             if (this.socket?.connected) {
@@ -477,6 +527,7 @@ class ChatService {
                 // Esperar la respuesta del socket que incluirá el mensaje creado
                 return new Promise((resolve, reject) => {
                     const timeout = setTimeout(() => {
+                        this.socket?.off('chat-message-sent', handler);
                         reject(new Error('Timeout esperando respuesta del servidor'));
                     }, 5000);
 
@@ -491,7 +542,7 @@ class ChatService {
                     this.socket?.once('chat-message-sent', handler);
                 });
             } else {
-                // Si no hay socket, usar HTTP
+                // Si no hay socket o no está conectado, usar HTTP
                 console.log('Socket no conectado, usando HTTP');
                 const response = await fetch(`${environment.apiUrl}/chat`, {
                     method: 'POST',
@@ -519,6 +570,7 @@ class ChatService {
     }
 
     public async deleteMessage(messageId: string, token: string): Promise<{ result: boolean, message_id: string }> {
+        // [ ... Implementación de fetch ... ]
         try {
             const response = await fetch(`${environment.apiUrl}/chat/${messageId}`, {
                 method: 'DELETE',
@@ -540,6 +592,7 @@ class ChatService {
     }
 
     public async markMessageAsDeliveredHttp(messageId: string, token: string): Promise<Message> {
+        // [ ... Implementación de fetch ... ]
         try {
             const response = await fetch(`${environment.apiUrl}/chat/${messageId}/delivered`, {
                 method: 'POST',
@@ -561,6 +614,7 @@ class ChatService {
     }
 
     public async markMessageAsReadHttp(messageId: string, token: string): Promise<Message> {
+        // [ ... Implementación de fetch ... ]
         try {
             const response = await fetch(`${environment.apiUrl}/chat/${messageId}/read`, {
                 method: 'POST',
@@ -582,4 +636,50 @@ class ChatService {
     }
 }
 
-export const chatService = new ChatService(); 
+// ===================================
+// EXPORTACIÓN DE SINGLETON SEGURO
+// ===================================
+
+let clientChatService: ChatService | null = null;
+
+/**
+ * Obtiene la instancia del ChatService. Asegura que el servicio y su socket
+ * SÓLO se inicialicen en el entorno del navegador para prevenir el error TDZ
+ * durante el Server Side Rendering (SSR).
+ * * En el servidor, devuelve un objeto simulado que sólo permite llamadas a los métodos HTTP seguros.
+ */
+export const getChatService = (): ChatService => {
+    if (typeof window !== 'undefined') {
+        if (!clientChatService) {
+            clientChatService = new ChatService();
+        }
+        return clientChatService;
+    }
+
+    // Si estamos en el servidor, devolvemos un objeto parcial que solo permite
+    // el uso de los métodos seguros basados en Fetch/HTTP.
+    const serverInstance = new ChatService();
+    return {
+        // Métodos seguros para el servidor (HTTP)
+        getActiveChats: serverInstance.getActiveChats.bind(serverInstance),
+        getMessages: serverInstance.getMessages.bind(serverInstance),
+        createMessage: serverInstance.createMessage.bind(serverInstance),
+        deleteMessage: serverInstance.deleteMessage.bind(serverInstance),
+        markMessageAsDeliveredHttp: serverInstance.markMessageAsDeliveredHttp.bind(serverInstance),
+        markMessageAsReadHttp: serverInstance.markMessageAsReadHttp.bind(serverInstance),
+
+        // Métodos de Socket simulados (para evitar errores si se llaman accidentalmente)
+        connect: () => { console.warn("ChatService.connect llamado en el servidor. Ignorado."); },
+        disconnect: () => { console.warn("ChatService.disconnect llamado en el servidor. Ignorado."); },
+        sendMessage: () => { throw new Error("sendMessage solo puede usarse en el cliente."); },
+        markMessageAsDelivered: () => { throw new Error("markMessageAsDelivered solo puede usarse en el cliente."); },
+        markMessageAsRead: () => { throw new Error("markMessageAsRead solo puede usarse en el cliente."); },
+        setTyping: () => { throw new Error("setTyping solo puede usarse en el cliente."); },
+        onNewMessage: () => () => { },
+        onDeliveryStatus: () => () => { },
+        onReadStatus: () => () => { },
+        onTyping: () => () => { },
+        onConnectionStatus: () => () => { },
+
+    } as unknown as ChatService;
+};

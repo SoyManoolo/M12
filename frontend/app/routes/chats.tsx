@@ -1,12 +1,10 @@
 /**
  * Página de Chats
- * 
- * Esta página muestra la lista de conversaciones del usuario.
+ * * Esta página muestra la lista de conversaciones del usuario.
  * Incluye:
  * - Navbar para navegación
  * - Lista de chats con foto de perfil, nombre y último mensaje
- * 
- * @module Chats
+ * * @module Chats
  */
 
 import { useState, useEffect } from 'react';
@@ -17,7 +15,8 @@ import ChatItem from '~/components/Chats/ChatItem';
 import RightPanel from '~/components/Shared/RightPanel';
 import { FaSearch, FaEnvelope } from 'react-icons/fa';
 import { useAuth } from "~/hooks/useAuth";
-import { chatService } from '~/services/chat.service';
+// Importación de la función Singleton segura para el cliente
+import { getChatService } from "~/services/chat.service"; 
 import { friendshipService } from '~/services/friendship.service';
 
 export const meta: MetaFunction = () => {
@@ -95,12 +94,18 @@ export default function Chats() {
   useEffect(() => {
     if (!token || !user) return;
 
+    // --- MODIFICACIÓN: Obtener la instancia del ChatService aquí ---
+    const chatServiceInstance = getChatService();
+    // ---------------------------------------------------------------
+    
     let unsubscribeFunctions: (() => void)[] = [];
 
     const fetchData = async () => {
       try {
-        // Cargar chats activos
-        const activeChats = await chatService.getActiveChats(token);
+        // --- MODIFICACIÓN: Usar chatServiceInstance ---
+        const activeChats = await chatServiceInstance.getActiveChats(token);
+        // ---------------------------------------------
+        
         console.log('Chats activos recibidos:', activeChats);
         const formattedChats: Chat[] = activeChats
           .filter((chat: any) => chat.other_user && chat.other_user.user_id !== user.user_id) // Filtrar chats con uno mismo
@@ -154,8 +159,9 @@ export default function Chats() {
       }
     };
 
-    // Manejar mensajes nuevos
-    const unsubscribeNewMessage = chatService.onNewMessage((message) => {
+    // --- MODIFICACIÓN: Usar chatServiceInstance para el handler del socket ---
+    const unsubscribeNewMessage = chatServiceInstance.onNewMessage((message) => {
+    // -------------------------------------------------------------------------
       console.log('Nuevo mensaje recibido:', message);
       if (message.sender_id === user.user_id || message.receiver_id === user.user_id) {
         setChats(prevChats => {
@@ -176,7 +182,9 @@ export default function Chats() {
               },
               unread_count: message.sender_id === user.user_id ? 0 : updatedChats[existingChatIndex].unread_count + 1
             };
-            return updatedChats;
+             // Mover el chat actualizado al principio de la lista
+            const chatToMove = updatedChats.splice(existingChatIndex, 1)[0];
+            return [chatToMove, ...updatedChats];
           } else {
             // Buscar la información del usuario en la lista de amigos
             const otherUser = friends.find(f => f.user.user_id === otherUserId)?.user;
@@ -216,7 +224,7 @@ export default function Chats() {
       console.log('Limpiando suscripciones de chats...');
       unsubscribeFunctions.forEach(unsubscribe => unsubscribe());
     };
-  }, [token, user]);
+  }, [token, user, friends]); // Agregué 'friends' al array de dependencias para que el onNewMessage tenga acceso a la lista de amigos actualizada.
 
   // Filtrar chats basado en la búsqueda y solo mostrar chats con amigos
   const filteredChats = chats.filter(chat => {
@@ -330,4 +338,4 @@ export default function Chats() {
       </style>
     </div>
   );
-} 
+}
