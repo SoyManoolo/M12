@@ -65,9 +65,21 @@ app.use('/friendship', friendshipRoutes);
 
 // Middleware de manejo de errores
 app.use((error: any, req: Request, res: Response, next: NextFunction) => {
+    // Asegurar que CORS se aplique incluso en errores
+    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+    
     celebrateErrorHandler(error, req, res, next);
 });
 
 app.use((error: Error, req: Request, res: Response, next: NextFunction): void => {
+    // Asegurar que CORS se aplique incluso en errores
+    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+    
     AppErrorHandler.errorHandler(error, req, res, next);
 });

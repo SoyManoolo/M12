@@ -1,3 +1,6 @@
+import dotenv from "dotenv";
+dotenv.config(); // Cargar variables de entorno PRIMERO
+
 import { Sequelize, Options, Dialect } from "sequelize";
 import { AppError } from "../middlewares/errors/AppError";
 import dbLogger from "./logger";
