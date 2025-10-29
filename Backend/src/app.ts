@@ -14,10 +14,7 @@ import helmet from 'helmet';
 
 const corsOptions = {
     origin: [
-        'http://localhost:5173',
-        'http://192.168.1.133:5173',
-        'https://39e1-37-133-29-123.ngrok-free.app',
-        /\.ngrok-free\.app$/
+        "https://friendsgofrontend.vercel.app"
     ],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
     credentials: true
