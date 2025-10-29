@@ -37,10 +37,6 @@ export const app = express();
 
 // Aplicar CORS antes de cualquier otra cosa
 app.use(cors(corsOptions));
-
-// Manejar preflight requests explícitamente
-app.options('*', cors(corsOptions));
-
 app.use(express.json());
 app.use(helmet({
   contentSecurityPolicy: false,
