@@ -38,27 +38,6 @@ export const app = express();
 // Aplicar CORS antes de cualquier otra cosa
 app.use(cors(corsOptions));
 
-// Middleware explícito para manejar preflight (OPTIONS) requests
-app.options('*', (req, res) => {
-    const origin = req.headers.origin;
-    // Solo permitir origenes específicos - NUNCA usar '*' con credentials
-    const allowedOrigins = [
-        "https://friendsgofrontend.vercel.app",
-        "http://localhost:5173",
-        "http://localhost:3000"
-    ];
-    
-    if (origin && allowedOrigins.includes(origin)) {
-        res.header('Access-Control-Allow-Origin', origin);
-    }
-    
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Ngrok-Skip-Browser-Warning');
-    res.header('Access-Control-Allow-Credentials', 'true');
-    res.header('Access-Control-Max-Age', '86400'); // 24 horas
-    res.sendStatus(204);
-});
-
 app.use(express.json());
 app.use(helmet({
   contentSecurityPolicy: false,

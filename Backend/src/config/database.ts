@@ -1,5 +1,8 @@
-import dotenv from "dotenv";
-dotenv.config(); // Cargar variables de entorno PRIMERO
+// Solo cargar dotenv en desarrollo (Railway inyecta variables directamente)
+if (process.env.NODE_ENV !== 'production') {
+    const dotenv = require('dotenv');
+    dotenv.config();
+}
 
 import { Sequelize, Options, Dialect } from "sequelize";
 import { AppError } from "../middlewares/errors/AppError";
