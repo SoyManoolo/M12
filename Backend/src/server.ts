@@ -70,10 +70,31 @@ process.on('SIGINT', () => {
 });
 
 const port = parseInt(process.env.PORT || "3000");
-console.log('[DEBUG] 9. Iniciando servidor en puerto:', port);
+const host = '0.0.0.0'; // CRÍTICO: Railway requiere escuchar en 0.0.0.0, no localhost
+console.log('[DEBUG] 9. Iniciando servidor en puerto:', port, 'host:', host);
 
-server.listen(port, () => {
-    console.log('[DEBUG] 10. ✅ Servidor escuchando en puerto:', port);
+server.listen(port, host, () => {
+    console.log('[DEBUG] 10. ✅ Servidor escuchando en', host + ':' + port);
+    console.log('[DEBUG] 11. Ambiente:', process.env.NODE_ENV);
+    console.log('[DEBUG] 12. Railway URL:', process.env.RAILWAY_STATIC_URL || 'N/A');
+});
+
+server.on('error', (error: any) => {
+    console.error('[ERROR] Error en el servidor:', error);
+    if (error.code === 'EADDRINUSE') {
+        console.error(`[ERROR] Puerto ${port} ya está en uso`);
+    }
+    process.exit(1);
+});
+
+process.on('uncaughtException', (error) => {
+    console.error('[FATAL] Uncaught Exception:', error);
+    process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('[FATAL] Unhandled Rejection at:', promise, 'reason:', reason);
+    process.exit(1);
 });
 
 export { io }
