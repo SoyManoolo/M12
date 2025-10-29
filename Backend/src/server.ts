@@ -1,5 +1,9 @@
-import dotenv from "dotenv";
-dotenv.config();
+// Cargar variables de entorno SOLO en desarrollo
+// Railway inyecta las variables directamente en producción
+if (process.env.NODE_ENV !== 'production') {
+    const dotenv = require('dotenv');
+    dotenv.config();
+}
 
 import { Server } from 'socket.io';
 import { app } from "./app";
