@@ -7,8 +7,8 @@ import {
     useLocation,
 } from "@remix-run/react";
 import { AuthProvider } from "./hooks/useAuth.tsx";
-
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { ClientOnly } from "./components/ClientOnly.tsx"; // 👈 Nueva importación
 
 import "./tailwind.css";
 import "./styles/globals.css";
@@ -16,31 +16,35 @@ import "./styles/globals.css";
 // Rutas públicas que no requieren autenticación
 const publicRoutes = ['/login', '/signup', '/forgot-password'];
 
-// ... (loader y meta se quedan igual)
-
-// Componente raíz de la aplicación
 export default function App() {
-    const location = useLocation(); // SE MANTIENE
+    const location = useLocation();
 
-    const isPublicRoute = publicRoutes.includes(location.pathname);
+    // NOTA: isPublicRoute se calcula fuera de ClientOnly porque depende de useLocation,
+    // que es seguro en SSR.
+    const isPublicRoute = publicRoutes.includes(location.pathname); 
+    
+    // Si la ruta es pública, renderiza el AuthProvider y Outlet inmediatamente.
+    // Esto es NECESARIO porque AuthProvider contiene el fallo TDZ.
+    // Si la ruta es PROTEGIDA, envolvemos TODO lo que depende de AuthProvider/ProtectedRoute
+    // dentro de ClientOnly.
 
     return (
         <html lang="es" className="h-full">
             <head>
-                <meta charSet="utf-8" />
-                <meta name="viewport" content="width=device-width, initial-scale=1" />
-                <Meta />
-                <Links />
+                {/* ... Meta y Links ... */}
             </head>
             <body className="h-full">
-                <AuthProvider>
-                    {/* El contenido se renderiza SIEMPRE, tanto en SSR como en Cliente */}
+                <AuthProvider> 
+                    {/* AuthProvider sigue aquí porque necesitamos el token, pero su contenido lo aislamos */}
                     {isPublicRoute ? (
-                        <Outlet />
+                        <Outlet /> // Rutas públicas no necesitan protección
                     ) : (
-                        <ProtectedRoute>
-                            <Outlet />
-                        </ProtectedRoute>
+                        <ClientOnly> 
+                            {/* Solo se monta en el cliente, después de la inicialización de React */}
+                            <ProtectedRoute> 
+                                <Outlet />
+                            </ProtectedRoute>
+                        </ClientOnly>
                     )}
                 </AuthProvider>
                 <ScrollRestoration />
