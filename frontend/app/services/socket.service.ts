@@ -1,5 +1,13 @@
-import { io, Socket } from 'socket.io-client';
+import type { Socket } from 'socket.io-client';
 import { environment } from '~/config/environment';
+
+// Función helper para cargar socket.io solo en el cliente
+function getSocketIO(): typeof import('socket.io-client') | null {
+    if (typeof window === 'undefined') {
+        return null;
+    }
+    return require('socket.io-client');
+}
 
 class SocketService {
     private static instance: SocketService;
@@ -16,6 +24,12 @@ class SocketService {
     }
 
     public connect(token: string): void {
+        // Protección SSR
+        if (typeof window === 'undefined') {
+            console.warn('Socket.connect llamado en SSR, ignorando.');
+            return;
+        }
+
         if (this.socket?.connected) {
             console.log('Socket ya conectado.');
             this.connectCallbacks.forEach(cb => cb());
@@ -29,7 +43,14 @@ class SocketService {
         }
 
         console.log('Intentando conectar a Socket.IO en:', environment.apiUrl);
-        this.socket = io(environment.apiUrl, {
+        
+        const socketIO = getSocketIO();
+        if (!socketIO) {
+            console.error('No se pudo cargar socket.io-client');
+            return;
+        }
+
+        this.socket = socketIO.io(environment.apiUrl, {
             auth: { token },
             transports: ['websocket'],
             reconnection: true,

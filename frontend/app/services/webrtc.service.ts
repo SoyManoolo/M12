@@ -35,7 +35,7 @@ class WebRTCService {
     public peerConnection: RTCPeerConnection | null = null;
     public localStream: MediaStream | null = null;
     public remoteStream: MediaStream | null = null;
-    private socketService: SocketService;
+    private socketService!: SocketService; // Usar ! para indicar que se inicializará
     private token: string | null = null;
 
     private currentCallId: string | null = null;
@@ -55,10 +55,20 @@ class WebRTCService {
         null;
 
     private constructor() {
-        this.socketService = SocketService.getInstance();
+        // Protección SSR: Solo inicializar el socket service en el cliente
+        if (typeof window !== 'undefined') {
+            this.socketService = SocketService.getInstance();
+        }
     }
 
     public static getInstance(): WebRTCService {
+        // Protección SSR: Solo crear instancia en el cliente
+        if (typeof window === 'undefined') {
+            console.warn('WebRTCService.getInstance llamado en SSR, devolviendo instancia vacía');
+            // Devolver un objeto dummy que no hace nada
+            return {} as WebRTCService;
+        }
+        
         if (!WebRTCService.instance) {
             WebRTCService.instance = new WebRTCService();
         }

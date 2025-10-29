@@ -1,8 +1,38 @@
 // app/services/chat.service.ts
 
-import { io, Socket } from 'socket.io-client';
-import { jwtDecode } from 'jwt-decode';
+import type { Socket } from 'socket.io-client';
 import { environment } from '../config/environment';
+
+// Función helper para decodificar token de forma segura con SSR
+function decodeTokenSafe(token: string): { user_id: string } | null {
+    if (typeof window === 'undefined') {
+        // SSR: Decodificación manual
+        try {
+            const parts = token.split('.');
+            if (parts.length !== 3) return null;
+            const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf8'));
+            return payload.user_id ? { user_id: payload.user_id } : null;
+        } catch {
+            return null;
+        }
+    } else {
+        // Cliente: Usar jwt-decode
+        try {
+            const { jwtDecode } = require('jwt-decode');
+            return jwtDecode(token) as { user_id: string };
+        } catch {
+            return null;
+        }
+    }
+}
+
+// Función helper para cargar socket.io solo en el cliente
+function getSocketIO(): typeof import('socket.io-client') | null {
+    if (typeof window === 'undefined') {
+        return null;
+    }
+    return require('socket.io-client');
+}
 
 // ===================================
 // INTERFACES
@@ -75,7 +105,12 @@ class ChatService {
 
         if (!this.socket) {
             console.log('Inicializando cliente de socket.io...');
-            this.socket = io(environment.apiUrl, {
+            const socketIO = getSocketIO();
+            if (!socketIO) {
+                console.error('No se pudo cargar socket.io-client');
+                return;
+            }
+            this.socket = socketIO.io(environment.apiUrl, {
                 autoConnect: false,
                 reconnection: true,
                 reconnectionAttempts: 5,
@@ -266,11 +301,11 @@ class ChatService {
         }
 
         try {
-            const decoded = jwtDecode(token) as { user_id: string };
+            const decoded = decodeTokenSafe(token);
 
-            if (decoded.user_id !== userId) {
+            if (!decoded || decoded.user_id !== userId) {
                 console.error('El token no coincide con el usuario:', {
-                    tokenId: decoded.user_id,
+                    tokenId: decoded?.user_id,
                     userId
                 });
                 return;
@@ -386,8 +421,10 @@ class ChatService {
             console.log('Socket no conectado, reconectando...');
             // Obtener el userId del token
             try {
-                const decodedToken = jwtDecode(token) as { user_id: string }; // Usamos jwtDecode importado
-                this.connect(token, decodedToken.user_id);
+                const decodedToken = decodeTokenSafe(token);
+                if (decodedToken) {
+                    this.connect(token, decodedToken.user_id);
+                }
             } catch (error) {
                 console.error('Error al decodificar el token para reconexión:', error);
                 return;

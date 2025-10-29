@@ -1,7 +1,29 @@
 import { environment } from '../config/environment';
 import type { UserProfile, ApiResponse, PaginatedUsersResponse } from '../types/user.types';
-import { jwtDecode } from 'jwt-decode';
 import type { User } from '~/types/user.types';
+
+// Función helper para decodificar token de forma segura con SSR
+function decodeTokenSafe(token: string): { user_id: string } | null {
+    if (typeof window === 'undefined') {
+        // SSR: Decodificación manual
+        try {
+            const parts = token.split('.');
+            if (parts.length !== 3) return null;
+            const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf8'));
+            return payload.user_id ? { user_id: payload.user_id } : null;
+        } catch {
+            return null;
+        }
+    } else {
+        // Cliente: Usar jwt-decode
+        try {
+            const { jwtDecode } = require('jwt-decode');
+            return jwtDecode(token) as { user_id: string };
+        } catch {
+            return null;
+        }
+    }
+}
 
 export const userService = {
     /**
@@ -22,8 +44,8 @@ export const userService = {
             const data = await response.json();
 
             // Obtener el ID del usuario actual del token
-            const decodedToken = jwtDecode(token) as { user_id: string };
-            const currentUserId = decodedToken.user_id;
+            const decodedToken = decodeTokenSafe(token);
+            const currentUserId = decodedToken?.user_id;
 
             // Filtrar el usuario actual de la lista
             const filteredUsers = data.data.users.filter((user: User) => user.user_id !== currentUserId);
@@ -111,8 +133,8 @@ export const userService = {
         try {
             // Si el userId es 'me', decodificamos el token para obtener el ID
             if (userId === 'me') {
-                const decoded = jwtDecode(token) as { user_id: string };
-                userId = decoded.user_id;
+                const decoded = decodeTokenSafe(token);
+                userId = decoded?.user_id || '';
             }
 
             const response = await fetch(`${environment.apiUrl}/users/${userId}`, {

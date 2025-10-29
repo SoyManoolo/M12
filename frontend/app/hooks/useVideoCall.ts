@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from './useAuth';
 import WebRTCService from '~/services/webrtc.service';
 import SocketService from '~/services/socket.service';
@@ -22,17 +22,26 @@ export function useVideoCall() {
     const [remoteStreamForUI, setRemoteStreamForUI] = useState<MediaStream | null>(null);
     const [partnerInfo, setPartnerInfo] = useState<{ dbId: string | null, socketId: string | null }>({ dbId: null, socketId: null });
 
+    // Lazy initialization: Solo obtener instancias cuando estamos en el cliente
+    // Usar useMemo para mantener las mismas instancias durante el ciclo de vida del componente
+    const webRTCService = useMemo(() => {
+        if (typeof window === 'undefined') return null;
+        return WebRTCService.getInstance();
+    }, []);
 
-    const webRTCService = WebRTCService.getInstance();
-    const socketService = SocketService.getInstance();
+    const socketService = useMemo(() => {
+        if (typeof window === 'undefined') return null;
+        return SocketService.getInstance();
+    }, []);
 
     useEffect(() => {
-        if (token) {
-            if (!socketService.isConnected()) {
-                socketService.connect(token);
-            }
+        if (!webRTCService || !socketService || !token) return;
 
-            webRTCService.initializeService(token); // Debe llamarse después de conectar el socket o manejar la conexión asíncrona
+        if (!socketService.isConnected()) {
+            socketService.connect(token);
+        }
+
+        webRTCService.initializeService(token); // Debe llamarse después de conectar el socket o manejar la conexión asíncrona
 
             webRTCService.setUICallbacks(
                 (stream) => { setRemoteStreamForUI(stream); },
@@ -64,16 +73,19 @@ export function useVideoCall() {
                     setLocalStreamForUI(stream);
                 }
             );
-        }
 
         return () => {
             console.log("Hook useVideoCall desmontándose. Llamando a webRTCService.closeConnection()");
-            webRTCService.closeConnection(); // Limpia la conexión WebRTC
+            if (webRTCService) {
+                webRTCService.closeConnection(); // Limpia la conexión WebRTC
+            }
             // No necesariamente desconectar el socket aquí, puede ser global.
         };
-    }, [user, socketService, webRTCService]);
+    }, [user, token, socketService, webRTCService]);
 
     useEffect(() => {
+        if (!socketService) return;
+
         const handleQueueResult = (result: QueueResult) => {
             console.log("Hook: QUEUE_RESULT", result);
             setState(prev => ({
@@ -124,16 +136,16 @@ export function useVideoCall() {
     }, [state.isCallActive, state.isConnecting]);
 
     const joinQueue = useCallback(async () => {
-        if (!user?.user_id) {
+        if (!user?.user_id || !webRTCService) {
             setState(prev => ({ ...prev, error: "Usuario no autenticado para unirse a la cola." }));
             return;
         }
         console.log("Hook: Solicitando unirse a la cola...");
-        setState(prev => ({
+        setState({
             ...initialState,
             inQueue: true,
             isConnecting: true
-        }));
+        });
         setLocalStreamForUI(null);
         setRemoteStreamForUI(null);
         setPartnerInfo({ dbId: null, socketId: null });
@@ -141,6 +153,7 @@ export function useVideoCall() {
     }, [user, webRTCService]);
 
     const leaveQueue = useCallback(() => {
+        if (!webRTCService) return;
         webRTCService.leaveQueue();
         setState(prev => ({ ...prev, inQueue: false, isConnecting: false }));
     }, [webRTCService]);
@@ -155,11 +168,13 @@ export function useVideoCall() {
     }, []);
 
     const endCall = useCallback(() => {
+        if (!webRTCService) return;
         webRTCService.endCall();
         // El estado se resetea a través del callback onCallEndedByService desde WebRTCService
     }, [webRTCService]);
 
     const toggleVideo = useCallback(() => {
+        if (!webRTCService) return;
         const stream = webRTCService.getLocalStream();
         if (stream) {
             const videoTrack = stream.getVideoTracks()[0];
@@ -171,6 +186,7 @@ export function useVideoCall() {
     }, [webRTCService]);
 
     const toggleAudio = useCallback(() => {
+        if (!webRTCService) return;
         const stream = webRTCService.getLocalStream();
         if (stream) {
             const audioTrack = stream.getAudioTracks()[0];
