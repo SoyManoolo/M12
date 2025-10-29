@@ -34,7 +34,8 @@ import { es } from "date-fns/locale";
 import ImageZoomModal from "~/components/Shared/ImageZoomModal";
 import { postService } from "~/services/post.service";
 import { commentService } from "~/services/comment.service";
-import EmojiPicker, { EmojiClickData, Theme } from "emoji-picker-react";
+import type { EmojiClickData } from "emoji-picker-react"; // Solo el tipo, es seguro.
+import ClientEmojiPicker from '~/components/Chats/ClientEmojiPicker';
 import SecureImage from '~/components/Shared/SecureImage';
 
 /**
@@ -326,6 +327,15 @@ export default function Post({
     setShowEmojiPicker(false);
   };
 
+  // Agrego un helper para renderizar el picker del cliente y evitar duplicación
+  const renderEmojiPicker = (width: number, height: number, className = "absolute bottom-full right-0 mb-2 z-50") => {
+    return (
+      <div ref={emojiPickerRef} className={className}>
+        <ClientEmojiPicker onEmojiClick={onEmojiClick} width={width} height={height} />
+      </div>
+    );
+  };
+
   return (
     <>
       {/* Contenedor principal del post */}
@@ -566,24 +576,7 @@ export default function Post({
             >
               <FaComment className="text-xl" />
             </button>
-            {showEmojiPicker && (
-              <div
-                ref={emojiPickerRef}
-                className="absolute bottom-full right-0 mb-2 z-50"
-              >
-                <EmojiPicker
-                  onEmojiClick={onEmojiClick}
-                  theme={Theme.DARK}
-                  width={300}
-                  height={350}
-                  searchDisabled={false}
-                  skinTonesDisabled={true}
-                  previewConfig={{
-                    showPreview: false,
-                  }}
-                />
-              </div>
-            )}
+            {showEmojiPicker && renderEmojiPicker(300, 350, "absolute bottom-full right-0 mb-2 z-50")}
           </div>
         </div>
 
@@ -873,24 +866,7 @@ export default function Post({
                   >
                     <FaComment className="text-2xl" />
                   </button>
-                  {showEmojiPicker && (
-                    <div
-                      ref={emojiPickerRef}
-                      className="absolute bottom-full right-0 mb-3 z-50"
-                    >
-                      <EmojiPicker
-                        onEmojiClick={onEmojiClick}
-                        theme={Theme.DARK}
-                        width={350}
-                        height={400}
-                        searchDisabled={false}
-                        skinTonesDisabled={true}
-                        previewConfig={{
-                          showPreview: false,
-                        }}
-                      />
-                    </div>
-                  )}
+                  {showEmojiPicker && renderEmojiPicker(350, 400, "absolute bottom-full right-0 mb-3 z-50")}
                 </div>
               </div>
             </div>

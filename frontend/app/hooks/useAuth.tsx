@@ -3,19 +3,19 @@ import { authService } from '../services/auth.service';
 import { decodeToken, getUserInfo } from '../utils/token';
 
 interface User {
-  user_id: string;
-  username: string;
-  name: string;
-  surname: string;
-  email: string;
-  profile_picture: string | null;
-  bio: string | null;
-  email_verified: boolean;
-  is_moderator: boolean;
-  deleted_at: string | null;
-  created_at: string;
-  updated_at: string;
-  active_video_call: boolean;
+    user_id: string;
+    username: string;
+    name: string;
+    surname: string;
+    email: string;
+    profile_picture: string | null;
+    bio: string | null;
+    email_verified: boolean;
+    is_moderator: boolean;
+    deleted_at: string | null;
+    created_at: string;
+    updated_at: string;
+    active_video_call: boolean;
 }
 
 interface AuthContextType {
@@ -38,7 +38,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         if (typeof window !== 'undefined') {
             const storedToken = localStorage.getItem('token');
             if (storedToken) {
-                // Verificar que el token sea válido
+                // Verificar que el token sea válido (usa el decodeToken ya seguro para SSR)
                 const decodedToken = decodeToken(storedToken);
                 if (!decodedToken) {
                     localStorage.removeItem('token');
@@ -69,8 +69,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
                     const decodedToken = decodeToken(token);
                     console.log('Token decodificado:', decodedToken);
                     if (decodedToken) {
-                        // Obtener la información completa del usuario
-                        const userInfo = await getUserInfo(decodedToken.user_id);
+                        // OJO: MODIFICACIÓN AQUÍ. Pasar el token como segundo argumento.
+                        const userInfo = await getUserInfo(decodedToken.user_id, token);
                         console.log('Información del usuario devuelta al inicializador:', userInfo);
                         if (userInfo?.success) {
                             setUser(userInfo.data);
