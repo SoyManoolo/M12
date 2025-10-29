@@ -14,16 +14,34 @@ import helmet from 'helmet';
 
 const corsOptions = {
     origin: [
-        "https://friendsgofrontend.vercel.app"
+        "https://friendsgofrontend.vercel.app",
+        "http://localhost:5173", // Para desarrollo local
+        "http://localhost:3000"  // Para desarrollo local alternativo
     ],
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-    credentials: true
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: [
+        'Content-Type', 
+        'Authorization', 
+        'X-Requested-With',
+        'Accept',
+        'Origin',
+        'Ngrok-Skip-Browser-Warning'
+    ],
+    exposedHeaders: ['Authorization'],
+    credentials: true,
+    preflightContinue: false,
+    optionsSuccessStatus: 204
 };
 
 export const app = express();
 
-app.use(express.json());
+// Aplicar CORS antes de cualquier otra cosa
 app.use(cors(corsOptions));
+
+// Manejar preflight requests explícitamente
+app.options('*', cors(corsOptions));
+
+app.use(express.json());
 app.use(helmet({
   contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false,

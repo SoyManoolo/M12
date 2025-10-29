@@ -15,8 +15,14 @@ const server = createServer(app);
 
 const io = new Server(server, {
     cors: {
-        origin: '*',
-        methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+        origin: [
+            'https://friendsgofrontend.vercel.app',
+            'http://localhost:5173',
+            'http://localhost:3000'
+        ],
+        methods: ['GET', 'POST', 'PATCH', 'DELETE', 'PUT', 'OPTIONS'],
+        credentials: true,
+        allowedHeaders: ['Content-Type', 'Authorization']
     }
 });
 
