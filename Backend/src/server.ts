@@ -71,6 +71,9 @@ process.on('SIGINT', () => {
 
 const port = parseInt(process.env.PORT || "3000");
 const host = '0.0.0.0'; // CRÍTICO: Railway requiere escuchar en 0.0.0.0, no localhost
+console.log('[DEBUG] 9a. Variable PORT desde env:', process.env.PORT);
+console.log('[DEBUG] 9b. Puerto parseado:', port);
+console.log('[DEBUG] 9c. Todas las variables PORT*:', Object.keys(process.env).filter(k => k.includes('PORT')));
 console.log('[DEBUG] 9. Iniciando servidor en puerto:', port, 'host:', host);
 
 server.listen(port, host, () => {

@@ -72,6 +72,17 @@ app.use(helmet({
 }));
 app.set('trust proxy', true);
 
+// Health check endpoint - SIN autenticación, para probar conectividad
+app.get('/health', (req, res) => {
+    console.log('[HEALTH] Health check recibido');
+    res.status(200).json({ 
+        status: 'OK', 
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV,
+        port: process.env.PORT
+    });
+});
+
 // Configurar middleware para servir archivos estáticos desde la carpeta 'media'
 app.use('/media', express.static(path.join(process.cwd(), 'media')));
 
