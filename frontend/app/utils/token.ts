@@ -5,12 +5,6 @@ interface DecodedToken {
     username: string;
 }
 
-// -------------------------------------------------------------------------
-// Definición de tipo para jwt-decode cargado dinámicamente
-// Esto soluciona el error ts(2347) al usar 'require'.
-// -------------------------------------------------------------------------
-type JwtDecodeFunction = <T = unknown>(token: string, options?: unknown) => T;
-
 /**
  * Decodifica un token JWT de forma segura para SSR.
  * Usa decodificación manual en el servidor y jwt-decode en el cliente.
@@ -38,13 +32,26 @@ export function decodeToken(token: string): DecodedToken | null {
             return null;
         }
     } else {
-        // En el cliente, usamos jwt-decode (se carga dinámicamente)
+        // En el cliente, usamos decodificación manual también para evitar problemas de bundling
         try {
-            // 🛑 CARGA DINÁMICA: Usamos 'require' para asegurar que la librería solo se carga en el cliente.
-            // USAMOS LA CONVERSIÓN 'as JwtDecodeFunction' PARA SOLUCIONAR EL ERROR ts(2347)
-            const { jwtDecode } = require('jwt-decode'); 
-            const decoded = (jwtDecode as JwtDecodeFunction)<DecodedToken>(token);
-            return decoded;
+            const parts = token.split('.');
+            if (parts.length !== 3) return null;
+            
+            // Decodificación Base64URL del payload (parte 1)
+            const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(
+                atob(base64)
+                    .split('')
+                    .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+                    .join('')
+            );
+            
+            const payload = JSON.parse(jsonPayload);
+            
+            if (payload.user_id && payload.username) {
+                return { user_id: payload.user_id, username: payload.username };
+            }
+            return null;
         } catch (error) {
             // console.error('Error al decodificar el token en el cliente:', error);
             return null;
