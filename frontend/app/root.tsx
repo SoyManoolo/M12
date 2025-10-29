@@ -1,7 +1,3 @@
-// app/root.tsx (CÓDIGO CORREGIDO)
-
-import "./utils/fetchWithNgrok.client";
-
 import {
     Links,
     Meta,
