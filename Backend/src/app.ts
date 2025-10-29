@@ -15,11 +15,28 @@ import path from 'path';
 import helmet from 'helmet';
 
 const corsOptions = {
-    origin: [
-        "https://friendsgofrontend.vercel.app",
-        "http://localhost:5173", // Para desarrollo local
-        "http://localhost:3000"  // Para desarrollo local alternativo
-    ],
+    origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
+        console.log('[CORS] Checking origin:', origin);
+        const allowedOrigins = [
+            "https://friendsgofrontend.vercel.app",
+            "http://localhost:5173",
+            "http://localhost:3000"
+        ];
+        
+        // Permitir requests sin origin (Postman, curl, etc)
+        if (!origin) {
+            console.log('[CORS] No origin - allowing');
+            return callback(null, true);
+        }
+        
+        if (allowedOrigins.indexOf(origin) !== -1) {
+            console.log('[CORS] Origin allowed:', origin);
+            callback(null, true);
+        } else {
+            console.log('[CORS] Origin BLOCKED:', origin);
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: [
         'Content-Type', 
@@ -36,6 +53,12 @@ const corsOptions = {
 };
 
 export const app = express();
+
+// Logging de TODAS las peticiones
+app.use((req, res, next) => {
+    console.log(`[REQUEST] ${req.method} ${req.path} - Origin: ${req.headers.origin}`);
+    next();
+});
 
 // Aplicar CORS antes de cualquier otra cosa
 app.use(cors(corsOptions));
