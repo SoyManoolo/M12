@@ -62,7 +62,8 @@ class PostService {
       }
 
       const response = await fetch(url.toString(), {
-        headers: {
+        credentials: 'include',
+                headers: {
           'Authorization': `Bearer ${token}`
         }
       });

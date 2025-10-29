@@ -78,6 +78,7 @@ async login(credentials: LoginCredentials): Promise<AuthResponse> {
                 headers: {
                     'Content-Type': 'application/json',
                 },
+                credentials: 'include', // CRÍTICO: Necesario para CORS con credentials: true
                 body: JSON.stringify({
                     id: credentials.id,
                     password: credentials.password
@@ -212,6 +213,7 @@ async login(credentials: LoginCredentials): Promise<AuthResponse> {
                 headers: {
                     'Content-Type': 'application/json',
                 },
+                credentials: 'include', // CRÍTICO: Necesario para CORS con credentials: true
                 body: JSON.stringify(userData),
             });
 
@@ -280,7 +282,8 @@ async login(credentials: LoginCredentials): Promise<AuthResponse> {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
-                }
+                },
+                credentials: 'include' // CRÍTICO: Necesario para CORS con credentials: true
             });
 
             const data = await response.json();

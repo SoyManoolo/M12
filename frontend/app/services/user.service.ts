@@ -32,6 +32,7 @@ export const userService = {
     async getAllUsers(token: string): Promise<ApiResponse<PaginatedUsersResponse>> {
         try {
             const response = await fetch(`${environment.apiUrl}/users`, {
+                credentials: 'include',
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -86,6 +87,7 @@ export const userService = {
     async getAllUsersForAdmin(token: string): Promise<ApiResponse<PaginatedUsersResponse>> {
         try {
             const response = await fetch(`${environment.apiUrl}/users`, {
+                credentials: 'include',
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -138,6 +140,7 @@ export const userService = {
             }
 
             const response = await fetch(`${environment.apiUrl}/users/${userId}`, {
+                credentials: 'include',
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -164,6 +167,7 @@ export const userService = {
     async getUserByUsername(username: string, token: string): Promise<ApiResponse<UserProfile>> {
         try {
             const response = await fetch(`${environment.apiUrl}/users/username?username=${username}`, {
+                credentials: 'include',
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -190,6 +194,7 @@ export const userService = {
     async updateUserById(userId: string, updateData: Partial<UserProfile>, token: string): Promise<ApiResponse<UserProfile>> {
         try {
             const response = await fetch(`${environment.apiUrl}/users/${userId}`, {
+                credentials: 'include',
                 method: 'PATCH',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -217,6 +222,7 @@ export const userService = {
     async updateUserByUsername(username: string, updateData: Partial<UserProfile>, token: string): Promise<ApiResponse<UserProfile>> {
         try {
             const response = await fetch(`${environment.apiUrl}/users/username?username=${username}`, {
+                credentials: 'include',
                 method: 'PATCH',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -242,8 +248,9 @@ export const userService = {
      * Elimina un usuario por ID
      */
     async deleteUserById(userId: string, token: string): Promise<ApiResponse<void>> {
-        try {
+        try{
             const response = await fetch(`${environment.apiUrl}/users/${userId}`, {
+                credentials: 'include',
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -270,6 +277,7 @@ export const userService = {
     async deleteUserByUsername(username: string, token: string): Promise<ApiResponse<void>> {
         try {
             const response = await fetch(`${environment.apiUrl}/users/username?username=${username}`, {
+                credentials: 'include',
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -299,6 +307,7 @@ export const userService = {
             formData.append('media', file);
 
             const response = await fetch(`${environment.apiUrl}/users/${userId}/profile-picture`, {
+                credentials: 'include',
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -325,6 +334,7 @@ export const userService = {
     async deleteProfilePicture(userId: string, token: string): Promise<ApiResponse<void>> {
         try {
             const response = await fetch(`${environment.apiUrl}/users/${userId}/profile-picture`, {
+                credentials: 'include',
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -360,6 +370,7 @@ export const userService = {
             }
 
             const response = await fetch(url, {
+                credentials: 'include',
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -386,6 +397,7 @@ export const userService = {
     async searchUsers(searchTerm: string, token: string): Promise<ApiResponse<User[]>> {
         try {
             const response = await fetch(`${environment.apiUrl}/users/search?term=${encodeURIComponent(searchTerm)}`, {
+                credentials: 'include',
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json',

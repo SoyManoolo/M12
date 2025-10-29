@@ -522,6 +522,7 @@ class ChatService {
             }
 
             const response = await fetch(url, {
+                credentials: 'include',
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
