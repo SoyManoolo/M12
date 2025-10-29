@@ -6,6 +6,13 @@ import { User } from "../models";
 import { hash } from "bcryptjs";
 import { Op } from "sequelize";
 
+console.log('[DEBUG-DB] 1. database.ts cargando...');
+console.log('[DEBUG-DB] 2. NODE_ENV:', process.env.NODE_ENV);
+console.log('[DEBUG-DB] 3. DATABASE_URL presente?:', !!process.env.DATABASE_URL);
+if (process.env.DATABASE_URL) {
+    console.log('[DEBUG-DB] 4. DATABASE_URL primeros 50 chars:', process.env.DATABASE_URL.substring(0, 50));
+}
+
 const DatabaseURL = process.env.DATABASE_URL;
 dbLogger.info("Valor de DATABASE_URL: ", {DatabaseURL})
 const isTestEnv = process.env.NODE_ENV === "test";

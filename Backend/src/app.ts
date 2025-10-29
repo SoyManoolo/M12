@@ -1,4 +1,6 @@
+console.log('[DEBUG-APP] 1. app.ts cargando...');
 import './models/index'
+console.log('[DEBUG-APP] 2. Models importados');
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import { AppErrorHandler } from './middlewares/errors/AppErrorHandler';
