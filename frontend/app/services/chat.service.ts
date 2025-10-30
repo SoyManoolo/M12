@@ -3,35 +3,44 @@
 import type { Socket } from 'socket.io-client';
 import { environment } from '../config/environment';
 
-// Función helper para decodificar token de forma segura con SSR
+// Función helper para decodificar token JWT manualmente (funciona en SSR y cliente)
 function decodeTokenSafe(token: string): { user_id: string } | null {
-    if (typeof window === 'undefined') {
-        // SSR: Decodificación manual
-        try {
-            const parts = token.split('.');
-            if (parts.length !== 3) return null;
-            const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf8'));
-            return payload.user_id ? { user_id: payload.user_id } : null;
-        } catch {
+    try {
+        const parts = token.split('.');
+        if (parts.length !== 3) {
+            console.error('Token JWT inválido: no tiene 3 partes');
             return null;
         }
-    } else {
-        // Cliente: Usar jwt-decode
-        try {
-            const { jwtDecode } = require('jwt-decode');
-            return jwtDecode(token) as { user_id: string };
-        } catch {
-            return null;
+
+        // Decodificar la parte del payload (segunda parte)
+        const payload = parts[1];
+
+        // En el navegador, usar atob; en Node.js, usar Buffer
+        let decoded: string;
+        if (typeof window !== 'undefined') {
+            // Cliente: usar atob (disponible en navegadores)
+            decoded = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
+        } else {
+            // SSR: usar Buffer
+            decoded = Buffer.from(payload, 'base64').toString('utf8');
         }
+
+        const parsed = JSON.parse(decoded);
+        return parsed.user_id ? { user_id: parsed.user_id } : null;
+    } catch (error) {
+        console.error('Error al decodificar token:', error);
+        return null;
     }
 }
 
-// Función helper para cargar socket.io solo en el cliente
-function getSocketIO(): typeof import('socket.io-client') | null {
+// Función helper para cargar socket.io solo en el cliente con import dinámico
+async function getSocketIO(): Promise<typeof import('socket.io-client') | null> {
     if (typeof window === 'undefined') {
         return null;
     }
-    return require('socket.io-client');
+    // Usar import dinámico en lugar de require para Vite
+    const socketIO = await import('socket.io-client');
+    return socketIO;
 }
 
 // ===================================
@@ -96,7 +105,7 @@ class ChatService {
     // CONSTRUCTOR ELIMINADO para evitar inicialización global del socket en SSR.
     // La inicialización se moverá a initSocket.
 
-    private initSocket() {
+    private async initSocket() {
         // Bloqueo de seguridad adicional: Si estamos en el servidor (SSR), no inicializamos el socket.
         if (typeof window === 'undefined') {
             console.warn('Intentando inicializar socket en el servidor (SSR). Ignorando.');
@@ -104,10 +113,11 @@ class ChatService {
         }
 
         if (!this.socket) {
-            console.log('Inicializando cliente de socket.io...');
-            const socketIO = getSocketIO();
+            console.log('🔌 Inicializando cliente de socket.io...');
+            console.log('🌐 URL del servidor:', environment.apiUrl);
+            const socketIO = await getSocketIO();
             if (!socketIO) {
-                console.error('No se pudo cargar socket.io-client');
+                console.error('❌ No se pudo cargar socket.io-client');
                 return;
             }
             this.socket = socketIO.io(environment.apiUrl, {
@@ -117,6 +127,7 @@ class ChatService {
                 reconnectionDelay: 1000,
                 transports: ['websocket', 'polling']
             });
+            console.log('✅ Socket creado para URL:', environment.apiUrl);
             this.setupSocketListeners();
         }
     }
@@ -286,9 +297,9 @@ class ChatService {
         }, delay);
     }
 
-    public connect(token: string, userId: string) {
+    public async connect(token: string, userId: string) {
         // Asegura la inicialización solo en el cliente
-        this.initSocket();
+        await this.initSocket();
 
         if (!this.socket) {
             console.error('Socket no inicializado, posiblemente llamado en SSR');
@@ -303,15 +314,22 @@ class ChatService {
         try {
             const decoded = decodeTokenSafe(token);
 
-            if (!decoded || decoded.user_id !== userId) {
-                console.error('El token no coincide con el usuario:', {
-                    tokenId: decoded?.user_id,
-                    userId
+            if (!decoded) {
+                console.error('❌ No se pudo decodificar el token');
+                return;
+            }
+
+            if (decoded.user_id !== userId) {
+                console.error('❌ El token no coincide con el usuario:', {
+                    tokenUserId: decoded.user_id,
+                    providedUserId: userId,
+                    message: 'Asegúrate de pasar tu propio user_id, no el del chat'
                 });
                 return;
             }
 
-            console.log('Iniciando conexión del socket...');
+            console.log('🚀 Iniciando conexión del socket...');
+            console.log('👤 User ID:', decoded.user_id);
             this.isConnecting = true;
             this.lastToken = token;
             this.lastUserId = decoded.user_id;

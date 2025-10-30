@@ -7,7 +7,7 @@
  * * @module Chats
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { redirect } from '@remix-run/node';
 import type { MetaFunction } from '@remix-run/node';
 import Navbar from '~/components/Inicio/Navbar';
@@ -24,13 +24,6 @@ export const meta: MetaFunction = () => {
     { title: "Chats | FriendsGo" },
     { name: "description", content: "Mensajes y conversaciones en FriendsGo" },
   ];
-};
-
-export const loader = async ({ request }: { request: Request }) => {
-  const cookieHeader = request.headers.get("Cookie");
-  const token = cookieHeader?.split(";").find((c: string) => c.trim().startsWith("token="))?.split("=")[1];
-  if (!token) return redirect("/login");
-  return null;
 };
 
 interface Chat {
@@ -90,9 +83,24 @@ export default function Chats() {
   const [chats, setChats] = useState<Chat[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // Usar ref para mantener la última versión de friends sin causar re-renders
+  const friendsRef = useRef<Friend[]>([]);
+  
+  // Flag para evitar múltiples llamadas
+  const hasLoadedRef = useRef(false);
+  
+  // Actualizar la ref cada vez que friends cambie
+  useEffect(() => {
+    friendsRef.current = friends;
+  }, [friends]);
 
   useEffect(() => {
     if (!token || !user) return;
+    
+    // Evitar múltiples cargas
+    if (hasLoadedRef.current) return;
+    hasLoadedRef.current = true;
 
     // --- MODIFICACIÓN: Obtener la instancia del ChatService aquí ---
     const chatServiceInstance = getChatService();
@@ -186,8 +194,8 @@ export default function Chats() {
             const chatToMove = updatedChats.splice(existingChatIndex, 1)[0];
             return [chatToMove, ...updatedChats];
           } else {
-            // Buscar la información del usuario en la lista de amigos
-            const otherUser = friends.find(f => f.user.user_id === otherUserId)?.user;
+            // Buscar la información del usuario en la lista de amigos usando la ref
+            const otherUser = friendsRef.current.find(f => f.user.user_id === otherUserId)?.user;
             
             if (otherUser) {
               // Crear nuevo chat con la información del amigo
@@ -223,8 +231,9 @@ export default function Chats() {
     return () => {
       console.log('Limpiando suscripciones de chats...');
       unsubscribeFunctions.forEach(unsubscribe => unsubscribe());
+      hasLoadedRef.current = false; // Resetear flag para permitir recarga si vuelve a montar
     };
-  }, [token, user, friends]); // Agregué 'friends' al array de dependencias para que el onNewMessage tenga acceso a la lista de amigos actualizada.
+  }, [token, user]); // Removí 'friends' para evitar el bucle infinito
 
   // Filtrar chats basado en la búsqueda y solo mostrar chats con amigos
   const filteredChats = chats.filter(chat => {

@@ -41,36 +41,6 @@ const getUsernameFromToken = (token: string | null): string => {
   }
 };
 
-export const loader = async ({ request }: { request: Request }) => {
-  const cookieHeader = request.headers.get("Cookie");
-  const token = cookieHeader?.split(";").find((c: string) => c.trim().startsWith("token=") )?.split("=")[1];
-  
-  if (!token) {
-    return redirect("/login");
-  }
-
-  try {
-    // Intentamos obtener los datos del usuario para verificar que el token es válido
-    const response = await fetch(`${environment.apiUrl}/users/username?username=${getUsernameFromToken(token)}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    const data = await response.json();
-    if (!data.success) {
-      return redirect("/login");
-    }
-
-    return null;
-  } catch (error) {
-    console.error('Error al verificar el token:', error);
-    return redirect("/login");
-  }
-};
-
 export default function ConfiguracionPage() {
   const { token } = useAuth();
   const navigate = useNavigate();

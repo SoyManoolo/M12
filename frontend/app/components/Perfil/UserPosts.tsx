@@ -15,22 +15,6 @@ import ImageZoomModal from '~/components/Shared/ImageZoomModal';
 import { useState } from 'react';
 import { decodeToken } from '~/utils/token';
 
-interface User {
-  user_id: string;
-  name: string;
-  surname: string;
-  username: string;
-  email: string;
-  profile_picture_url: string | null;
-  bio: string | null;
-  email_verified: boolean;
-  is_moderator: boolean;
-  deleted_at: string | null;
-  created_at: string;
-  updated_at: string;
-  active_video_call: boolean;
-}
-
 interface UserPostsProps {
   posts: Array<{
     post_id: string;
@@ -100,8 +84,14 @@ export default function UserPosts({ posts = [], onLike, onSave, onDelete, onEdit
           description={post.description}
           media_url={post.media_url || ''}
           comments={post.comments?.map(comment => ({
-            ...comment,
-            username: post.author.username
+            comment_id: comment.comment_id,
+            author: {
+              user_id: comment.user_id,
+              username: post.author.username, // Temporal: usar el username del autor del post
+              profile_picture: null // Temporal: sin foto de perfil del comentarista
+            },
+            content: comment.content,
+            created_at: comment.created_at
           })) || []}
           created_at={post.created_at}
           likes_count={post.likes_count.toString()}

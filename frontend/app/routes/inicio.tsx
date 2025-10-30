@@ -133,19 +133,6 @@ interface Post {
  * @method handleSave - Maneja el guardado de publicaciones
  */
 
-export const loader = async ({ request }: { request: Request }) => {
-  const cookieHeader = request.headers.get("Cookie");
-  const token = cookieHeader?.split(";").find(c => c.trim().startsWith("token="))?.split("=")[1];
-
-  if (!token) {
-    return redirect("/login");
-  }
-
-  return json({ 
-    error: null
-  });
-};
-
 // Función para decodificar el token JWT
 const decodeToken = (token: string) => {
   try {

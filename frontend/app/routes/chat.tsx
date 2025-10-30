@@ -35,13 +35,6 @@ interface Message {
   is_own?: boolean;
 }
 
-export const loader = async ({ request }: { request: Request }) => {
-  const cookieHeader = request.headers.get("Cookie");
-  const token = cookieHeader?.split(";").find((c: string) => c.trim().startsWith("token="))?.split("=")[1];
-  if (!token) return redirect("/login");
-  return null;
-};
-
 export default function Chat() {
   const [searchParams] = useSearchParams();
   const [messages, setMessages] = useState<Message[]>([]);

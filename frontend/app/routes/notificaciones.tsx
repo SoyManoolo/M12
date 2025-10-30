@@ -12,8 +12,6 @@
  * @module Notificaciones
  */
 
-import { json, redirect } from "@remix-run/node";
-import { useLoaderData, Link } from "@remix-run/react";
 import { useState, useEffect } from "react";
 import type { Notification } from "~/types/notifications";
 import type { User } from "~/types/user.types";
@@ -27,99 +25,9 @@ import { formatDistanceToNow, isToday, isYesterday, isThisWeek, isThisMonth } fr
 import { es } from 'date-fns/locale';
 import { friendshipService } from "~/services/friendship.service";
 
-interface LoaderData {
-  notifications: (Notification & { user: User })[];
-  currentUser: User;
-}
-
-export const loader = async ({ request }: { request: Request }) => {
-  const cookieHeader = request.headers.get("Cookie");
-  const token = cookieHeader?.split(";").find((c: string) => c.trim().startsWith("token="))?.split("=")[1];
-  if (!token) return redirect("/login");
-  try {
-    // Datos mock para pruebas
-    const mockUser: User = {
-      user_id: "1",
-      username: "mariagarcia",
-      name: "María",
-      surname: "García",
-      email: "maria@example.com",
-      profile_picture: "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg",
-      bio: "¡Hola! Me encanta compartir momentos especiales",
-      email_verified: true,
-      is_moderator: false,
-      deleted_at: null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      active_video_call: false
-    };
-
-    const mockNotifications: (Notification & { user: User })[] = [
-      {
-        notification_id: "1",
-        type: "friend_request",
-        user_id: "2",
-        related_id: "1",
-        post_id: null,
-        is_read: false,
-        severity: "info",
-        created_at: new Date().toISOString(),
-        user: {
-          user_id: "2",
-          username: "carlos123",
-          name: "Carlos",
-          surname: "Pérez",
-          email: "carlos@example.com",
-          profile_picture: "https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg",
-          bio: "Amante de la música",
-          email_verified: true,
-          is_moderator: false,
-          deleted_at: null,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          active_video_call: false
-        }
-      },
-      {
-        notification_id: "2",
-        type: "message",
-        user_id: "3",
-        related_id: "1",
-        post_id: null,
-        is_read: false,
-        severity: "info",
-        created_at: new Date().toISOString(),
-        user: {
-          user_id: "3",
-          username: "analopez",
-          name: "Ana",
-          surname: "López",
-          email: "ana@example.com",
-          profile_picture: "https://images.pexels.com/photos/733872/pexels-photo-733872.jpeg",
-          bio: "Viajera y fotógrafa",
-          email_verified: true,
-          is_moderator: false,
-          deleted_at: null,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          active_video_call: false
-        }
-      }
-    ];
-
-    return json<LoaderData>({
-      notifications: mockNotifications,
-      currentUser: mockUser
-    });
-  } catch (error) {
-    throw new Error('Error al cargar las notificaciones');
-  }
-};
-
 export default function Notificaciones(): React.ReactElement {
-  const { notifications, currentUser } = useLoaderData<LoaderData>();
   const { token } = useAuth();
-  const [currentNotifications, setCurrentNotifications] = useState<Notification[]>(notifications);
+  const [currentNotifications, setCurrentNotifications] = useState<(Notification & { user: User })[]>([]);
   const [friends, setFriends] = useState<Friend[]>([]);
   const [suggestedUsers, setSuggestedUsers] = useState<User[]>([]);
   const [error, setError] = useState<string | null>(null);

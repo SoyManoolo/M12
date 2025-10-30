@@ -21,15 +21,15 @@ const logger = pino({
 
 const dbLogger = {
     info: (message: string, meta?: object) => {
-        logger.info(message, meta);
+        (logger.info as any)(message, meta);
         saveLogToDatabase('info', message, meta);
     },
     warn: (message: string, meta?: object) => {
-        logger.warn(message, meta);
+        (logger.warn as any)(message, meta);
         saveLogToDatabase('warn', message, meta);
     },
     error: (message: string, meta?: object) => {
-        logger.error(message, meta);
+        (logger.error as any)(message, meta);
         saveLogToDatabase('error', message, meta);
     },
 };
@@ -53,7 +53,7 @@ const checkTableExists = async () => {
         tableChecked = true;
         logger.info('Logs table verified or created');
     } catch (error) {
-        logger.error('Error checking logs table:', error);
+        (logger.error as any)('Error checking logs table:', error);
     }
 };
 

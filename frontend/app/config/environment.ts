@@ -6,7 +6,7 @@
  */
 export const environment = {
     // Si VITE_API_URL no está definida, lanzamos un error claro.
-    apiUrl: import.meta.env.VITE_API_URL || '',
+    apiUrl: import.meta.env.VITE_API_URL || 'http://localhost:3000',
 };
 
 if (!environment.apiUrl) {
