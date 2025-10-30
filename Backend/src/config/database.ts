@@ -14,7 +14,7 @@ if (process.env.DATABASE_URL) {
 }
 
 const DatabaseURL = process.env.DATABASE_URL;
-dbLogger.info("Valor de DATABASE_URL: ", {DatabaseURL})
+dbLogger.info("Valor de DATABASE_URL: ", { DatabaseURL })
 const isTestEnv = process.env.NODE_ENV === "test";
 const dbName = isTestEnv ? process.env.DB_NAME_TEST : process.env.DB_NAME;
 const dbUpdate: boolean = process.env.DB_UPDATE === "true" || false;
@@ -135,10 +135,13 @@ let sequelize: Sequelize;
 if (DatabaseURL) {
     // ENTORNO DE PRODUCCIÓN (RAILWAY)
 
-    // Opciones específicas para Producción (principalmente SSL)
+    // Detectar si es una conexión interna de Railway (no requiere SSL)
+    const isRailwayInternal = DatabaseURL.includes('.railway.internal');
+
+    // Opciones específicas para Producción
     const prodOptions: Options = {
         ...baseOptions,
-        dialectOptions: {
+        dialectOptions: isRailwayInternal ? {} : {
             ssl: {
                 require: true,
                 rejectUnauthorized: false
@@ -154,6 +157,8 @@ if (DatabaseURL) {
 
     // Overload 3: new Sequelize(uri: string, options?: Options)
     sequelize = new Sequelize(DatabaseURL, prodOptions);
+
+    dbLogger.info(`Database connection mode: ${isRailwayInternal ? 'Railway Internal Network' : 'External/SSL'}`);
 
 } else {
     // ENTORNO DE DESARROLLO (LOCALHOST)

@@ -3,6 +3,7 @@
 console.log('[DEBUG] 1. Iniciando server.ts');
 console.log('[DEBUG] 2. NODE_ENV:', process.env.NODE_ENV);
 console.log('[DEBUG] 3. DATABASE_URL disponible?:', !!process.env.DATABASE_URL);
+console.log('[DEBUG] 3. PORT disponible?:', !!process.env.PORT)
 
 if (process.env.NODE_ENV !== 'production') {
     console.log('[DEBUG] 4. Cargando dotenv...');
@@ -71,7 +72,8 @@ process.on('SIGINT', () => {
 });
 
 const port = parseInt(process.env.PORT || "3000");
-const host = '0.0.0.0'; // CRÍTICO: Railway requiere escuchar en 0.0.0.0, no localhost
+const host = '0.0.0.0'; // CRÍTICO: Railway requiere escuchar en 0.0.0.0
+
 console.log('[DEBUG] 9a. Variable PORT desde env:', process.env.PORT);
 console.log('[DEBUG] 9b. Puerto parseado:', port);
 console.log('[DEBUG] 9c. Todas las variables PORT*:', Object.keys(process.env).filter(k => k.includes('PORT')));
