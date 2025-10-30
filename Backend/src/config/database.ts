@@ -212,4 +212,7 @@ async function initializeDatabase() {
     }
 }
 
-initializeDatabase();
+// NO inicializar aquí - lo haremos desde server.ts después de que el servidor HTTP esté escuchando
+// initializeDatabase();
+
+export { initializeDatabase };

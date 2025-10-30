@@ -19,6 +19,7 @@ import { chatEvents } from "./socket/ChatEvents";
 import { videoCallEvents } from "./socket/VideoCallEvents";
 import './services/chat';
 import { VideoCallService } from "./services/videoCall";
+import { initializeDatabase } from "./config/database";
 
 console.log('[DEBUG] 7. Dependencias importadas correctamente');
 
@@ -77,9 +78,20 @@ console.log('[DEBUG] 9c. Todas las variables PORT*:', Object.keys(process.env).f
 console.log('[DEBUG] 9. Iniciando servidor en puerto:', port, 'host:', host);
 
 server.listen(port, host, () => {
-    console.log('[DEBUG] 10. ✅ Servidor escuchando en', host + ':' + port);
+    console.log('[DEBUG] 10. ✅ Servidor HTTP escuchando en', host + ':' + port);
     console.log('[DEBUG] 11. Ambiente:', process.env.NODE_ENV);
     console.log('[DEBUG] 12. Railway URL:', process.env.RAILWAY_STATIC_URL || 'N/A');
+    
+    // Inicializar base de datos DESPUÉS de que el servidor HTTP esté listo
+    console.log('[DEBUG] 13. Inicializando base de datos...');
+    initializeDatabase()
+        .then(() => {
+            console.log('[DEBUG] 14. ✅ Base de datos inicializada correctamente');
+        })
+        .catch((error) => {
+            console.error('[DEBUG] 14. ❌ Error al inicializar base de datos:', error);
+            // No cerramos el servidor si falla la DB - puede que solo necesite retry
+        });
 });
 
 server.on('error', (error: any) => {
