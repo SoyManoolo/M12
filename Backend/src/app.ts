@@ -15,32 +15,15 @@ import path from 'path';
 import helmet from 'helmet';
 
 const corsOptions = {
-    origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
-        console.log('[CORS] Checking origin:', origin);
-        const allowedOrigins = [
-            "https://friendsgofrontend.vercel.app",
-            "http://localhost:5173",
-            "http://localhost:3000"
-        ];
-        
-        // Permitir requests sin origin (Postman, curl, etc)
-        if (!origin) {
-            console.log('[CORS] No origin - allowing');
-            return callback(null, true);
-        }
-        
-        if (allowedOrigins.indexOf(origin) !== -1) {
-            console.log('[CORS] Origin allowed:', origin);
-            callback(null, true);
-        } else {
-            console.log('[CORS] Origin BLOCKED:', origin);
-            callback(new Error('Not allowed by CORS'));
-        }
-    },
+    origin: [
+        "https://friendsgofrontend.vercel.app",
+        "http://localhost:5173",
+        "http://localhost:3000"
+    ],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: [
-        'Content-Type', 
-        'Authorization', 
+        'Content-Type',
+        'Authorization',
         'X-Requested-With',
         'Accept',
         'Origin',
@@ -65,10 +48,10 @@ app.use(cors(corsOptions));
 
 app.use(express.json());
 app.use(helmet({
-  contentSecurityPolicy: false,
-  crossOriginEmbedderPolicy: false,
-  crossOriginOpenerPolicy: false,
-  crossOriginResourcePolicy: { policy: 'cross-origin' }
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false,
+    crossOriginOpenerPolicy: false,
+    crossOriginResourcePolicy: { policy: 'cross-origin' }
 }));
 app.set('trust proxy', true);
 
@@ -79,16 +62,16 @@ app.get('/health', (req, res) => {
     console.log('[HEALTH] Headers:', JSON.stringify(req.headers, null, 2));
     console.log('[HEALTH] IP:', req.ip);
     console.log('[HEALTH] Protocol:', req.protocol);
-    
-    const responseData = { 
-        status: 'OK', 
+
+    const responseData = {
+        status: 'OK',
         timestamp,
         environment: process.env.NODE_ENV,
         port: process.env.PORT,
         host: req.hostname,
         ip: req.ip
     };
-    
+
     console.log('[HEALTH] Enviando respuesta:', JSON.stringify(responseData));
     res.status(200).json(responseData);
 });
@@ -110,45 +93,11 @@ app.use('/chat', chatROutes);
 app.use('/comments', commentRoutes);
 app.use('/friendship', friendshipRoutes);
 
-// Middleware de manejo de errores - TEMPORALMENTE DESACTIVADO PARA DEBUG
-/*
+// Middleware de manejo de errores
 app.use((error: any, req: Request, res: Response, next: NextFunction) => {
-    // Asegurar que CORS se aplique incluso en errores
-    const origin = req.headers.origin;
-    const allowedOrigins = [
-        "https://friendsgofrontend.vercel.app",
-        "http://localhost:5173",
-        "http://localhost:3000"
-    ];
-    
-    if (origin && allowedOrigins.includes(origin)) {
-        res.header('Access-Control-Allow-Origin', origin);
-    }
-    
-    res.header('Access-Control-Allow-Credentials', 'true');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Ngrok-Skip-Browser-Warning');
-    
     celebrateErrorHandler(error, req, res, next);
 });
 
 app.use((error: Error, req: Request, res: Response, next: NextFunction): void => {
-    // Asegurar que CORS se aplique incluso en errores
-    const origin = req.headers.origin;
-    const allowedOrigins = [
-        "https://friendsgofrontend.vercel.app",
-        "http://localhost:5173",
-        "http://localhost:3000"
-    ];
-    
-    if (origin && allowedOrigins.includes(origin)) {
-        res.header('Access-Control-Allow-Origin', origin);
-    }
-    
-    res.header('Access-Control-Allow-Credentials', 'true');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Ngrok-Skip-Browser-Warning');
-    
     AppErrorHandler.errorHandler(error, req, res, next);
 });
-*/
