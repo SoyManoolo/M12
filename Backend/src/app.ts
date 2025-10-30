@@ -74,13 +74,23 @@ app.set('trust proxy', true);
 
 // Health check endpoint - SIN autenticación, para probar conectividad
 app.get('/health', (req, res) => {
-    console.log('[HEALTH] Health check recibido');
-    res.status(200).json({ 
+    const timestamp = new Date().toISOString();
+    console.log('[HEALTH] ✅ Health check recibido en', timestamp);
+    console.log('[HEALTH] Headers:', JSON.stringify(req.headers, null, 2));
+    console.log('[HEALTH] IP:', req.ip);
+    console.log('[HEALTH] Protocol:', req.protocol);
+    
+    const responseData = { 
         status: 'OK', 
-        timestamp: new Date().toISOString(),
+        timestamp,
         environment: process.env.NODE_ENV,
-        port: process.env.PORT
-    });
+        port: process.env.PORT,
+        host: req.hostname,
+        ip: req.ip
+    };
+    
+    console.log('[HEALTH] Enviando respuesta:', JSON.stringify(responseData));
+    res.status(200).json(responseData);
 });
 
 // Configurar middleware para servir archivos estáticos desde la carpeta 'media'
@@ -100,7 +110,8 @@ app.use('/chat', chatROutes);
 app.use('/comments', commentRoutes);
 app.use('/friendship', friendshipRoutes);
 
-// Middleware de manejo de errores
+// Middleware de manejo de errores - TEMPORALMENTE DESACTIVADO PARA DEBUG
+/*
 app.use((error: any, req: Request, res: Response, next: NextFunction) => {
     // Asegurar que CORS se aplique incluso en errores
     const origin = req.headers.origin;
@@ -140,3 +151,4 @@ app.use((error: Error, req: Request, res: Response, next: NextFunction): void =>
     
     AppErrorHandler.errorHandler(error, req, res, next);
 });
+*/
