@@ -71,7 +71,7 @@ process.on('SIGINT', () => {
     process.exit(0);
 });
 
-const port = parseInt(process.env.PORT || "3000");
+const port = parseInt(process.env.PORT || "8080");
 const host = '0.0.0.0'; // CRÍTICO: Railway requiere escuchar en 0.0.0.0
 
 console.log('[DEBUG] 9a. Variable PORT desde env:', process.env.PORT);
