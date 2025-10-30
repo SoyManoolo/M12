@@ -36,6 +36,7 @@
         "delete:cleanup": "pm2 delete cleanup-job",
         "sync-translations": "ts-node src/lang/syncTranslations.ts",
         "start": "cross-env NODE_ENV=production node dist/server.js",
+        "start:simple": "cross-env NODE_ENV=production node dist/server-simple.js",
         "dev": "cross-env nodemon dist/server.js",
         "test": "cross-env NODE_ENV=test jest --verbose --coverage --runInBand --forceExit --detectOpenHandles --silent",
         "test:watch": "npm run test -- --watch",
