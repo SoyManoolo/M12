@@ -332,14 +332,9 @@ export default function VideollamadaPage() {
                             <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-4 bg-gray-900/50 p-3 rounded-full backdrop-blur-sm">
                                 <button
                                     onClick={(e) => {
-                                        e.preventDefault();
                                         e.stopPropagation();
                                         toggleAudio();
                                         showDebug(videoCallState.isAudioEnabled ? '🔇 MUTED' : '🎤 UNMUTED');
-                                    }}
-                                    onTouchEnd={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
                                     }}
                                     className={`p-3 rounded-full transition-all duration-200 hover:bg-gray-700 ${videoCallState.isAudioEnabled
                                         ? 'bg-gray-800 text-white hover:text-gray-300'
@@ -351,14 +346,9 @@ export default function VideollamadaPage() {
                                 </button>
                                 <button
                                     onClick={(e) => {
-                                        e.preventDefault();
                                         e.stopPropagation();
                                         toggleVideo();
                                         showDebug(videoCallState.isVideoEnabled ? '📹 OFF' : '📹 ON');
-                                    }}
-                                    onTouchEnd={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
                                     }}
                                     className={`p-3 rounded-full transition-all duration-200 hover:bg-gray-700 ${videoCallState.isVideoEnabled
                                         ? 'bg-gray-800 text-white hover:text-gray-300'
