@@ -179,11 +179,11 @@ export default function VideollamadaPage() {
 
     return (
         <div className="h-screen w-screen bg-black text-white overflow-hidden fixed inset-0">
-            <div className="h-full max-w-[1920px] mx-auto w-full p-2 md:p-4 flex flex-col">
-                {/* Container cambia de columna (móvil) a fila (desktop) */}
-                <div className="flex-1 flex flex-col md:flex-row gap-2 md:gap-4 min-h-0 overflow-hidden">
-                    {/* Left section - Controls - En móvil: barra superior compacta, en PC: sidebar */}
-                    <div className="md:w-1/4 flex flex-col gap-2 min-h-0 overflow-hidden flex-shrink-0">
+            <div className="h-full w-full flex flex-col">
+                {/* Container: En móvil ocupará 100% altura dividida en secciones */}
+                <div className="flex-1 flex flex-col md:flex-row gap-2 md:gap-4 p-2 md:p-4 min-h-0 h-full overflow-hidden">
+                    {/* Left section - Controls - En móvil: altura fija pequeña, en PC: sidebar */}
+                    <div className="h-auto md:h-full md:w-1/4 flex flex-col gap-2 flex-shrink-0">
                         {/* Fila que contiene el botón Inicio y el contador de tiempo */}
                         <div className="flex gap-2 flex-shrink-0">
                             {/* Botón Volver a Inicio al lado izquierdo del contador */}
@@ -265,8 +265,8 @@ export default function VideollamadaPage() {
                             </div>
                         </div>
 
-                    {/* Center section - Main video */}
-                    <div className="flex-1 bg-gray-900 border border-gray-700 rounded-lg overflow-hidden relative min-h-0 max-h-full">
+                    {/* Center section - Main video - En móvil: ocupa el resto del espacio disponible */}
+                    <div className="flex-1 bg-gray-900 border border-gray-700 rounded-lg overflow-hidden relative">
                             <video
                                 ref={remoteVideoRef}
                                 autoPlay
@@ -314,8 +314,8 @@ export default function VideollamadaPage() {
                                 </div>
                             )}
 
-                            {/* Controles de video/audio */}
-                            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-4 bg-gray-900/50 p-3 rounded-full backdrop-blur-sm">
+                            {/* Controles de video/audio - Posicionados en la parte inferior, siempre visibles */}
+                            <div className="absolute bottom-6 md:bottom-4 left-1/2 transform -translate-x-1/2 flex gap-3 md:gap-4 bg-gray-900/80 p-4 md:p-3 rounded-full backdrop-blur-sm z-50">
                                 <button
                                     onClick={(e) => {
                                         e.stopPropagation();
@@ -323,13 +323,13 @@ export default function VideollamadaPage() {
                                         toggleAudio();
                                         showDebug(willMute ? '🔇 MUTEADO' : '🎤 SONIDO ON');
                                     }}
-                                    className={`p-4 md:p-3 rounded-full transition-all duration-200 hover:bg-gray-700 ${videoCallState.isAudioEnabled
+                                    className={`w-14 h-14 md:w-12 md:h-12 rounded-full transition-all duration-200 hover:bg-gray-700 flex items-center justify-center ${videoCallState.isAudioEnabled
                                         ? 'bg-gray-800 text-white hover:text-gray-300'
-                                        : 'bg-red-600/80 text-white hover:bg-red-700'
+                                        : 'bg-red-600 text-white hover:bg-red-700'
                                         }`}
                                     style={{ touchAction: 'manipulation' }}
                                 >
-                                    {videoCallState.isAudioEnabled ? <FaMicrophone className="text-xl md:text-lg" /> : <FaMicrophoneSlash className="text-xl md:text-lg" />}
+                                    {videoCallState.isAudioEnabled ? <FaMicrophone className="text-2xl md:text-xl" /> : <FaMicrophoneSlash className="text-2xl md:text-xl" />}
                                 </button>
                                 <button
                                     onClick={(e) => {
@@ -337,13 +337,13 @@ export default function VideollamadaPage() {
                                         toggleVideo();
                                         showDebug(videoCallState.isVideoEnabled ? '📹 OFF' : '📹 ON');
                                     }}
-                                    className={`p-4 md:p-3 rounded-full transition-all duration-200 hover:bg-gray-700 ${videoCallState.isVideoEnabled
+                                    className={`w-14 h-14 md:w-12 md:h-12 rounded-full transition-all duration-200 hover:bg-gray-700 flex items-center justify-center ${videoCallState.isVideoEnabled
                                         ? 'bg-gray-800 text-white hover:text-gray-300'
-                                        : 'bg-red-600/80 text-white hover:bg-red-700'
+                                        : 'bg-red-600 text-white hover:bg-red-700'
                                         }`}
                                     style={{ touchAction: 'manipulation' }}
                                 >
-                                    {videoCallState.isVideoEnabled ? <FaVideo className="text-xl md:text-lg" /> : <FaVideoSlash className="text-xl md:text-lg" />}
+                                    {videoCallState.isVideoEnabled ? <FaVideo className="text-2xl md:text-xl" /> : <FaVideoSlash className="text-2xl md:text-xl" />}
                             </button>
                         </div>
                     </div>
