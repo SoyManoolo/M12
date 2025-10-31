@@ -77,10 +77,17 @@ export default function VideollamadaPage() {
 
     const [messages, setMessages] = useState<Message[]>([]);
     const [showRatingModal, setShowRatingModal] = useState(false);
+    const [debugMessage, setDebugMessage] = useState<string>('');
 
     // Referencias para los elementos de video
     const localVideoRef = useRef<HTMLVideoElement>(null);
     const remoteVideoRef = useRef<HTMLVideoElement>(null);
+
+    // Mostrar mensaje de debug temporal
+    const showDebug = (msg: string) => {
+        setDebugMessage(msg);
+        setTimeout(() => setDebugMessage(''), 2000);
+    };
 
     // Actualizar el video local cuando cambie el stream
     useEffect(() => {
@@ -185,8 +192,8 @@ export default function VideollamadaPage() {
 
 
     return (
-        <div className="min-h-screen bg-black text-white p-8">
-            <div className="max-w-[1920px] mx-auto h-[calc(100vh-4rem)]">
+        <div className="h-screen bg-black text-white p-8 overflow-hidden">
+            <div className="max-w-[1920px] mx-auto h-full">
                 <div className="flex flex-col h-full">
                     {/* Main content */}
                     <div className="flex-1 flex gap-6">
@@ -255,7 +262,15 @@ export default function VideollamadaPage() {
                                         autoPlay
                                         playsInline
                                         muted
+                                        disablePictureInPicture
+                                        controls={false}
                                         className="w-full h-full object-cover"
+                                        style={{ 
+                                            WebkitTransform: 'translateZ(0)',
+                                            transform: 'translateZ(0)',
+                                            backfaceVisibility: 'hidden',
+                                            WebkitBackfaceVisibility: 'hidden'
+                                        }}
                                     />
                                     <div className="absolute bottom-2 left-2 text-sm bg-black bg-opacity-50 px-2 py-1 rounded">
                                         TU CÁMARA
@@ -270,7 +285,15 @@ export default function VideollamadaPage() {
                                 ref={remoteVideoRef}
                                 autoPlay
                                 playsInline
+                                disablePictureInPicture
+                                controls={false}
                                 className="w-full h-full object-cover"
+                                style={{ 
+                                    WebkitTransform: 'translateZ(0)',
+                                    transform: 'translateZ(0)',
+                                    backfaceVisibility: 'hidden',
+                                    WebkitBackfaceVisibility: 'hidden'
+                                }}
                             />
 
                             {/* MODIFICADO: Indicador de búsqueda */}
@@ -298,23 +321,50 @@ export default function VideollamadaPage() {
                                 </div>
                             )}
 
+                            {/* Debug message - Feedback visual para móvil */}
+                            {debugMessage && (
+                                <div className="absolute top-20 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-6 py-3 rounded-lg text-lg font-bold shadow-lg animate-pulse z-50">
+                                    {debugMessage}
+                                </div>
+                            )}
+
                             {/* Controles de video/audio */}
                             <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-4 bg-gray-900/50 p-3 rounded-full backdrop-blur-sm">
                                 <button
-                                    onClick={toggleAudio}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        toggleAudio();
+                                        showDebug(videoCallState.isAudioEnabled ? '🔇 MUTED' : '🎤 UNMUTED');
+                                    }}
+                                    onTouchEnd={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                    }}
                                     className={`p-3 rounded-full transition-all duration-200 hover:bg-gray-700 ${videoCallState.isAudioEnabled
                                         ? 'bg-gray-800 text-white hover:text-gray-300'
                                         : 'bg-red-600/80 text-white hover:bg-red-700'
                                         }`}
+                                    style={{ touchAction: 'manipulation' }}
                                 >
                                     {videoCallState.isAudioEnabled ? <FaMicrophone size={20} /> : <FaMicrophoneSlash size={20} />}
                                 </button>
                                 <button
-                                    onClick={toggleVideo}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        toggleVideo();
+                                        showDebug(videoCallState.isVideoEnabled ? '📹 OFF' : '📹 ON');
+                                    }}
+                                    onTouchEnd={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                    }}
                                     className={`p-3 rounded-full transition-all duration-200 hover:bg-gray-700 ${videoCallState.isVideoEnabled
                                         ? 'bg-gray-800 text-white hover:text-gray-300'
                                         : 'bg-red-600/80 text-white hover:bg-red-700'
                                         }`}
+                                    style={{ touchAction: 'manipulation' }}
                                 >
                                     {videoCallState.isVideoEnabled ? <FaVideo size={20} /> : <FaVideoSlash size={20} />}
                                 </button>

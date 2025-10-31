@@ -197,9 +197,20 @@ export function useVideoCall() {
         if (stream) {
             const audioTrack = stream.getAudioTracks()[0];
             if (audioTrack) {
-                audioTrack.enabled = !audioTrack.enabled;
-                setState(prev => ({ ...prev, isAudioEnabled: audioTrack.enabled }));
+                const newState = !audioTrack.enabled;
+                audioTrack.enabled = newState;
+                console.log(`🎤 Audio toggled: ${newState ? 'ENABLED' : 'MUTED'}`, {
+                    trackId: audioTrack.id,
+                    label: audioTrack.label,
+                    readyState: audioTrack.readyState,
+                    enabled: audioTrack.enabled
+                });
+                setState(prev => ({ ...prev, isAudioEnabled: newState }));
+            } else {
+                console.error('❌ No hay audio track disponible');
             }
+        } else {
+            console.error('❌ No hay stream local disponible');
         }
     }, [webRTCService]);
 
