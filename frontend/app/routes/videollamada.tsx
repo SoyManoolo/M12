@@ -183,7 +183,7 @@ export default function VideollamadaPage() {
                 {/* Container cambia de columna (móvil) a fila (desktop) */}
                 <div className="flex-1 flex flex-col md:flex-row gap-2 md:gap-4 min-h-0 overflow-hidden">
                     {/* Left section - Controls - En móvil: barra superior compacta, en PC: sidebar */}
-                    <div className="md:w-1/4 flex flex-col gap-2 min-h-0 overflow-hidden flex-shrink-0">`
+                    <div className="md:w-1/4 flex flex-col gap-2 min-h-0 overflow-hidden flex-shrink-0">
                         {/* Fila que contiene el botón Inicio y el contador de tiempo */}
                         <div className="flex gap-2 flex-shrink-0">
                             {/* Botón Volver a Inicio al lado izquierdo del contador */}
@@ -198,7 +198,7 @@ export default function VideollamadaPage() {
                             {/* Contador de tiempo */}
                             <div className="flex-1 bg-gray-900 border border-gray-700 rounded-lg p-2 flex items-center justify-center gap-1 md:gap-2">
                                 <FaClock className="text-gray-400 text-xs md:text-sm" />
-                                <span className="font-mono text-xs md:text-sm">{formatTime(videoCallState.callDuration)}</span>`
+                                <span className="font-mono text-xs md:text-sm">{formatTime(videoCallState.callDuration)}</span>
                             </div>
                         </div>
 
@@ -242,7 +242,7 @@ export default function VideollamadaPage() {
 
                         {/* Video local - OCULTO EN MÓVIL para ahorrar espacio */}
                         <div className="hidden md:flex flex-1 relative min-h-0 overflow-hidden">
-                            <div className="absolute inset-0 bg-gray-900 border border-gray-700 rounded-lg overflow-hidden">`
+                            <div className="absolute inset-0 bg-gray-900 border border-gray-700 rounded-lg overflow-hidden">
                                     <video
                                         ref={localVideoRef}
                                         autoPlay
