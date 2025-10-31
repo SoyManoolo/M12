@@ -78,6 +78,7 @@ export default function VideollamadaPage() {
     const [messages, setMessages] = useState<Message[]>([]);
     const [showRatingModal, setShowRatingModal] = useState(false);
     const [debugMessage, setDebugMessage] = useState<string>('');
+    const [showChat, setShowChat] = useState(false); // Para toggle del chat en móvil
 
     // Referencias para los elementos de video
     const localVideoRef = useRef<HTMLVideoElement>(null);
@@ -192,11 +193,12 @@ export default function VideollamadaPage() {
 
 
     return (
-        <div className="h-screen bg-black text-white overflow-hidden flex flex-col">
-            <div className="flex-1 max-w-[1920px] mx-auto w-full p-4">
-                <div className="flex h-full gap-4">
+        <div className="h-screen w-screen bg-black text-white overflow-hidden fixed inset-0">
+            {/* Desktop layout */}
+            <div className="hidden md:flex h-full max-w-[1920px] mx-auto w-full p-4 flex-col">
+                <div className="flex-1 flex gap-4 min-h-0 overflow-hidden">
                     {/* Left section - Controls */}
-                    <div className="w-1/4 flex flex-col gap-3 min-h-0">
+                    <div className="w-1/4 flex flex-col gap-2 min-h-0 overflow-hidden">
                         {/* Fila que contiene el botón Inicio y el contador de tiempo */}
                         <div className="flex gap-2 flex-shrink-0">
                             {/* Botón Volver a Inicio al lado izquierdo del contador */}
@@ -253,8 +255,8 @@ export default function VideollamadaPage() {
                         </button>
 
                         {/* Video local */}
-                        <div className="flex-1 relative min-h-0">
-                                <div className="absolute inset-0 bg-gray-900 border border-gray-700 rounded-lg overflow-hidden">
+                        <div className="flex-1 relative min-h-0 overflow-hidden">
+                            <div className="absolute inset-0 bg-gray-900 border border-gray-700 rounded-lg overflow-hidden">
                                     <video
                                         ref={localVideoRef}
                                         autoPlay
@@ -278,7 +280,7 @@ export default function VideollamadaPage() {
                         </div>
 
                     {/* Center section - Main video */}
-                    <div className="flex-1 bg-gray-900 border border-gray-700 rounded-lg overflow-hidden relative min-h-0">
+                    <div className="flex-1 bg-gray-900 border border-gray-700 rounded-lg overflow-hidden relative min-h-0 max-h-full">
                             <video
                                 ref={remoteVideoRef}
                                 autoPlay
@@ -361,13 +363,178 @@ export default function VideollamadaPage() {
                     </div>
 
                     {/* Right section - Chat */}
-                    <div className="w-1/4 min-h-0">
+                    <div className="w-1/4 min-h-0 max-h-full overflow-hidden">
                         <ChatVideollamada
                             messages={messages}
                             onSendMessage={handleSendMessage}
                         />
                     </div>
                 </div>
+            </div>
+
+            {/* Mobile layout */}
+            <div className="md:hidden h-full flex flex-col">
+                {/* Top bar - Controls compactos */}
+                <div className="flex-shrink-0 p-2 flex gap-2 bg-gray-900/50 backdrop-blur-sm">
+                    <button
+                        onClick={() => navigate('/inicio')}
+                        className="p-2 bg-gray-800 hover:bg-gray-700 rounded-lg"
+                    >
+                        <FaHome className="text-lg" />
+                    </button>
+                    <div className="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 flex items-center justify-center gap-2">
+                        <FaClock className="text-gray-400 text-sm" />
+                        <span className="font-mono text-sm">{formatTime(videoCallState.callDuration)}</span>
+                    </div>
+                    <button
+                        onClick={() => setShowChat(!showChat)}
+                        className="p-2 bg-blue-600 hover:bg-blue-700 rounded-lg relative"
+                    >
+                        💬
+                        {messages.length > 0 && (
+                            <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                                {messages.length}
+                            </span>
+                        )}
+                    </button>
+                </div>
+
+                {/* Video principal */}
+                <div className="flex-1 relative min-h-0 bg-gray-900">
+                    <video
+                        ref={remoteVideoRef}
+                        autoPlay
+                        playsInline
+                        disablePictureInPicture
+                        controls={false}
+                        className="w-full h-full object-cover"
+                        style={{ 
+                            WebkitTransform: 'translateZ(0)',
+                            transform: 'translateZ(0)',
+                            backfaceVisibility: 'hidden',
+                            WebkitBackfaceVisibility: 'hidden'
+                        }}
+                    />
+
+                    {/* Video local en esquina */}
+                    <div className="absolute top-4 right-4 w-24 h-32 rounded-lg overflow-hidden border-2 border-white shadow-lg">
+                        <video
+                            ref={localVideoRef}
+                            autoPlay
+                            playsInline
+                            muted
+                            disablePictureInPicture
+                            controls={false}
+                            className="w-full h-full object-cover"
+                            style={{ 
+                                WebkitTransform: 'translateZ(0)',
+                                transform: 'translateZ(0)',
+                                backfaceVisibility: 'hidden',
+                                WebkitBackfaceVisibility: 'hidden'
+                            }}
+                        />
+                    </div>
+
+                    {/* Indicador de búsqueda móvil */}
+                    {videoCallState.inQueue && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-75">
+                            <div className="mb-4 animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-blue-500"></div>
+                            <h2 className="text-xl font-bold mb-2">Buscando...</h2>
+                        </div>
+                    )}
+
+                    {/* Debug message móvil */}
+                    {debugMessage && (
+                        <div className="absolute top-20 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg animate-pulse z-50">
+                            {debugMessage}
+                        </div>
+                    )}
+
+                    {/* Controles de video/audio - centrados abajo */}
+                    <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-4 bg-gray-900/80 p-3 rounded-full backdrop-blur-sm">
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                const willMute = videoCallState.isAudioEnabled;
+                                toggleAudio();
+                                showDebug(willMute ? '🔇 MUTEADO' : '🎤 SONIDO ON');
+                            }}
+                            className={`p-3 rounded-full transition-all ${videoCallState.isAudioEnabled
+                                ? 'bg-gray-800 text-white'
+                                : 'bg-red-600/80 text-white'
+                                }`}
+                            style={{ touchAction: 'manipulation' }}
+                        >
+                            {videoCallState.isAudioEnabled ? <FaMicrophone size={24} /> : <FaMicrophoneSlash size={24} />}
+                        </button>
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                toggleVideo();
+                                showDebug(videoCallState.isVideoEnabled ? '📹 OFF' : '📹 ON');
+                            }}
+                            className={`p-3 rounded-full transition-all ${videoCallState.isVideoEnabled
+                                ? 'bg-gray-800 text-white'
+                                : 'bg-red-600/80 text-white'
+                                }`}
+                            style={{ touchAction: 'manipulation' }}
+                        >
+                            {videoCallState.isVideoEnabled ? <FaVideo size={24} /> : <FaVideoSlash size={24} />}
+                        </button>
+                    </div>
+                </div>
+
+                {/* Bottom bar - Botones de acción */}
+                <div className="flex-shrink-0 p-2 flex gap-2 bg-gray-900/50 backdrop-blur-sm">
+                    <button
+                        onClick={handleSearchCall}
+                        className={`flex-1 ${videoCallState.inQueue
+                            ? 'bg-orange-600 hover:bg-orange-700'
+                            : 'bg-blue-600 hover:bg-blue-700'} 
+                        text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2 text-sm
+                        ${videoCallState.isCallActive ? 'opacity-50' : ''}`}
+                        disabled={videoCallState.isCallActive}
+                    >
+                        <FaSearch />
+                        <span>{videoCallState.inQueue ? 'CANCELAR' : 'BUSCAR'}</span>
+                    </button>
+                    <button
+                        onClick={handleNextCall}
+                        className={`flex-1 bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2 text-sm ${!videoCallState.isCallActive ? 'opacity-50' : ''}`}
+                        disabled={!videoCallState.isCallActive}
+                    >
+                        <FaArrowRight />
+                        <span>SIGUIENTE</span>
+                    </button>
+                    <button
+                        onClick={handleEndCall}
+                        className={`flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center gap-2 text-sm ${!videoCallState.isCallActive ? 'opacity-50' : ''}`}
+                        disabled={!videoCallState.isCallActive}
+                    >
+                        <FaVideo />
+                        <span>FINALIZAR</span>
+                    </button>
+                </div>
+
+                {/* Chat overlay para móvil */}
+                {showChat && (
+                    <div className="absolute inset-0 bg-black/50 z-40" onClick={() => setShowChat(false)}>
+                        <div className="absolute right-0 top-0 bottom-0 w-4/5 bg-gray-900 shadow-xl" onClick={(e) => e.stopPropagation()}>
+                            <div className="h-full flex flex-col">
+                                <div className="p-4 border-b border-gray-700 flex justify-between items-center">
+                                    <h3 className="text-lg font-bold">Chat</h3>
+                                    <button onClick={() => setShowChat(false)} className="text-2xl">&times;</button>
+                                </div>
+                                <div className="flex-1 overflow-hidden">
+                                    <ChatVideollamada
+                                        messages={messages}
+                                        onSendMessage={handleSendMessage}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
 
             <RatingModal
