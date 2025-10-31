@@ -11,7 +11,7 @@
  * @requires ~/components/Videollamada/VideoCall
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { FaVideo, FaArrowRight, FaClock, FaMicrophone, FaMicrophoneSlash, FaVideoSlash, FaSearch, FaHome } from 'react-icons/fa';
 import ChatVideollamada from '~/components/Videollamada/ChatVideollamada';
 import { useNavigate, useParams } from '@remix-run/react';
@@ -77,6 +77,24 @@ export default function VideollamadaPage() {
 
     const [messages, setMessages] = useState<Message[]>([]);
     const [showRatingModal, setShowRatingModal] = useState(false);
+
+    // Referencias para los elementos de video
+    const localVideoRef = useRef<HTMLVideoElement>(null);
+    const remoteVideoRef = useRef<HTMLVideoElement>(null);
+
+    // Actualizar el video local cuando cambie el stream
+    useEffect(() => {
+        if (localVideoRef.current && localStream) {
+            localVideoRef.current.srcObject = localStream;
+        }
+    }, [localStream]);
+
+    // Actualizar el video remoto cuando cambie el stream
+    useEffect(() => {
+        if (remoteVideoRef.current && remoteStream) {
+            remoteVideoRef.current.srcObject = remoteStream;
+        }
+    }, [remoteStream]);
 
     // Iniciar la llamada cuando se monta el componente
     useEffect(() => {
@@ -233,11 +251,7 @@ export default function VideollamadaPage() {
                             <div className="flex-1 relative">
                                 <div className="absolute inset-0 bg-gray-900 border border-gray-700 rounded-lg overflow-hidden">
                                     <video
-                                        ref={video => {
-                                            if (video && localStream) {
-                                                video.srcObject = localStream;
-                                            }
-                                        }}
+                                        ref={localVideoRef}
                                         autoPlay
                                         playsInline
                                         muted
@@ -253,11 +267,7 @@ export default function VideollamadaPage() {
                         {/* Center section - Main video */}
                         <div className="flex-1 bg-gray-900 border border-gray-700 rounded-lg overflow-hidden relative">
                             <video
-                                ref={video => {
-                                    if (video && remoteStream) {
-                                        video.srcObject = remoteStream;
-                                    }
-                                }}
+                                ref={remoteVideoRef}
                                 autoPlay
                                 playsInline
                                 className="w-full h-full object-cover"

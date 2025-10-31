@@ -459,8 +459,12 @@ class WebRTCService {
             // Constraints más flexibles - intentar primero con video y audio
             let constraints: MediaStreamConstraints = isMobile
                 ? {
-                    // Móvil: constraints mínimas
-                    video: true,
+                    // Móvil: constraints básicas pero con frameRate especificado
+                    video: {
+                        width: { ideal: 640 },
+                        height: { ideal: 480 },
+                        frameRate: { ideal: 24, min: 15 }
+                    },
                     audio: true
                 }
                 : {
@@ -498,23 +502,30 @@ class WebRTCService {
             }
 
             // Si no hay video, crear un track de video negro (placeholder) para mantener la negociación bidireccional
-            if (!hasVideo) {
+            if (!hasVideo && typeof window !== 'undefined') {
                 console.log("WebRTCService: 🎨 Creando track de video placeholder (pantalla negra) para permitir recibir video del otro lado");
                 const canvas = document.createElement('canvas');
                 canvas.width = 640;
                 canvas.height = 480;
                 const ctx = canvas.getContext('2d');
+                
                 if (ctx) {
-                    ctx.fillStyle = '#000000';
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    // Animar el canvas para evitar parpadeo - relleno continuo
+                    const animate = () => {
+                        ctx.fillStyle = '#000000';
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                        requestAnimationFrame(animate);
+                    };
+                    animate();
                 }
-                // Capturar el canvas como stream de video a 1 FPS (suficiente para placeholder)
-                const dummyVideoStream = canvas.captureStream(1);
+                
+                // Capturar el canvas como stream de video a 15 FPS (más fluido que 1 FPS)
+                const dummyVideoStream = canvas.captureStream(15);
                 const dummyVideoTrack = dummyVideoStream.getVideoTracks()[0];
 
                 if (dummyVideoTrack) {
                     stream.addTrack(dummyVideoTrack);
-                    console.log("WebRTCService: ✅ Track de video placeholder agregado - ahora se puede recibir video del otro usuario");
+                    console.log("WebRTCService: ✅ Track de video placeholder agregado a 15 FPS - ahora se puede recibir video del otro usuario");
                 }
             }
 
