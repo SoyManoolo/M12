@@ -449,7 +449,8 @@ class WebRTCService {
         }
 
         try {
-            const constraints = {
+            // Constraints más flexibles - intentar primero con video y audio
+            let constraints: MediaStreamConstraints = {
                 video: {
                     width: { ideal: 640 },
                     height: { ideal: 480 },
@@ -459,7 +460,23 @@ class WebRTCService {
             };
 
             console.log("WebRTCService: Solicitando acceso a medios locales con constraints:", constraints);
-            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+            
+            let stream: MediaStream;
+            try {
+                // Intentar con video y audio
+                stream = await navigator.mediaDevices.getUserMedia(constraints);
+            } catch (videoError) {
+                console.warn("WebRTCService: No se pudo obtener video, intentando solo con audio:", videoError);
+                // Si falla el video, intentar solo con audio
+                try {
+                    constraints = { audio: true, video: false };
+                    stream = await navigator.mediaDevices.getUserMedia(constraints);
+                    console.log("WebRTCService: Llamada de solo audio iniciada");
+                } catch (audioError) {
+                    console.error("WebRTCService: No se pudo obtener ni video ni audio:", audioError);
+                    throw new Error("No se encontró ningún dispositivo de entrada (cámara o micrófono). Por favor, verifica que tengas al menos un micrófono conectado y que el navegador tenga permisos.");
+                }
+            }
 
             // Depurar estado de los tracks
             const videoTracks = stream.getVideoTracks();
