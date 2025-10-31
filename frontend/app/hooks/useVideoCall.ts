@@ -194,16 +194,35 @@ export function useVideoCall() {
     const toggleAudio = useCallback(() => {
         if (!webRTCService) return;
         const stream = webRTCService.getLocalStream();
+        const peerConnection = webRTCService.peerConnection;
+        
         if (stream) {
             const audioTrack = stream.getAudioTracks()[0];
             if (audioTrack) {
                 const newState = !audioTrack.enabled;
+                
+                // 1. Deshabilitar el track localmente
                 audioTrack.enabled = newState;
+                
+                // 2. En móvil, también necesitamos deshabilitar el sender en el PeerConnection
+                if (peerConnection) {
+                    const senders = peerConnection.getSenders();
+                    const audioSender = senders.find(sender => 
+                        sender.track && sender.track.kind === 'audio'
+                    );
+                    
+                    if (audioSender && audioSender.track) {
+                        audioSender.track.enabled = newState;
+                        console.log(`🔊 Audio sender también ${newState ? 'habilitado' : 'deshabilitado'}`);
+                    }
+                }
+                
                 console.log(`🎤 Audio toggled: ${newState ? 'ENABLED' : 'MUTED'}`, {
                     trackId: audioTrack.id,
                     label: audioTrack.label,
                     readyState: audioTrack.readyState,
-                    enabled: audioTrack.enabled
+                    enabled: audioTrack.enabled,
+                    muted: audioTrack.muted
                 });
                 setState(prev => ({ ...prev, isAudioEnabled: newState }));
             } else {

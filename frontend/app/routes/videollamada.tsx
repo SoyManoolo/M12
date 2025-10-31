@@ -333,8 +333,9 @@ export default function VideollamadaPage() {
                                 <button
                                     onClick={(e) => {
                                         e.stopPropagation();
+                                        const willMute = videoCallState.isAudioEnabled;
                                         toggleAudio();
-                                        showDebug(videoCallState.isAudioEnabled ? '🔇 MUTED' : '🎤 UNMUTED');
+                                        showDebug(willMute ? '🔇 MUTEADO' : '🎤 SONIDO ON');
                                     }}
                                     className={`p-3 rounded-full transition-all duration-200 hover:bg-gray-700 ${videoCallState.isAudioEnabled
                                         ? 'bg-gray-800 text-white hover:text-gray-300'
