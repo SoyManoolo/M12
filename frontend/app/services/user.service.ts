@@ -2,26 +2,33 @@ import { environment } from '../config/environment';
 import type { UserProfile, ApiResponse, PaginatedUsersResponse } from '../types/user.types';
 import type { User } from '~/types/user.types';
 
-// Función helper para decodificar token de forma segura con SSR
+// Función helper para decodificar token JWT manualmente (funciona en SSR y cliente)
 function decodeTokenSafe(token: string): { user_id: string } | null {
-    if (typeof window === 'undefined') {
-        // SSR: Decodificación manual
-        try {
-            const parts = token.split('.');
-            if (parts.length !== 3) return null;
-            const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf8'));
-            return payload.user_id ? { user_id: payload.user_id } : null;
-        } catch {
+    try {
+        const parts = token.split('.');
+        if (parts.length !== 3) {
+            console.error('Token JWT inválido: no tiene 3 partes');
             return null;
         }
-    } else {
-        // Cliente: Usar jwt-decode
-        try {
-            const { jwtDecode } = require('jwt-decode');
-            return jwtDecode(token) as { user_id: string };
-        } catch {
-            return null;
+        
+        // Decodificar la parte del payload (segunda parte)
+        const payload = parts[1];
+        
+        // En el navegador, usar atob; en Node.js, usar Buffer
+        let decoded: string;
+        if (typeof window !== 'undefined') {
+            // Cliente: usar atob (disponible en navegadores)
+            decoded = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
+        } else {
+            // SSR: usar Buffer
+            decoded = Buffer.from(payload, 'base64').toString('utf8');
         }
+        
+        const parsed = JSON.parse(decoded);
+        return parsed.user_id ? { user_id: parsed.user_id } : null;
+    } catch (error) {
+        console.error('Error al decodificar token:', error);
+        return null;
     }
 }
 

@@ -37,11 +37,13 @@ export function useVideoCall() {
     useEffect(() => {
         if (!webRTCService || !socketService || !token) return;
 
-        if (!socketService.isConnected()) {
-            socketService.connect(token);
-        }
+        // Función async para manejar la conexión
+        const initializeConnection = async () => {
+            if (!socketService.isConnected()) {
+                await socketService.connect(token);
+            }
 
-        webRTCService.initializeService(token); // Debe llamarse después de conectar el socket o manejar la conexión asíncrona
+            webRTCService.initializeService(token); // Debe llamarse después de conectar el socket o manejar la conexión asíncrona
 
             webRTCService.setUICallbacks(
                 (stream) => { setRemoteStreamForUI(stream); },
@@ -73,6 +75,10 @@ export function useVideoCall() {
                     setLocalStreamForUI(stream);
                 }
             );
+        };
+
+        // Ejecutar la inicialización
+        initializeConnection();
 
         return () => {
             console.log("Hook useVideoCall desmontándose. Llamando a webRTCService.closeConnection()");

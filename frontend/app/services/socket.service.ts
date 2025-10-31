@@ -1,12 +1,14 @@
 import type { Socket } from 'socket.io-client';
 import { environment } from '~/config/environment';
 
-// Función helper para cargar socket.io solo en el cliente
-function getSocketIO(): typeof import('socket.io-client') | null {
+// Función helper para cargar socket.io solo en el cliente con import dinámico
+async function getSocketIO(): Promise<typeof import('socket.io-client') | null> {
     if (typeof window === 'undefined') {
         return null;
     }
-    return require('socket.io-client');
+    // Usar import dinámico en lugar de require para Vite
+    const socketIO = await import('socket.io-client');
+    return socketIO;
 }
 
 class SocketService {
@@ -23,7 +25,7 @@ class SocketService {
         return SocketService.instance;
     }
 
-    public connect(token: string): void {
+    public async connect(token: string): Promise<void> {
         // Protección SSR
         if (typeof window === 'undefined') {
             console.warn('Socket.connect llamado en SSR, ignorando.');
@@ -44,7 +46,7 @@ class SocketService {
 
         console.log('Intentando conectar a Socket.IO en:', environment.apiUrl);
         
-        const socketIO = getSocketIO();
+        const socketIO = await getSocketIO();
         if (!socketIO) {
             console.error('No se pudo cargar socket.io-client');
             return;
