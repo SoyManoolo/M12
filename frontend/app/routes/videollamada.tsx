@@ -282,6 +282,25 @@ export default function VideollamadaPage() {
                                 }}
                             />
 
+                            {/* Video local en esquina superior derecha - VISIBLE EN MÓVIL como PiP */}
+                            <div className="md:hidden absolute top-4 right-4 w-24 h-32 rounded-lg overflow-hidden border-2 border-white shadow-lg z-40">
+                                <video
+                                    ref={localVideoRef}
+                                    autoPlay
+                                    playsInline
+                                    muted
+                                    disablePictureInPicture
+                                    controls={false}
+                                    className="w-full h-full object-cover"
+                                    style={{ 
+                                        WebkitTransform: 'translateZ(0)',
+                                        transform: 'translateZ(0)',
+                                        backfaceVisibility: 'hidden',
+                                        WebkitBackfaceVisibility: 'hidden'
+                                    }}
+                                />
+                            </div>
+
                             {/* MODIFICADO: Indicador de búsqueda */}
                             {videoCallState.inQueue && (
                                 <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-75">
@@ -314,8 +333,8 @@ export default function VideollamadaPage() {
                                 </div>
                             )}
 
-                            {/* Controles de video/audio - Posicionados en la parte inferior, siempre visibles */}
-                            <div className="absolute bottom-6 md:bottom-4 left-1/2 transform -translate-x-1/2 flex gap-3 md:gap-4 bg-gray-900/80 p-4 md:p-3 rounded-full backdrop-blur-sm z-50">
+                            {/* Controles de video/audio - Posicionados más arriba del borde inferior */}
+                            <div className="absolute bottom-20 md:bottom-4 left-1/2 transform -translate-x-1/2 flex gap-3 md:gap-4 bg-gray-900/80 p-4 md:p-3 rounded-full backdrop-blur-sm z-50">
                                 <button
                                     onClick={(e) => {
                                         e.stopPropagation();
