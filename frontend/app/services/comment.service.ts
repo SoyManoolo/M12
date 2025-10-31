@@ -40,9 +40,9 @@ class CommentService {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           post_id: postId,
-          content 
+          content
         })
       });
 

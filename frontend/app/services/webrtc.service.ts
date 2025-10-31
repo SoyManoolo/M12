@@ -68,7 +68,7 @@ class WebRTCService {
             // Devolver un objeto dummy que no hace nada
             return {} as WebRTCService;
         }
-        
+
         if (!WebRTCService.instance) {
             WebRTCService.instance = new WebRTCService();
         }
@@ -193,6 +193,10 @@ class WebRTCService {
                 muted: event.track.muted,
                 readyState: event.track.readyState
             });
+
+            // Log de todos los tracks en el stream
+            console.log(`WebRTCService: Stream remoto tiene ${event.streams[0].getTracks().length} tracks:`,
+                event.streams[0].getTracks().map(t => `${t.kind} (${t.readyState})`).join(', '));
 
             this.remoteStream = event.streams[0];
             this.ensureTracksEnabled(this.remoteStream);
@@ -449,32 +453,68 @@ class WebRTCService {
         }
 
         try {
-            // Constraints más flexibles - intentar primero con video y audio
-            let constraints: MediaStreamConstraints = {
-                video: {
-                    width: { ideal: 640 },
-                    height: { ideal: 480 },
-                    frameRate: { ideal: 30, max: 30 }
-                },
-                audio: true
-            };
+            // Detectar si es móvil para usar constraints más simples
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-            console.log("WebRTCService: Solicitando acceso a medios locales con constraints:", constraints);
-            
+            // Constraints más flexibles - intentar primero con video y audio
+            let constraints: MediaStreamConstraints = isMobile
+                ? {
+                    // Móvil: constraints mínimas
+                    video: true,
+                    audio: true
+                }
+                : {
+                    // Desktop: constraints específicas
+                    video: {
+                        width: { ideal: 640 },
+                        height: { ideal: 480 },
+                        frameRate: { ideal: 30, max: 30 }
+                    },
+                    audio: true
+                };
+
+            console.log(`WebRTCService: Solicitando acceso a medios locales (${isMobile ? 'MÓVIL' : 'DESKTOP'}) con constraints:`, constraints);
+
             let stream: MediaStream;
+            let hasVideo = false;
+
             try {
                 // Intentar con video y audio
                 stream = await navigator.mediaDevices.getUserMedia(constraints);
+                hasVideo = stream.getVideoTracks().length > 0;
+                console.log(`WebRTCService: ✅ Media obtenida con éxito. Video tracks: ${stream.getVideoTracks().length}, Audio tracks: ${stream.getAudioTracks().length}`);
             } catch (videoError) {
                 console.warn("WebRTCService: No se pudo obtener video, intentando solo con audio:", videoError);
                 // Si falla el video, intentar solo con audio
                 try {
                     constraints = { audio: true, video: false };
                     stream = await navigator.mediaDevices.getUserMedia(constraints);
-                    console.log("WebRTCService: Llamada de solo audio iniciada");
+                    hasVideo = false;
+                    console.log("WebRTCService: Audio obtenido, se agregará placeholder de video");
                 } catch (audioError) {
                     console.error("WebRTCService: No se pudo obtener ni video ni audio:", audioError);
                     throw new Error("No se encontró ningún dispositivo de entrada (cámara o micrófono). Por favor, verifica que tengas al menos un micrófono conectado y que el navegador tenga permisos.");
+                }
+            }
+
+            // Si no hay video, crear un track de video negro (placeholder) para mantener la negociación bidireccional
+            if (!hasVideo) {
+                console.log("WebRTCService: 🎨 Creando track de video placeholder (pantalla negra) para permitir recibir video del otro lado");
+                const canvas = document.createElement('canvas');
+                canvas.width = 640;
+                canvas.height = 480;
+                const ctx = canvas.getContext('2d');
+                if (ctx) {
+                    ctx.fillStyle = '#000000';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                }
+                // Capturar el canvas como stream de video a 1 FPS (suficiente para placeholder)
+                const dummyVideoStream = canvas.captureStream(1);
+                const dummyVideoTrack = dummyVideoStream.getVideoTracks()[0];
+
+                if (dummyVideoTrack) {
+                    stream.addTrack(dummyVideoTrack);
+                    console.log("WebRTCService: ✅ Track de video placeholder agregado - ahora se puede recibir video del otro usuario");
                 }
             }
 
@@ -502,7 +542,7 @@ class WebRTCService {
                 this.localStream.getTracks().forEach((track) => {
                     this.peerConnection!.addTrack(track, this.localStream!);
                 });
-                console.log("WebRTCService: Tracks locales añadidos al PeerConnection.");
+                console.log(`WebRTCService: Tracks locales añadidos al PeerConnection (${stream.getVideoTracks().length} video, ${stream.getAudioTracks().length} audio)`);
             }
         } catch (error) {
             console.error("WebRTCService: Error al obtener getUserMedia:", error);
