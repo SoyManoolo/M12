@@ -33,36 +33,66 @@ interface AuthProviderProps {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: AuthProviderProps) {
-    const [token, setToken] = useState<string | null>(() => {
+    const [token, setTokenState] = useState<string | null>(() => {
         // Inicializar el token desde localStorage solo en el cliente
         if (typeof window !== 'undefined') {
-            const storedToken = localStorage.getItem('token');
-            if (storedToken) {
-                // Verificar que el token sea válido (usa el decodeToken ya seguro para SSR)
-                const decodedToken = decodeToken(storedToken);
-                if (!decodedToken) {
-                    localStorage.removeItem('token');
-                    return null;
+            try {
+                const storedToken = localStorage.getItem('token');
+                if (storedToken) {
+                    // Verificar que el token sea válido (usa el decodeToken ya seguro para SSR)
+                    const decodedToken = decodeToken(storedToken);
+                    if (!decodedToken) {
+                        try {
+                            localStorage.removeItem('token');
+                        } catch (e) {
+                            console.warn('No se pudo limpiar localStorage:', e);
+                        }
+                        return null;
+                    }
+                    return storedToken;
                 }
-                return storedToken;
+            } catch (error) {
+                // iOS en modo privado puede lanzar error al acceder a localStorage
+                console.warn('Error al acceder a localStorage:', error);
+                return null;
             }
         }
         return null;
     });
 
     const [user, setUser] = useState<User | null>(null);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
 
-    // Efecto para sincronizar el token con localStorage
-    useEffect(() => {
-        if (token) {
-            localStorage.setItem('token', token);
-        } else {
-            localStorage.removeItem('token');
+    // Wrapper para setToken que maneja localStorage de forma segura
+    const setToken = (newToken: string | null) => {
+        setTokenState(newToken);
+        if (typeof window !== 'undefined') {
+            try {
+                if (newToken) {
+                    localStorage.setItem('token', newToken);
+                } else {
+                    localStorage.removeItem('token');
+                }
+            } catch (error) {
+                // iOS en modo privado puede fallar
+                console.warn('No se pudo guardar en localStorage:', error);
+                // Intentar usar sessionStorage como fallback
+                try {
+                    if (newToken) {
+                        sessionStorage.setItem('token', newToken);
+                    } else {
+                        sessionStorage.removeItem('token');
+                    }
+                } catch (e) {
+                    console.error('Tampoco se pudo usar sessionStorage:', e);
+                }
+            }
         }
-    }, [token]);
+    };
 
     useEffect(() => {
         const initializeAuth = async () => {
+            setIsLoading(true);
             if (token) {
                 try {
                     console.log('Inicializando autenticación con token:', token);
@@ -77,24 +107,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
                         } else {
                             // Si no podemos obtener la información del usuario, el token podría ser inválido
                             setToken(null);
-                            localStorage.removeItem('token');
                             setUser(null);
                         }
                     } else {
                         // Token inválido
                         setToken(null);
-                        localStorage.removeItem('token');
                         setUser(null);
                     }
                 } catch (error) {
                     console.error('Error al inicializar la autenticación:', error);
                     setToken(null);
-                    localStorage.removeItem('token');
                     setUser(null);
                 }
             } else {
                 setUser(null);
             }
+            setIsLoading(false);
         };
 
         initializeAuth();
@@ -104,17 +132,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
         try {
             await authService.logout();
             setToken(null);
-            localStorage.removeItem('token');
             setUser(null);
         } catch (error) {
             console.error('Error al cerrar sesión:', error);
+            // Limpiar localmente aunque falle la petición
+            setToken(null);
+            setUser(null);
         }
     };
 
     const value: AuthContextType = {
         token,
         setToken,
-        isAuthenticated: !!token,
+        // CRÍTICO: isAuthenticated ahora verifica que tengamos token Y que no estemos cargando
+        // Esto evita que se redirija a login mientras se está cargando el usuario
+        isAuthenticated: !!token && !isLoading,
         user,
         logout
     };
