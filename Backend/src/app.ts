@@ -48,8 +48,8 @@ app.use(helmet(helmetOptions));
 
 // Rate limiting global
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutos
-    max: 100, // 100 requests por IP
+    windowMs: 10 * 60 * 1000, // 10 minutos
+    max: process.env.NODE_ENV === 'production' ? 1000 : 10000, // 100 requests por IP
     message: {
         success: false,
         status: 429,
@@ -71,7 +71,7 @@ const authLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
-    skipSuccessfulRequests: true  // ✅ No contar logins exitosos
+    skipSuccessfulRequests: true  //  No contar logins exitosos
 });
 
 // Parsing
@@ -87,7 +87,7 @@ app.set('trust proxy', true);
 // Health check endpoint - SIN autenticación, para probar conectividad
 app.get('/health', (req, res) => {
     const timestamp = new Date().toISOString();
-    dbLogger.debug('[HEALTH] ✅ Health check recibido en', { timestamp });
+    dbLogger.debug('[HEALTH] Health check recibido en', { timestamp });
     dbLogger.debug('[HEALTH] Headers:', { headers: req.headers });
     dbLogger.debug('[HEALTH] IP:', { ip: req.ip });
     dbLogger.debug('[HEALTH] Protocol:', { protocol: req.protocol });
