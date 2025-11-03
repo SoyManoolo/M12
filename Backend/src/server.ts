@@ -11,17 +11,13 @@ import './services/chat';
 import { VideoCallService } from "./services/videoCall";
 import { initializeDatabase } from "./config/database";
 import dbLogger from './config/logger';
+import { ALLOWED_ORIGINS } from './config/cors';
 
 const server = createServer(app);
 
 const io = new Server(server, {
     cors: {
-        origin: [
-            'https://friendsgofrontend.vercel.app',
-            'http://localhost:5173',
-            'http://localhost:5174',
-            'http://localhost:3000'
-        ],
+        origin: ALLOWED_ORIGINS,
         methods: ['GET', 'POST', 'PATCH', 'DELETE', 'PUT', 'OPTIONS'],
         credentials: true,
         allowedHeaders: ['Content-Type', 'Authorization']
