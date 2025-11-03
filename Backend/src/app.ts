@@ -46,6 +46,21 @@ if (process.env.NODE_ENV === 'development') {
 app.use(cors(corsOptions));
 app.use(helmet(helmetOptions));
 
+// HTTPS Enforcement en producción
+if (process.env.NODE_ENV === 'production') {
+    app.use((req: Request, res: Response, next: NextFunction) => {
+        // Railway y otros PaaS usan el header 'x-forwarded-proto'
+        if (req.headers['x-forwarded-proto'] !== 'https') {
+            dbLogger.warn(`[Security] HTTP request redirected to HTTPS`, {
+                path: req.path,
+                ip: req.ip
+            });
+            return res.redirect(301, `https://${req.headers.host}${req.url}`);
+        }
+        next();
+    });
+}
+
 // Rate limiting global
 const limiter = rateLimit({
     windowMs: 10 * 60 * 1000, // 10 minutos
@@ -75,7 +90,7 @@ const authLimiter = rateLimit({
 });
 
 // Parsing
-app.use(express.json({limit: '10mb'}));
+app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Compresión

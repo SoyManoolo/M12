@@ -56,13 +56,12 @@ export class PostService {
             };
 
             const user: User | null = await existsUser(filters);
-            dbLogger.info(`[PostService] User found: ${JSON.stringify(user)}`);
-
             if (!user) {
                 dbLogger.error("[PostService] User not found for filters:", { filters });
                 throw new AppError(404, "")
             };
 
+            dbLogger.debug(`[PostService] User found`, { user_id: user.user_id, username: user.username });
             const user_id = user.getDataValue("user_id");
             dbLogger.info(`[PostService] User ID: ${JSON.stringify(user_id)}`);
 
