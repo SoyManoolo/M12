@@ -16,7 +16,7 @@ export function commentEvents(socket: Socket, io: Server) {
         try {
 
         } catch (error) {
-            
+
         }
     });
 
@@ -24,7 +24,7 @@ export function commentEvents(socket: Socket, io: Server) {
         try {
 
         } catch (error) {
-            
+
         }
     });
 };
