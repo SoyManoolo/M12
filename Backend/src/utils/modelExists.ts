@@ -2,6 +2,7 @@ import { Op } from "sequelize";
 import { AppError } from "../middlewares/errors/AppError";
 import { User, Post, Friends, PostComments } from "../models";
 import { UserFilters } from "../types/custom";
+import dbLogger from "../config/logger";
 
 // Método para comprobar si existe un usuario
 export async function existsUser(filters: UserFilters) {
@@ -19,7 +20,7 @@ export async function existsUser(filters: UserFilters) {
 
         // Si no hay condiciones válidas, no buscar
         if (orConditions.length === 0) {
-            console.warn("existsUser called with no valid filters.");
+            dbLogger.warn("existsUser called with no valid filters.");
             return null;
         }
 

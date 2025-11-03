@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import dbLogger from '../config/logger';
 
 // Importación dinámica de ESM
 let translate: any;
@@ -61,7 +62,7 @@ const translateText = async (text: string, targetLang: string): Promise<string> 
     const translated = await translate(text, { from: 'es', to: targetLang });
     return translated;
   } catch (error) {
-    console.error(`Error al traducir "${text}" a ${targetLang}:`, error);
+    dbLogger.error(`Error al traducir "${text}" a ${targetLang}:`, {error});
     return `ERROR_${text}`;
   }
 };
@@ -70,7 +71,7 @@ const syncTranslations = async (): Promise<void> => {
   const baseFilePath: string = path.join(baseDir, `${baseLocale}.json`);
 
   if (!fs.existsSync(baseFilePath)) {
-    console.error(`Archivo base no encontrado: ${baseFilePath}`);
+    dbLogger.error(`Archivo base no encontrado: ${baseFilePath}`);
     return;
   }
 
@@ -78,19 +79,19 @@ const syncTranslations = async (): Promise<void> => {
   try {
     const fileContent: string = fs.readFileSync(baseFilePath, 'utf8');
     if (!fileContent.trim()) {
-      console.error(`Archivo vacío: ${baseFilePath}`);
+      dbLogger.error(`Archivo vacío: ${baseFilePath}`);
       return;
     }
     baseFile = JSON.parse(fileContent);
   } catch (error) {
-    console.error(`Error al parsear el archivo ${baseFilePath}:`, error);
+    dbLogger.error(`Error al parsear el archivo ${baseFilePath}:`, {error});
     return;
   }
 
   const baseFlat: Record<string, string> = flatten(baseFile);
 
   for (const locale of locales) {
-    console.log(`Traduciendo al idioma: ${locale}`);
+    dbLogger.debug(`Traduciendo al idioma: ${locale}`);
     const filePath: string = path.join(baseDir, `${locale}.json`);
 
     let current: TranslationObject = {};
@@ -99,7 +100,7 @@ const syncTranslations = async (): Promise<void> => {
         const currentContent: string = fs.readFileSync(filePath, 'utf8');
         current = currentContent.trim() ? JSON.parse(currentContent) : {};
       } catch (error) {
-        console.error(`Error al parsear el archivo ${filePath}:`, error);
+        dbLogger.error(`Error al parsear el archivo ${filePath}:`, {error});
         continue;
       }
     }
@@ -118,17 +119,17 @@ const syncTranslations = async (): Promise<void> => {
 
     const updated: TranslationObject = unflatten(updatedFlat);
     fs.writeFileSync(filePath, JSON.stringify(updated, null, 2), 'utf8');
-    console.log(`Traducción completada para ${locale}`);
+    dbLogger.debug(`Traducción completada para ${locale}`);
   }
 };
 
 async function main() {
   await loadTranslate();
   await syncTranslations();
-  console.log('Sincronización y traducción completada');
+  dbLogger.debug('Sincronización y traducción completada');
 }
 
 main().catch((error) => {
-  console.error('Error durante la sincronización:', error);
+  dbLogger.error('Error durante la sincronización:', {error});
   process.exit(1);
 });

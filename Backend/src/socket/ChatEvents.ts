@@ -3,6 +3,7 @@ import { ChatService } from "../services/chat";
 import { AppError } from "../middlewares/errors/AppError";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { User } from "../models";
+import dbLogger from "../config/logger";
 
 // Mapa para mantener un registro de los sockets de usuario
 const userSockets = new Map<string, Socket>();
@@ -23,7 +24,7 @@ export function chatEvents(socket: Socket, io: Server) {
         try {
             // Extraer el token del paquete de manera más robusta
             let token: string | undefined;
-            
+
             // Intentar obtener el token de diferentes ubicaciones posibles
             if (packet[0] === 'join-user' && typeof packet[1] === 'object') {
                 // Para el evento join-user, el token viene en el objeto data
@@ -33,14 +34,14 @@ export function chatEvents(socket: Socket, io: Server) {
                 token = packet[1].token;
             } else if (typeof packet[1] === 'object') {
                 // Para otros eventos, intentar obtener el token de diferentes ubicaciones
-                token = packet[1].token || 
-                       (packet[1].data && packet[1].data.token) || 
-                       (packet[1].auth && packet[1].auth.token);
+                token = packet[1].token ||
+                    (packet[1].data && packet[1].data.token) ||
+                    (packet[1].auth && packet[1].auth.token);
             }
 
             // Si no hay token y no es un evento de desconexión, lanzar error
             if (!token && packet[0] !== 'disconnect') {
-                console.error("[SOCKET] Token no encontrado en el paquete:", {
+                dbLogger.error("[SOCKET] Token no encontrado en el paquete:", {
                     event: packet[0],
                     data: packet[1]
                 });
@@ -58,12 +59,12 @@ export function chatEvents(socket: Socket, io: Server) {
             }
 
             const decoded = jwt.verify(token, JWT_SECRET) as unknown as { user_id: string; username: string };
-            console.log("[SOCKET] Token decodificado para evento", packet[0], ":", decoded);
+            dbLogger.debug("[SOCKET] Token decodificado para evento", { packet: packet[0], decoded });
 
             // Buscar el usuario en la base de datos
             const user = await User.findByPk(decoded.user_id);
             if (!user) {
-                console.error("[SOCKET] Usuario no encontrado para el ID:", decoded.user_id);
+                dbLogger.error("[SOCKET] Usuario no encontrado para el ID:", { decoded: decoded.user_id });
                 throw new AppError(401, 'UserNotFound');
             }
 
@@ -82,10 +83,10 @@ export function chatEvents(socket: Socket, io: Server) {
                 active_video_call: user.getDataValue('active_video_call')
             };
 
-            console.log("[SOCKET] Usuario autenticado para evento", packet[0], ":", socket.data.user);
+            dbLogger.debug("[SOCKET] Usuario autenticado para evento", { packet: packet[0], user: socket.data.user });
             next();
         } catch (error) {
-            console.error("[SOCKET] Error de autenticación para evento", packet[0], ":", error);
+            dbLogger.error("[SOCKET] Error de autenticación para evento", { packet: packet[0], error });
             if (error instanceof jwt.JsonWebTokenError) {
                 next(new Error('InvalidToken'));
             } else if (error instanceof AppError) {
@@ -99,7 +100,7 @@ export function chatEvents(socket: Socket, io: Server) {
     // Unirse a la sala del usuario
     socket.on("join-user", async (data: { userId: string; token: string }) => {
         try {
-            console.log("[SOCKET][DEBUG] Evento recibido: join-user", [data]);
+            dbLogger.debug("[SOCKET][DEBUG] Evento recibido: join-user", [data]);
             const { userId, token } = data;
 
             // Verificar el token
@@ -107,7 +108,7 @@ export function chatEvents(socket: Socket, io: Server) {
 
             // Verificar que el ID del token coincide con el userId proporcionado
             if (decoded.user_id !== userId) {
-                console.error("[SOCKET] Token ID no coincide con userId:", { tokenId: decoded.user_id, userId });
+                dbLogger.error("[SOCKET] Token ID no coincide con userId:", { tokenId: decoded.user_id, userId });
                 socket.emit("error", {
                     type: 'InvalidToken',
                     message: 'El token no coincide con el usuario'
@@ -151,7 +152,7 @@ export function chatEvents(socket: Socket, io: Server) {
             });
 
         } catch (error) {
-            console.error("[SOCKET] Error en join-user:", error);
+            dbLogger.error("[SOCKET] Error en join-user:", { error });
             if (error instanceof jwt.JsonWebTokenError) {
                 socket.emit("error", {
                     type: 'InvalidToken',
@@ -186,19 +187,22 @@ export function chatEvents(socket: Socket, io: Server) {
     // Enviar mensaje
     socket.on('chat-message', async (data: { data: { receiver_id: string; content: string }, token: string }) => {
         try {
-            console.log('[SOCKET] Datos del socket:', {
+            dbLogger.debug('[SOCKET] Datos del socket:', {
                 user: socket.data.user,
                 id: socket.id,
                 rooms: Array.from(socket.rooms)
             });
 
             if (!socket.data.user || !socket.data.user.user_id) {
-                console.error('[SOCKET] Usuario no autenticado en el socket o user_id no disponible');
+                dbLogger.error('[SOCKET] Usuario no autenticado en el socket o user_id no disponible');
                 throw new AppError(401, 'UserNotAuthenticated');
             }
 
             const sender = socket.data.user;
-            console.log(`[SOCKET] Enviando mensaje de ${sender.user_id} a ${data.data.receiver_id}`);
+            dbLogger.info(`[SOCKET] Mensaje enviado`, {
+                from: sender.user_id,
+                to: data.data.receiver_id
+            });
 
             // Crear el mensaje
             const message = await chatService.createMessage(
@@ -227,7 +231,7 @@ export function chatEvents(socket: Socket, io: Server) {
             });
 
         } catch (error) {
-            console.error('[SOCKET] Error en \'chat-message\':', error);
+            dbLogger.error('[SOCKET] Error en \'chat-message\':', { error });
 
             // Solo emitir error si es un error de autenticación o si el mensaje no se pudo crear
             if (error instanceof AppError && error.type === 'UserNotAuthenticated') {
@@ -248,12 +252,12 @@ export function chatEvents(socket: Socket, io: Server) {
     // Marcar mensaje como entregado
     socket.on("message-delivered", async (data) => {
         try {
-            console.log("[SOCKET] Evento 'message-delivered' recibido:", data);
+            dbLogger.debug("[SOCKET] Evento 'message-delivered' recibido:", data);
             const { message_id } = data;
-            console.log("[SOCKET] Marcando mensaje como entregado:", message_id);
+            dbLogger.debug("[SOCKET] Marcando mensaje como entregado:", message_id);
             if (!socket.data.user) return;
             const message = await chatService.markMessageAsDelivered(message_id);
-            console.log("[SOCKET] Mensaje marcado como entregado:", message);
+            dbLogger.debug("[SOCKET] Mensaje marcado como entregado:", message);
             // Notificar al remitente que el mensaje fue entregado
             io.to(message.sender_id).emit("message-delivery-status", {
                 message_id,
@@ -261,7 +265,7 @@ export function chatEvents(socket: Socket, io: Server) {
                 delivered_at: message.delivered_at
             });
         } catch (error) {
-            console.error("[SOCKET] Error en 'message-delivered':", error);
+            dbLogger.error("[SOCKET] Error en 'message-delivered':", { error });
             socket.emit("delivery-status-error", {
                 success: false,
                 message: error instanceof AppError ? error.message : "Error updating delivery status",
@@ -272,12 +276,12 @@ export function chatEvents(socket: Socket, io: Server) {
     // Marcar mensaje como leído
     socket.on("message-read", async (data) => {
         try {
-            console.log("[SOCKET] Evento 'message-read' recibido:", data);
+            dbLogger.debug("[SOCKET] Evento 'message-read' recibido:", data);
             const { message_id } = data;
-            console.log("[SOCKET] Marcando mensaje como leído:", message_id);
+            dbLogger.debug("[SOCKET] Marcando mensaje como leído:", message_id);
             if (!socket.data.user) return;
             const message = await chatService.markMessageAsRead(message_id);
-            console.log("[SOCKET] Mensaje marcado como leído:", message);
+            dbLogger.debug("[SOCKET] Mensaje marcado como leído:", message);
             // Notificar al remitente que el mensaje fue leído
             io.to(message.sender_id).emit("message-read-status", {
                 message_id,
@@ -285,7 +289,7 @@ export function chatEvents(socket: Socket, io: Server) {
                 read_at: message.read_at
             });
         } catch (error) {
-            console.error("[SOCKET] Error en 'message-read':", error);
+            dbLogger.error("[SOCKET] Error en 'message-read':", { error });
             socket.emit("read-status-error", {
                 success: false,
                 message: error instanceof AppError ? error.message : "Error updating read status",
@@ -321,7 +325,7 @@ export function chatEvents(socket: Socket, io: Server) {
                 isTyping
             });
         } catch (error) {
-            console.error("[SOCKET] Error en typing:", error);
+            dbLogger.error("[SOCKET] Error en typing:", { error });
             socket.emit("error", {
                 type: error instanceof AppError ? error.type : 'InternalServerError',
                 message: error instanceof Error ? error.message : 'Error interno del servidor'
@@ -370,6 +374,6 @@ export function chatEvents(socket: Socket, io: Server) {
 
     // Listener global para depuración de eventos
     socket.onAny((event, ...args) => {
-        console.log(`[SOCKET][DEBUG] Evento recibido:`, event, args);
+        dbLogger.debug(`[SOCKET][DEBUG] Evento recibido:`, { event, args });
     });
 }

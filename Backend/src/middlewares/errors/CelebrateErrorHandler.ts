@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { isCelebrateError } from "celebrate";
 import i18n from "../../config/i18n";
+import dbLogger from "../../config/logger";
 
 export const celebrateErrorHandler = (error: any, req: Request, res: Response, next: NextFunction) => {
     if (!isCelebrateError(error)) return next(error);
@@ -13,7 +14,7 @@ export const celebrateErrorHandler = (error: any, req: Request, res: Response, n
             const translated = i18n.__({ phrase: `errors.field.${fieldName}`, locale });
             return translated !== `errors.field.${fieldName}` ? translated : fieldName;
         } catch (error) {
-            console.warn(`Translation error for field: ${fieldName}`, error);
+            dbLogger.warn(`Translation error for field: ${fieldName}`, {error});
             return fieldName;
         }
     };
@@ -23,7 +24,7 @@ export const celebrateErrorHandler = (error: any, req: Request, res: Response, n
             const message = i18n.__({ phrase: key, locale });
             return field ? message?.replace('{field}', field) : message;
         } catch (error) {
-            console.warn(`Translation error for key: ${key}`, error);
+            dbLogger.warn(`Translation error for key: ${key}`, {error});
             return field ? `The field ${field} is required` : 'Validation error occurred';
         }
     };
@@ -52,7 +53,7 @@ export const celebrateErrorHandler = (error: any, req: Request, res: Response, n
                         return getTranslatedMessage('errors.validation.invalidEmail');
                     }
                     default: {
-                        console.warn(`Unhandled validation type: ${d.type}`);
+                        dbLogger.warn(`Unhandled validation type: ${d.type}`);
                         return getTranslatedMessage('errors.validation.generic');
                     }
                 }
@@ -67,7 +68,7 @@ export const celebrateErrorHandler = (error: any, req: Request, res: Response, n
             errors: validationErrors
         });
     } catch (err) {
-        console.error('Unexpected error in celebrate error handler:', err);
+        dbLogger.error('Unexpected error in celebrate error handler:', {err});
         return res.status(500).json({
             success: false,
             status: 500,

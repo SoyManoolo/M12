@@ -1,20 +1,11 @@
 import { Sequelize, Options, Dialect } from "sequelize";
 import { AppError } from "../middlewares/errors/AppError";
 import dbLogger from "./logger";
-import { Client } from "pg"; // Importar el cliente de PostgreSQL
 import { User } from "../models";
 import { hash } from "bcryptjs";
 import { Op } from "sequelize";
 
-console.log('[DEBUG-DB] 1. database.ts cargando...');
-console.log('[DEBUG-DB] 2. NODE_ENV:', process.env.NODE_ENV);
-console.log('[DEBUG-DB] 3. DATABASE_URL presente?:', !!process.env.DATABASE_URL);
-if (process.env.DATABASE_URL) {
-    console.log('[DEBUG-DB] 4. DATABASE_URL primeros 50 chars:', process.env.DATABASE_URL.substring(0, 50));
-}
-
 const DatabaseURL = process.env.DATABASE_URL;
-dbLogger.info("Valor de DATABASE_URL: ", { DatabaseURL })
 const isTestEnv = process.env.NODE_ENV === "test";
 const dbName = isTestEnv ? process.env.DB_NAME_TEST : process.env.DB_NAME;
 const dbUpdate: boolean = process.env.DB_UPDATE === "true" || false;
@@ -49,76 +40,14 @@ async function createDefaultAdmin() {
                 ...DEFAULT_ADMIN,
                 password: hashedPassword
             });
-            dbLogger.info("Default admin user created successfully.");
+            dbLogger.debug("Default admin user created successfully.");
         } else {
-            dbLogger.info("Default admin user already exists.");
+            dbLogger.debug("Default admin user already exists.");
         }
     } catch (error) {
         dbLogger.error("Error creating default admin user.", { error });
     }
 }
-
-// Función para crear usuarios al iniciar la conexión con la bbdd (debes proporcionar un json con la información de x persona)
-
-// async function createDefaultUsers() {
-//     try {
-//         for (const userData of DEFAULT_USERS) {
-//             // Verificar si ya existe el usuario
-//             const existingUser = await User.findOne({
-//                 where: {
-//                     [Op.or]: [
-//                         { username: userData.username },
-//                         { email: userData.email }
-//                     ]
-//                 }
-//             });
-
-//             if (!existingUser) {
-//                 // Crear el usuario
-//                 const hashedPassword = await hash(userData.password, 10);
-//                 await User.create({
-//                     ...userData,
-//                     password: hashedPassword
-//                 });
-//                 dbLogger.info(`Default user ${userData.username} created successfully.`);
-//             } else {
-//                 dbLogger.info(`Default user ${userData.username} already exists.`);
-//             }
-//         }
-//     } catch (error) {
-//         dbLogger.error("Error creating default users.", { error });
-//     }
-// }
-
-// Función para crear la bbdd si no existe (usado para entorno local)
-
-// async function createDatabase(): Promise<boolean> {
-//     try {
-//         const client = new Client({
-//             host: process.env.DB_HOST || "localhost",
-//             user: process.env.DB_USER!,
-//             password: process.env.DB_PASS!,
-//             port: Number(process.env.DB_PORT) || 5432, // Puerto por defecto de PostgreSQL
-//         });
-
-//         await client.connect();
-
-//         // Verificar si la base de datos ya existe
-//         const res = await client.query(`SELECT 1 FROM pg_database WHERE datname = '${dbName}'`);
-
-//         if (res.rowCount === 0) {
-//             await client.query(`CREATE DATABASE "${dbName}"`);
-//             await client.end();
-//             return true;
-//         }
-
-//         await client.end();
-//         return false; // La base de datos ya existe
-//     } catch (error) {
-//         dbLogger.error("Error creating database.", { error });
-//         throw new AppError(500, "FailedConnection");
-//     }
-// }
 
 // --- Opciones de Base ---
 const baseOptions: Options = {
@@ -190,7 +119,10 @@ async function initializeDatabase() {
         // if (databaseCreated) {
         //     dbLogger.info("Database created successfully.");
         // }
-        console.log(`Using database: ${dbName} (Environment: ${process.env.NODE_ENV || "development"})`);
+        dbLogger.info('Base de datos conectada', {
+            database: dbName,
+            env: process.env.NODE_ENV
+        });
 
         await sequelize.authenticate();
         dbLogger.info("Connection has been established successfully.");
@@ -216,8 +148,5 @@ async function initializeDatabase() {
         throw new AppError(500, "FailedConnection");
     }
 }
-
-// NO inicializar aquí - lo haremos desde server.ts después de que el servidor HTTP esté escuchando
-// initializeDatabase();
 
 export { initializeDatabase };

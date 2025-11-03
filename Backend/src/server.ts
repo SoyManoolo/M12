@@ -1,18 +1,7 @@
-// Cargar variables de entorno SOLO en desarrollo
-// Railway inyecta las variables directamente en producción
-console.log('[DEBUG] 1. Iniciando server.ts');
-console.log('[DEBUG] 2. NODE_ENV:', process.env.NODE_ENV);
-console.log('[DEBUG] 3. DATABASE_URL disponible?:', !!process.env.DATABASE_URL);
-console.log('[DEBUG] 3. PORT disponible?:', !!process.env.PORT)
+// Cargar variables de entorno ANTES de cualquier importación
+import dotenv from 'dotenv';
+dotenv.config();
 
-if (process.env.NODE_ENV !== 'production') {
-    console.log('[DEBUG] 4. Cargando dotenv...');
-    const dotenv = require('dotenv');
-    dotenv.config();
-    console.log('[DEBUG] 5. Dotenv cargado');
-}
-
-console.log('[DEBUG] 6. Importando dependencias...');
 import { Server } from 'socket.io';
 import { app } from "./app";
 import { createServer } from "http";
@@ -21,10 +10,7 @@ import { videoCallEvents } from "./socket/VideoCallEvents";
 import './services/chat';
 import { VideoCallService } from "./services/videoCall";
 import { initializeDatabase } from "./config/database";
-
-console.log('[DEBUG] 7. Dependencias importadas correctamente');
-
-// Cargar variables de entorno desde el archivo .env
+import dbLogger from './config/logger';
 
 const server = createServer(app);
 
@@ -56,13 +42,12 @@ function startMatchingSystem() {
         try {
             await VideoCallService.performMatchingRound(io);
         } catch (error) {
-            console.error("Error en el proceso de emparejamiento:", error);
+            dbLogger.error("Error en el proceso de emparejamiento:", { error });
         }
     }, 5000);
 }
 
 // Iniciar el sistema cuando arranca el servidor
-console.log('[DEBUG] 8. Iniciando matching system...');
 startMatchingSystem();
 
 process.on('SIGINT', () => {
@@ -75,43 +60,39 @@ process.on('SIGINT', () => {
 const port = parseInt(process.env.PORT || "8080");
 const host = '0.0.0.0'; // CRÍTICO: Railway requiere escuchar en 0.0.0.0
 
-console.log('[DEBUG] 9a. Variable PORT desde env:', process.env.PORT);
-console.log('[DEBUG] 9b. Puerto parseado:', port);
-console.log('[DEBUG] 9c. Todas las variables PORT*:', Object.keys(process.env).filter(k => k.includes('PORT')));
-console.log('[DEBUG] 9. Iniciando servidor en puerto:', port, 'host:', host);
-
 server.listen(port, host, () => {
-    console.log('[DEBUG] 10. ✅ Servidor HTTP escuchando en', host + ':' + port);
-    console.log('[DEBUG] 11. Ambiente:', process.env.NODE_ENV);
-    console.log('[DEBUG] 12. Railway URL:', process.env.RAILWAY_STATIC_URL || 'N/A');
-    
-    // Inicializar base de datos DESPUÉS de que el servidor HTTP esté listo
-    console.log('[DEBUG] 13. Inicializando base de datos...');
+    dbLogger.info('Servidor HTTP iniciado', {
+        host,
+        port,
+        env: process.env.NODE_ENV
+    });
+
     initializeDatabase()
         .then(() => {
-            console.log('[DEBUG] 14. ✅ Base de datos inicializada correctamente');
+            dbLogger.info('Base de datos inicializada');
         })
         .catch((error) => {
-            console.error('[DEBUG] 14. ❌ Error al inicializar base de datos:', error);
-            // No cerramos el servidor si falla la DB - puede que solo necesite retry
+            dbLogger.error('Error al inicializar base de datos', {
+                error: error instanceof Error ? error.message : error
+            });
         });
 });
 
 server.on('error', (error: any) => {
-    console.error('[ERROR] Error en el servidor:', error);
+    dbLogger.error('[ERROR] Error en el servidor:', error);
     if (error.code === 'EADDRINUSE') {
-        console.error(`[ERROR] Puerto ${port} ya está en uso`);
+        dbLogger.error(`[ERROR] Puerto ${port} ya está en uso`);
     }
     process.exit(1);
 });
 
 process.on('uncaughtException', (error) => {
-    console.error('[FATAL] Uncaught Exception:', error);
+    dbLogger.error('[FATAL] Uncaught Exception:', error);
     process.exit(1);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-    console.error('[FATAL] Unhandled Rejection at:', promise, 'reason:', reason);
+    dbLogger.error('[FATAL] Unhandled Rejection at:', {promise, reason});
     process.exit(1);
 });
 

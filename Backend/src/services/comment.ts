@@ -7,8 +7,6 @@ export class CommentService {
     // Método para crear un nuevo comentario
     public async createComment(post_id: string, user_id: string, content: string): Promise<PostComments> {
         try {
-            dbLogger.info(`[CommentService] Creando comentario para el post: ${post_id} por el usuario: ${user_id}`);
-
             // Verificar si el post existe
             const post = await Post.findByPk(post_id);
             if (!post) {
@@ -16,7 +14,6 @@ export class CommentService {
                 throw new AppError(404, 'PostNotFound');
             }
 
-            console.log('[CommentService] Buscando usuario:', user_id);
             // Verificar si el usuario existe
             const user = await User.findByPk(user_id);
             if (!user) {
@@ -24,7 +21,6 @@ export class CommentService {
                 throw new AppError(404, 'UserNotFound');
             }
 
-            dbLogger.info('[CommentService] Creando comentario...');
             const comment = await PostComments.create({
                 post_id,
                 user_id,
@@ -51,7 +47,6 @@ export class CommentService {
                 throw new AppError(500, 'CommentNotFound');
             }
 
-            dbLogger.info('[CommentService] Comentario final listo para devolver:', createdComment);
             return createdComment;
         } catch (error) {
             if (error instanceof AppError) {
@@ -66,8 +61,6 @@ export class CommentService {
     // Método para obtener comentarios de un post
     public async getComments(post_id: string): Promise<PostComments[]> {
         try {
-            dbLogger.info(`[CommentService] Obteniendo comentarios para el post: ${post_id}`);
-
             // Verificar si el post existe
             const post = await existsPost(post_id);
             if (!post) {

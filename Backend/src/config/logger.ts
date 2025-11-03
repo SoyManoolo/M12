@@ -7,8 +7,9 @@ import { Logs } from '../models';
 let tableChecked = false;
 const daysToRetainLogs = parseInt(process.env.LOGS_DAYS as string, 10) || 7;
 
+// Configuración de Pino según el entorno
 const logger = pino({
-    level: 'info',
+    level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
     transport: {
         target: 'pino-pretty',
         options: {
@@ -19,7 +20,14 @@ const logger = pino({
     },
 });
 
+// Configuración e implementación de debug, info, warn y error
 const dbLogger = {
+    debug: (message: string, meta?: object) => {
+        if (process.env.NODE_ENV === 'development') {
+            (logger.debug as any)(message, meta);
+            saveLogToDatabase('debug', message, meta);
+        }
+    },
     info: (message: string, meta?: object) => {
         (logger.info as any)(message, meta);
         saveLogToDatabase('info', message, meta);
