@@ -1,11 +1,13 @@
 import dotenv from "dotenv";
 dotenv.config();
 
+import { env } from './env'
+
 import { sequelize } from "../config/database";
 import dbLogger from "./logger";
 
 const resetDatabase = async () => {
-    if (process.env.NODE_ENV !== "test") {
+    if (env.NODE_ENV !== "test") {
         dbLogger.error("This script can only be run in a test environment!");
         process.exit(1);
     }
@@ -20,7 +22,7 @@ const resetDatabase = async () => {
         const [indexes] = await sequelize.query(`
             SELECT INDEX_NAME 
             FROM INFORMATION_SCHEMA.STATISTICS 
-            WHERE TABLE_SCHEMA = '${process.env.DB_NAME_TEST}'
+            WHERE TABLE_SCHEMA = '${env.DB_NAME_TEST}'
             AND TABLE_NAME = 'users' 
             AND INDEX_NAME != 'PRIMARY'
             GROUP BY INDEX_NAME;

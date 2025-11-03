@@ -4,12 +4,13 @@ import { AppError } from "../middlewares/errors/AppError";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { User } from "../models";
 import dbLogger from "../config/logger";
+import { env } from './../config/env'
 
 // Mapa para mantener un registro de los sockets de usuario
 const userSockets = new Map<string, Socket>();
 
 const chatService = new ChatService();
-const JWT_SECRET = process.env.JWT_SECRET as string;
+const JWT_SECRET = env.JWT_SECRET as string;
 
 // Mapa para mantener el estado de los usuarios
 const userStatus = new Map<string, {

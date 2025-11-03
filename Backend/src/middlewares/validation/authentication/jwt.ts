@@ -4,11 +4,12 @@ import jwt from "jsonwebtoken";
 import { JWT, User } from "../../../models";
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../../errors/AppError";
+import { env } from './../../../config/env'
 
 
 export class AuthToken {
 
-    private static secretKey: string = process.env.JWT_SECRET as string;
+    private static secretKey: string = env.JWT_SECRET as string;
 
     // Comprobamos si existe la clave secreta
     static {

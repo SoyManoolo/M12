@@ -71,7 +71,8 @@
         "socket.io": "^4.8.1",
         "socket.io-client": "^4.8.1",
         "translate": "^3.0.1",
-        "winston": "^3.17.0"
+        "winston": "^3.17.0",
+        "zod": "^4.1.12"
     },
     "devDependencies": {
         "@types/bcryptjs": "^2.4.6",
