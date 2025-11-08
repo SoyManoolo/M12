@@ -1,5 +1,5 @@
 import { AppError } from "../middlewares/errors/AppError";
-import { User, JWT } from "../models";
+import { User, RefreshToken } from "../models";
 import { compare, hash } from "bcryptjs";
 import { AuthToken } from "../middlewares/validation/authentication/jwt";
 import { Op } from "sequelize";
@@ -40,7 +40,7 @@ export class AuthService {
             };
 
             // Guardar el token en la base de datos
-            await JWT.findOrCreate({
+            await RefreshToken.findOrCreate({
                 where: { token },
                 defaults: { token }
             });
@@ -101,7 +101,7 @@ export class AuthService {
             }
 
             // Guardar el token en la base de datos
-            await JWT.findOrCreate({
+            await RefreshToken.findOrCreate({
                 where: { token },
                 defaults: { token }
             });
@@ -122,7 +122,7 @@ export class AuthService {
             dbLogger.info(`[AuthService] Logout attempt`);
 
             // Encontrar el token en la base de datos
-            const jwt = await JWT.findOne({ where: { token } });
+            const jwt = await RefreshToken.findOne({ where: { token } });
 
             // Si no se encuentra el token, lanzar un error
             if (!jwt) throw new AppError(404, 'TokenNotFound');
