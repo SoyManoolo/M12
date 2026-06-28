@@ -37,9 +37,32 @@ El proyecto se desarrolló en un plazo de tres meses siguiendo metodología **Sc
 - Moderación de contenido (panel de staff: sanciones, revisión de publicaciones y usuarios).
 
 ### Comunicación en tiempo real
-- Videollamadas P2P aleatorias mediante WebRTC, con emparejamiento automático cada 5 segundos gestionado por el servidor.
-- Si ambos usuarios hacen match durante la llamada, se habilita un chat persistente entre ellos vía Socket.IO.
-- Valoración del interlocutor al finalizar la llamada, visible en su perfil.
+```mermaid
+sequenceDiagram
+    participant A as Usuario A
+    participant S as Socket.IO Server
+    participant B as Usuario B
+
+    A->>S: add_to_queue
+    B->>S: add_to_queue
+
+    S-->>A: match_found
+    S-->>B: match_found
+
+    A->>S: send_offer (SDP)
+    S-->>B: receive_offer (SDP)
+
+    B->>S: send_answer (SDP)
+    S-->>A: receive_answer (SDP)
+
+    A->>S: send_ice_candidate
+    S-->>B: receive_ice_candidate
+
+    B->>S: send_ice_candidate
+    S-->>A: receive_ice_candidate
+
+    Note over A,B: Conexión WebRTC P2P establecida
+```
 
 ### Backend
 - API REST desarrollada con Express 5 y TypeScript, desplegada en Railway.
