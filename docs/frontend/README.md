@@ -21,9 +21,30 @@
 
 El frontend es una aplicación **Remix** (sobre React 18 y React Router 6) con renderizado en servidor (SSR) y rutas basadas en archivos. Remix gestiona la carga de datos por ruta (`loader`/`action`) para las operaciones convencionales, mientras que dos servicios singleton independientes —`SocketService` y `WebRTCService`— gestionan toda la comunicación en tiempo real (chat, señalización de videollamadas) directamente desde el cliente, fuera del ciclo de vida de Remix.
 
-```
-Ruta (Remix)  →  loader/action  →  Servicio HTTP (services/*.service.ts)  →  Backend REST
-Componente    →  Hook (useAuth, useVideoCall, useMessage)  →  SocketService / WebRTCService  →  Backend Socket.IO
+```mermaid
+flowchart LR
+
+R["Remix Route"]
+
+L["loader / action"]
+
+S["HTTP Service"]
+
+API["REST API"]
+
+SOCKET["SocketService"]
+
+WEBRTC["WebRTCService"]
+
+R --> L
+
+L --> S
+
+S --> API
+
+R --> SOCKET
+
+SOCKET --> WEBRTC
 ```
 
 Como Remix renderiza primero en el servidor, **toda pieza que depende de APIs del navegador (WebSocket, WebRTC, `localStorage`) está protegida explícitamente contra SSR** con comprobaciones `typeof window === 'undefined'`. Es el patrón más repetido en la base de código: aparece en `SocketService`, `WebRTCService`, `useAuth` y en la utilidad de decodificación de JWT (que decodifica el token manualmente en servidor y usa `jwt-decode` en el cliente, porque la librería no funciona en Node).
