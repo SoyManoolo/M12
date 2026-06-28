@@ -11,6 +11,8 @@
 
 **[🔗 Demo en vivo](https://friendsgofrontend.vercel.app)** · [Documentación](#documentación) · [Instalación](#instalación)
 
+> Frontend desplegado en **Vercel**, backend desplegado en **Railway**.
+
 ---
 
 ## Introducción
@@ -35,22 +37,25 @@ El proyecto se desarrolló en un plazo de tres meses siguiendo metodología **Sc
 - Moderación de contenido (panel de staff: sanciones, revisión de publicaciones y usuarios).
 
 ### Comunicación en tiempo real
-- Videollamadas P2P aleatorias mediante WebRTC, con servidor STUN/TURN como respaldo.
+- Videollamadas P2P aleatorias mediante WebRTC, con emparejamiento automático cada 5 segundos gestionado por el servidor.
 - Si ambos usuarios hacen match durante la llamada, se habilita un chat persistente entre ellos vía Socket.IO.
 - Valoración del interlocutor al finalizar la llamada, visible en su perfil.
 
 ### Backend
-- API REST desarrollada con Express y TypeScript.
+- API REST desarrollada con Express 5 y TypeScript, desplegada en Railway.
 - PostgreSQL como base de datos principal, con Sequelize como ORM.
-- Autenticación basada en JWT.
-- Seguridad mediante Helmet y Content Security Policy.
-- Testing automatizado con Jest.
-- Sistema de logs y limpieza programada con PM2.
+- Autenticación basada en JWT, con verificación adicional contra base de datos (permite invalidación real en logout).
+- Rate limiting global y específico para autenticación (5 intentos / 15 min).
+- Seguridad mediante Helmet, CORS y enforcement de HTTPS en producción.
+- Testing de integración automatizado con Jest + Supertest.
+- Internacionalización de mensajes en 7 idiomas (es, en, ca, de, fr, ja, zh).
+- Logging dual (consola + base de datos) y tareas programadas (purga de logs y de datos eliminados, configurable por entorno).
 
 ### Frontend
-- Remix + React.
-- TailwindCSS.
+- Remix (SSR) + React, con protección explícita contra SSR en todo lo que depende de APIs del navegador (Socket.IO, WebRTC, almacenamiento local).
+- TailwindCSS 4.
 - Diseño responsive.
+- Fallback de vídeo sintético cuando no hay cámara disponible, para no romper la conexión P2P.
 
 ---
 
@@ -58,19 +63,21 @@ El proyecto se desarrolló en un plazo de tres meses siguiendo metodología **Sc
 
 ```mermaid
 graph TD
-    Frontend["🎨 Frontend<br>Remix + React"]
+    Frontend["🎨 Frontend (Vercel)<br>Remix + React"]
     Frontend -->|"REST API / Socket.IO"| Split
     style Split fill:none,stroke:none,color:none
     Split[ ]
-    BackendAPI["🛠️ Express API<br>JWT · Sequelize · Helmet"]
-    BackendSocket["⚡ Socket.IO Server<br>Chat · Comments · WebRTC Signalling"]
+    BackendAPI["🛠️ Express API (Railway)<br>JWT · Sequelize · Helmet · Rate Limiting"]
+    BackendSocket["⚡ Socket.IO Server<br>Chat · Comments · WebRTC Signalling · Matchmaking"]
+    TURN["📡 Servidor STUN/TURN<br>coturn"]
     Split --> BackendAPI
     Split --> BackendSocket
+    Frontend -.->|"WebRTC P2P"| TURN
     BackendAPI --> DB[("💾 PostgreSQL Database")]
     BackendSocket --> DB
 ```
 
-El frontend se comunica con el backend a través de dos canales: peticiones REST para operaciones CRUD convencionales (perfiles, publicaciones, amistades) y una conexión persistente vía Socket.IO para todo lo que requiere baja latencia (chat, señalización WebRTC). Ambos canales comparten la misma base de datos PostgreSQL.
+El frontend se comunica con el backend a través de dos canales: peticiones REST para operaciones CRUD convencionales (perfiles, publicaciones, amistades) y una conexión persistente vía Socket.IO para todo lo que requiere baja latencia (chat, señalización WebRTC, emparejamiento de videollamadas). Ambos canales comparten la misma base de datos PostgreSQL. El backend corre detrás de un proxy inverso en Railway, por lo que la aplicación fuerza HTTPS a nivel de código inspeccionando la cabecera `x-forwarded-proto`.
 
 ---
 
@@ -78,15 +85,16 @@ El frontend se comunica con el backend a través de dos canales: peticiones REST
 
 | Categoría | Tecnologías |
 |---|---|
-| **Frontend** | React, Remix, Vite, TailwindCSS, TypeScript |
-| **Backend** | Node.js, Express, TypeScript, Sequelize |
+| **Frontend** | React 18, Remix 2 (SSR), Vite 6, TailwindCSS 4, TypeScript |
+| **Backend** | Node.js, Express 5, TypeScript, Sequelize |
 | **Base de datos** | PostgreSQL |
-| **Tiempo real** | Socket.IO, WebRTC (servidor STUN/TURN) |
-| **Autenticación** | JWT |
-| **Seguridad** | Helmet, Content Security Policy |
-| **Testing** | Jest |
+| **Tiempo real** | Socket.IO, WebRTC |
+| **Autenticación** | JWT (con verificación en base de datos) |
+| **Seguridad** | Helmet, CORS, express-rate-limit, enforcement de HTTPS |
+| **Internacionalización** | i18n (7 idiomas) |
+| **Testing** | Jest + Supertest |
 | **Calidad de código** | ESLint |
-| **Despliegue** | Vercel (frontend) |
+| **Despliegue** | Vercel (frontend) · Railway (backend) |
 
 ---
 
@@ -98,9 +106,11 @@ Algunas decisiones de diseño relevantes tomadas durante el desarrollo, junto co
 - **Node.js sobre Deno y Bun:** se compararon los tres entornos de ejecución de JavaScript/TypeScript. Deno destaca en seguridad y Bun en rendimiento, pero se eligió Node.js por su comunidad más extensa, mayor disponibilidad de recursos y mejor compatibilidad con sistemas y servidores existentes — priorizando estabilidad y soporte sobre rendimiento marginal.
 - **Express sobre NestJS:** se priorizó la simplicidad y el bajo nivel de imposición estructural de Express frente a frameworks más opinionados, lo que facilita la integración directa con Socket.IO y WebRTC sin pelear contra el framework.
 - **PostgreSQL sobre MySQL y Cassandra:** se eligió PostgreSQL por su equilibrio entre potencia, consistencia fuerte y soporte de relaciones complejas (tipos JSONB, búsqueda full-text, integridad referencial). Cassandra se descartó porque prioriza disponibilidad sobre consistencia, lo cual no encajaba con un modelo de datos relacional como el de una red social.
-- **WebRTC + Socket.IO para videollamadas:** WebRTC se eligió por permitir conexiones P2P de baja latencia con cifrado obligatorio, reduciendo carga de servidor. Socket.IO gestiona la señalización (intercambio de metadatos para establecer la conexión WebRTC) y se reutiliza como infraestructura común para chat y notificaciones, gracias a su reconexión automática y fallback sobre WebSockets.
-- **JWT + Helmet + CSP:** autenticación sin estado en servidor (escalable horizontalmente) combinada con cabeceras de seguridad estrictas para mitigar XSS e inyección de contenido. Las contraseñas se almacenan con hash (bcrypt), nunca en texto plano.
+- **WebRTC + Socket.IO para videollamadas:** WebRTC se eligió por permitir conexiones P2P de baja latencia con cifrado obligatorio, reduciendo carga de servidor. Socket.IO gestiona la señalización (intercambio de metadatos para establecer la conexión WebRTC) y se reutiliza como infraestructura común para chat y notificaciones, gracias a su reconexión automática y fallback sobre WebSockets. El proyecto despliega su propio servidor STUN/TURN (coturn), con TURNS cifrado como opción prioritaria y TURN sin cifrar como respaldo si el cifrado falla.
+- **JWT + Helmet + CSP:** autenticación sin estado en servidor (escalable horizontalmente) combinada con cabeceras de seguridad estrictas para mitigar XSS e inyección de contenido. Las contraseñas se almacenan con hash (bcrypt), nunca en texto plano. Como matiz: el token no solo se verifica criptográficamente, sino que también se comprueba su existencia en base de datos, lo que permite invalidar sesiones de forma real en el logout (algo que un JWT puramente sin estado no permite).
 - **TypeScript en todo el stack:** se decidió tipar tanto frontend como backend para detectar errores en tiempo de compilación y compartir un modelo de datos consistente entre ambas partes.
+- **Emparejamiento de videollamadas con cola en memoria:** en vez de resolver el matching directamente vía Socket.IO en cada conexión, el servidor mantiene una cola de espera en memoria y ejecuta una ronda de emparejamiento aleatorio cada 5 segundos, creando el registro de llamada en base de datos y notificando a ambos usuarios quién actúa como iniciador de la señalización WebRTC.
+- **Internacionalización en el backend, no solo en el frontend:** los mensajes de error y éxito de la API se traducen dinámicamente según la cabecera `Accept-Language` de cada petición (7 idiomas soportados), resueltos mediante una jerarquía de categorías de error en vez de un mapeo plano clave-valor.
 
 ### Calidad de código: refactorización del componente Post
 
@@ -121,17 +131,22 @@ La duplicación entre las vistas de escritorio y móvil se resolvió con CSS res
 
 ```
 M12/
-├── frontend/          # ⚛️ Aplicación React + Remix
-│   ├── app/           # Componentes y páginas
-│   ├── public/        # Archivos estáticos
-│   └── src/           # Código fuente
-├── Backend/           # 🛠️ Servidor Node.js
-│   ├── src/
-│   │   ├── config/    # Configuraciones
-│   │   ├── models/    # Modelos Sequelize
-│   │   ├── routes/    # Rutas API
-│   │   └── types/     # Tipos TypeScript
-│   └── media/         # Archivos multimedia
+├── frontend/          # ⚛️ Aplicación Remix + React (SSR)
+│   └── app/
+│       ├── routes/        # Rutas basadas en archivos (convención Remix)
+│       ├── components/    # Inicio, Chats, Perfil, Videollamada, Shared
+│       ├── hooks/          # useAuth, useVideoCall, useMessage...
+│       ├── services/        # Servicios HTTP + singletons de Socket.IO/WebRTC
+│       └── types/
+├── Backend/           # 🛠️ Servidor Node.js + Express
+│   └── src/
+│       ├── controllers/   # Un controlador por dominio
+│       ├── services/        # Lógica de negocio
+│       ├── models/            # Modelos Sequelize + asociaciones
+│       ├── routes/              # Endpoints REST
+│       ├── socket/                # Eventos de Socket.IO (chat, comentarios, videollamadas)
+│       ├── middlewares/             # Validación y manejo de errores
+│       └── lang/                      # Traducciones (7 idiomas)
 ├── database/          # 💾 Scripts y schema de PostgreSQL
 ├── docs/              # 📚 Documentación del proyecto
 │   ├── frontend/       # Documentación del frontend
@@ -180,6 +195,9 @@ DB_HOST=localhost
 DB_UPDATE=true   # crea las tablas automáticamente al iniciar
 
 LOGS_DAYS=7
+CLEAN_USERS=30     # días de retención antes de purgar usuarios eliminados
+CLEAN_POSTS=15     # días de retención antes de purgar publicaciones eliminadas
+CLEAN_COMMENTS=7   # días de retención antes de purgar comentarios eliminados
 ```
 
 ### Backend
@@ -187,7 +205,7 @@ LOGS_DAYS=7
 ```bash
 cd Backend
 npm install
-cp .env.example .env   # edita con tus credenciales
+# Crea un archivo .env en esta carpeta con las variables del bloque anterior
 npm run dev             # http://localhost:3000
 ```
 
@@ -196,7 +214,7 @@ npm run dev             # http://localhost:3000
 ```bash
 cd frontend
 npm install
-cp .env.example .env   # edita con la URL del backend
+echo "VITE_API_URL=http://localhost:3000" > .env
 npm run dev             # http://localhost:5173
 ```
 
@@ -215,23 +233,24 @@ npm run dev             # http://localhost:5173
 | Comando | Descripción |
 |---|---|
 | `npm run dev` | Servidor de desarrollo (nodemon) |
-| `npm run build` | Compila TypeScript |
+| `npm run build` | Compila TypeScript y copia los ficheros de idioma |
 | `npm start` | Modo producción |
-| `npm run test` | Tests con Jest |
+| `npm run test` | Tests de integración con Jest + Supertest |
+| `npm run test:watch` | Tests en modo watch |
 | `npm run test:reset-db` | Resetea la base de datos de pruebas |
-| `npm run sync-translations` | Sincroniza traducciones |
-| `npm run start:cleanup` | Inicia job de limpieza con PM2 |
+| `npm run sync-translations` | Sincroniza claves entre los ficheros de idioma |
+| `npm run start:cleanup` / `stop:cleanup` / `delete:cleanup` | Gestiona el job de limpieza programada con PM2 |
 
 ---
 
 ## Alcance del proyecto
 
-Como Trabajo Final de Grado desarrollado en tres meses, se tomaron decisiones conscientes de alcance para priorizar las funcionalidades core sobre el endurecimiento de producción:
+Como Trabajo Final de Grado desarrollado en tres meses, se tomaron decisiones conscientes de alcance para priorizar las funcionalidades core. El proyecto está desplegado públicamente (frontend en Vercel, backend en Railway) e incluye medidas de seguridad de nivel razonable —rate limiting, hash de contraseñas, invalidación de sesión vía base de datos, HTTPS forzado en producción—, pero quedan límites explícitos:
 
-- El entorno objetivo es local/desarrollo; no se ha configurado un pipeline de despliegue en producción con monitorización o soporte técnico.
-- Las contraseñas se almacenan con hash (bcrypt), pero no se han implementado medidas adicionales como límite de intentos de login o rate-limiting a nivel de API.
 - No se han realizado pruebas formales de usabilidad o accesibilidad, aunque se siguieron patrones de diseño habituales en redes sociales para mantener una navegación intuitiva.
 - El sistema de notificaciones en tiempo real vía Socket.IO está implementado pero no cubre aún el 100% de los eventos de la aplicación.
+- No hay un pipeline de CI/CD formal ni monitorización de errores en producción más allá del logging propio.
+- El emparejamiento de videollamadas funciona en memoria de un único proceso; escalar a varias instancias del backend requeriría mover esa cola a un almacén compartido (Redis, por ejemplo).
 
 Documentar estas decisiones explícitamente —en vez de presentarlas como si no existieran— fue una elección deliberada: permite distinguir entre lo que está terminado, lo que es una limitación de alcance y lo que queda como trabajo futuro.
 
