@@ -106,10 +106,23 @@ function PostDetailModal({ isOpen, onClose, post, onImageClick }: PostDetailModa
 
   if (!isOpen || !post) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-2 sm:p-0" onClick={onClose}>
-      <div className="bg-gray-900 rounded-2xl shadow-2xl w-full max-w-7xl h-[95vh] sm:h-[90vh] mx-auto p-0 relative overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
-        <button 
-          onClick={onClose} 
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-2 sm:p-0">
+      <button
+        type="button"
+        aria-label="Cerrar detalle de publicación"
+        className="absolute inset-0 cursor-default"
+        onClick={onClose}
+      />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Detalle de publicación"
+        className="relative z-10 bg-gray-900 rounded-2xl shadow-2xl w-full max-w-7xl h-[95vh] sm:h-[90vh] mx-auto p-0 overflow-hidden flex flex-col"
+      >
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Cerrar detalle de publicación"
           className="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl z-10 cursor-pointer bg-gray-800/50 hover:bg-gray-800 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200"
         >
           ×
@@ -119,8 +132,9 @@ function PostDetailModal({ isOpen, onClose, post, onImageClick }: PostDetailModa
           {/* Imagen arriba en móvil, izquierda en escritorio */}
           {post.media && (
             <div className="w-full sm:w-1/2 bg-black flex items-center justify-center relative max-h-72 sm:max-h-none">
-              <div 
-                className="w-full h-full flex items-center justify-center cursor-zoom-in group" 
+              <button
+                type="button"
+                className="w-full h-full flex items-center justify-center cursor-zoom-in group"
                 onClick={() => {
                   onClose();
                   onImageClick(post.media);
@@ -136,7 +150,7 @@ function PostDetailModal({ isOpen, onClose, post, onImageClick }: PostDetailModa
                     Click para ampliar
                   </span>
                 </div>
-              </div>
+              </button>
             </div>
           )}
 
@@ -145,8 +159,9 @@ function PostDetailModal({ isOpen, onClose, post, onImageClick }: PostDetailModa
             {/* Cabecera con información del usuario */}
             <div className="p-6 border-b border-gray-800 bg-gray-900/95 backdrop-blur-sm">
               <div className="flex items-center gap-3">
-                <div 
-                  className="flex items-center gap-3 cursor-pointer hover:bg-gray-800/50 p-2 rounded-lg transition-colors duration-200" 
+                <button
+                  type="button"
+                  className="flex items-center gap-3 cursor-pointer hover:bg-gray-800/50 p-2 rounded-lg transition-colors duration-200 text-left"
                   onClick={() => { window.location.href = `/perfil?username=${post.author.username}`; }}
                 >
                   {post.author.profile_picture ? (
@@ -166,7 +181,7 @@ function PostDetailModal({ isOpen, onClose, post, onImageClick }: PostDetailModa
                     <span className="font-semibold text-lg text-white">{post.author.name}</span>
                     <span className="text-sm text-gray-400">@{post.author.username}</span>
                   </div>
-                </div>
+                </button>
               </div>
             </div>
 
@@ -510,8 +525,17 @@ export default function AdminPublicaciones() {
                 {filteredPosts.map((post) => (
                   <div
                     key={post.post_id}
+                    role="button"
+                    tabIndex={0}
                     className="bg-gray-900 rounded-lg border border-gray-800 hover:border-blue-500 transition-colors flex flex-col w-full cursor-pointer"
                     onClick={() => { setSelectedPost(post); setShowPostModal(true); }}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        setSelectedPost(post);
+                        setShowPostModal(true);
+                      }
+                    }}
                   >
                     {/* Cabecera con información del usuario */}
                     <div className="p-3 border-b border-gray-800 flex-shrink-0">
