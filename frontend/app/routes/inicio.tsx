@@ -25,7 +25,7 @@
 
 import { useState, useEffect } from "react";
 import { Link } from "@remix-run/react";
-import Navbar from "~/components/Inicio/Navbar";
+import AppLayout from "~/components/Layout/AppLayout";
 import Post from "~/components/Inicio/Post";
 import RightPanel from "~/components/Shared/RightPanel";
 import ConfirmModal from "~/components/Shared/ConfirmModal";
@@ -395,15 +395,15 @@ export default function InicioPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex">
-      <Navbar />
-      <div className="w-full lg:w-2/3 lg:ml-[16.666667%] border-r border-gray-800 min-h-screen flex flex-col"
+    <>
+      <AppLayout mainClassName="border-r border-gray-800" rightPanel={<RightPanel users={suggestedUsers} mode="suggested" />}>
+      <div className="min-h-screen w-full flex flex-col"
         style={{ minHeight: '100vh' }}>
         <div
           className="p-2 sm:p-4 md:p-6 space-y-6"
           style={{
-            paddingTop: '4.5rem', // espacio para navbar superior móvil
-            paddingBottom: '4.5rem', // espacio para navbar inferior móvil
+            paddingTop: undefined,
+            paddingBottom: undefined,
             minHeight: '100vh',
             boxSizing: 'border-box',
             overflowX: 'hidden'
@@ -481,12 +481,7 @@ export default function InicioPage() {
           )}
         </div>
       </div>
-      <div className="hidden lg:block">
-      <RightPanel
-        users={suggestedUsers}
-        mode="suggested"
-      />
-      </div>
+      </AppLayout>
       <ConfirmModal
         isOpen={showDeleteModal}
         onClose={() => {
@@ -521,6 +516,6 @@ export default function InicioPage() {
           onClose={() => setNotification(null)}
         />
       )}
-    </div>
+    </>
   );
 } 
