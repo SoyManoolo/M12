@@ -14,7 +14,6 @@
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useAuth } from "~/hooks/useAuth";
-import { FaCircle } from 'react-icons/fa';
 import SecureImage from '../Shared/SecureImage';
 
 interface ChatItemProps {

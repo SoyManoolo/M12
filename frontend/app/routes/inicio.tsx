@@ -24,8 +24,7 @@
  */
 
 import { useState, useEffect } from "react";
-import { redirect, useNavigate, useSearchParams, Link } from "@remix-run/react";
-import { json } from "@remix-run/node";
+import { Link } from "@remix-run/react";
 import Navbar from "~/components/Inicio/Navbar";
 import Post from "~/components/Inicio/Post";
 import RightPanel from "~/components/Shared/RightPanel";
@@ -39,7 +38,6 @@ import { userService } from "~/services/user.service";
 import { friendshipService } from "~/services/friendship.service";
 import type { Friend } from "~/services/friendship.service";
 import { FaCamera } from 'react-icons/fa';
-import { environment } from '~/config/environment';
 
 /**
  * @interface User

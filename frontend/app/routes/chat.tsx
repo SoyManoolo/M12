@@ -13,7 +13,6 @@ import { useSearchParams } from '@remix-run/react';
 import Navbar from '~/components/Inicio/Navbar';
 import ChatUserInfo from '~/components/Chats/ChatUserInfo';
 import { FaPaperPlane, FaSmile } from 'react-icons/fa';
-import { redirect } from "@remix-run/node";
 import type { User } from '~/types/user.types';
 // Importación de la función Singleton segura para el cliente
 import { getChatService } from "~/services/chat.service"; 

@@ -4,31 +4,14 @@ import {
     MatchFoundData,
     VideoCallOffer,
     VideoCallAnswer,
-    VideoCallIceCandidate,
 } from "~/types/videocall.types"; // Tus tipos
 import SocketService from "./socket.service";
-
-// Tipos para los datos recibidos (payloads de señalización que vienen del otro par)
-interface ReceivedOfferData {
-    offer: RTCSessionDescriptionInit;
-    from: string; // socketId de quien envió la oferta
-}
-
-interface ReceivedAnswerData {
-    answer: RTCSessionDescriptionInit;
-    from: string; // socketId de quien envió la respuesta
-}
-
-interface ReceivedIceCandidateData {
-    candidate: RTCIceCandidateInit;
-    from: string; // socketId de quien envió el candidato
-}
+import { acquireLocalMedia, enableTracks } from './webrtc/media';
+import type { ReceivedAnswerData, ReceivedIceCandidateData, ReceivedOfferData } from './webrtc/signaling.types';
 
 class WebRTCService {
     private iceCandidateBuffer: RTCIceCandidateInit[] = [];
     private hasRemoteDescription = false;
-    private reconnectionAttempts = 0;
-    private readonly MAX_RECONNECTION_ATTEMPTS = 3;
     private connectionTimeout: NodeJS.Timeout | null = null;
 
     private static instance: WebRTCService;
@@ -144,7 +127,6 @@ class WebRTCService {
         // Reiniciar buffers y estados
         this.iceCandidateBuffer = [];
         this.hasRemoteDescription = false;
-        this.reconnectionAttempts = 0;
 
         if (this.connectionTimeout) {
             clearTimeout(this.connectionTimeout);
@@ -237,7 +219,6 @@ class WebRTCService {
                         this.connectionTimeout = null;
                     }
 
-                    this.reconnectionAttempts = 0; // Reset contador cuando se conecta exitosamente
 
                 } else if (state === "failed") {
                     console.log("WebRTCService: Conexión WebRTC fallida. Cerrando llamada...");
@@ -453,108 +434,13 @@ class WebRTCService {
         }
 
         try {
-            // Detectar si es móvil para usar constraints más simples
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-            // Constraints más flexibles - intentar primero con video y audio
-            let constraints: MediaStreamConstraints = isMobile
-                ? {
-                    // Móvil: constraints básicas pero con frameRate especificado
-                    video: {
-                        width: { ideal: 640 },
-                        height: { ideal: 480 },
-                        frameRate: { ideal: 24, min: 15 }
-                    },
-                    audio: true
-                }
-                : {
-                    // Desktop: constraints específicas
-                    video: {
-                        width: { ideal: 640 },
-                        height: { ideal: 480 },
-                        frameRate: { ideal: 30, max: 30 }
-                    },
-                    audio: true
-                };
-
-            console.log(`WebRTCService: Solicitando acceso a medios locales (${isMobile ? 'MÓVIL' : 'DESKTOP'}) con constraints:`, constraints);
-
-            let stream: MediaStream;
-            let hasVideo = false;
-
-            try {
-                // Intentar con video y audio
-                stream = await navigator.mediaDevices.getUserMedia(constraints);
-                hasVideo = stream.getVideoTracks().length > 0;
-                console.log(`WebRTCService: ✅ Media obtenida con éxito. Video tracks: ${stream.getVideoTracks().length}, Audio tracks: ${stream.getAudioTracks().length}`);
-            } catch (videoError) {
-                console.warn("WebRTCService: No se pudo obtener video, intentando solo con audio:", videoError);
-                // Si falla el video, intentar solo con audio
-                try {
-                    constraints = { audio: true, video: false };
-                    stream = await navigator.mediaDevices.getUserMedia(constraints);
-                    hasVideo = false;
-                    console.log("WebRTCService: Audio obtenido, se agregará placeholder de video");
-                } catch (audioError) {
-                    console.error("WebRTCService: No se pudo obtener ni video ni audio:", audioError);
-                    throw new Error("No se encontró ningún dispositivo de entrada (cámara o micrófono). Por favor, verifica que tengas al menos un micrófono conectado y que el navegador tenga permisos.");
-                }
-            }
-
-            // Si no hay video, crear un track de video negro (placeholder) para mantener la negociación bidireccional
-            if (!hasVideo && typeof window !== 'undefined') {
-                console.log("WebRTCService: 🎨 Creando track de video placeholder (pantalla negra) para permitir recibir video del otro lado");
-                const canvas = document.createElement('canvas');
-                canvas.width = 640;
-                canvas.height = 480;
-                const ctx = canvas.getContext('2d');
-                
-                if (ctx) {
-                    // Animar el canvas para evitar parpadeo - relleno continuo
-                    const animate = () => {
-                        ctx.fillStyle = '#000000';
-                        ctx.fillRect(0, 0, canvas.width, canvas.height);
-                        requestAnimationFrame(animate);
-                    };
-                    animate();
-                }
-                
-                // Capturar el canvas como stream de video a 15 FPS (más fluido que 1 FPS)
-                const dummyVideoStream = canvas.captureStream(15);
-                const dummyVideoTrack = dummyVideoStream.getVideoTracks()[0];
-
-                if (dummyVideoTrack) {
-                    stream.addTrack(dummyVideoTrack);
-                    console.log("WebRTCService: ✅ Track de video placeholder agregado a 15 FPS - ahora se puede recibir video del otro usuario");
-                }
-            }
-
-            // Depurar estado de los tracks
-            const videoTracks = stream.getVideoTracks();
-            if (videoTracks.length > 0) {
-                const videoTrack = videoTracks[0];
-                console.log("WebRTCService: Stream local obtenido con video track:", {
-                    label: videoTrack.label,
-                    enabled: videoTrack.enabled,
-                    muted: videoTrack.muted,
-                    readyState: videoTrack.readyState,
-                    settings: videoTrack.getSettings()
-                });
-            } else {
-                console.warn("WebRTCService: Stream local sin tracks de video");
-            }
-
-            this.localStream = stream;
+            this.localStream = await acquireLocalMedia();
             this.ensureTracksEnabled(this.localStream);
+            this.onLocalStreamReady?.(this.localStream);
 
-            if (this.onLocalStreamReady) this.onLocalStreamReady(this.localStream);
-
-            if (this.peerConnection) {
-                this.localStream.getTracks().forEach((track) => {
-                    this.peerConnection!.addTrack(track, this.localStream!);
-                });
-                console.log(`WebRTCService: Tracks locales añadidos al PeerConnection (${stream.getVideoTracks().length} video, ${stream.getAudioTracks().length} audio)`);
-            }
+            this.localStream.getTracks().forEach((track) => {
+                this.peerConnection?.addTrack(track, this.localStream!);
+            });
         } catch (error) {
             console.error("WebRTCService: Error al obtener getUserMedia:", error);
             throw error;
@@ -630,15 +516,11 @@ class WebRTCService {
     private ensureTracksEnabled(stream: MediaStream | null): void {
         if (!stream) return;
 
+        enableTracks(stream);
         console.log("WebRTCService: Verificando estado de tracks en stream:", stream.id);
 
         // Habilitar explícitamente todos los tracks
         stream.getTracks().forEach(track => {
-            if (!track.enabled) {
-                console.log(`WebRTCService: Habilitando track ${track.kind} que estaba desactivado`);
-                track.enabled = true;
-            }
-
             console.log(`WebRTCService: Track ${track.kind} está ${track.enabled ? 'habilitado' : 'deshabilitado'} y ${track.readyState}`);
         });
     }
@@ -703,7 +585,6 @@ class WebRTCService {
         // Limpiar estados de buffer y reconexión
         this.iceCandidateBuffer = [];
         this.hasRemoteDescription = false;
-        this.reconnectionAttempts = 0;
 
         if (this.connectionTimeout) {
             clearTimeout(this.connectionTimeout);

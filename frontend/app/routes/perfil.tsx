@@ -13,9 +13,9 @@
  */
 
 import { json, redirect } from "@remix-run/node";
-import { useLoaderData, useNavigate, useLocation, useFetcher } from "@remix-run/react";
+import { useLoaderData, useNavigate } from "@remix-run/react";
 import { useState, useEffect } from "react";
-import { FaEdit, FaCamera } from "react-icons/fa";
+import { FaCamera } from "react-icons/fa";
 import { Link } from "@remix-run/react";
 import Navbar from "~/components/Inicio/Navbar";
 import UserProfile from "~/components/Perfil/UserProfile";

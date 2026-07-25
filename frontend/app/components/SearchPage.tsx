@@ -3,7 +3,6 @@ import { useNavigate } from '@remix-run/react';
 import { environment } from '~/config/environment';
 import Navbar from './Inicio/Navbar';
 import { 
-  FaUser, 
   FaSearch, 
   FaUserFriends, 
   FaUserPlus, 

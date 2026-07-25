@@ -8,7 +8,6 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
-import { redirect } from '@remix-run/node';
 import type { MetaFunction } from '@remix-run/node';
 import Navbar from '~/components/Inicio/Navbar';
 import ChatItem from '~/components/Chats/ChatItem';
@@ -37,19 +36,6 @@ interface Chat {
     content: string;
     timestamp: string;
     sender_id: string;
-  };
-  unread_count: number;
-}
-
-interface ChatResponse {
-  other_user: {
-    user_id: string;
-    username: string;
-    profile_picture: string | null;
-  };
-  last_message: {
-    content: string;
-    created_at: string;
   };
   unread_count: number;
 }

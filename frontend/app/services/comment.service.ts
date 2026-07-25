@@ -96,7 +96,7 @@ class CommentService {
     }
   }
 
-  async deleteComment(token: string, postId: string, commentId: string): Promise<{ success: boolean; message: string }> {
+  async deleteComment(token: string, commentId: string): Promise<{ success: boolean; message: string }> {
     try {
       const response = await fetch(`${environment.apiUrl}/comments/${commentId}`, {
         method: 'DELETE',
@@ -115,7 +115,7 @@ class CommentService {
         }
       }
 
-      const data = await response.json();
+      await response.json();
       return {
         success: true,
         message: 'Comentario eliminado correctamente'

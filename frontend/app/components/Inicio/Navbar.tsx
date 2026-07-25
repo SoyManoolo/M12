@@ -13,7 +13,7 @@
  */
 
 // src/components/Navbar.tsx
-import { Link, useNavigate } from "@remix-run/react";
+import { Link } from "@remix-run/react";
 import { FaVideo, FaUpload, FaBell, FaEnvelope, FaCog, FaUser, FaShieldAlt, FaNewspaper, FaUsers, FaChevronDown, FaSearch, FaHome } from 'react-icons/fa';
 import { useAuth } from "~/hooks/useAuth";
 import { useState, useEffect } from 'react';
@@ -24,8 +24,7 @@ import { useState, useEffect } from 'react';
  * @returns {JSX.Element} Barra de navegación con enlaces y funcionalidades principales
  */
 export default function Navbar() {
-  const navigate = useNavigate();
-  const { token, user } = useAuth();
+  const { user } = useAuth();
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isModerator, setIsModerator] = useState(false);
 
@@ -34,11 +33,6 @@ export default function Navbar() {
       setIsModerator(user.is_moderator === true);
     }
   }, [user]);
-
-  const handleProfileClick = () => {
-    // Navegar al perfil sin parámetros
-    navigate('/perfil');
-  };
 
   return (
     <>

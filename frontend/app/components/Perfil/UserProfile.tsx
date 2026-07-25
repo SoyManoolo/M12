@@ -16,7 +16,6 @@ import { useEffect, useState } from 'react';
 import { FaEdit, FaCamera, FaTimes, FaUserPlus, FaUserMinus, FaCheck } from 'react-icons/fa';
 import { userService } from '../../services/user.service';
 import { useAuth } from '../../hooks/useAuth.tsx';
-import { useNavigate } from 'react-router-dom';
 import type { User } from '~/types/user.types';
 import ImageZoomModal from '../Shared/ImageZoomModal';
 import Notification from '../Shared/Notification';

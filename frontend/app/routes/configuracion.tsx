@@ -7,18 +7,16 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from "@remix-run/react";
+import { useNavigate } from "@remix-run/react";
 import Navbar from "~/components/Inicio/Navbar";
 import { useAuth } from "~/hooks/useAuth";
 import { environment } from "~/config/environment";
 import { FaSignOutAlt, FaTrash, FaUser, FaEnvelope, FaLock, FaCamera, FaEdit, FaTimes, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { userService } from "~/services/user.service";
 import type { UserProfile } from "~/types/user.types";
-import { redirect } from "@remix-run/node";
 import { useMessage } from '../hooks/useMessage';
 import Message from '../components/Shared/Message';
 import { authService } from '../services/auth.service';
-import RedirectModal from '~/components/Shared/RedirectModal';
 import Notification from '../components/Shared/Notification';
 import ConfirmModal from '../components/Shared/ConfirmModal';
 import { decodeToken } from '../utils/token';
@@ -47,7 +45,6 @@ export default function ConfiguracionPage() {
   const { message, showMessage, clearMessage } = useMessage();
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [searchParams] = useSearchParams();
   const [notification, setNotification] = useState<{
     message: string;
     type: 'success' | 'error';

@@ -9,8 +9,6 @@
  * @requires react-icons/fa
  */
 
-import { useState, useEffect } from 'react';
-import { FaTimes, FaSearchPlus, FaSearchMinus } from 'react-icons/fa';
 import SecureImage from './SecureImage';
 
 interface ImageZoomModalProps {

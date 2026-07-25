@@ -90,7 +90,7 @@ export function useComments(postId: string, initialComments: Comment[]) {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No hay token de autenticación");
 
-      await commentService.deleteComment(token, postId, commentId);
+      await commentService.deleteComment(token, commentId);
       setComments((prev) =>
         prev.filter((comment) => comment.comment_id !== commentId)
       );

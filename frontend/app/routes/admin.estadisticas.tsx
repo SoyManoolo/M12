@@ -8,7 +8,6 @@
  * - Tendencias y análisis
  */
 
-import { useState } from 'react';
 import Navbar from '~/components/Inicio/Navbar';
 import { FaUsers, FaVideo, FaComments, FaChartLine, FaCalendarAlt } from 'react-icons/fa';
 

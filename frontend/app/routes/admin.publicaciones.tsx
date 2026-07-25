@@ -48,19 +48,6 @@ interface Post {
   }>;
 }
 
-interface PostComment {
-  comment_id: string;
-  post_id: string;
-  user_id: string;
-  content: string;
-  created_at: string;
-  deleted_at: string | null;
-  author: {
-    username: string;
-    profile_picture: string | null;
-  };
-}
-
 interface PostDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -119,7 +106,7 @@ function PostDetailModal({ isOpen, onClose, post, onImageClick }: PostDetailModa
     if (!token || !commentToDelete || !post) return;
 
     try {
-      const response = await commentService.deleteComment(token, post.post_id, commentToDelete);
+      const response = await commentService.deleteComment(token, commentToDelete);
       if (response.success) {
         setComments(prev => prev.filter(comment => comment.comment_id !== commentToDelete));
         setNotification({

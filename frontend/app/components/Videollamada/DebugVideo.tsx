@@ -30,7 +30,7 @@ export const DebugVideo: React.FC<DebugVideoProps> = ({ stream, type, className 
                     .catch(err => console.error(`Error al reproducir video ${type}:`, err));
             };
 
-            video.onerror = (event) => {
+            video.onerror = () => {
                 console.error(`Error en video ${type}:`, video.error);
             };
         } else if (!stream) {

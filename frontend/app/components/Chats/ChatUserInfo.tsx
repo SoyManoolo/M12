@@ -12,7 +12,6 @@
  * @module ChatUserInfo
  */
 
-import { FaVideo, FaPhone } from 'react-icons/fa';
 import type { User } from '~/types/user.types';
 import SecureImage from '../Shared/SecureImage';
 
