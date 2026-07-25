@@ -1,10 +1,11 @@
 import { Op } from "sequelize";
 import { User, Post, PostComments } from "../models";
 import dbLogger from "../config/logger";
+import { env } from './../config/env'
 
-const cleanUsers: number = Number(process.env.CLEAN_USERS) || 30;
-const cleanPosts: number = Number(process.env.CLEAN_POSTS) || 15;
-const cleanComments: number = Number(process.env.CLEAN_COMMENTS) || 7;
+const cleanUsers: number = env.CLEAN_USERS ?? 30;
+const cleanPosts: number = env.CLEAN_POSTS ?? 15;
+const cleanComments: number = env.CLEAN_COMMENTS ?? 7;
 
 export async function cleanupOldData() {
     try {

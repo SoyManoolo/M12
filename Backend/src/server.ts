@@ -2,6 +2,8 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
+import { env } from './config/env';
+
 import { Server } from 'socket.io';
 import { app } from "./app";
 import { createServer } from "http";
@@ -11,17 +13,13 @@ import './services/chat';
 import { VideoCallService } from "./services/videoCall";
 import { initializeDatabase } from "./config/database";
 import dbLogger from './config/logger';
+import { ALLOWED_ORIGINS } from './config/cors';
 
 const server = createServer(app);
 
 const io = new Server(server, {
     cors: {
-        origin: [
-            'https://friendsgofrontend.vercel.app',
-            'http://localhost:5173',
-            'http://localhost:5174',
-            'http://localhost:3000'
-        ],
+        origin: ALLOWED_ORIGINS,
         methods: ['GET', 'POST', 'PATCH', 'DELETE', 'PUT', 'OPTIONS'],
         credentials: true,
         allowedHeaders: ['Content-Type', 'Authorization']
@@ -57,14 +55,14 @@ process.on('SIGINT', () => {
     process.exit(0);
 });
 
-const port = parseInt(process.env.PORT || "8080");
+const port: number = env.PORT;
 const host = '0.0.0.0'; // CRÍTICO: Railway requiere escuchar en 0.0.0.0
 
 server.listen(port, host, () => {
     dbLogger.info('Servidor HTTP iniciado', {
         host,
         port,
-        env: process.env.NODE_ENV
+        env: env.NODE_ENV
     });
 
     initializeDatabase()

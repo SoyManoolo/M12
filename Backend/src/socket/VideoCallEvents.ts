@@ -1,15 +1,17 @@
 import { Socket, Server } from "socket.io";
 import { VideoCallService } from "../services/videoCall";
 import dbLogger from "../config/logger";
+import { socketAuthMiddleware } from "./middleware/socketAuth";
 
 const videoCallService = VideoCallService.getInstance();
 
 export function videoCallEvents(socket: Socket, io: Server) {
-    socket.on("add_to_queue", async (data) => {
+    // Autenticación
+    socketAuthMiddleware(socket)
+
+    socket.on("add_to_queue", async () => {
         try {
-            // Guardar el user_id en el socket
-            const { user_id } = data;
-            socket.data.user_id = user_id;
+            const user_id = socket.data.user_id;  // Ya verificado por el middleware
 
             // Meter el usuario en la cola de espera
             const queueResult = await videoCallService.QueueVideoCall(user_id, socket.id);
@@ -37,13 +39,6 @@ export function videoCallEvents(socket: Socket, io: Server) {
     socket.on("leave_queue", async () => {
         try {
             const user_id = socket.data.user_id;
-            if (!user_id) {
-                socket.emit("leave_queue_result", {
-                    success: false,
-                    message: "User not authenticated",
-                });
-                return;
-            };
 
             const resultLeave = await videoCallService.leaveQueue(user_id);
             if (resultLeave) {
@@ -68,13 +63,6 @@ export function videoCallEvents(socket: Socket, io: Server) {
     socket.on("call_connected", async (data) => {
         try {
             const user_id = socket.data.user_id;
-            if (!user_id) {
-                socket.emit("call_connected_result", {
-                    success: false,
-                    message: "User not authenticated",
-                });
-                return;
-            };
 
             const { callId } = data;
             if (!callId) {
@@ -98,7 +86,7 @@ export function videoCallEvents(socket: Socket, io: Server) {
                 });
             }
         } catch (error) {
-            dbLogger.error("Error connecting call:", {error});
+            dbLogger.error("Error connecting call:", { error });
             socket.emit("call_connected_result", {
                 success: false,
                 message: "Error connecting call",
@@ -109,13 +97,7 @@ export function videoCallEvents(socket: Socket, io: Server) {
     socket.on("end_call", async (data) => {
         try {
             const user_id = socket.data.user_id;
-            if (!user_id) {
-                socket.emit("end_call_result", {
-                    success: false,
-                    message: "User not authenticated",
-                });
-                return;
-            };
+
 
             // Obtener el callId del objeto data o buscar la llamada activa
             const callId = data?.callId;
@@ -158,13 +140,6 @@ export function videoCallEvents(socket: Socket, io: Server) {
     socket.on("send_offer", async (data) => {
         try {
             const user_id = socket.data.user_id;
-            if (!user_id) {
-                socket.emit("send_offer_result", {
-                    success: false,
-                    message: "User not authenticated",
-                });
-                return;
-            }
 
             const { offer, to } = data;
 
@@ -191,7 +166,7 @@ export function videoCallEvents(socket: Socket, io: Server) {
                 message: "Offer sent successfully",
             });
         } catch (error) {
-            dbLogger.error("Error sending offer:", {error});
+            dbLogger.error("Error sending offer:", { error });
             socket.emit("send_offer_result", {
                 success: false,
                 message: "Error sending offer",
@@ -202,13 +177,6 @@ export function videoCallEvents(socket: Socket, io: Server) {
     socket.on("send_answer", async (data) => {
         try {
             const user_id = socket.data.user_id;
-            if (!user_id) {
-                socket.emit("send_answer_result", {
-                    success: false,
-                    message: "User not authenticated",
-                });
-                return;
-            }
 
             const { answer, to } = data;
 
@@ -235,7 +203,7 @@ export function videoCallEvents(socket: Socket, io: Server) {
                 message: "Answer sent successfully",
             });
         } catch (error) {
-            dbLogger.error("Error sending answer:", {error});
+            dbLogger.error("Error sending answer:", { error });
             socket.emit("send_answer_result", {
                 success: false,
                 message: "Error sending answer",
@@ -246,13 +214,6 @@ export function videoCallEvents(socket: Socket, io: Server) {
     socket.on("send_ice_candidate", async (data) => {
         try {
             const user_id = socket.data.user_id;
-            if (!user_id) {
-                socket.emit("send_ice_candidate_result", {
-                    success: false,
-                    message: "User not authenticated",
-                });
-                return;
-            }
 
             const { candidate, to } = data;
 
@@ -279,7 +240,7 @@ export function videoCallEvents(socket: Socket, io: Server) {
                 message: "ICE candidate sent successfully",
             });
         } catch (error) {
-            dbLogger.error("Error sending ICE candidate:", {error});
+            dbLogger.error("Error sending ICE candidate:", { error });
             socket.emit("send_ice_candidate_result", {
                 success: false,
                 message: "Error sending ICE candidate",
@@ -290,7 +251,6 @@ export function videoCallEvents(socket: Socket, io: Server) {
     socket.on("disconnect", async () => {
         try {
             const user_id = socket.data.user_id;
-            if (!user_id) return;
 
             dbLogger.info(`User ${user_id} disconnected`);
 
@@ -320,7 +280,7 @@ export function videoCallEvents(socket: Socket, io: Server) {
                 dbLogger.info(`Call ${callData.callId} ended due to user ${user_id} disconnect`);
             }
         } catch (error) {
-            dbLogger.error("Error handling disconnect:", {error});
+            dbLogger.error("Error handling disconnect:", { error });
             // No podemos emitir al socket porque ya se desconectó
         }
     });

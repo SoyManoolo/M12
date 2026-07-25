@@ -3,13 +3,14 @@ import cron from 'node-cron';
 import { AppError } from '../middlewares/errors/AppError';
 import { Op } from 'sequelize';
 import { Logs } from '../models';
+import { env } from './env'
 
 let tableChecked = false;
-const daysToRetainLogs = parseInt(process.env.LOGS_DAYS as string, 10) || 7;
+const daysToRetainLogs = env.LOGS_DAYS;
 
 // Configuración de Pino según el entorno
 const logger = pino({
-    level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
+    level: env.NODE_ENV === 'production' ? 'info' : 'debug',
     transport: {
         target: 'pino-pretty',
         options: {
@@ -23,7 +24,7 @@ const logger = pino({
 // Configuración e implementación de debug, info, warn y error
 const dbLogger = {
     debug: (message: string, meta?: object) => {
-        if (process.env.NODE_ENV === 'development') {
+        if (env.NODE_ENV === 'development') {
             (logger.debug as any)(message, meta);
             saveLogToDatabase('debug', message, meta);
         }
@@ -91,7 +92,7 @@ const saveLogToDatabase = async (level: string, message: string, meta?: object) 
 };
 
 // Solo programa el cron si no estamos en entorno de test
-if (process.env.NODE_ENV !== 'test') {
+if (env.NODE_ENV !== 'test') {
     cron.schedule('0 0 * * *', async () => {
         try {
             const oneWeekAgo = new Date();

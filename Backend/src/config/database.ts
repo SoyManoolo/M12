@@ -4,11 +4,14 @@ import dbLogger from "./logger";
 import { User } from "../models";
 import { hash } from "bcryptjs";
 import { Op } from "sequelize";
+import { env } from './env';
 
-const DatabaseURL = process.env.DATABASE_URL;
-const isTestEnv = process.env.NODE_ENV === "test";
-const dbName = isTestEnv ? process.env.DB_NAME_TEST : process.env.DB_NAME;
-const dbUpdate: boolean = process.env.DB_UPDATE === "true" || false;
+const DatabaseURL = env.DATABASE_URL;
+const isTestEnv = env.NODE_ENV === "test";
+const dbName = isTestEnv
+    ? (env.DB_NAME_TEST || env.DB_NAME)  // Si no existe DB_NAME_TEST, usa DB_NAME
+    : env.DB_NAME;
+const dbUpdate: boolean = env.DB_UPDATE === true || false;
 
 // Datos del usuario administrador por defecto
 const DEFAULT_ADMIN = {
@@ -95,8 +98,8 @@ if (DatabaseURL) {
     // Opciones específicas para Desarrollo (host, port)
     const devOptions: Options = {
         ...baseOptions,
-        host: process.env.DB_HOST || "localhost",
-        port: Number(process.env.DB_PORT) || 5432,
+        host: env.DB_HOST,
+        port: env.DB_PORT,
         pool: {
             max: 5,
             min: 0,
@@ -106,7 +109,7 @@ if (DatabaseURL) {
     };
 
     // Overload 1: new Sequelize(database: string, username: string, password?: string, options?: Options)
-    sequelize = new Sequelize(dbName!, process.env.DB_USER!, process.env.DB_PASS!, devOptions);
+    sequelize = new Sequelize(dbName!, env.DB_USER!, env.DB_PASS!, devOptions);
 }
 
 export { sequelize };
@@ -121,7 +124,7 @@ async function initializeDatabase() {
         // }
         dbLogger.info('Base de datos conectada', {
             database: dbName,
-            env: process.env.NODE_ENV
+            env: env.NODE_ENV
         });
 
         await sequelize.authenticate();

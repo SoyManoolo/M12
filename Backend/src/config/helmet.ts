@@ -1,4 +1,5 @@
 import { HelmetOptions } from 'helmet';
+import { env } from './env';
 
 export const helmetOptions: HelmetOptions = {
     // ===== CONTENT SECURITY POLICY (CSP) =====
@@ -38,9 +39,9 @@ export const helmetOptions: HelmetOptions = {
             // APIs: Tu backend + tu frontend
             connectSrc: [
                 "'self'",
-                process.env.FRONTEND_URL || "http://localhost:5173",
+                env.FRONTEND_URL || "http://localhost:5173",
                 // WebSocket también
-                process.env.FRONTEND_URL?.replace('https:', 'wss:') || "ws://localhost:5173"
+                env.FRONTEND_URL?.replace('https:', 'wss:') || "ws://localhost:5173"
             ],
 
             // Frames: Solo tu dominio (para evitar clickjacking)
@@ -56,7 +57,7 @@ export const helmetOptions: HelmetOptions = {
             formAction: ["'self'"],
 
             // Upgrade insecure requests (HTTP → HTTPS)
-            upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : null
+            upgradeInsecureRequests: env.NODE_ENV === 'production' ? [] : null
         }
     },
 
@@ -76,7 +77,7 @@ export const helmetOptions: HelmetOptions = {
 
     // ===== OTRAS PROTECCIONES =====
     // HSTS: Forzar HTTPS (solo en producción)
-    strictTransportSecurity: process.env.NODE_ENV === 'production' ? {
+    strictTransportSecurity: env.NODE_ENV === 'production' ? {
         maxAge: 31536000,      // 1 año en segundos
         includeSubDomains: true,
         preload: true

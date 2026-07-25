@@ -11,6 +11,7 @@ import rateLimit from 'express-rate-limit';
 import { corsOptions } from './config/cors';
 import { helmetOptions } from './config/helmet';
 import dbLogger from './config/logger';
+import { env } from './config/env';
 
 // Rutas
 import userRoutes from './routes/user'
@@ -27,7 +28,7 @@ import { AppErrorHandler } from './middlewares/errors/AppErrorHandler';
 export const app = express();
 
 // Logging
-if (process.env.NODE_ENV === 'development') {
+if (env.NODE_ENV === 'development') {
     // Desarrollo: colorizado, fácil de leer
     app.use(morgan('dev'));
 } else {
@@ -47,7 +48,7 @@ app.use(cors(corsOptions));
 app.use(helmet(helmetOptions));
 
 // HTTPS Enforcement en producción
-if (process.env.NODE_ENV === 'production') {
+if (env.NODE_ENV === 'production') {
     app.use((req: Request, res: Response, next: NextFunction) => {
         // Railway y otros PaaS usan el header 'x-forwarded-proto'
         if (req.headers['x-forwarded-proto'] !== 'https') {
@@ -64,7 +65,7 @@ if (process.env.NODE_ENV === 'production') {
 // Rate limiting global
 const limiter = rateLimit({
     windowMs: 10 * 60 * 1000, // 10 minutos
-    max: process.env.NODE_ENV === 'production' ? 1000 : 10000, // 100 requests por IP
+    max: env.NODE_ENV === 'production' ? 1000 : 10000, // 100 requests por IP
     message: {
         success: false,
         status: 429,
@@ -110,8 +111,8 @@ app.get('/health', (req, res) => {
     const responseData = {
         status: 'OK',
         timestamp,
-        environment: process.env.NODE_ENV,
-        port: process.env.PORT,
+        environment: env.NODE_ENV,
+        port: env.PORT,
         host: req.hostname,
         ip: req.ip
     };

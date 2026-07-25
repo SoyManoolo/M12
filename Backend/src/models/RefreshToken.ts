@@ -1,24 +1,28 @@
 import { sequelize } from "../config/database";
 import { Model, DataTypes } from "sequelize";
 
-// Clase JWT
+export class RefreshToken extends Model { }
 
-export class JWT extends Model {
-    public token!: string;
-    public created_at!: Date;
-}
-
-JWT.init({
+RefreshToken.init({
     token: {
         type: DataTypes.STRING,
         allowNull: false,
         primaryKey: true,
         unique: true
     },
+    user_id: {
+        type: DataTypes.UUID,
+        allowNull: false,
+
+    },
     created_at: {
         type: DataTypes.DATE,
         allowNull: false,
         defaultValue: DataTypes.NOW
+    },
+    expires_at: {
+        type: DataTypes.DATE,
+        allowNull: false
     }
 },
     {
@@ -34,4 +38,4 @@ JWT.init({
             }
         ]
     }
-);
+)

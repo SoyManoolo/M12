@@ -646,7 +646,7 @@ class WebRTCService {
     public joinQueue(userId: string): void {
         this.closeConnection(); // Limpieza completa antes de unirse a una nueva búsqueda
         console.log("WebRTCService: Usuario uniéndose a la cola:", userId);
-        this.socketService.emit(VideoCallEvent.ADD_TO_QUEUE, { user_id: userId, token: this.token });
+        this.socketService.emit(VideoCallEvent.ADD_TO_QUEUE, { token: this.token });
     }
 
     public leaveQueue(): void {
