@@ -1,7 +1,6 @@
 // app/components/Chats/ClientEmojiPicker.tsx
 
-import { ClientOnly } from "remix-utils/client-only";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import type { EmojiClickData } from 'emoji-picker-react'; // Importamos solo el tipo
 
 // Importación lazy del wrapper (solo se carga en el cliente)
@@ -15,13 +14,19 @@ interface ClientEmojiPickerProps {
 }
 
 export default function ClientEmojiPicker(props: ClientEmojiPickerProps) {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  if (!isClient) {
+    return <div className="p-4 text-center text-gray-400">Cargando emojis...</div>;
+  }
+
   return (
-    <ClientOnly fallback={<div className="p-4 text-center text-gray-400">Cargando emojis...</div>}>
-      {() => (
-        <Suspense fallback={<div className="p-4 text-center text-gray-400">Cargando emojis...</div>}>
-          <EmojiPickerWrapper {...props} />
-        </Suspense>
-      )}
-    </ClientOnly>
+    <Suspense fallback={<div className="p-4 text-center text-gray-400">Cargando emojis...</div>}>
+      <EmojiPickerWrapper {...props} />
+    </Suspense>
   );
 }

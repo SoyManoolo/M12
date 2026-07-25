@@ -2,87 +2,13 @@
 
 import type { Socket } from 'socket.io-client';
 import { environment } from '../config/environment';
-
-// Función helper para decodificar token JWT manualmente (funciona en SSR y cliente)
-function decodeTokenSafe(token: string): { user_id: string } | null {
-    try {
-        const parts = token.split('.');
-        if (parts.length !== 3) {
-            console.error('Token JWT inválido: no tiene 3 partes');
-            return null;
-        }
-
-        // Decodificar la parte del payload (segunda parte)
-        const payload = parts[1];
-
-        // En el navegador, usar atob; en Node.js, usar Buffer
-        let decoded: string;
-        if (typeof window !== 'undefined') {
-            // Cliente: usar atob (disponible en navegadores)
-            decoded = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
-        } else {
-            // SSR: usar Buffer
-            decoded = Buffer.from(payload, 'base64').toString('utf8');
-        }
-
-        const parsed = JSON.parse(decoded);
-        return parsed.user_id ? { user_id: parsed.user_id } : null;
-    } catch (error) {
-        console.error('Error al decodificar token:', error);
-        return null;
-    }
-}
-
-// Función helper para cargar socket.io solo en el cliente con import dinámico
-async function getSocketIO(): Promise<typeof import('socket.io-client') | null> {
-    if (typeof window === 'undefined') {
-        return null;
-    }
-    // Usar import dinámico en lugar de require para Vite
-    const socketIO = await import('socket.io-client');
-    return socketIO;
-}
+import { chatApi } from './chat/api';
+import { decodeUserId, loadSocketClient } from './chat/client';
+import type { ChatMessage as Message, ChatSummary as Chat, ConnectionStatus, DeliveryStatus, ReadStatus, TypingStatus } from './chat/types';
 
 // ===================================
 // INTERFACES
 // ===================================
-
-interface Message {
-    id: string;
-    content: string;
-    sender_id: string;
-    receiver_id: string;
-    created_at: string;
-    is_delivered: boolean;
-    delivered_at: string | null;
-    read_at: string | null;
-}
-
-interface DeliveryStatus {
-    message_id: string;
-    status: string;
-    delivered_at?: string;
-}
-
-interface ReadStatus {
-    message_id: string;
-    status: string;
-    read_at?: string;
-}
-
-interface ChatUser {
-    user_id: string;
-    username: string;
-    name: string;
-    surname: string;
-    profile_picture: string | null;
-}
-
-interface Chat {
-    other_user: ChatUser;
-    last_message: Message;
-    unread_count: number;
-}
 
 // ===================================
 // CLASE CHATSERVICE
@@ -93,8 +19,8 @@ class ChatService {
     private messageHandlers: ((message: Message) => void)[] = [];
     private deliveryHandlers: ((data: DeliveryStatus) => void)[] = [];
     private readHandlers: ((data: ReadStatus) => void)[] = [];
-    private typingHandlers: ((data: { userId: string; isTyping: boolean }) => void)[] = [];
-    private connectionHandlers: ((status: 'connected' | 'disconnected' | 'reconnecting') => void)[] = [];
+    private typingHandlers: ((data: TypingStatus) => void)[] = [];
+    private connectionHandlers: ((status: ConnectionStatus) => void)[] = [];
     private isConnecting = false;
     private reconnectAttempts = 0;
     private maxReconnectAttempts = 5;
@@ -115,7 +41,7 @@ class ChatService {
         if (!this.socket) {
             console.log('🔌 Inicializando cliente de socket.io...');
             console.log('🌐 URL del servidor:', environment.apiUrl);
-            const socketIO = await getSocketIO();
+            const socketIO = await loadSocketClient();
             if (!socketIO) {
                 console.error('❌ No se pudo cargar socket.io-client');
                 return;
@@ -312,16 +238,16 @@ class ChatService {
         }
 
         try {
-            const decoded = decodeTokenSafe(token);
+            const decoded = decodeUserId(token);
 
             if (!decoded) {
                 console.error('❌ No se pudo decodificar el token');
                 return;
             }
 
-            if (decoded.user_id !== userId) {
+            if (decoded !== userId) {
                 console.error('❌ El token no coincide con el usuario:', {
-                    tokenUserId: decoded.user_id,
+                    tokenUserId: decoded,
                     providedUserId: userId,
                     message: 'Asegúrate de pasar tu propio user_id, no el del chat'
                 });
@@ -329,10 +255,10 @@ class ChatService {
             }
 
             console.log('🚀 Iniciando conexión del socket...');
-            console.log('👤 User ID:', decoded.user_id);
+            console.log('👤 User ID:', decoded);
             this.isConnecting = true;
             this.lastToken = token;
-            this.lastUserId = decoded.user_id;
+            this.lastUserId = decoded;
             this.socket.auth = { token };
 
             // Si ya está conectado, desconectar primero para asegurar una conexión limpia
@@ -439,9 +365,9 @@ class ChatService {
             console.log('Socket no conectado, reconectando...');
             // Obtener el userId del token
             try {
-                const decodedToken = decodeTokenSafe(token);
+                const decodedToken = decodeUserId(token);
                 if (decodedToken) {
-                    this.connect(token, decodedToken.user_id);
+                    this.connect(token, decodedToken);
                 }
             } catch (error) {
                 console.error('Error al decodificar el token para reconexión:', error);
@@ -497,34 +423,8 @@ class ChatService {
     // --- MÉTODOS HTTP ---
 
     public async getActiveChats(token: string): Promise<Chat[]> {
-        // [ ... Implementación de fetch ... ]
         try {
-            const response = await fetch(`${environment.apiUrl}/chat/list`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error('Error al obtener los chats');
-            }
-
-            const responseData = await response.json();
-
-            if (!responseData.success || !responseData.data) {
-                throw new Error('Formato de respuesta inválido');
-            }
-
-            // Procesar los chats para incluir el sender_id en el último mensaje
-            return responseData.data.map((chat: any) => ({
-                ...chat,
-                last_message: {
-                    ...chat.last_message,
-                    sender_id: chat.last_message.sender_id // Asegurarnos de que el sender_id esté incluido
-                }
-            }));
+            return await chatApi.getActiveChats(token);
         } catch (error) {
             console.error('Error al obtener los chats:', error);
             return [];
@@ -532,29 +432,8 @@ class ChatService {
     }
 
     public async getMessages(userId: string, token: string, limit: number = 20, cursor?: string): Promise<{ messages: Message[], nextCursor: string | null }> {
-        // [ ... Implementación de fetch ... ]
         try {
-            let url = `${environment.apiUrl}/chat?receiver_id=${userId}&limit=${limit}`;
-            if (cursor) {
-                url += `&cursor=${cursor}`;
-            }
-
-            const response = await fetch(url, {
-                credentials: 'include',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error('Error al obtener los mensajes');
-            }
-
-            const data = await response.json();
-            return {
-                messages: data.data.messages,
-                nextCursor: data.data.nextCursor
-            };
+            return await chatApi.getMessages(userId, token, limit, cursor);
         } catch (error) {
             console.error('Error al obtener mensajes:', error);
             return { messages: [], nextCursor: null };
@@ -626,69 +505,15 @@ class ChatService {
     }
 
     public async deleteMessage(messageId: string, token: string): Promise<{ result: boolean, message_id: string }> {
-        // [ ... Implementación de fetch ... ]
-        try {
-            const response = await fetch(`${environment.apiUrl}/chat/${messageId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error('Error al eliminar el mensaje');
-            }
-
-            const data = await response.json();
-            return data.data;
-        } catch (error) {
-            console.error('Error al eliminar mensaje:', error);
-            throw error;
-        }
+        return chatApi.deleteMessage(messageId, token);
     }
 
     public async markMessageAsDeliveredHttp(messageId: string, token: string): Promise<Message> {
-        // [ ... Implementación de fetch ... ]
-        try {
-            const response = await fetch(`${environment.apiUrl}/chat/${messageId}/delivered`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error('Error al marcar mensaje como entregado');
-            }
-
-            const data = await response.json();
-            return data.data;
-        } catch (error) {
-            console.error('Error al marcar mensaje como entregado:', error);
-            throw error;
-        }
+        return chatApi.markDelivered(messageId, token);
     }
 
     public async markMessageAsReadHttp(messageId: string, token: string): Promise<Message> {
-        // [ ... Implementación de fetch ... ]
-        try {
-            const response = await fetch(`${environment.apiUrl}/chat/${messageId}/read`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error('Error al marcar mensaje como leído');
-            }
-
-            const data = await response.json();
-            return data.data;
-        } catch (error) {
-            console.error('Error al marcar mensaje como leído:', error);
-            throw error;
-        }
+        return chatApi.markRead(messageId, token);
     }
 }
 
