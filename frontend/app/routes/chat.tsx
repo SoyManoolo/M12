@@ -72,7 +72,7 @@ export default function Chat() {
     });
 
     let isComponentMounted = true;
-    let unsubscribeFunctions: (() => void)[] = [];
+    const unsubscribeFunctions: (() => void)[] = [];
 
     // Definir los handlers de eventos
     const handleNewMessage = (message: Message) => {

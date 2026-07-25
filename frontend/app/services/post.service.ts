@@ -49,8 +49,8 @@ class PostService {
 
   async getPosts(token: string, cursor?: string, username?: string): Promise<PostsResponse> {
     try {
-      let endpoint = username ? '/posts/username' : '/posts';
-      let url = new URL(`${environment.apiUrl}${endpoint}`);
+      const endpoint = username ? '/posts/username' : '/posts';
+      const url = new URL(`${environment.apiUrl}${endpoint}`);
 
       if (username) {
         url.searchParams.append('username', username);

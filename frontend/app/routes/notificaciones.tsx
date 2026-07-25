@@ -15,7 +15,6 @@
 import { useState, useEffect } from "react";
 import type { Notification } from "~/types/notifications";
 import type { User } from "~/types/user.types";
-import type { Friend } from "~/services/friendship.service";
 import Navbar from "~/components/Inicio/Navbar";
 import RightPanel from "~/components/Shared/RightPanel";
 import { FaUserFriends, FaComment, FaHeart, FaVideo, FaCheck, FaTimes, FaSearch, FaTrash, FaCheckDouble, FaBell } from 'react-icons/fa';
@@ -28,15 +27,17 @@ import { friendshipService } from "~/services/friendship.service";
 export default function Notificaciones(): React.ReactElement {
   const { token } = useAuth();
   const [currentNotifications, setCurrentNotifications] = useState<(Notification & { user: User })[]>([]);
-  const [friends, setFriends] = useState<Friend[]>([]);
   const [suggestedUsers, setSuggestedUsers] = useState<User[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [reloadKey, setReloadKey] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState<string>('all');
 
   useEffect(() => {
     const fetchFriends = async () => {
+      setLoading(true);
+      setError(null);
       if (!token) {
         setError('Por favor, inicia sesión para ver las notificaciones');
         setLoading(false);
@@ -47,8 +48,6 @@ export default function Notificaciones(): React.ReactElement {
         // Cargar amigos
         const friendsResponse = await friendshipService.getUserFriends(token);
         if (friendsResponse.success && friendsResponse.data) {
-          setFriends(friendsResponse.data);
-
           // Cargar usuarios sugeridos
           const suggestedResponse = await userService.getAllUsers(token);
           if (suggestedResponse.success && suggestedResponse.data && Array.isArray(suggestedResponse.data.users)) {
@@ -60,7 +59,6 @@ export default function Notificaciones(): React.ReactElement {
             setSuggestedUsers(filteredSuggestedUsers);
           }
         } else {
-          setFriends([]);
           setSuggestedUsers([]);
         }
       } catch (err) {
@@ -72,16 +70,16 @@ export default function Notificaciones(): React.ReactElement {
     };
 
     fetchFriends();
-  }, [token]);
+  }, [token, reloadKey]);
 
   const handleAcceptFriend = async (friendshipId: string) => {
     try {
       console.log('Aceptando solicitud de amistad:', friendshipId);
-      setFriends(prev =>
-        prev.map(friend =>
-          friend.friendship_id === friendshipId
-            ? { ...friend, status: 'accepted' }
-            : friend
+      setCurrentNotifications(prev =>
+        prev.map(notification =>
+          notification.related_id === friendshipId
+            ? { ...notification, is_read: true }
+            : notification
         )
       );
     } catch (error) {
@@ -92,8 +90,8 @@ export default function Notificaciones(): React.ReactElement {
   const handleRejectFriend = async (friendshipId: string) => {
     try {
       console.log('Rechazando solicitud de amistad:', friendshipId);
-      setFriends(prev =>
-        prev.filter(friend => friend.friendship_id !== friendshipId)
+      setCurrentNotifications(prev =>
+        prev.filter(notification => notification.related_id !== friendshipId)
       );
     } catch (error) {
       console.error('Error al rechazar solicitud:', error);
@@ -276,7 +274,26 @@ export default function Notificaciones(): React.ReactElement {
             </div>
           </div>
 
-          {/* Lista de notificaciones agrupadas */}
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-16 bg-gray-900/50 rounded-xl border border-gray-800" role="status">
+              <FaBell className="mb-4 text-3xl text-blue-500 animate-pulse" aria-hidden="true" />
+              <p className="text-gray-300">Cargando notificaciones…</p>
+            </div>
+          ) : error ? (
+            <div className="flex flex-col items-center justify-center py-16 bg-red-950/20 rounded-xl border border-red-900/60" role="alert">
+              <FaBell className="mb-4 text-3xl text-red-400" aria-hidden="true" />
+              <h2 className="text-lg font-semibold text-white">No pudimos cargar las notificaciones</h2>
+              <p className="mt-2 text-center text-gray-300">{error}</p>
+              <button
+                type="button"
+                onClick={() => setReloadKey((value) => value + 1)}
+                className="mt-5 rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-500"
+              >
+                Reintentar
+              </button>
+            </div>
+          ) : (
+          /* Lista de notificaciones agrupadas */
           <div className="space-y-4 sm:space-y-6">
             {Object.entries(filteredNotifications).map(([group, notifications]) => (
               <div key={group} className="space-y-2">
@@ -370,6 +387,7 @@ export default function Notificaciones(): React.ReactElement {
               </div>
             )}
           </div>
+          )}
         </div>
       </div>
 

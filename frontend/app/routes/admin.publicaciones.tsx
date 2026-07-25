@@ -19,34 +19,11 @@ import Notification from '~/components/Shared/Notification';
 import ConfirmModal from '~/components/Shared/ConfirmModal';
 import EditPostModal from '~/components/Shared/EditPostModal';
 import ImageZoomModal from '~/components/Shared/ImageZoomModal';
-import { differenceInSeconds, differenceInMinutes, differenceInHours, differenceInDays } from 'date-fns';
 import SecureImage from '../components/Shared/SecureImage';
-
-interface Post {
-  post_id: string;
-  user_id: string;
-  description: string;
-  media: string;
-  created_at: string;
-  updated_at: string;
-  deleted_at: string | null;
-  likes_count: string;
-  comments_count: string;
-  author: {
-    user_id: string;
-    username: string;
-    profile_picture: string | null;
-    name: string;
-  };
-  is_saved?: boolean;
-  comments?: Array<{
-    comment_id: string;
-    user_id: string;
-    username: string;
-    content: string;
-    created_at: string;
-  }>;
-}
+import { mapAdminPost } from '~/features/admin/posts/post.mapper';
+import type { AdminPost as Post, ApiAdminPost } from '~/features/admin/posts/types';
+import { formatTimeAgo } from '~/features/admin/posts/time';
+import { filterAdminPosts, type PostSort } from '~/features/admin/posts/filters';
 
 interface PostDetailModalProps {
   isOpen: boolean;
@@ -295,31 +272,12 @@ function PostDetailModal({ isOpen, onClose, post, onImageClick }: PostDetailModa
   );
 }
 
-// Formato relativo para fechas tipo "hace X tiempo"
-const formatTimeAgo = (date: string) => {
-  const now = new Date();
-  const past = new Date(date);
-  const seconds = differenceInSeconds(now, past);
-  const minutes = differenceInMinutes(now, past);
-  const hours = differenceInHours(now, past);
-  const days = differenceInDays(now, past);
-  if (days > 0) {
-    return `${days} ${days === 1 ? 'día' : 'días'}`;
-  } else if (hours > 0) {
-    return `${hours} ${hours === 1 ? 'hora' : 'horas'}`;
-  } else if (minutes > 0) {
-    return `${minutes} ${minutes === 1 ? 'minuto' : 'minutos'}`;
-  } else {
-    return `${seconds} ${seconds === 1 ? 'segundo' : 'segundos'}`;
-  }
-};
-
 export default function AdminPublicaciones() {
   const { token } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [posts, setPosts] = useState<Post[]>([]);
   const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
-  const [activeFilter, setActiveFilter] = useState<'all' | 'recent' | 'oldest'>('all');
+  const [activeFilter, setActiveFilter] = useState<PostSort>('all');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
@@ -338,31 +296,7 @@ export default function AdminPublicaciones() {
 
   // Efecto para filtrar y ordenar posts
   useEffect(() => {
-    let filtered = [...posts];
-
-    // Aplicar filtro de búsqueda
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase().trim();
-      filtered = filtered.filter(post => 
-        post.author.username.toLowerCase().includes(query) ||
-        post.author.name.toLowerCase().includes(query)
-      );
-    }
-
-    // Aplicar ordenamiento por fecha
-    switch (activeFilter) {
-      case 'recent':
-        filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-        break;
-      case 'oldest':
-        filtered.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-        break;
-      default:
-        // 'all' no requiere ordenamiento especial
-        break;
-    }
-
-    setFilteredPosts(filtered);
+    setFilteredPosts(filterAdminPosts(posts, searchQuery, activeFilter));
   }, [searchQuery, posts, activeFilter]);
 
   useEffect(() => {
@@ -376,20 +310,7 @@ export default function AdminPublicaciones() {
       try {
         const response = await postService.getPosts(token);
         if (response.success) {
-          const transformedPosts: Post[] = response.data.posts.map((post: any) => ({
-            post_id: post.post_id,
-            user_id: post.user_id,
-            description: post.description,
-            media: post.media || '',
-            created_at: post.created_at,
-            updated_at: post.updated_at,
-            deleted_at: post.deleted_at,
-            likes_count: post.likes_count,
-            comments_count: post.comments_count,
-            author: post.author,
-            is_saved: false,
-            comments: []
-          }));
+          const transformedPosts = response.data.posts.map((post: ApiAdminPost) => mapAdminPost(post));
           setPosts(transformedPosts);
           setFilteredPosts(transformedPosts); // Inicializar posts filtrados
           setNextCursor(response.data.nextCursor);
@@ -413,20 +334,7 @@ export default function AdminPublicaciones() {
     try {
       const response = await postService.getPosts(token, nextCursor);
       if (response.success) {
-        const transformedPosts: Post[] = response.data.posts.map((post: any) => ({
-          post_id: post.post_id,
-          user_id: post.user_id,
-          description: post.description,
-          media: post.media || '',
-          created_at: post.created_at,
-          updated_at: post.updated_at,
-          deleted_at: post.deleted_at,
-          likes_count: post.likes_count,
-          comments_count: post.comments_count,
-          author: post.author,
-          is_saved: false,
-          comments: []
-        }));
+        const transformedPosts = response.data.posts.map((post: ApiAdminPost) => mapAdminPost(post));
         const newPosts = [...posts, ...transformedPosts];
         setPosts(newPosts);
         // Actualizar también los posts filtrados

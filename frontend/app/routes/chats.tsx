@@ -92,7 +92,7 @@ export default function Chats() {
     const chatServiceInstance = getChatService();
     // ---------------------------------------------------------------
     
-    let unsubscribeFunctions: (() => void)[] = [];
+    const unsubscribeFunctions: (() => void)[] = [];
 
     const fetchData = async () => {
       try {
