@@ -296,7 +296,7 @@ export default function ConfiguracionPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col lg:flex-row overflow-hidden">
+    <div className="min-h-screen bg-black text-white flex flex-col lg:flex-row overflow-x-hidden">
       <Navbar />
       
       <div className="w-full lg:w-5/6 lg:ml-[16.666667%] pt-16 pb-16 p-3 sm:p-6">

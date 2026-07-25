@@ -32,7 +32,7 @@ export default function App() {
                 <Meta />
                 <Links />
             </head>
-            <body className="h-full">
+            <body className="min-h-full bg-black text-white antialiased">
                 <AuthProvider>
                     {/* El contenido se renderiza SIEMPRE, tanto en SSR como en Cliente */}
                     {isPublicRoute ? (
