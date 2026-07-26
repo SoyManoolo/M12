@@ -42,7 +42,11 @@ export class AuthService {
             // Guardar el token en la base de datos
             await RefreshToken.findOrCreate({
                 where: { token },
-                defaults: { token }
+                defaults: {
+                    token,
+                    user_id: user.getDataValue('user_id'),
+                    expires_at: new Date(Date.now() + 60 * 60 * 1000),
+                }
             });
 
             return token;
@@ -103,7 +107,11 @@ export class AuthService {
             // Guardar el token en la base de datos
             await RefreshToken.findOrCreate({
                 where: { token },
-                defaults: { token }
+                defaults: {
+                    token,
+                    user_id: newUser.getDataValue('user_id'),
+                    expires_at: new Date(Date.now() + 60 * 60 * 1000),
+                }
             });
 
             return token;

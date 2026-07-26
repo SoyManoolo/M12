@@ -281,7 +281,7 @@ export default function RightPanel({
   }));
 
   return (
-    <div className="w-[370px] p-4 sticky top-0 h-screen overflow-y-auto">
+    <div className="h-dvh w-full overflow-y-auto p-4 sticky top-0">
       <div className="pt-4">
         {/* Barra de búsqueda */}
         {showSearch && (

@@ -397,14 +397,10 @@ export default function InicioPage() {
   return (
     <>
       <AppLayout mainClassName="border-r border-gray-800" rightPanel={<RightPanel users={suggestedUsers} mode="suggested" />}>
-      <div className="min-h-screen w-full flex flex-col"
-        style={{ minHeight: '100vh' }}>
+      <div className="flex w-full flex-col">
         <div
           className="p-2 sm:p-4 md:p-6 space-y-6"
           style={{
-            paddingTop: undefined,
-            paddingBottom: undefined,
-            minHeight: '100vh',
             boxSizing: 'border-box',
             overflowX: 'hidden'
           }}

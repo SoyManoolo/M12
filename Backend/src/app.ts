@@ -27,6 +27,10 @@ import { AppErrorHandler } from './middlewares/errors/AppErrorHandler';
 
 export const app = express();
 
+// En Railway hay un único proxy inverso delante de la aplicación. En local no
+// debemos confiar en cabeceras X-Forwarded-* enviadas por cualquier cliente.
+app.set('trust proxy', env.NODE_ENV === 'production' ? 1 : false);
+
 // Logging
 if (env.NODE_ENV === 'development') {
     // Desarrollo: colorizado, fácil de leer
@@ -96,9 +100,6 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Compresión
 app.use(compression());
-
-// Proxy
-app.set('trust proxy', true);
 
 // Health check endpoint - SIN autenticación, para probar conectividad
 app.get('/health', (req, res) => {
