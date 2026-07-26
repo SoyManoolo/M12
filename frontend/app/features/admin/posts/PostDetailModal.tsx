@@ -93,27 +93,27 @@ export default function PostDetailModal({ isOpen, onClose, post, onImageClick }:
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-2 sm:p-0">
       <button
         type="button"
-        aria-label="Cerrar detalle de publicaciÃ³n"
+        aria-label="Cerrar detalle de publicación"
         className="absolute inset-0 cursor-default"
         onClick={onClose}
       />
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Detalle de publicaciÃ³n"
+        aria-label="Detalle de publicación"
         className="relative z-10 bg-gray-900 rounded-2xl shadow-2xl w-full max-w-7xl h-[95vh] sm:h-[90vh] mx-auto p-0 overflow-hidden flex flex-col"
       >
         <button
           type="button"
           onClick={onClose}
-          aria-label="Cerrar detalle de publicaciÃ³n"
+          aria-label="Cerrar detalle de publicación"
           className="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl z-10 cursor-pointer bg-gray-800/50 hover:bg-gray-800 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200"
         >
-          Ã—
+          ×
         </button>
         
         <div className="flex flex-col sm:flex-row h-full">
-          {/* Imagen arriba en mÃ³vil, izquierda en escritorio */}
+          {/* Imagen arriba en móvil, izquierda en escritorio */}
           {post.media && (
             <div className="w-full sm:w-1/2 bg-black flex items-center justify-center relative max-h-72 sm:max-h-none">
               <button
@@ -126,7 +126,7 @@ export default function PostDetailModal({ isOpen, onClose, post, onImageClick }:
               >
                 <SecureImage 
                   src={post.media} 
-                  alt="Imagen publicaciÃ³n" 
+                  alt="Imagen publicación"
                   className="max-h-72 sm:max-h-[90vh] w-auto object-contain transition-transform duration-300 group-hover:scale-105 mx-auto" 
                 />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center">
@@ -140,7 +140,7 @@ export default function PostDetailModal({ isOpen, onClose, post, onImageClick }:
 
           {/* Detalles y comentarios */}
           <div className={`${post.media ? 'w-full sm:w-1/2' : 'w-full'} flex flex-col h-full bg-gray-900`}>
-            {/* Cabecera con informaciÃ³n del usuario */}
+            {/* Cabecera con información del usuario */}
             <div className="p-6 border-b border-gray-800 bg-gray-900/95 backdrop-blur-sm">
               <div className="flex items-center gap-3">
                 <button
@@ -169,13 +169,13 @@ export default function PostDetailModal({ isOpen, onClose, post, onImageClick }:
               </div>
             </div>
 
-            {/* DescripciÃ³n del post */}
+            {/* Descripción del post */}
             <div className="p-6 border-b border-gray-800 bg-gray-900/95 backdrop-blur-sm">
               <p className="text-gray-200 whitespace-pre-line text-base break-words leading-relaxed">{post.description}</p>
               <div className="flex items-center justify-between text-sm text-gray-400 mt-4">
                 <div className="flex gap-4">
                   <span className="flex items-center gap-1">
-                    <span className="text-red-500">â¤ï¸</span> {post.likes_count}
+                    <span className="text-red-500">❤️</span> {post.likes_count}
                   </span>
                   <span className="flex items-center gap-1">
                     <span className="text-blue-500">ðŸ’¬</span> {post.comments_count}
@@ -187,7 +187,7 @@ export default function PostDetailModal({ isOpen, onClose, post, onImageClick }:
               </div>
             </div>
 
-            {/* SecciÃ³n de comentarios */}
+            {/* Sección de comentarios */}
             <div className="flex-1 overflow-y-auto p-6 bg-gray-900/95 backdrop-blur-sm">
               <h4 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
                 <span className="text-blue-500">ðŸ’¬</span> Comentarios
@@ -195,8 +195,8 @@ export default function PostDetailModal({ isOpen, onClose, post, onImageClick }:
               {comments.length === 0 ? (
                 <div className="text-center text-gray-400 py-12 bg-gray-800/30 rounded-xl">
                   <span className="text-4xl mb-4 block">ðŸ’­</span>
-                  <p className="text-lg">No hay comentarios aÃºn</p>
-                  <p className="text-sm mt-2">SÃ© el primero en comentar</p>
+                  <p className="text-lg">No hay comentarios aún</p>
+                  <p className="text-sm mt-2">Sé el primero en comentar</p>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -255,7 +255,7 @@ export default function PostDetailModal({ isOpen, onClose, post, onImageClick }:
         }}
         onConfirm={confirmDeleteComment}
         title="Eliminar comentario"
-        message="Â¿EstÃ¡s seguro de que quieres eliminar este comentario? Esta acciÃ³n no se puede deshacer."
+        message="¿Estás seguro de que quieres eliminar este comentario? Esta acción no se puede deshacer."
         confirmText="Eliminar"
         cancelText="Cancelar"
       />

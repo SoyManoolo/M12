@@ -1,11 +1,11 @@
 /**
- * PÃ¡gina de AdministraciÃ³n de Publicaciones
+ * Página de Administración de Publicaciones
  * 
- * Esta pÃ¡gina permite gestionar todas las publicaciones de la aplicaciÃ³n.
+ * Esta página permite gestionar todas las publicaciones de la aplicación.
  * Incluye:
- * - Lista de publicaciones con opciones de ediciÃ³n y eliminaciÃ³n
- * - Filtros y bÃºsqueda
- * - EstadÃ­sticas de publicaciones
+ * - Lista de publicaciones con opciones de edición y eliminación
+ * - Filtros y búsqueda
+ * - Estadísticas de publicaciones
  */
 
 import { useState, useEffect } from 'react';
@@ -55,7 +55,7 @@ export default function AdminPublicaciones() {
   useEffect(() => {
     const fetchData = async () => {
       if (!token) {
-        setError('Por favor, inicia sesiÃ³n para ver las publicaciones');
+        setError('Por favor, inicia sesión para ver las publicaciones');
         setLoading(false);
         return;
       }
@@ -90,7 +90,7 @@ export default function AdminPublicaciones() {
         const transformedPosts = response.data.posts.map((post: ApiAdminPost) => mapAdminPost(post));
         const newPosts = [...posts, ...transformedPosts];
         setPosts(newPosts);
-        // Actualizar tambiÃ©n los posts filtrados
+        // Actualizar también los posts filtrados
         if (!searchQuery.trim()) {
           setFilteredPosts(newPosts);
         } else {
@@ -103,7 +103,7 @@ export default function AdminPublicaciones() {
         }
         setNextCursor(response.data.nextCursor);
       } else {
-        throw new Error(response.message || 'Error al cargar mÃ¡s posts');
+        throw new Error(response.message || 'Error al cargar más posts');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al conectar con el servidor');
@@ -137,7 +137,7 @@ export default function AdminPublicaciones() {
             : post
         ));
         setNotification({
-          message: 'PublicaciÃ³n actualizada correctamente',
+          message: 'Publicación actualizada correctamente',
           type: 'success'
         });
       } else {
@@ -145,7 +145,7 @@ export default function AdminPublicaciones() {
       }
     } catch (err) {
       setNotification({
-        message: err instanceof Error ? err.message : 'Error al actualizar la publicaciÃ³n',
+        message: err instanceof Error ? err.message : 'Error al actualizar la publicación',
         type: 'error'
       });
     } finally {
@@ -162,15 +162,15 @@ export default function AdminPublicaciones() {
       if (response.success) {
         setPosts(prev => prev.filter(post => post.post_id !== postToDelete));
         setNotification({
-          message: 'PublicaciÃ³n eliminada correctamente',
+          message: 'Publicación eliminada correctamente',
           type: 'success'
         });
       } else {
-        throw new Error(response.message || 'Error al eliminar la publicaciÃ³n');
+        throw new Error(response.message || 'Error al eliminar la publicación');
       }
     } catch (err) {
       setNotification({
-        message: err instanceof Error ? err.message : 'Error al eliminar la publicaciÃ³n',
+        message: err instanceof Error ? err.message : 'Error al eliminar la publicación',
         type: 'error'
       });
     } finally {
@@ -189,12 +189,12 @@ export default function AdminPublicaciones() {
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-8 gap-4 sm:gap-0">
             <div>
               <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                GestiÃ³n de Publicaciones
+                Gestión de Publicaciones
               </h1>
               <p className="text-gray-400 mt-2">Administra y modera el contenido de la plataforma</p>
             </div>
             
-            {/* Barra de bÃºsqueda */}
+            {/* Barra de búsqueda */}
             <div className="relative w-full sm:w-96">
               <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
@@ -229,7 +229,7 @@ export default function AdminPublicaciones() {
                     : 'bg-gray-800 text-white hover:bg-gray-700'
                 }`}
               >
-                MÃ¡s recientes
+                Más recientes
               </button>
               <button 
                 onClick={() => setActiveFilter('oldest')}
@@ -239,7 +239,7 @@ export default function AdminPublicaciones() {
                     : 'bg-gray-800 text-white hover:bg-gray-700'
                 }`}
               >
-                MÃ¡s antiguas
+                Más antiguas
               </button>
             </div>
           </div>
@@ -275,7 +275,7 @@ export default function AdminPublicaciones() {
                       }
                     }}
                   >
-                    {/* Cabecera con informaciÃ³n del usuario */}
+                    {/* Cabecera con información del usuario */}
                     <div className="p-3 border-b border-gray-800 flex-shrink-0">
                       <div className="flex justify-between items-start gap-2">
                         <div className="flex items-center gap-2 min-w-0">
@@ -301,14 +301,14 @@ export default function AdminPublicaciones() {
                           <button 
                             onClick={e => { e.stopPropagation(); handleEdit(post.post_id); }}
                             className="p-2.5 text-blue-500 hover:bg-blue-500/10 rounded-lg transition-colors cursor-pointer"
-                            title="Editar publicaciÃ³n"
+                            title="Editar publicación"
                           >
                             <FaEdit className="w-5 h-5" />
                           </button>
                           <button 
                             onClick={e => { e.stopPropagation(); handleDelete(post.post_id); }}
                             className="p-2.5 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors cursor-pointer"
-                            title="Eliminar publicaciÃ³n"
+                            title="Eliminar publicación"
                           >
                             <FaTrash className="w-5 h-5" />
                           </button>
@@ -333,14 +333,14 @@ export default function AdminPublicaciones() {
                       )}
                     </div>
 
-                    {/* Pie de tarjeta con informaciÃ³n */}
+                    {/* Pie de tarjeta con información */}
                     <div className="p-3 bg-gray-900/95 backdrop-blur-sm border-t border-gray-800 flex-shrink-0">
                       <p className="text-sm text-gray-300 line-clamp-2 mb-2">
                         {post.description}
                       </p>
                       <div className="flex items-center justify-between text-xs text-gray-400">
                         <div className="flex gap-3">
-                          <span>â¤ï¸ {post.likes_count}</span>
+                          <span>❤️ {post.likes_count}</span>
                           <span>ðŸ’¬ {post.comments_count}</span>
                         </div>
                         <span className="text-gray-500">
@@ -358,7 +358,7 @@ export default function AdminPublicaciones() {
                       disabled={loading}
                       className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {loading ? 'Cargando...' : 'Cargar mÃ¡s'}
+                      {loading ? 'Cargando...' : 'Cargar más'}
                     </button>
                   </div>
                 )}
@@ -375,8 +375,8 @@ export default function AdminPublicaciones() {
           setPostToDelete(null);
         }}
         onConfirm={confirmDelete}
-        title="Eliminar publicaciÃ³n"
-        message="Â¿EstÃ¡s seguro de que quieres eliminar esta publicaciÃ³n? Esta acciÃ³n no se puede deshacer."
+        title="Eliminar publicación"
+        message="¿Estás seguro de que quieres eliminar esta publicación? Esta acción no se puede deshacer."
         confirmText="Eliminar"
         cancelText="Cancelar"
       />
@@ -405,7 +405,7 @@ export default function AdminPublicaciones() {
         isOpen={showGlobalImageZoomModal}
         onClose={() => setShowGlobalImageZoomModal(false)}
         imageUrl={globalZoomImageUrl}
-        alt="Imagen de la publicaciÃ³n ampliada"
+        alt="Imagen de la publicación ampliada"
       />
 
       {notification && (
