@@ -6,7 +6,9 @@ const envSchema = z.object({
     PORT: z.string().transform(Number),
 
     // Database
-    DATABASE_URL: z.string().url(),
+    // Railway/producción usa una URL completa. En local se emplean DB_HOST,
+    // DB_PORT, DB_NAME, DB_USER y DB_PASS.
+    DATABASE_URL: z.string().url().optional(),
     DB_NAME: z.string(),
     DB_USER: z.string(),
     DB_PASS: z.string(),

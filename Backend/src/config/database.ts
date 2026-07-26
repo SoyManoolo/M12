@@ -1,10 +1,11 @@
 import { Sequelize, Options, Dialect } from "sequelize";
 import { AppError } from "../middlewares/errors/AppError";
-import dbLogger from "./logger";
+import dbLogger, { enableDatabaseLogging } from "./logger";
 import { User } from "../models";
 import { hash } from "bcryptjs";
 import { Op } from "sequelize";
 import { env } from './env';
+import { createDatabase } from "../scripts/seedUsers";
 
 const DatabaseURL = env.DATABASE_URL;
 const isTestEnv = env.NODE_ENV === "test";
@@ -117,11 +118,11 @@ export { sequelize };
 // Función para inicializar la base de datos
 async function initializeDatabase() {
     try {
-        // const databaseCreated = await createDatabase();
+        const databaseCreated = await createDatabase();
 
-        // if (databaseCreated) {
-        //     dbLogger.info("Database created successfully.");
-        // }
+        if (databaseCreated) {
+            dbLogger.info("Database created successfully.");
+        }
         dbLogger.info('Base de datos conectada', {
             database: dbName,
             env: env.NODE_ENV
@@ -145,6 +146,8 @@ async function initializeDatabase() {
         } else {
             dbLogger.info("Skipping model synchronization (DB_UPDATE is not 'true')");
         }
+
+        await enableDatabaseLogging();
 
     } catch (error) {
         dbLogger.error('Error connecting to the database', { error });

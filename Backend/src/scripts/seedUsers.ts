@@ -1,5 +1,9 @@
 // Función para crear usuarios al iniciar la conexión con la bbdd (debes proporcionar un json con la información de x persona)
 
+import { Client } from 'pg';
+import { env } from '../config/env';
+import dbLogger from '../config/logger';
+
 // async function createDefaultUsers() {
 //     try {
 //         for (const userData of DEFAULT_USERS) {
@@ -32,30 +36,37 @@
 
 // Función para crear la bbdd si no existe (usado para entorno local)
 
-// async function createDatabase(): Promise<boolean> {
-//     try {
-//         const client = new Client({
-//             host: process.env.DB_HOST || "localhost",
-//             user: process.env.DB_USER!,
-//             password: process.env.DB_PASS!,
-//             port: Number(process.env.DB_PORT) || 5432, // Puerto por defecto de PostgreSQL
-//         });
+export async function createDatabase(): Promise<boolean> {
+    if (env.DATABASE_URL) {
+        return false;
+    }
 
-//         await client.connect();
+    const dbName = env.DB_NAME;
+    const client = new Client({
+        host: env.DB_HOST,
+        user: env.DB_USER,
+        password: env.DB_PASS,
+        port: env.DB_PORT,
+        database: 'postgres',
+    });
 
-//         // Verificar si la base de datos ya existe
-//         const res = await client.query(`SELECT 1 FROM pg_database WHERE datname = '${dbName}'`);
+    try {
+        await client.connect();
 
-//         if (res.rowCount === 0) {
-//             await client.query(`CREATE DATABASE "${dbName}"`);
-//             await client.end();
-//             return true;
-//         }
+        // Verificar si la base de datos ya existe
+        const res = await client.query('SELECT 1 FROM pg_database WHERE datname = $1', [dbName]);
 
-//         await client.end();
-//         return false; // La base de datos ya existe
-//     } catch (error) {
-//         dbLogger.error("Error creating database.", { error });
-//         throw new AppError(500, "FailedConnection");
-//     }
-// }
+        if (res.rowCount === 0) {
+            const escapedDatabaseName = dbName.replace(/"/g, '""');
+            await client.query(`CREATE DATABASE "${escapedDatabaseName}"`);
+            return true;
+        }
+
+        return false; // La base de datos ya existe
+    } catch (error) {
+        dbLogger.error("Error creating database.", { error });
+        throw error;
+    } finally {
+        await client.end().catch(() => undefined);
+    }
+}

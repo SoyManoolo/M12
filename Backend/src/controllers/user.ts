@@ -3,6 +3,7 @@ import i18n from '../config/i18n';
 import { UserService } from '../services/user';
 import { AppError } from '../middlewares/errors/AppError';
 import dbLogger from '../config/logger';
+import { getOptionalRouteParam } from '../utils/request';
 
 export class UserController {
     constructor(private userService: UserService) { }
@@ -29,7 +30,7 @@ export class UserController {
     }
 
     // Método para obtener un usuario
-    public async getUser(req: Request, res: Response, next: NextFunction) {
+    public async getUser(req: Request<{ id?: string }>, res: Response, next: NextFunction) {
         try {
             dbLogger.info('[UserController] Get user request received');
 
@@ -39,7 +40,7 @@ export class UserController {
 
             // Verifica si el usuario está autenticado
             const filters = {
-                user_id: req.params.id,
+                user_id: getOptionalRouteParam(req.params.id),
                 username: req.query.username as string
             };
 
@@ -57,7 +58,7 @@ export class UserController {
     };
 
     // Método para editar un usuario
-    public async updateUser(req: Request, res: Response, next: NextFunction) {
+    public async updateUser(req: Request<{ id?: string }>, res: Response, next: NextFunction) {
         try {
             dbLogger.info('[UserController] Update user request received');
 
@@ -73,7 +74,7 @@ export class UserController {
 
             // Recupera el ID del usuario desde los parámetros de la solicitud o el username desde la query
             const filters = {
-                user_id: req.params.id,
+                user_id: getOptionalRouteParam(req.params.id),
                 username: req.query.username as string
             };
 
@@ -94,7 +95,7 @@ export class UserController {
     };
 
     // Método para eliminar un usuario
-    public async deleteUser(req: Request, res: Response, next: NextFunction) {
+    public async deleteUser(req: Request<{ id?: string }>, res: Response, next: NextFunction) {
         try {
             dbLogger.info('[UserController] Delete user request received');
 
@@ -104,7 +105,7 @@ export class UserController {
 
             // Verifica si el usuario está autenticado
             const filters = {
-                user_id: req.params.id,
+                user_id: getOptionalRouteParam(req.params.id),
                 username: req.query.username as string
             };
 
@@ -122,7 +123,7 @@ export class UserController {
     };
 
     // Método para subir una foto de perfil
-    public async uploadProfilePicture(req: Request, res: Response, next: NextFunction) {
+    public async uploadProfilePicture(req: Request<{ id?: string }>, res: Response, next: NextFunction) {
         try {
             const locale = req.headers['accept-language'] || 'en';
             i18n.setLocale(locale);
@@ -135,7 +136,7 @@ export class UserController {
 
             // Recupera el ID del usuario desde los parámetros de la solicitud o el username desde la query
             const filters = {
-                user_id: req.params.id,
+                user_id: getOptionalRouteParam(req.params.id),
                 username: req.query.username as string
             };
 
@@ -161,7 +162,7 @@ export class UserController {
     }
 
     // Método para subir una foto de perfil
-    public async deleteProfilePicture(req: Request, res: Response, next: NextFunction) {
+    public async deleteProfilePicture(req: Request<{ id?: string }>, res: Response, next: NextFunction) {
         try {
             dbLogger.info('[UserController] Delete profile picture request received');
 
@@ -177,7 +178,7 @@ export class UserController {
 
             // Recupera el ID del usuario desde los parámetros de la solicitud o el username desde la query
             const filters = {
-                user_id: req.params.id,
+                user_id: getOptionalRouteParam(req.params.id),
                 username: req.query.username as string
             };
 

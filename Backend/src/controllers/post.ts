@@ -3,13 +3,14 @@ import i18n from '../config/i18n';
 import { PostService } from '../services/post';
 import { AppError } from '../middlewares/errors/AppError';
 import dbLogger from '../config/logger';
+import { getRequiredRouteParam } from '../utils/request';
 
 
 export class PostController {
 
     constructor(private readonly postService: PostService) { };
 
-    public async getPostsUser(req: Request, res: Response, next: NextFunction) {
+    public async getPostsUser(req: Request<{ id?: string }>, res: Response, next: NextFunction) {
         try {
             dbLogger.info(`[PostController] Request to get posts for user: ${req.params.id}`);
             // Guarda el idioma en la variable locale y lo asigna a i18n
@@ -17,7 +18,7 @@ export class PostController {
             i18n.setLocale(locale);
 
             const filters = {
-                user_id: req.params.id as string,
+                user_id: getRequiredRouteParam(req.params.id, 'id'),
                 username: req.query.username as string
             };
 
@@ -95,14 +96,14 @@ export class PostController {
         };
     };
 
-    public async updatePost(req: Request, res: Response, next: NextFunction) {
+    public async updatePost(req: Request<{ id?: string }>, res: Response, next: NextFunction) {
         try {
             // Guarda el idioma en la variable locale y lo asigna a i18n
             const locale = req.headers['accept-language'] || 'en';
             i18n.setLocale(locale);
 
             // Guarda la informacion a actualizar
-            const postId = req.params.id;
+            const postId = getRequiredRouteParam(req.params.id, 'id');
             const { description } = req.body;
 
             // Llama al servicio para actualizar el post
@@ -124,14 +125,14 @@ export class PostController {
         };
     };
 
-    public async deletePost(req: Request, res: Response, next: NextFunction) {
+    public async deletePost(req: Request<{ id?: string }>, res: Response, next: NextFunction) {
         try {
             // Guarda el idioma en la variable locale y lo asigna a i18n
             const locale = req.headers['accept-language'] || 'en';
             i18n.setLocale(locale);
 
             // Guarda la informacion del post a eliminar
-            const postId = req.params.id;
+            const postId = getRequiredRouteParam(req.params.id, 'id');
 
             // Llama al servicio para eliminar el post
             const deletedPost = await this.postService.deletePost(postId);
@@ -152,7 +153,7 @@ export class PostController {
         };
     };
 
-    public async likePost(req: Request, res: Response, next: NextFunction) {
+    public async likePost(req: Request<{ id?: string }>, res: Response, next: NextFunction) {
         try {
             const locale = req.headers['accept-language'] || 'en';
             i18n.setLocale(locale);
@@ -161,7 +162,7 @@ export class PostController {
                 throw new AppError(401, 'Unauthorized');
             };
 
-            const postId = req.params.id;
+            const postId = getRequiredRouteParam(req.params.id, 'id');
             const userId = req.user.user_id;
 
             const result = await this.postService.likePost(postId, userId);
@@ -177,7 +178,7 @@ export class PostController {
         };
     };
 
-    public async unlikePost(req: Request, res: Response, next: NextFunction) {
+    public async unlikePost(req: Request<{ id?: string }>, res: Response, next: NextFunction) {
         try {
             const locale = req.headers['accept-language'] || 'en';
             i18n.setLocale(locale);
@@ -186,7 +187,7 @@ export class PostController {
                 throw new AppError(401, 'Unauthorized');
             };
 
-            const postId = req.params.id;
+            const postId = getRequiredRouteParam(req.params.id, 'id');
             const userId = req.user.user_id;
 
             const result = await this.postService.unlikePost(postId, userId);
@@ -202,7 +203,7 @@ export class PostController {
         };
     };
 
-    public async checkUserLike(req: Request, res: Response, next: NextFunction) {
+    public async checkUserLike(req: Request<{ id?: string }>, res: Response, next: NextFunction) {
         try {
             const locale = req.headers['accept-language'] || 'en';
             i18n.setLocale(locale);
@@ -211,7 +212,7 @@ export class PostController {
                 throw new AppError(401, 'Unauthorized');
             };
 
-            const postId = req.params.id;
+            const postId = getRequiredRouteParam(req.params.id, 'id');
             const userId = req.user.user_id;
 
             const result = await this.postService.checkUserLike(postId, userId);

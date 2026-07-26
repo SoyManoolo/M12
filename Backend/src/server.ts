@@ -45,9 +45,6 @@ function startMatchingSystem() {
     }, 5000);
 }
 
-// Iniciar el sistema cuando arranca el servidor
-startMatchingSystem();
-
 process.on('SIGINT', () => {
     if (matchingInterval) {
         clearInterval(matchingInterval);
@@ -58,23 +55,28 @@ process.on('SIGINT', () => {
 const port: number = env.PORT;
 const host = '0.0.0.0'; // CRÍTICO: Railway requiere escuchar en 0.0.0.0
 
-server.listen(port, host, () => {
-    dbLogger.info('Servidor HTTP iniciado', {
-        host,
-        port,
-        env: env.NODE_ENV
-    });
+async function startServer() {
+    try {
+        await initializeDatabase();
+        dbLogger.info('Base de datos inicializada');
+        startMatchingSystem();
 
-    initializeDatabase()
-        .then(() => {
-            dbLogger.info('Base de datos inicializada');
-        })
-        .catch((error) => {
-            dbLogger.error('Error al inicializar base de datos', {
-                error: error instanceof Error ? error.message : error
+        server.listen(port, host, () => {
+            dbLogger.info('Servidor HTTP iniciado', {
+                host,
+                port,
+                env: env.NODE_ENV
             });
         });
-});
+    } catch (error) {
+        dbLogger.error('Error al inicializar base de datos', {
+            error: error instanceof Error ? error.message : error
+        });
+        process.exit(1);
+    }
+}
+
+void startServer();
 
 server.on('error', (error: any) => {
     dbLogger.error('[ERROR] Error en el servidor:', error);

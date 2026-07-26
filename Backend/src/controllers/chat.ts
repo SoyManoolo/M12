@@ -3,6 +3,7 @@ import i18n from '../config/i18n';
 import { ChatService } from '../services/chat';
 import { AppError } from '../middlewares/errors/AppError';
 import dbLogger from '../config/logger';
+import { getRequiredRouteParam } from '../utils/request';
 
 export class ChatController {
     constructor(private readonly chatService: ChatService) {};
@@ -104,7 +105,7 @@ export class ChatController {
         }
     }
 
-    public async deleteMessage(req: Request, res: Response, next: NextFunction) {
+    public async deleteMessage(req: Request<{ message_id?: string }>, res: Response, next: NextFunction) {
         try {
             dbLogger.info(`[ChatController] Request to delete message with ID: ${req.params.message_id} for user: ${req.user?.user_id}`);
 
@@ -120,7 +121,7 @@ export class ChatController {
             // Obtener el ID del mensaje a eliminar
             const { message_id } = req.params;
 
-            const result = await this.chatService.deleteMessage(message_id);
+            const result = await this.chatService.deleteMessage(getRequiredRouteParam(message_id, 'message_id'));
 
             res.status(200).json({
                 success: true,
@@ -131,7 +132,7 @@ export class ChatController {
         }
     }
 
-    public async markMessageAsDelivered(req: Request, res: Response, next: NextFunction) {
+    public async markMessageAsDelivered(req: Request<{ message_id?: string }>, res: Response, next: NextFunction) {
         try {
             dbLogger.info(`[ChatController] Request to mark message as delivered with ID: ${req.params.message_id} for user: ${req.user?.user_id}`);
 
@@ -146,7 +147,7 @@ export class ChatController {
 
             // Obtener el ID del mensaje a marcar como entregado
             const { message_id } = req.params;
-            const message = await this.chatService.markMessageAsDelivered(message_id);
+            const message = await this.chatService.markMessageAsDelivered(getRequiredRouteParam(message_id, 'message_id'));
 
             res.status(200).json({
                 success: true,
@@ -157,7 +158,7 @@ export class ChatController {
         }
     }
 
-    public async markMessageAsRead(req: Request, res: Response, next: NextFunction) {
+    public async markMessageAsRead(req: Request<{ message_id?: string }>, res: Response, next: NextFunction) {
         try {
             dbLogger.info(`[ChatController] Request to mark message as read with ID: ${req.params.message_id} for user: ${req.user?.user_id}`);
 
@@ -172,7 +173,7 @@ export class ChatController {
 
             // Obtener el ID del mensaje a marcar como leído
             const { message_id } = req.params;
-            const message = await this.chatService.markMessageAsRead(message_id);
+            const message = await this.chatService.markMessageAsRead(getRequiredRouteParam(message_id, 'message_id'));
 
             res.status(200).json({
                 success: true,

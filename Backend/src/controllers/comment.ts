@@ -3,11 +3,12 @@ import i18n from '../config/i18n';
 import { AppError } from '../middlewares/errors/AppError';
 import { CommentService } from '../services/comment';
 import dbLogger from '../config/logger';
+import { getRequiredRouteParam } from '../utils/request';
 
 export class CommentController {
     constructor(private readonly commentService: CommentService) {};
 
-    public async getComments(req: Request, res: Response, next: NextFunction) {
+    public async getComments(req: Request<{ postId?: string }>, res: Response, next: NextFunction) {
         try {
             dbLogger.info('[CommentController] Get comments request received');
 
@@ -17,7 +18,7 @@ export class CommentController {
 
             // Extraer postId de los parámetros de la solicitud
             const { postId } = req.params;
-            const comments = await this.commentService.getComments(postId);
+            const comments = await this.commentService.getComments(getRequiredRouteParam(postId, 'postId'));
 
             // Si no hay comentarios, lanza un error
             if (!comments) {
@@ -37,7 +38,7 @@ export class CommentController {
         };
     };
 
-    public async deleteComment(req: Request, res: Response, next: NextFunction) {
+    public async deleteComment(req: Request<{ commentId?: string }>, res: Response, next: NextFunction) {
         try {
             dbLogger.info('[CommentController] Delete comment request received');
 
@@ -55,7 +56,7 @@ export class CommentController {
                 throw new AppError(401, 'Unauthorized');
             }
 
-            await this.commentService.deleteComment(commentId, user_id);
+            await this.commentService.deleteComment(getRequiredRouteParam(commentId, 'commentId'), user_id);
 
             res.status(200).json({
                 success: true,

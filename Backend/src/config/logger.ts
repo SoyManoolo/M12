@@ -6,6 +6,8 @@ import { Logs } from '../models';
 import { env } from './env'
 
 let tableChecked = false;
+let databaseLoggingEnabled = false;
+let tableCheckPromise: Promise<void> | undefined;
 const daysToRetainLogs = env.LOGS_DAYS;
 
 // Configuración de Pino según el entorno
@@ -56,17 +58,36 @@ logger.error = (error: unknown, message?: string) => {
 const checkTableExists = async () => {
     if (tableChecked) return;
 
-    try {
-        // Intenta crear la tabla si no existe
-        await Logs.sync();
-        tableChecked = true;
-        logger.info('Logs table verified or created');
-    } catch (error) {
-        (logger.error as any)('Error checking logs table:', error);
+    if (tableCheckPromise) {
+        return tableCheckPromise;
     }
+
+    tableCheckPromise = (async () => {
+        try {
+            // Intenta crear la tabla si no existe una vez que PostgreSQL está disponible.
+            await Logs.sync();
+            tableChecked = true;
+            logger.info('Logs table verified or created');
+        } catch (error) {
+            (logger.error as any)('Error checking logs table:', error);
+        } finally {
+            tableCheckPromise = undefined;
+        }
+    })();
+
+    return tableCheckPromise;
 };
 
+export async function enableDatabaseLogging() {
+    databaseLoggingEnabled = true;
+    await checkTableExists();
+}
+
 const saveLogToDatabase = async (level: string, message: string, meta?: object) => {
+    if (!databaseLoggingEnabled) {
+        return;
+    }
+
     try {
         // Verifica si la tabla existe antes de intentar guardar
         if (!tableChecked) {
