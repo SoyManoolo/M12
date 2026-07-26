@@ -169,11 +169,10 @@ export default function Publicar() {
   }
 
   return (
-    <div className="flex min-h-screen bg-black flex-col">
-        <Navbar />
-
-      <div className="flex-1 pt-16 pb-16 p-3 sm:p-8 flex flex-col items-center justify-center w-full">
-        <div className="w-full sm:w-[900px] bg-gray-900 rounded-xl shadow-xl p-3 sm:p-8 border border-gray-800">
+    <div className="min-h-screen bg-black lg:pl-[16.666667%]">
+      <Navbar />
+      <div className="flex min-h-screen w-full flex-col items-center justify-center p-3 pt-16 pb-16 sm:p-8 lg:pt-0 lg:pb-0">
+        <div className="w-full max-w-[900px] bg-gray-900 rounded-xl shadow-xl p-3 sm:p-8 border border-gray-800">
           {/* Encabezado */}
           <div className="flex flex-col sm:flex-row items-center justify-between mb-6 sm:mb-8 gap-2 sm:gap-0">
             <button
@@ -303,4 +302,4 @@ export default function Publicar() {
       )}
     </div>
   );
-} 
+}

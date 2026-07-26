@@ -32,6 +32,16 @@ interface AuthProviderProps {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+function syncAuthenticationCookie(token: string | null) {
+    if (typeof document === 'undefined') return;
+
+    if (token) {
+        document.cookie = `token=${encodeURIComponent(token)}; Path=/; SameSite=Lax; Max-Age=3600`;
+    } else {
+        document.cookie = 'token=; Path=/; SameSite=Lax; Max-Age=0';
+    }
+}
+
 export function AuthProvider({ children }: AuthProviderProps) {
     const [token, setTokenState] = useState<string | null>(() => {
         // Inicializar el token desde localStorage solo en el cliente
@@ -66,6 +76,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // Wrapper para setToken que maneja localStorage de forma segura
     const setToken = (newToken: string | null) => {
         setTokenState(newToken);
+        syncAuthenticationCookie(newToken);
         if (typeof window !== 'undefined') {
             try {
                 if (newToken) {
@@ -126,6 +137,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
         };
 
         initializeAuth();
+    }, [token]);
+
+    useEffect(() => {
+        syncAuthenticationCookie(token);
     }, [token]);
 
     const logout = async () => {
