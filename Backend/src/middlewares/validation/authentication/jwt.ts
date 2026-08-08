@@ -59,7 +59,7 @@ export class AuthToken {
     public static async isModerator(req: Request, res: Response, next: NextFunction) {
         try {
             // Verifica si el token ha sido validado
-            if (!req.user || !req.user.user_id) throw new AppError(403, "Missing authentication. Please provide a valid token");
+            if (!req.user || !req.user.user_id) throw new AppError(403, 'MissingAuthentication');
 
             // Busca el usuario en la base de datos
             const user = await User.findOne({ where: { user_id: req.user.user_id } });
@@ -73,7 +73,7 @@ export class AuthToken {
             if (error instanceof AppError) {
                 throw error;
             };
-            next(new AppError(403, "Error verifying admin privileges"));
+            next(new AppError(403, 'AdminPrivilegeVerificationFailed'));
         };
     };
 };

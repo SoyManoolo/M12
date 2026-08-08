@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import * as fs from 'fs';
 import * as path from 'path';
 import dbLogger from '../config/logger';
@@ -63,7 +64,7 @@ const translateText = async (text: string, targetLang: string): Promise<string> 
     return translated;
   } catch (error) {
     dbLogger.error(`Error al traducir "${text}" a ${targetLang}:`, {error});
-    return `ERROR_${text}`;
+    return text;
   }
 };
 

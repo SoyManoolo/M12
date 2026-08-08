@@ -37,7 +37,9 @@
         "MissingJwtSecret": "La contraseña JWT no está definida",
         "MissingJWT": "No se ha proporcionado un JWT",
         "FormatJWT": "Formato del JWT inválido",
-        "InvalidTempToken": "Token temporal inválido"
+        "InvalidTempToken": "Token temporal inválido",
+        "MissingAuthentication": "Se requiere autenticación válida",
+        "AdminPrivilegeVerificationFailed": "No se pudieron verificar los permisos de administrador"
       },
       "user": {
         "IncorrectCredentials": "Credenciales incorrectas",
@@ -51,7 +53,11 @@
         "DniAlreadyExists": "El DNI ya está en uso",
         "AdminCannotBeDeleted": "No es posible eliminar al administrador",
         "UserNotActive": "El usuario no está activo",
-        "UserDeleted": "El usuario está eliminado"
+        "UserDeleted": "El usuario está eliminado",
+        "FileNotFound": "No se ha proporcionado ningún archivo",
+        "MissingUserFilters": "Se requieren datos para identificar al usuario",
+        "UserUpdateFailed": "No se pudo actualizar el usuario",
+        "UserSearchFailed": "No se pudieron buscar los usuarios"
       },
       "validation": {
         "MissingPassword": "Introduzca la contraseña",
@@ -65,7 +71,48 @@
         "MissingIdentifier": "Falta el identificador",
         "InvalidEmail": "Formato de correo electrónico no válido",
         "ValidationError": "Error de validación",
-        "fieldRequired": "El campo {field} es obligatorio"
+        "fieldRequired": "El campo {field} es obligatorio",
+        "InvalidFileExtension": "La extensión del archivo no es válida",
+        "InvalidRouteParameter": "El parámetro de la ruta no es válido"
+      },
+      "auth": {
+        "TokenGenerationError": "No se pudo generar el token de autenticación",
+        "UserEmailAlreadyExists": "El correo electrónico ya está en uso",
+        "UserUsernameAlreadyExists": "El nombre de usuario ya está en uso",
+        "UserCreationError": "No se pudo crear el usuario",
+        "TokenNotFound": "Token no encontrado"
+      },
+      "chat": {
+        "ReceiverIdRequired": "Debe indicar el destinatario del mensaje",
+        "MissingRequiredFields": "Faltan campos obligatorios para crear el mensaje",
+        "EmptyMessage": "El mensaje no puede estar vacío",
+        "MessageTooLong": "El mensaje es demasiado largo",
+        "MessageNotCreated": "No se pudo crear el mensaje",
+        "MessageNotFound": "Mensaje no encontrado",
+        "MessageTooOld": "El mensaje ya no puede modificarse",
+        "UserNotAuthenticated": "Usuario no autenticado",
+        "TokenRequired": "Se requiere un token de autenticación"
+      },
+      "comment": {
+        "CommentsNotFound": "No se encontraron comentarios",
+        "CommentCreationFailed": "No se pudo crear el comentario",
+        "CommentNotFound": "Comentario no encontrado"
+      },
+      "post": {
+        "PostNotFound": "Publicación no encontrada",
+        "PostNotCreated": "No se pudo crear la publicación",
+        "PostAlreadyLiked": "Ya has indicado que te gusta esta publicación",
+        "PostNotLiked": "No has indicado que te gusta esta publicación"
+      },
+      "friendship": {
+        "FriendRequestAlreadyExists": "Ya existe una solicitud de amistad",
+        "UsersAlreadyFriends": "Los usuarios ya son amigos",
+        "FriendRequestNotFound": "Solicitud de amistad no encontrada",
+        "InvalidFriendRequestData": "Los datos de la solicitud de amistad no son válidos",
+        "FriendshipNotFound": "Amistad no encontrada"
+      },
+      "video": {
+        "CallNotFound": "Videollamada no encontrada"
       }
     },
     "field": {

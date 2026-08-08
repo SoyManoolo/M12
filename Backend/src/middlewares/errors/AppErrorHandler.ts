@@ -18,7 +18,7 @@ export class AppErrorHandler {
 
             // Intentar encontrar la traducción del error siguiendo una jerarquía
             // Primero buscamos en categorías específicas (user, registry, auth, etc.)
-            const errorCategories = ['validation', 'jwt', 'user', 'registry', 'status', 'connection'];
+            const errorCategories = ['validation', 'jwt', 'user', 'auth', 'chat', 'comment', 'post', 'friendship', 'video', 'registry', 'status', 'connection'];
             let translatedMessage = null;
 
             // Intentar encontrar la traducción en cada categoría

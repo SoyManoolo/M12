@@ -52,13 +52,13 @@ export class PostService {
         try {
             dbLogger.info(`[PostService] Getting posts for user with filters: ${JSON.stringify(filters)}`);
             if (Object.keys(filters).length === 0) {
-                throw new AppError(400, "");
+                throw new AppError(400, 'MissingUserFilters');
             };
 
             const user: User | null = await existsUser(filters);
             if (!user) {
                 dbLogger.error("[PostService] User not found for filters:", { filters });
-                throw new AppError(404, "")
+                throw new AppError(404, 'UserNotFound')
             };
 
             dbLogger.debug(`[PostService] User found`, { user_id: user.user_id, username: user.username });
@@ -245,7 +245,7 @@ export class PostService {
 
             const post: Post | null = await existsPost(postId);
 
-            if (!post) throw new AppError(404, "");
+            if (!post) throw new AppError(404, 'PostNotFound');
 
             await post.update({ description });
 
@@ -270,7 +270,7 @@ export class PostService {
 
             const post: Post | null = await existsPost(postId);
 
-            if (!post) throw new AppError(404, "");
+            if (!post) throw new AppError(404, 'PostNotFound');
 
             await post.destroy();
 

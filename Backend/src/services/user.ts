@@ -48,7 +48,7 @@ export class UserService {
             if (!users || users.length === 0) {
                 // No lanzar error 404 si no hay usuarios en la carga inicial, solo si es una búsqueda paginada y no hay más.
                 // Considerar si este endpoint debe paginar o no. Por ahora, devuelve lo que encuentra.
-                // throw new AppError(404, 'No se encontraron usuarios');
+                // throw new AppError(404, 'UsersNotFound');
             }
 
             // Determinar si hay más páginas
@@ -71,7 +71,7 @@ export class UserService {
                 throw error;
             }
             dbLogger.error(`[UserService] Unexpected error getting all users: ${error}`);
-            throw new AppError(500, 'Error interno del servidor');
+            throw new AppError(500, 'InternalServerError');
         }
     }
 
@@ -79,7 +79,7 @@ export class UserService {
     public async getUser(filters: UserFilters) {
         try {
             if (Object.keys(filters).length === 0) {
-                throw new AppError(400, "");
+                throw new AppError(400, 'MissingUserFilters');
             };
 
             dbLogger.info(`[UserService] Getting user with filters: ${JSON.stringify(filters)}`);
@@ -87,7 +87,7 @@ export class UserService {
 
             if (!user) {
                 dbLogger.warn(`[UserService] User not found with filters: ${JSON.stringify(filters)}`);
-                throw new AppError(404, "Usuario no encontrado");
+                throw new AppError(404, 'UserNotFound');
             }
 
             return user;
@@ -105,13 +105,13 @@ export class UserService {
     public async updateUser(filters: UserFilters, updateData: UpdateUserData) {
         try {
             if (Object.keys(filters).length === 0) {
-                throw new AppError(400, "");
+                throw new AppError(400, 'MissingUserFilters');
             };
 
             const user: User | null = await existsUser(filters);
             if (!user) {
                 dbLogger.warn(`[UserService] User not found for update with filters: ${JSON.stringify(filters)}`);
-                throw new AppError(404, "Usuario no encontrado");
+                throw new AppError(404, 'UserNotFound');
             }
 
             // Si se va a actualizar la contraseña, hashearla antes de guardar
@@ -122,7 +122,7 @@ export class UserService {
             dbLogger.info(`[UserService] Updating user with ID: ${user.user_id}`);
             const newUser: User = await user.update(updateData);
 
-            if (!newUser) throw new AppError(404, "");
+            if (!newUser) throw new AppError(500, 'UserUpdateFailed');
 
             await user.reload();
 
@@ -144,7 +144,7 @@ export class UserService {
 
             if (!user) {
                 dbLogger.warn(`[UserService] User not found for deletion with filters: ${JSON.stringify(filters)}`);
-                throw new AppError(404, "Usuario no encontrado");
+                throw new AppError(404, 'UserNotFound');
             }
 
             dbLogger.info(`[UserService] Deleting user with ID: ${user.user_id}`);
@@ -188,12 +188,12 @@ export class UserService {
     public async updateProfilePicture(filters: UserFilters, profilePicture: Express.Multer.File) {
         try {
             if (Object.keys(filters).length === 0) {
-                throw new AppError(400, "Se requieren filtros para identificar al usuario");
+                throw new AppError(400, 'MissingUserFilters');
             };
 
             const user: User | null = await existsUser(filters);
 
-            if (!user) throw new AppError(404, "Usuario no encontrado");
+            if (!user) throw new AppError(404, 'UserNotFound');
 
             // Eliminar la imagen anterior si existe
             const userData: UserAttributes = user.toJSON();
@@ -214,7 +214,7 @@ export class UserService {
                 throw error;
             };
             dbLogger.error(`[UserService] Unexpected error updating profile picture: ${error}`);
-            throw new AppError(500, 'Error interno del servidor');
+            throw new AppError(500, 'InternalServerError');
         };
     };
 
@@ -222,12 +222,12 @@ export class UserService {
     public async deleteProfilePicture(filters: UserFilters) {
         try {
             if (Object.keys(filters).length === 0) {
-                throw new AppError(400, "Se requieren filtros para identificar al usuario");
+                throw new AppError(400, 'MissingUserFilters');
             };
 
             const user: User | null = await existsUser(filters);
 
-            if (!user) throw new AppError(404, "Usuario no encontrado");
+            if (!user) throw new AppError(404, 'UserNotFound');
 
             // Guardamos la ruta antes de actualizar
             const userData: UserAttributes = user.toJSON();
@@ -251,7 +251,7 @@ export class UserService {
                 throw error;
             };
             dbLogger.error(`[UserService] Unexpected error deleting profile picture: ${error}`);
-            throw new AppError(500, 'Error interno del servidor');
+            throw new AppError(500, 'InternalServerError');
         };
     };
 
@@ -296,7 +296,7 @@ export class UserService {
             return users;
         } catch (error) {
             dbLogger.error(`[UserService] Error searching users: ${error}`);
-            throw new AppError(500, 'Error interno del servidor al buscar usuarios');
+            throw new AppError(500, 'UserSearchFailed');
         }
     }
 };
