@@ -106,15 +106,6 @@ export default function SignUpPage(): React.ReactElement {
    */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('📤 Datos enviados al backend:', { 
-      name, 
-      surname, 
-      username, 
-      email, 
-      password: '****' 
-    });
-    console.log('🔄 Iniciando proceso de registro...');
-
     // Validar contraseña con el regex
     if (!passwordRegex.test(password)) {
       setNotification({
@@ -133,10 +124,7 @@ export default function SignUpPage(): React.ReactElement {
         password
       });
       
-      console.log('📥 Respuesta del backend:', response);
-      
       if (response.success) {
-        console.log('✅ Registro exitoso');
         setNotification({
           message: response.message || '¡Cuenta creada con éxito! Ya puedes iniciar sesión',
           type: 'success'
@@ -145,14 +133,12 @@ export default function SignUpPage(): React.ReactElement {
         localStorage.setItem('signupSuccess', response.message || '¡Cuenta creada con éxito! Ya puedes iniciar sesión');
         navigate('/login');
       } else {
-        console.log('❌ Error en el registro:', response.message);
         setNotification({
           message: response.message || 'No pudimos crear tu cuenta',
           type: 'error'
         });
       }
-    } catch (error) {
-      console.error('⚠️ Error al conectar con el servidor:', error);
+    } catch {
       setNotification({
         message: 'No pudimos conectarnos al servidor. Por favor, verifica tu conexión a internet',
         type: 'error'

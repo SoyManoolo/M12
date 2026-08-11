@@ -99,7 +99,7 @@ const saveLogToDatabase = async (level: string, message: string, meta?: object) 
             await Logs.create({ level, message, meta });
         }
     } catch (error: any) { // Usa any para este caso específico
-        console.error('Error saving log to database:', error);
+        originalError({ error }, 'Error saving log to database');
         // Si hay un error con la tabla, desactiva temporalmente el guardado
         if (
             error &&

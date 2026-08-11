@@ -1,4 +1,5 @@
 import { environment } from '../config/environment';
+import { developmentLogger } from './logger';
 
 interface DecodedToken {
     user_id: string;
@@ -27,8 +28,7 @@ export function decodeToken(token: string): DecodedToken | null {
             }
             return null;
 
-        } catch (error) {
-            // console.error('Error al decodificar el token en SSR:', error); 
+        } catch {
             return null;
         }
     } else {
@@ -52,8 +52,7 @@ export function decodeToken(token: string): DecodedToken | null {
                 return { user_id: payload.user_id, username: payload.username };
             }
             return null;
-        } catch (error) {
-            // console.error('Error al decodificar el token en el cliente:', error);
+        } catch {
             return null;
         }
     }
@@ -67,8 +66,6 @@ export function decodeToken(token: string): DecodedToken | null {
  */
 export async function getUserInfo(user_id: string, token: string) { 
     try {
-        console.log(`Intentando obtener usuario desde: ${environment.apiUrl}/users/${user_id}`);
-
         const response = await fetch(`${environment.apiUrl}/users/${user_id}`, {
             headers: {
                 'Content-Type': 'application/json',
@@ -79,32 +76,24 @@ export async function getUserInfo(user_id: string, token: string) {
             }
         });
 
-        console.log('Headers de respuesta:', {
-            status: response.status,
-            contentType: response.headers.get('content-type'),
-            server: response.headers.get('server')
-        });
-
         const rawContent = await response.text();
 
         // Verificar si es HTML o JSON
         if (rawContent.includes('<!DOCTYPE html>')) {
-            console.log('Aún recibiendo HTML a pesar del header de ngrok');
-            console.log(rawContent.substring(0, 200) + '...');
+            developmentLogger.warn('La API devolvió HTML al solicitar información de usuario.');
             return null;
         }
 
         // Intentar parsear como JSON
         try {
             const data = JSON.parse(rawContent);
-            console.log('Respuesta JSON recibida correctamente');
             return data;
         } catch (e) {
-            console.error('Error al parsear JSON:', e);
+            developmentLogger.error('No se pudo procesar la respuesta del usuario.', e);
             return null;
         }
     } catch (error) {
-        console.error('Error al obtener información del usuario:', error);
+        developmentLogger.error('No se pudo obtener la información del usuario.', error);
         return null;
     }
 }

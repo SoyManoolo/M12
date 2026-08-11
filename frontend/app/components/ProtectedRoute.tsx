@@ -23,7 +23,6 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   useEffect(() => {
     if (!isChecking && !isAuthenticated && !token) {
-      console.log('❌ No autenticado, redirigiendo a login desde:', location.pathname);
       // Redirigir al login usando navigate en lugar de Navigate component
       navigate('/login', { 
         state: { from: location.pathname }, 

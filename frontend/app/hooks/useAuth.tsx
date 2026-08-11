@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { authService } from '../services/auth.service';
 import { decodeToken, getUserInfo } from '../utils/token';
+import { developmentLogger } from '../utils/logger';
 
 interface User {
     user_id: string;
@@ -55,7 +56,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
                         try {
                             localStorage.removeItem('token');
                         } catch (e) {
-                            console.warn('No se pudo limpiar localStorage:', e);
+                            developmentLogger.warn('No se pudo limpiar localStorage.', e);
                         }
                         return null;
                     }
@@ -63,7 +64,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 }
             } catch (error) {
                 // iOS en modo privado puede lanzar error al acceder a localStorage
-                console.warn('Error al acceder a localStorage:', error);
+                developmentLogger.warn('No se pudo acceder a localStorage.', error);
                 return null;
             }
         }
@@ -86,7 +87,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 }
             } catch (error) {
                 // iOS en modo privado puede fallar
-                console.warn('No se pudo guardar en localStorage:', error);
+                developmentLogger.warn('No se pudo guardar en localStorage.', error);
                 // Intentar usar sessionStorage como fallback
                 try {
                     if (newToken) {
@@ -95,7 +96,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
                         sessionStorage.removeItem('token');
                     }
                 } catch (e) {
-                    console.error('Tampoco se pudo usar sessionStorage:', e);
+                    developmentLogger.error('No se pudo usar sessionStorage.', e);
                 }
             }
         }
@@ -106,13 +107,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
             setIsLoading(true);
             if (token) {
                 try {
-                    console.log('Inicializando autenticación con token:', token);
                     const decodedToken = decodeToken(token);
-                    console.log('Token decodificado:', decodedToken);
                     if (decodedToken) {
                         // OJO: MODIFICACIÓN AQUÍ. Pasar el token como segundo argumento.
                         const userInfo = await getUserInfo(decodedToken.user_id, token);
-                        console.log('Información del usuario devuelta al inicializador:', userInfo);
                         if (userInfo?.success) {
                             setUser(userInfo.data);
                         } else {
@@ -126,7 +124,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
                         setUser(null);
                     }
                 } catch (error) {
-                    console.error('Error al inicializar la autenticación:', error);
+                    developmentLogger.error('Error al inicializar la autenticación.', error);
                     setToken(null);
                     setUser(null);
                 }
@@ -149,7 +147,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             setToken(null);
             setUser(null);
         } catch (error) {
-            console.error('Error al cerrar sesión:', error);
+            developmentLogger.error('Error al cerrar sesión.', error);
             // Limpiar localmente aunque falle la petición
             setToken(null);
             setUser(null);

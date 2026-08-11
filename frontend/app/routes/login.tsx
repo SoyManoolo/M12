@@ -96,35 +96,11 @@ export default function LoginPage() {
      */
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        console.log('📱 Datos enviados al backend:', { id, password: '****' });
-        console.log('📱 User Agent:', navigator.userAgent);
-        console.log('📱 Iniciando proceso de login...');
-
         try {
             const response = await authService.login({ id, password });
-            console.log('📱 Respuesta del backend:', response);
 
             if (response.success && response.token) {
-                console.log('✅ Login exitoso, token recibido');
-                console.log('📱 Intentando guardar token en localStorage...');
-                
-                try {
-                    localStorage.setItem('token', response.token);
-                    const verificar = localStorage.getItem('token');
-                    console.log('✅ Token guardado correctamente, verificación:', verificar ? 'OK' : 'FALLO');
-                } catch (storageError) {
-                    console.error('❌ Error al guardar en localStorage:', storageError);
-                    // Intentar sessionStorage como fallback
-                    try {
-                        sessionStorage.setItem('token', response.token);
-                        console.log('✅ Token guardado en sessionStorage como fallback');
-                    } catch (sessionError) {
-                        console.error('❌ Tampoco funcionó sessionStorage:', sessionError);
-                    }
-                }
-                
                 setToken(response.token);
-                console.log('✅ setToken() ejecutado');
                 
                 setNotification({
                     message: response.message || '¡Bienvenido de nuevo!',
@@ -133,19 +109,15 @@ export default function LoginPage() {
                 
                 // Pequeño delay para asegurar que el estado se actualice
                 await new Promise(resolve => setTimeout(resolve, 100));
-                console.log('✅ Delay completado, redirigiendo...');
-                
                 // Navegar directamente a inicio
                 navigate('/inicio', { replace: true });
             } else {
-                console.log('❌ Error en el login:', response.message);
                 setNotification({
                     message: response.message || 'No pudimos iniciar tu sesión',
                     type: 'error'
                 });
             }
-        } catch (error) {
-            console.error('❌ Error al conectar con el servidor:', error);
+        } catch {
             setNotification({
                 message: 'No pudimos conectarnos al servidor. Por favor, verifica tu conexión a internet',
                 type: 'error'

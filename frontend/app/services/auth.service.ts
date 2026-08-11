@@ -1,4 +1,5 @@
 import { environment } from '../config/environment';
+import { developmentLogger } from '../utils/logger';
 
 /**
  * Servicio de Autenticación
@@ -85,24 +86,15 @@ export const authService = {
                 }),
             });
 
-            console.log('📊 Headers recibidos:', {
-                contentType: response.headers.get('content-type'),
-                statusCode: response.status,
-                statusText: response.statusText
-            });
-
-            // Obtener la respuesta como texto para ver exactamente qué llega
+            // Se procesa como texto para controlar las respuestas no JSON.
             const rawText = await response.text();
-            console.log('📥 Respuesta raw del backend:', rawText);
 
             // Intentar parsear como JSON
             let data: any;
             try {
                 data = JSON.parse(rawText);
-                console.log('✅ Respuesta parseada correctamente:', data);
             } catch (parseError) {
-                console.error('❌ Error al parsear respuesta JSON:', parseError);
-                console.log('❌ Primeros 500 caracteres de la respuesta:', rawText.substring(0, 500));
+                developmentLogger.error('La respuesta de login no contenía JSON válido.', parseError);
                 return {
                     success: false,
                     status: response.status,
@@ -150,7 +142,7 @@ export const authService = {
             };
 
         } catch (error) {
-            console.error("❌ Error en la petición:", error);
+            developmentLogger.error('Error en la petición de inicio de sesión.', error);
             return {
                 success: false,
                 status: 500,
@@ -253,7 +245,7 @@ export const authService = {
                 message: '¡Cuenta creada con éxito! Ya puedes iniciar sesión'
             };
         } catch (error) {
-            console.error('Error en registro:', error);
+            developmentLogger.error('Error en el registro.', error);
             return {
                 success: false,
                 status: 500,
@@ -303,7 +295,7 @@ export const authService = {
                 message: data.message || 'Sesión cerrada correctamente'
             };
         } catch (error) {
-            console.error('Error en logout:', error);
+            developmentLogger.error('Error al cerrar sesión.', error);
             return {
                 success: false,
                 status: 500,
