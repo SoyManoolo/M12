@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { authService } from '../services/auth.service';
 import { decodeToken, getUserInfo } from '../utils/token';
 import { developmentLogger } from '../utils/logger';
+import { clearSessionToken, getSessionToken, setSessionToken } from '../utils/session';
 
 interface User {
     user_id: string;
@@ -45,26 +46,21 @@ function syncAuthenticationCookie(token: string | null) {
 
 export function AuthProvider({ children }: AuthProviderProps) {
     const [token, setTokenState] = useState<string | null>(() => {
-        // Inicializar el token desde localStorage solo en el cliente
+        // Inicializar el token desde el almacenamiento disponible en el cliente.
         if (typeof window !== 'undefined') {
             try {
-                const storedToken = localStorage.getItem('token');
+                const storedToken = getSessionToken();
                 if (storedToken) {
                     // Verificar que el token sea válido (usa el decodeToken ya seguro para SSR)
                     const decodedToken = decodeToken(storedToken);
                     if (!decodedToken) {
-                        try {
-                            localStorage.removeItem('token');
-                        } catch (e) {
-                            developmentLogger.warn('No se pudo limpiar localStorage.', e);
-                        }
+                        clearSessionToken();
                         return null;
                     }
                     return storedToken;
                 }
             } catch (error) {
-                // iOS en modo privado puede lanzar error al acceder a localStorage
-                developmentLogger.warn('No se pudo acceder a localStorage.', error);
+                developmentLogger.warn('No se pudo acceder al almacenamiento de sesión.', error);
                 return null;
             }
         }
@@ -74,31 +70,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
 
-    // Wrapper para setToken que maneja localStorage de forma segura
+    // Wrapper para setToken que usa el mismo mecanismo en toda la sesión.
     const setToken = (newToken: string | null) => {
         setTokenState(newToken);
         syncAuthenticationCookie(newToken);
         if (typeof window !== 'undefined') {
-            try {
-                if (newToken) {
-                    localStorage.setItem('token', newToken);
-                } else {
-                    localStorage.removeItem('token');
-                }
-            } catch (error) {
-                // iOS en modo privado puede fallar
-                developmentLogger.warn('No se pudo guardar en localStorage.', error);
-                // Intentar usar sessionStorage como fallback
-                try {
-                    if (newToken) {
-                        sessionStorage.setItem('token', newToken);
-                    } else {
-                        sessionStorage.removeItem('token');
-                    }
-                } catch (e) {
-                    developmentLogger.error('No se pudo usar sessionStorage.', e);
-                }
-            }
+            if (newToken) setSessionToken(newToken);
+            else clearSessionToken();
         }
     };
 
@@ -113,9 +91,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
                         const userInfo = await getUserInfo(decodedToken.user_id, token);
                         if (userInfo?.success) {
                             setUser(userInfo.data);
-                        } else {
-                            // Si no podemos obtener la información del usuario, el token podría ser inválido
+                        } else if (userInfo?.status === 401 || userInfo?.status === 403) {
+                            // Solo una respuesta explícita de autorización invalida la sesión.
                             setToken(null);
+                            setUser(null);
+                        } else {
+                            // Ante un fallo transitorio se conserva el token para que la siguiente
+                            // navegación o recarga pueda reintentar la consulta.
                             setUser(null);
                         }
                     } else {

@@ -60,7 +60,7 @@ export default function SearchPage() {
       try {
         const response = await fetch(`${environment.apiUrl}/friendship/friends`, {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
         });
@@ -74,7 +74,7 @@ export default function SearchPage() {
     };
 
     fetchFriends();
-  }, []);
+  }, [token]);
 
   // Cargar usuarios sugeridos cuando se cambia a la pestaña de sugerencias
   useEffect(() => {
@@ -84,14 +84,14 @@ export default function SearchPage() {
           setLoading(true);
           const response = await fetch(`${environment.apiUrl}/users`, {
             headers: {
-              'Authorization': `Bearer ${localStorage.getItem('token')}`,
+              'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json',
             },
           });
           const data = await response.json();
           if (data.success && data.data && data.data.users) {
             // Obtener el ID del usuario actual del token
-            const decodedToken = jwtDecode(localStorage.getItem('token') || '') as { user_id: string };
+            const decodedToken = jwtDecode(token || '') as { user_id: string };
             const currentUserId = decodedToken.user_id;
 
             // Filtrar usuarios que no son amigos y no es el usuario actual
@@ -113,7 +113,7 @@ export default function SearchPage() {
     };
 
     fetchSuggestedUsers();
-  }, [activeTab, friends]);
+  }, [activeTab, friends, token]);
 
   // Cargar estados de amistad para usuarios sugeridos
   useEffect(() => {
@@ -152,7 +152,7 @@ export default function SearchPage() {
       
       const response = await fetch(url, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });

@@ -1,5 +1,6 @@
 import { environment } from '../config/environment';
 import { developmentLogger } from '../utils/logger';
+import { clearSessionToken, getSessionToken } from '../utils/session';
 
 /**
  * Servicio de Autenticación
@@ -260,7 +261,7 @@ export const authService = {
      */
     async logout(): Promise<AuthResponse> {
         try {
-            const token = localStorage.getItem('token');
+            const token = getSessionToken();
             if (!token) {
                 return {
                     success: false,
@@ -288,7 +289,7 @@ export const authService = {
                 };
             }
 
-            localStorage.removeItem('token');
+            clearSessionToken();
             return {
                 success: true,
                 status: response.status,

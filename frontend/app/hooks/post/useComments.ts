@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { commentService } from "~/services/comment.service";
+import { getSessionToken } from "~/utils/session";
 
 interface Comment {
   comment_id: string;
@@ -23,7 +24,7 @@ export function useComments(postId: string, initialComments: Comment[]) {
   useEffect(() => {
     const loadComments = async () => {
       try {
-        const token = localStorage.getItem("token");
+        const token = getSessionToken();
         if (!token) return;
 
         const response = await commentService.getComments(token, postId);
@@ -54,7 +55,7 @@ export function useComments(postId: string, initialComments: Comment[]) {
 
     try {
       setIsCommenting(true);
-      const token = localStorage.getItem("token");
+      const token = getSessionToken();
       if (!token) throw new Error("No hay token de autenticación");
 
       const response = await commentService.createComment(
@@ -87,7 +88,7 @@ export function useComments(postId: string, initialComments: Comment[]) {
 
   const deleteComment = async (commentId: string) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = getSessionToken();
       if (!token) throw new Error("No hay token de autenticación");
 
       await commentService.deleteComment(token, commentId);

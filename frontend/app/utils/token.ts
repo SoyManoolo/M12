@@ -81,19 +81,19 @@ export async function getUserInfo(user_id: string, token: string) {
         // Verificar si es HTML o JSON
         if (rawContent.includes('<!DOCTYPE html>')) {
             developmentLogger.warn('La API devolvió HTML al solicitar información de usuario.');
-            return null;
+            return { success: false, status: response.status };
         }
 
         // Intentar parsear como JSON
         try {
             const data = JSON.parse(rawContent);
-            return data;
+            return { ...data, status: response.status };
         } catch (e) {
             developmentLogger.error('No se pudo procesar la respuesta del usuario.', e);
-            return null;
+            return { success: false, status: response.status };
         }
     } catch (error) {
         developmentLogger.error('No se pudo obtener la información del usuario.', error);
-        return null;
+        return { success: false, status: 0 };
     }
 }

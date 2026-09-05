@@ -40,7 +40,7 @@ const getUsernameFromToken = (token: string | null): string => {
 };
 
 export default function ConfiguracionPage() {
-  const { token } = useAuth();
+  const { token, setToken } = useAuth();
   const navigate = useNavigate();
   const { message, showMessage, clearMessage } = useMessage();
   const [user, setUser] = useState<UserProfile | null>(null);
@@ -193,7 +193,7 @@ export default function ConfiguracionPage() {
       }
 
       // Asegurarnos de que el token esté actualizado
-      const currentToken = localStorage.getItem('token');
+      const currentToken = token;
       if (!currentToken) {
         showMessage('error', 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
         navigate('/login');
@@ -249,7 +249,7 @@ export default function ConfiguracionPage() {
     try {
       const response = await authService.logout();
       if (response.success) {
-        localStorage.removeItem('token');
+        setToken(null);
         navigate('/login');
       } else {
         showMessage('error', response.message || 'No pudimos cerrar tu sesión');
@@ -269,8 +269,7 @@ export default function ConfiguracionPage() {
     
     try {
       await userService.deleteUserById(userId, token);
-      localStorage.clear();
-      sessionStorage.clear();
+      setToken(null);
       document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
       window.location.href = '/login';
     } catch (error) {
