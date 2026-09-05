@@ -29,6 +29,7 @@ export default function Publicar() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [description, setDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPublished, setIsPublished] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [notification, setNotification] = useState<{
     message: string;
@@ -104,6 +105,8 @@ export default function Publicar() {
   };
 
   const handleSubmit = async () => {
+    if (isSubmitting || isPublished) return;
+
     if (!token) {
       setNotification({
         message: 'No hay token de autenticación',
@@ -148,6 +151,9 @@ export default function Publicar() {
         message: '¡Publicación creada exitosamente!',
         type: 'success'
       });
+      // La publicación ya existe: no se vuelve a habilitar el envío mientras
+      // se muestra la confirmación y se redirige al usuario.
+      setIsPublished(true);
       
       setTimeout(() => {
         resetForm();
@@ -159,7 +165,6 @@ export default function Publicar() {
         message: err instanceof Error ? err.message : 'Error al crear la publicación',
         type: 'error'
       });
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -271,13 +276,13 @@ export default function Publicar() {
               <div className="mt-4 sm:mt-6 flex justify-end">
                 <button
                   onClick={handleSubmit}
-                  disabled={isSubmitting || !description.trim()}
+                  disabled={isSubmitting || isPublished || !description.trim()}
                   className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 sm:px-8 py-2 sm:py-3 rounded-lg hover:from-blue-500 hover:to-purple-500 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-base sm:text-lg font-medium shadow-lg transform hover:scale-105 disabled:transform-none disabled:hover:scale-100 flex items-center space-x-2"
                 >
-                  {isSubmitting ? (
+                  {isSubmitting || isPublished ? (
                     <>
                       <FaSpinner className="animate-spin" />
-                      <span>Publicando...</span>
+                      <span>{isPublished ? 'Publicación creada' : 'Publicando...'}</span>
                     </>
                   ) : (
                     <>
