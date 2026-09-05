@@ -29,6 +29,25 @@ export class UserController {
         };
     }
 
+    public async getAdminUsers(req: Request, res: Response, next: NextFunction) {
+        try {
+            const users = await this.userService.getAdminUsers();
+            res.status(200).json({ success: true, status: 200, data: users });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    public async getCurrentUser(req: Request, res: Response, next: NextFunction) {
+        try {
+            if (!req.user?.user_id) throw new AppError(401, 'Unauthorized');
+            const user = await this.userService.getCurrentUser(req.user.user_id);
+            res.status(200).json({ success: true, status: 200, data: user });
+        } catch (error) {
+            next(error);
+        }
+    }
+
     // Método para obtener un usuario
     public async getUser(req: Request<{ id?: string }>, res: Response, next: NextFunction) {
         try {
@@ -81,7 +100,7 @@ export class UserController {
             // Recupera los datos a actualizar desde el cuerpo de la solicitud
             const updateData = req.body;
 
-            const user = await this.userService.updateUser(filters, updateData);
+            const user = await this.userService.updateUser(filters, updateData, req.user.user_id);
 
             res.status(200).json({
                 success: true,
@@ -109,7 +128,11 @@ export class UserController {
                 username: req.query.username as string
             };
 
-            const user = await this.userService.deleteUser(filters);
+            if (!req.user?.user_id) {
+                throw new AppError(401, 'Unauthorized');
+            }
+
+            const user = await this.userService.deleteUser(filters, req.user.user_id);
 
             res.status(200).json({
                 success: true,
@@ -148,7 +171,7 @@ export class UserController {
                 throw new AppError(400, 'FileNotFound');
             };
 
-            const user = await this.userService.updateProfilePicture(filters, file)
+            const user = await this.userService.updateProfilePicture(filters, file, req.user.user_id)
 
             res.status(200).json({
                 success: true,
@@ -182,7 +205,7 @@ export class UserController {
                 username: req.query.username as string
             };
 
-            const user = await this.userService.deleteProfilePicture(filters)
+            const user = await this.userService.deleteProfilePicture(filters, req.user.user_id)
 
             res.status(200).json({
                 success: true,

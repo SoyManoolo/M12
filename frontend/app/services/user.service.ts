@@ -93,7 +93,7 @@ export const userService = {
      */
     async getAllUsersForAdmin(token: string): Promise<ApiResponse<PaginatedUsersResponse>> {
         try {
-            const response = await fetch(`${environment.apiUrl}/users`, {
+            const response = await fetch(`${environment.apiUrl}/users/admin`, {
                 credentials: 'include',
                 headers: {
                     'Authorization': `Bearer ${token}`

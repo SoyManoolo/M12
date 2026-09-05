@@ -22,23 +22,6 @@ import ConfirmModal from '../components/Shared/ConfirmModal';
 import { decodeToken } from '../utils/token';
 import SecureImage from '../components/Shared/SecureImage';
 
-/**
- * Función auxiliar para obtener el username del token JWT
- * @param token Token JWT
- * @returns Username del usuario
- */
-const getUsernameFromToken = (token: string | null): string => {
-  if (!token) return '';
-  
-  try {
-    const decoded = decodeToken(token);
-    return decoded?.username || '';
-  } catch (error) {
-    console.error('Error al decodificar el token:', error);
-    return '';
-  }
-};
-
 export default function ConfiguracionPage() {
   const { token, setToken } = useAuth();
   const navigate = useNavigate();
@@ -74,13 +57,7 @@ export default function ConfiguracionPage() {
       }
 
       try {
-        const username = getUsernameFromToken(token);
-        if (!username) {
-          navigate('/login');
-          return;
-        }
-
-        const response = await fetch(`${environment.apiUrl}/users/username?username=${username}`, {
+        const response = await fetch(`${environment.apiUrl}/users/me`, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,
