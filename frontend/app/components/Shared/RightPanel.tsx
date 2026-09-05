@@ -14,7 +14,7 @@
  * @module RightPanel
  */
 
-import { useNavigate } from "@remix-run/react";
+import { useNavigate } from "react-router";
 import { FaSearch, FaUserPlus, FaUserMinus, FaUserClock, FaUserCheck, FaUserTimes, FaUserFriends } from 'react-icons/fa';
 import { useAuth } from "~/hooks/useAuth";
 import { useState, useEffect } from 'react';

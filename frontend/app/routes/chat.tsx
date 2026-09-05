@@ -9,7 +9,7 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
-import { useSearchParams } from '@remix-run/react';
+import { useSearchParams } from 'react-router';
 import Navbar from '~/components/Inicio/Navbar';
 import ChatUserInfo from '~/components/Chats/ChatUserInfo';
 import { FaPaperPlane, FaSmile } from 'react-icons/fa';

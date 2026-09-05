@@ -25,7 +25,8 @@
     "paths": {
       "~/*": ["./app/*"]
     },
-    "types": ["@remix-run/node", "vite/client"],
+    "types": ["@react-router/node", "vite/client"],
+    "rootDirs": [".", "./.react-router/types"],
 
     /* Linting */
     "strict": true,
@@ -41,6 +42,7 @@
     "**/.server/**/*.ts",
     "**/.server/**/*.tsx",
     "**/.client/**/*.ts",
-    "**/.client/**/*.tsx"
+    "**/.client/**/*.tsx",
+    ".react-router/types/**/*"
   ]
 }

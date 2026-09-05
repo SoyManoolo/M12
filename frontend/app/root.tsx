@@ -5,7 +5,7 @@ import {
     Scripts,
     ScrollRestoration,
     useLocation,
-} from "@remix-run/react";
+} from "react-router";
 import { AuthProvider } from "./hooks/useAuth.tsx";
 
 import { ProtectedRoute } from "./components/ProtectedRoute";

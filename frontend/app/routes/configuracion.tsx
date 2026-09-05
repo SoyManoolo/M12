@@ -7,7 +7,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { useNavigate } from "@remix-run/react";
+import { useNavigate } from "react-router";
 import Navbar from "~/components/Inicio/Navbar";
 import { useAuth } from "~/hooks/useAuth";
 import { environment } from "~/config/environment";

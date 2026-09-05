@@ -10,7 +10,7 @@
  * @module ForgotPassword
  */
 
-import { Link } from '@remix-run/react';
+import { Link } from 'react-router';
 import { FaArrowLeft } from 'react-icons/fa';
 
 export default function ForgotPassword() {

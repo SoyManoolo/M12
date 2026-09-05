@@ -16,7 +16,7 @@ import type { UserProfile, User } from '~/types/user.types';
 import ConfirmModal from '~/components/Shared/ConfirmModal';
 import Notification from '~/components/Shared/Notification';
 import { useAuth } from '~/hooks/useAuth';
-import { Link, useNavigate } from '@remix-run/react';
+import { Link, useNavigate } from 'react-router';
 import { jwtDecode } from 'jwt-decode';
 import SecureImage from '../components/Shared/SecureImage';
 

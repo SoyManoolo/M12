@@ -12,11 +12,11 @@
  * @module Perfil
  */
 
-import { json, redirect } from "@remix-run/node";
-import { useLoaderData, useNavigate } from "@remix-run/react";
+import { json, redirect } from "react-router";
+import { useLoaderData, useNavigate } from "react-router";
 import { useState, useEffect } from "react";
 import { FaCamera } from "react-icons/fa";
-import { Link } from "@remix-run/react";
+import { Link } from "react-router";
 import Navbar from "~/components/Inicio/Navbar";
 import UserProfile from "~/components/Perfil/UserProfile";
 import UserPosts from "~/components/Perfil/UserPosts";

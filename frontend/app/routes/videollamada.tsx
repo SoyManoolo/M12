@@ -14,7 +14,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { FaVideo, FaArrowRight, FaClock, FaMicrophone, FaMicrophoneSlash, FaVideoSlash, FaSearch, FaHome } from 'react-icons/fa';
 import ChatVideollamada from '~/components/Videollamada/ChatVideollamada';
-import { useNavigate, useParams } from '@remix-run/react';
+import { useNavigate, useParams } from 'react-router';
 import { useVideoCall } from '~/hooks/useVideoCall';
 import { VideoCallEvent } from '~/types/videocall.types';
 import SocketService from '~/services/socket.service';

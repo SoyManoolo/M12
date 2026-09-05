@@ -1,17 +1,11 @@
 import tsconfigPaths from "vite-tsconfig-paths";
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
-import { vitePlugin as remix } from "@remix-run/dev";
+import { reactRouter } from "@react-router/dev/vite";
 import tailwindcss from "@tailwindcss/vite";
 import { resolve } from 'path';
 
 const root = process.cwd();
-
-declare module "@remix-run/node" {
-  interface Future {
-    v3_singleFetch: true;
-  }
-}
 
 export default defineConfig(({ mode }) => {
 
@@ -24,15 +18,7 @@ export default defineConfig(({ mode }) => {
 
   return { // 👈 Se retorna el objeto de configuración, solucionando el error.
     plugins: [
-      remix({
-        future: {
-          v3_fetcherPersist: true,
-          v3_relativeSplatPath: true,
-          v3_throwAbortReason: true,
-          v3_singleFetch: true,
-          v3_lazyRouteDiscovery: true,
-        },
-      }),
+      reactRouter(),
       react({
         jsxRuntime: 'automatic',
         babel: {
@@ -91,7 +77,7 @@ export default defineConfig(({ mode }) => {
             }
 
             // Remix y router (solo en cliente, no en SSR)
-            if (id.includes('@remix-run') || id.includes('react-router')) {
+            if (id.includes('@react-router') || id.includes('react-router')) {
               return 'vendor-remix';
             }
 
@@ -122,8 +108,7 @@ export default defineConfig(({ mode }) => {
         'date-fns'
       ],
       exclude: [
-        '@remix-run/react',
-        '@remix-run/router'
+        'react-router'
       ],
       esbuildOptions: {
         target: 'esnext'

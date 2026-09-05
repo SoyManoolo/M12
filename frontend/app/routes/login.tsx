@@ -8,8 +8,8 @@
  * @exports LoginPage
  * 
  * @requires react
- * @requires @remix-run/react
- * @requires @remix-run/node
+ * @requires react-router
+ * @requires react-router
  * @requires ~/services/auth.service
  * @requires ~/hooks/useAuth.tsx
  * @requires ~/hooks/useMessage
@@ -17,9 +17,9 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Form, Link, useNavigate } from "@remix-run/react";
-import type { ActionFunction } from "@remix-run/node";
-import { redirect } from "@remix-run/node";
+import { Form, Link, useNavigate } from "react-router";
+import type { ActionFunction } from "react-router";
+import { redirect } from "react-router";
 import { authService } from '../services/auth.service';
 import { useAuth } from '../hooks/useAuth.tsx';
 import Notification from '../components/Shared/Notification';

@@ -8,12 +8,12 @@
  * - Iconos para cada sección
  * 
  * @module Navbar
- * @requires @remix-run/react
+ * @requires react-router
  * @requires react-icons/fa
  */
 
 // src/components/Navbar.tsx
-import { Link } from "@remix-run/react";
+import { Link } from "react-router";
 import { FaVideo, FaUpload, FaBell, FaEnvelope, FaCog, FaUser, FaShieldAlt, FaNewspaper, FaUsers, FaChevronDown, FaSearch, FaHome } from 'react-icons/fa';
 import { useAuth } from "~/hooks/useAuth";
 import { useState, useEffect } from 'react';

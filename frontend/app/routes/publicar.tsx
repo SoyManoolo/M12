@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import Navbar from '~/components/Inicio/Navbar';
 import { useAuth } from '~/hooks/useAuth';
 import Notification from '~/components/Shared/Notification';
-import { useNavigate } from '@remix-run/react';
+import { useNavigate } from 'react-router';
 import { FaCamera, FaTimes, FaSpinner, FaImage, FaArrowLeft } from 'react-icons/fa';
 import { environment } from '../config/environment';
 

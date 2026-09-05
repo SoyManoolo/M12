@@ -8,15 +8,15 @@
  * @exports SignUpPage
  * 
  * @requires react
- * @requires @remix-run/react
- * @requires @remix-run/node
+ * @requires react-router
+ * @requires react-router
  * @requires ~/services/auth.service
  */
 
 import React, { useState, useEffect } from 'react';
-import { Form, useNavigate, Link } from "@remix-run/react";
-import type { ActionFunction } from "@remix-run/node";
-import { redirect } from "@remix-run/node";
+import { Form, useNavigate, Link } from "react-router";
+import type { ActionFunction } from "react-router";
+import { redirect } from "react-router";
 import { authService } from '../services/auth.service';
 import Notification from '../components/Shared/Notification';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';

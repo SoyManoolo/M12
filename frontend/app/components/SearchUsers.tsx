@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from '@remix-run/react';
+import { useNavigate } from 'react-router';
 import { userService } from '~/services/user.service';
 import { useAuth } from '~/hooks/useAuth';
 import type { User } from '~/types/user.types';

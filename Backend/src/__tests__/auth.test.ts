@@ -20,7 +20,7 @@ describe('Auth test:', () => {
                 username: "manolo",
                 name: "Erik",
                 surname: "Saldaña",
-                password: "12345678"
+                password: "Test1234!"
             })
             .expect(200)
             .expect('Content-Type', /application\/json/)
@@ -31,7 +31,7 @@ describe('Auth test:', () => {
             .post('/auth/login')
             .send({
                 id: "erik.saldi.diaz@gmail.com",
-                password: "12345678"
+                password: "Test1234!"
             })
             .expect(200)
             .expect('Content-Type', /application\/json/)

@@ -8,7 +8,7 @@
  * @exports InicioPage
  * 
  * @requires react
- * @requires @remix-run/react
+ * @requires react-router
  * @requires ~/components/Inicio/Navbar
  * @requires ~/components/Inicio/Post
  * @requires ~/components/Shared/RightPanel
@@ -24,7 +24,7 @@
  */
 
 import { useState, useEffect } from "react";
-import { Link } from "@remix-run/react";
+import { Link } from "react-router";
 import AppLayout from "~/components/Layout/AppLayout";
 import Post from "~/components/Inicio/Post";
 import RightPanel from "~/components/Shared/RightPanel";

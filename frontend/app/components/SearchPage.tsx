@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from '@remix-run/react';
+import { useNavigate } from 'react-router';
 import { environment } from '~/config/environment';
 import Navbar from './Inicio/Navbar';
 import { 
