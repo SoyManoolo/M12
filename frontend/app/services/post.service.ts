@@ -55,11 +55,14 @@ class PostService {
 
       if (username) {
         url.searchParams.append('username', username);
-      } else {
-        url.searchParams.append('limit', '10');
-        if (cursor) {
-          url.searchParams.append('cursor', cursor);
-        }
+      }
+
+      // El endpoint de publicaciones por usuario admite la misma paginación
+      // que el listado general; sin estos parámetros siempre devolvía la
+      // primera página.
+      url.searchParams.append('limit', '10');
+      if (cursor) {
+        url.searchParams.append('cursor', cursor);
       }
 
       const response = await fetch(url.toString(), {
