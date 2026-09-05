@@ -47,7 +47,6 @@
         "@types/bcrypt": "^5.0.2",
         "@types/compression": "^1.8.1",
         "@types/morgan": "^1.9.10",
-        "@types/socket.io-client": "^3.0.0",
         "@types/winston": "^2.4.4",
         "bcrypt": "^6.0.0",
         "bcryptjs": "^2.4.3",

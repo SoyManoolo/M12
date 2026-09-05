@@ -12,6 +12,7 @@ node_modules
 dist
 dist-ssr
 .react-router/
+.vercel/
 *.local
 
 # Editor directories and files
