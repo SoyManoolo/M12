@@ -3,7 +3,8 @@ import dbLogger from "../../config/logger";
 import { AppError } from "../../middlewares/errors/AppError";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { env } from "./../../config/env";
-import { User } from "../../models";
+import { RefreshToken, User } from "../../models";
+import { Op } from "sequelize";
 
 const JWT_SECRET = env.JWT_SECRET;
 
@@ -50,9 +51,18 @@ export const socketAuthMiddleware = (socket: Socket) => {
             const decoded = jwt.verify(token, JWT_SECRET) as unknown as { user_id: string; username: string };
             dbLogger.debug("[SOCKET] Token decodificado para evento", { packet: packet[0], decoded });
 
-            // Buscar el usuario en la base de datos
-            const user = await User.findByPk(decoded.user_id);
-            if (!user) {
+            // La sesión debe seguir vigente, no basta con una firma JWT válida.
+            const [user, activeToken] = await Promise.all([
+                User.findByPk(decoded.user_id),
+                RefreshToken.findOne({
+                    where: {
+                        token,
+                        user_id: decoded.user_id,
+                        expires_at: { [Op.gt]: new Date() }
+                    }
+                })
+            ]);
+            if (!user || !activeToken) {
                 dbLogger.error("[SOCKET] Usuario no encontrado para el ID:", { decoded: decoded.user_id });
                 throw new AppError(401, 'UserNotFound');
             }

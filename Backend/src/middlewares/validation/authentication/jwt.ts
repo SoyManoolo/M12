@@ -2,6 +2,8 @@
 
 import jwt from "jsonwebtoken";
 import { User } from "../../../models";
+import { RefreshToken } from "../../../models";
+import { Op } from "sequelize";
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../../errors/AppError";
 import { env } from './../../../config/env'
@@ -44,7 +46,22 @@ export class AuthToken {
 
         try {
             // Verificamos el token y lo guardamos en req.user
-            req.user = jwt.verify(token, AuthToken.secretKey) as jwt.JwtPayload;
+            const payload = jwt.verify(token, AuthToken.secretKey) as jwt.JwtPayload;
+            if (!payload.user_id) throw new AppError(403, "FormatJWT");
+
+            const [activeToken, activeUser] = await Promise.all([
+                RefreshToken.findOne({
+                    where: {
+                        token,
+                        user_id: payload.user_id,
+                        expires_at: { [Op.gt]: new Date() }
+                    }
+                }),
+                User.findByPk(payload.user_id)
+            ]);
+
+            if (!activeToken || !activeUser) throw new AppError(403, "FormatJWT");
+            req.user = payload;
 
             // Pasamos al siguiente middleware
             next();

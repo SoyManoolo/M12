@@ -3,6 +3,7 @@ import { Request, Response, NextFunction } from 'express';
 import { AuthController } from "../controllers/auth";
 import { AuthService } from "../services/auth";
 import { AuthValidation } from "../middlewares/validation/authentication/AuthValidation";
+import { AuthToken } from "../middlewares/validation/authentication/jwt";
 
 const router = express.Router();
 
@@ -19,7 +20,7 @@ router.post('/register', registerValidation, async (req: Request, res: Response,
     await authController.register(req, res, next);
 });
 
-router.delete('/logout', async (req: Request, res: Response, next: NextFunction) => {
+router.delete('/logout', AuthToken.verifyToken, async (req: Request, res: Response, next: NextFunction) => {
     await authController.logout(req, res, next);
 });
 
