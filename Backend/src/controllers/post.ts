@@ -105,9 +105,10 @@ export class PostController {
             // Guarda la informacion a actualizar
             const postId = getRequiredRouteParam(req.params.id, 'id');
             const { description } = req.body;
+            if (!req.user?.user_id) throw new AppError(401, 'Unauthorized');
 
             // Llama al servicio para actualizar el post
-            const updatedPost = await this.postService.updatePost(postId, description);
+            const updatedPost = await this.postService.updatePost(postId, description, req.user.user_id);
 
             // Si no se actualiza el post, lanza un error
             if (!updatedPost) throw new AppError(404, 'PostNotFound');
@@ -133,9 +134,10 @@ export class PostController {
 
             // Guarda la informacion del post a eliminar
             const postId = getRequiredRouteParam(req.params.id, 'id');
+            if (!req.user?.user_id) throw new AppError(401, 'Unauthorized');
 
             // Llama al servicio para eliminar el post
-            const deletedPost = await this.postService.deletePost(postId);
+            const deletedPost = await this.postService.deletePost(postId, req.user.user_id);
 
             // Si no se elimina el post, lanza un error
             if (!deletedPost) throw new AppError(404, 'PostNotFound');

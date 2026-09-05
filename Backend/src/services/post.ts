@@ -12,6 +12,15 @@ export class PostService {
     private readonly imageBasePath: string = '/media/images';
     private readonly videoBasePath: string = '/media/videos';
 
+    private async authorizePostMutation(post: Post, requesterId: string) {
+        if (post.getDataValue('user_id') === requesterId) return;
+
+        const requester = await User.findByPk(requesterId);
+        if (!requester || !requester.is_moderator) {
+            throw new AppError(403, 'Forbidden');
+        }
+    }
+
     // Método para crear un nuevo post
     public async createPost(user_id: string, description: string, media?: Express.Multer.File) {
         try {
@@ -239,13 +248,15 @@ export class PostService {
     }
 
     // Método para actualizar un post
-    public async updatePost(postId: string, description: string) {
+    public async updatePost(postId: string, description: string, requesterId: string) {
         try {
             dbLogger.info(`[PostService] Updating post with ID: ${postId}`);
 
             const post: Post | null = await existsPost(postId);
 
             if (!post) throw new AppError(404, 'PostNotFound');
+
+            await this.authorizePostMutation(post, requesterId);
 
             await post.update({ description });
 
@@ -264,13 +275,15 @@ export class PostService {
     };
 
     // Método para eliminar un post
-    public async deletePost(postId: string) {
+    public async deletePost(postId: string, requesterId: string) {
         try {
             dbLogger.info(`[PostService] Deleting post with ID: ${postId}`);
 
             const post: Post | null = await existsPost(postId);
 
             if (!post) throw new AppError(404, 'PostNotFound');
+
+            await this.authorizePostMutation(post, requesterId);
 
             await post.destroy();
 

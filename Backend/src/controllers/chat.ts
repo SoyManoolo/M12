@@ -121,7 +121,7 @@ export class ChatController {
             // Obtener el ID del mensaje a eliminar
             const { message_id } = req.params;
 
-            const result = await this.chatService.deleteMessage(getRequiredRouteParam(message_id, 'message_id'));
+            const result = await this.chatService.deleteMessage(getRequiredRouteParam(message_id, 'message_id'), req.user.user_id);
 
             res.status(200).json({
                 success: true,
@@ -147,11 +147,15 @@ export class ChatController {
 
             // Obtener el ID del mensaje a marcar como entregado
             const { message_id } = req.params;
-            const message = await this.chatService.markMessageAsDelivered(getRequiredRouteParam(message_id, 'message_id'));
+            const message = await this.chatService.markMessageAsDelivered(getRequiredRouteParam(message_id, 'message_id'), req.user.user_id);
 
             res.status(200).json({
                 success: true,
-                data: message
+                data: {
+                    message_id: message.id,
+                    is_delivered: message.is_delivered,
+                    delivered_at: message.delivered_at
+                }
             });
         } catch (error) {
             next(error);
@@ -173,11 +177,16 @@ export class ChatController {
 
             // Obtener el ID del mensaje a marcar como leído
             const { message_id } = req.params;
-            const message = await this.chatService.markMessageAsRead(getRequiredRouteParam(message_id, 'message_id'));
+            const message = await this.chatService.markMessageAsRead(getRequiredRouteParam(message_id, 'message_id'), req.user.user_id);
 
             res.status(200).json({
                 success: true,
-                data: message
+                data: {
+                    message_id: message.id,
+                    is_delivered: message.is_delivered,
+                    delivered_at: message.delivered_at,
+                    read_at: message.read_at
+                }
             });
         } catch (error) {
             next(error);

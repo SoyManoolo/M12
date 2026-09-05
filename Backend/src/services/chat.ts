@@ -217,37 +217,31 @@ export class ChatService {
                 throw new AppError(404, 'UserNotFound')
             };
 
+            const conversationWhere = {
+                [Op.or]: [
+                    { sender_id, receiver_id },
+                    { sender_id: receiver_id, receiver_id: sender_id }
+                ]
+            };
             const queryOptions: any = {
                 limit: limit + 1,
-                order: [['created_at', 'DESC']]
+                order: [['created_at', 'DESC']],
+                where: conversationWhere
             };
 
             if (cursor) {
                 const lastMessage = await ChatMessages.findByPk(cursor);
                 if (lastMessage) {
                     queryOptions.where = {
-                        created_at: {
-                            [Op.lt]: lastMessage.created_at
-                        }
+                        [Op.and]: [
+                            conversationWhere,
+                            { created_at: { [Op.lt]: lastMessage.created_at } }
+                        ]
                     };
                 }
             }
 
-            const messages: ChatMessages[] = await ChatMessages.findAll({
-                ...queryOptions,
-                where: {
-                    [Op.or]: [
-                        {
-                            sender_id,
-                            receiver_id
-                        },
-                        {
-                            sender_id: receiver_id,
-                            receiver_id: sender_id
-                        }
-                    ]
-                }
-            });
+            const messages: ChatMessages[] = await ChatMessages.findAll(queryOptions);
 
             if (!messages || messages.length === 0) {
                 return {
@@ -302,7 +296,7 @@ export class ChatService {
     }
 
     // Método para eliminar un mensaje
-    public async deleteMessage(message_id: string) {
+    public async deleteMessage(message_id: string, requesterId: string) {
         try {
             dbLogger.info(`[ChatService] Eliminando mensaje con ID: ${message_id}`);
 
@@ -312,6 +306,10 @@ export class ChatService {
             if (!messageExist) {
                 dbLogger.error(`[ChatService] Mensaje no encontrado: ${message_id}`);
                 throw new AppError(404, 'MessageNotFound')};
+
+            if (messageExist.sender_id !== requesterId) {
+                throw new AppError(403, 'Forbidden');
+            }
 
             // Eliminar el mensaje
             await messageExist.destroy()
@@ -326,13 +324,14 @@ export class ChatService {
                 dbLogger.error("[ChatService] Error al eliminar mensaje:", {error});
                 throw error;
             }
+
             dbLogger.error("[ChatService] Error inesperado al eliminar mensaje:", {error});
             throw new AppError(500, 'InternalServerError');
         }
     }
 
     // Método para marcar mensaje como entregado
-    public async markMessageAsDelivered(message_id: string) {
+    public async markMessageAsDelivered(message_id: string, requesterId: string) {
         try {
             dbLogger.info(`[ChatService] Marcando mensaje como entregado con ID: ${message_id}`);
 
@@ -341,6 +340,10 @@ export class ChatService {
             if (!message) {
                 dbLogger.error(`[ChatService] Mensaje no encontrado: ${message_id}`);
                 throw new AppError(404, 'MessageNotFound');
+            }
+
+            if (message.receiver_id !== requesterId) {
+                throw new AppError(403, 'Forbidden');
             }
 
             // Actualizar el mensaje como entregado
@@ -361,7 +364,7 @@ export class ChatService {
     }
 
     // Método para marcar mensaje como leído
-    public async markMessageAsRead(message_id: string) {
+    public async markMessageAsRead(message_id: string, requesterId: string) {
         try {
             dbLogger.info(`[ChatService] Marcando mensaje como leído con ID: ${message_id}`);
 
@@ -370,6 +373,10 @@ export class ChatService {
             if (!message) {
                 dbLogger.error(`[ChatService] Mensaje no encontrado: ${message_id}`);
                 throw new AppError(404, 'MessageNotFound');
+            }
+
+            if (message.receiver_id !== requesterId) {
+                throw new AppError(403, 'Forbidden');
             }
 
             // Actualizar el mensaje como leído

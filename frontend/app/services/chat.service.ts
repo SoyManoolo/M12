@@ -134,8 +134,8 @@ class ChatService {
                     }
                 });
 
-                // Si el mensaje es nuestro, marcar como entregado
-                if (this.lastUserId && data.message.sender_id === this.lastUserId) {
+                // Solo el destinatario puede confirmar la entrega.
+                if (this.lastUserId && data.message.receiver_id === this.lastUserId) {
                     console.log('Marcando mensaje como entregado:', data.message.id);
                     // Solo marcar como entregado si el token existe
                     if (this.lastToken) {

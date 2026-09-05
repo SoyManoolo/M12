@@ -171,7 +171,7 @@ export function chatEvents(socket: Socket, io: Server) {
             const { message_id } = data;
             dbLogger.debug("[SOCKET] Marcando mensaje como entregado:", message_id);
             if (!socket.data.user) return;
-            const message = await chatService.markMessageAsDelivered(message_id);
+            const message = await chatService.markMessageAsDelivered(message_id, socket.data.user.user_id);
             dbLogger.debug("[SOCKET] Mensaje marcado como entregado:", message);
             // Notificar al remitente que el mensaje fue entregado
             io.to(message.sender_id).emit("message-delivery-status", {
@@ -195,7 +195,7 @@ export function chatEvents(socket: Socket, io: Server) {
             const { message_id } = data;
             dbLogger.debug("[SOCKET] Marcando mensaje como leído:", message_id);
             if (!socket.data.user) return;
-            const message = await chatService.markMessageAsRead(message_id);
+            const message = await chatService.markMessageAsRead(message_id, socket.data.user.user_id);
             dbLogger.debug("[SOCKET] Mensaje marcado como leído:", message);
             // Notificar al remitente que el mensaje fue leído
             io.to(message.sender_id).emit("message-read-status", {
@@ -255,7 +255,7 @@ export function chatEvents(socket: Socket, io: Server) {
             if (!socket.data.user) return;
             const sender_id = socket.data.user.user_id;
 
-            const result = await chatService.deleteMessage(message_id);
+            const result = await chatService.deleteMessage(message_id, sender_id);
 
             // Notificar al remitente
             io.to(sender_id).emit("message-deleted", {
