@@ -1,55 +1,26 @@
 import { Sequelize, Options, Dialect } from "sequelize";
 import { AppError } from "../middlewares/errors/AppError";
 import dbLogger, { enableDatabaseLogging } from "./logger";
-import { User } from "../models";
-import { hash } from "bcryptjs";
-import { Op } from "sequelize";
 import { env } from './env';
 import { createDatabase } from "../scripts/seedUsers";
 
-const DatabaseURL = env.DATABASE_URL;
 const isTestEnv = env.NODE_ENV === "test";
-const dbName = isTestEnv
-    ? (env.DB_NAME_TEST || env.DB_NAME)  // Si no existe DB_NAME_TEST, usa DB_NAME
-    : env.DB_NAME;
+const DatabaseURL = isTestEnv ? env.DATABASE_URL_TEST : env.DATABASE_URL;
+const dbName = isTestEnv ? env.DB_NAME_TEST : env.DB_NAME;
 const dbUpdate: boolean = env.DB_UPDATE === true || false;
 
-// Datos del usuario administrador por defecto
-const DEFAULT_ADMIN = {
-    username: "admin",
-    email: "admin@example.com",
-    password: "admin123",
-    is_moderator: true,
-    name: "Admin",
-    surname: "System",
-    profile_picture: "/assets/images/profiles/admin.png"
-};
+function assertSafeTestDatabase() {
+    if (!isTestEnv) return;
 
-async function createDefaultAdmin() {
-    try {
-        // Verificar si ya existe un usuario administrador
-        const existingAdmin = await User.findOne({
-            where: {
-                [Op.or]: [
-                    { username: DEFAULT_ADMIN.username },
-                    { email: DEFAULT_ADMIN.email }
-                ]
-            }
-        });
+    if (!dbName || dbName === env.DB_NAME) {
+        throw new AppError(500, 'UnsafeTestDatabase');
+    }
 
-        if (!existingAdmin) {
-            // Crear el usuario administrador
-            const hashedPassword = await hash(DEFAULT_ADMIN.password, 10);
-            await User.create({
-                ...DEFAULT_ADMIN,
-                password: hashedPassword
-            });
-            dbLogger.debug("Default admin user created successfully.");
-        } else {
-            dbLogger.debug("Default admin user already exists.");
+    if (DatabaseURL) {
+        const urlDatabaseName = decodeURIComponent(new URL(DatabaseURL).pathname).replace(/^\//, '');
+        if (DatabaseURL === env.DATABASE_URL || urlDatabaseName !== dbName) {
+            throw new AppError(500, 'UnsafeTestDatabase');
         }
-    } catch (error) {
-        dbLogger.error("Error creating default admin user.", { error });
     }
 }
 
@@ -118,10 +89,12 @@ export { sequelize };
 // Función para inicializar la base de datos
 async function initializeDatabase() {
     try {
-        const databaseCreated = await createDatabase();
-
-        if (databaseCreated) {
-            dbLogger.info("Database created successfully.");
+        assertSafeTestDatabase();
+        if (!isTestEnv) {
+            const databaseCreated = await createDatabase();
+            if (databaseCreated) {
+                dbLogger.info("Database created successfully.");
+            }
         }
         dbLogger.info('Base de datos conectada', {
             database: dbName,
@@ -140,9 +113,6 @@ async function initializeDatabase() {
                 await sequelize.sync({ alter: true });
             }
             dbLogger.info("All models were synchronized successfully.");
-            // Crear usuarios por defecto después de sincronizar
-            await createDefaultAdmin();
-            // await createDefaultUsers();
         } else {
             dbLogger.info("Skipping model synchronization (DB_UPDATE is not 'true')");
         }
