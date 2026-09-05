@@ -1,8 +1,8 @@
 # FriendsGo 🌟
 
 [![React](https://img.shields.io/badge/React-18.2.0-blue)](https://reactjs.org/)
-[![Remix](https://img.shields.io/badge/Remix-2.16.2-blue)](https://remix.run/)
-[![Node.js](https://img.shields.io/badge/Node.js-18.x-green)](https://nodejs.org/)
+[![React Router](https://img.shields.io/badge/React_Router-7.18.3-blue)](https://reactrouter.com/)
+[![Node.js](https://img.shields.io/badge/Node.js-20%2B-green)](https://nodejs.org/)
 [![Express](https://img.shields.io/badge/Express-5.0.1-lightgrey)](https://expressjs.com/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7.2-blue)](https://www.typescriptlang.org/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14.x-blue)](https://www.postgresql.org/)
@@ -75,10 +75,17 @@ sequenceDiagram
 - Logging dual (consola + base de datos) y tareas programadas (purga de logs y de datos eliminados, configurable por entorno).
 
 ### Frontend
-- Remix (SSR) + React, con protección explícita contra SSR en todo lo que depende de APIs del navegador (Socket.IO, WebRTC, almacenamiento local).
+- React Router 7 (SSR) + React, con protección explícita contra SSR en todo lo que depende de APIs del navegador (Socket.IO, WebRTC, almacenamiento local).
 - TailwindCSS 4.
 - Diseño responsive.
 - Fallback de vídeo sintético cuando no hay cámara disponible, para no romper la conexión P2P.
+
+### Mejoras recientes
+- Actualización de dependencias directas y transitivas de seguridad; las auditorías de los lockfiles del repositorio, backend y frontend no detectan vulnerabilidades conocidas.
+- Migración del frontend de Remix 2 a React Router 7.18, con configuración de rutas, SSR y Vite actualizada.
+- Adaptación del despliegue SSR a Vercel mediante `@vercel/react-router`, su preset oficial y `frontend/vercel.json`.
+- Actualización de Multer a 2.3, node-cron a 4.6 y de las resoluciones de Lodash, UUID, qs, Vite, esbuild y Ajv.
+- Base de datos de pruebas `friendsgo_test` inicializada localmente y batería de integración validada: 7 suites y 8 pruebas superadas.
 
 ---
 
@@ -86,7 +93,7 @@ sequenceDiagram
 
 ```mermaid
 graph TD
-    Frontend["🎨 Frontend (Vercel)<br>Remix + React"]
+    Frontend["🎨 Frontend (Vercel)<br>React Router 7 + React"]
     Frontend -->|"REST API / Socket.IO"| Split
     style Split fill:none,stroke:none,color:none
     Split[ ]
@@ -108,7 +115,7 @@ El frontend se comunica con el backend a través de dos canales: peticiones REST
 
 | Categoría | Tecnologías |
 |---|---|
-| **Frontend** | React 18, Remix 2 (SSR), Vite 6, TailwindCSS 4, TypeScript |
+| **Frontend** | React 18, React Router 7 (SSR), Vite 6, TailwindCSS 4, TypeScript |
 | **Backend** | Node.js, Express 5, TypeScript, Sequelize |
 | **Base de datos** | PostgreSQL |
 | **Tiempo real** | Socket.IO, WebRTC |
@@ -125,7 +132,7 @@ El frontend se comunica con el backend a través de dos canales: peticiones REST
 
 Algunas decisiones de diseño relevantes tomadas durante el desarrollo, junto con las alternativas que se valoraron:
 
-- **Remix sobre Next.js y Astro:** se evaluaron React + Next.js, Angular y Vue para el frontend; se eligió React por su curva de aprendizaje razonable y el tamaño de su ecosistema. Para el framework, se valoró primero Next.js por su SSR/SSG, pero tras una comparativa más profunda se descartó por no ajustarse a los estándares buscados; entre las alternativas (Astro y Remix), se optó por Remix porque Astro está más orientado a sitios con contenido mayormente estático, mientras que Remix encaja mejor con una aplicación con estado e interacción constante.
+- **React Router 7 como evolución de Remix:** inicialmente se eligió Remix por su modelo SSR y de rutas para una aplicación con estado e interacción constante. El frontend se migró posteriormente a React Router 7, que continúa ese modelo de framework y cuenta con integración SSR oficial para Vercel.
 - **Node.js sobre Deno y Bun:** se compararon los tres entornos de ejecución de JavaScript/TypeScript. Deno destaca en seguridad y Bun en rendimiento, pero se eligió Node.js por su comunidad más extensa, mayor disponibilidad de recursos y mejor compatibilidad con sistemas y servidores existentes — priorizando estabilidad y soporte sobre rendimiento marginal.
 - **Express sobre NestJS:** se priorizó la simplicidad y el bajo nivel de imposición estructural de Express frente a frameworks más opinionados, lo que facilita la integración directa con Socket.IO y WebRTC sin pelear contra el framework.
 - **PostgreSQL sobre MySQL y Cassandra:** se eligió PostgreSQL por su equilibrio entre potencia, consistencia fuerte y soporte de relaciones complejas (tipos JSONB, búsqueda full-text, integridad referencial). Cassandra se descartó porque prioriza disponibilidad sobre consistencia, lo cual no encajaba con un modelo de datos relacional como el de una red social.
@@ -154,9 +161,9 @@ La duplicación entre las vistas de escritorio y móvil se resolvió con CSS res
 
 ```
 M12/
-├── frontend/          # ⚛️ Aplicación Remix + React (SSR)
+├── frontend/          # ⚛️ Aplicación React Router + React (SSR)
 │   └── app/
-│       ├── routes/        # Rutas basadas en archivos (convención Remix)
+│       ├── routes/        # Rutas basadas en archivos
 │       ├── components/    # Inicio, Chats, Perfil, Videollamada, Shared
 │       ├── hooks/          # useAuth, useVideoCall, useMessage...
 │       ├── services/        # Servicios HTTP + singletons de Socket.IO/WebRTC
@@ -183,7 +190,7 @@ M12/
 ## Instalación
 
 ### Requisitos previos
-- Node.js v18 o superior
+- Node.js v20 o superior
 - npm v9 o superior
 - PostgreSQL v14 o superior
 - Git
@@ -246,8 +253,9 @@ npm run dev             # http://localhost:5173
 **Frontend**
 | Comando | Descripción |
 |---|---|
-| `npm run dev` | Servidor de desarrollo (Vite) |
-| `npm run build` | Build de producción (Remix + Vite) |
+| `npm run dev` | Servidor de desarrollo (React Router + Vite) |
+| `npm run build` | Build de producción SSR (React Router + Vite) |
+| `npm start` | Sirve el build SSR fuera de Vercel |
 | `npm run lint` | Linter (ESLint) |
 | `npm run preview` | Previsualiza el build de producción |
 | `npm run analyze` | Analiza el bundle de producción |
@@ -286,15 +294,24 @@ La documentación detallada de cada parte del proyecto vive en su propio README:
 - 🔌 **[API](docs/api/README.md)** — endpoints, autenticación y manejo de errores.
 - 💾 **[Schema de base de datos](database/schema.sql)** — modelos, relaciones e índices.
 
-## Visión de futuro
+## Pendiente y hoja de ruta
 
-Funcionalidades identificadas como siguientes pasos naturales del proyecto:
+Estas mejoras están identificadas, pero no forman parte de la versión actual. Se incluyen para hacer explícito el siguiente alcance técnico y de producto.
 
-- [ ] Llamadas y videollamadas directas entre amigos (no solo emparejamiento aleatorio).
-- [ ] Extender los eventos de Socket.IO para que la interacción en tiempo real cubra toda la aplicación.
-- [ ] Envío de imágenes y vídeos dentro del chat.
-- [ ] Aplicación móvil nativa (Android e iOS).
-- [ ] Inicio de sesión y registro mediante OAuth (Google / Facebook).
+| Prioridad | Área | Pendiente | Posible implementación |
+|---|---|---|---|
+| Alta | Entrega continua | Automatizar la validación antes de cada despliegue. | GitHub Actions con `npm ci`, `npm audit`, build de frontend/backend y pruebas de integración contra PostgreSQL efímero. |
+| Alta | Observabilidad | Detectar y diagnosticar errores de producción con rapidez. | Monitorización de excepciones (por ejemplo, Sentry), health checks, alertas y métricas de latencia/errores. |
+| Alta | Escalabilidad en tiempo real | Hacer que chat y matchmaking funcionen con varias instancias del backend. | Adaptador Socket.IO para Redis y cola de emparejamiento compartida, con métricas y caducidad de sesiones. |
+| Media | Calidad | Ampliar la cobertura funcional y de accesibilidad. | Pruebas E2E con Playwright, pruebas de componentes y auditorías periódicas con Lighthouse/axe. |
+| Media | Comunicación | Llamadas y videollamadas directas entre amistades. | Señalización Socket.IO con salas privadas, permisos de amistad y notificaciones de llamada. |
+| Media | Chat | Envío de imágenes, vídeos y archivos. | Almacenamiento de objetos con URLs firmadas, validación de tipo/tamaño, análisis antimalware y CDN. |
+| Media | Autenticación | Inicio de sesión social y refuerzo de la recuperación de cuenta. | OAuth 2.0/OIDC (Google/Facebook), verificación de correo y tokens de recuperación con expiración. |
+| Baja | Cliente móvil | Aplicación móvil nativa. | React Native compartiendo contratos de API y capa de autenticación; notificaciones push con FCM/APNs. |
+
+### Mantenimiento de dependencias
+
+Las actualizaciones de seguridad se revisan localmente con auditorías, build y pruebas antes de aceptarse. Para reducir regresiones en el futuro, cada cambio destinado a producción debe revisarse antes de crear el commit o enviarlo al remoto.
 
 ---
 
