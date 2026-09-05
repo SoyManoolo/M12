@@ -3,6 +3,7 @@ import { AppError } from '../middlewares/errors/AppError';
 import dbLogger from '../config/logger';
 import { Op } from 'sequelize';
 import { verifyFriendship } from '../utils/modelExists';
+import { sequelize } from '../config/database';
 
 export class FriendshipService {
     /**
@@ -64,44 +65,30 @@ export class FriendshipService {
      */
     public async acceptFriendRequest(request_id: string, receiver_id: string) {
         try {
-            const friendRequest = await FriendRequest.findOne({
-                where: {
-                    request_id,
-                    receiver_id,
-                    status: 'pending'
-                }
-            });
-
-            if (!friendRequest) {
-                throw new AppError(404, 'FriendRequestNotFound');
-            }
-
-            // Log para depuración
-            dbLogger.info('[FriendshipService] Datos de la solicitud:', {
-                request_id,
-                receiver_id,
-                friendRequest: friendRequest.toJSON()
-            });
-
-            // Actualizar estado de la solicitud
-            await friendRequest.update({ status: 'accepted' });
-
-            // Crear la amistad asegurando que los IDs no sean null
-            const requestData = friendRequest.toJSON();
-            if (!requestData.sender_id || !requestData.receiver_id) {
-                dbLogger.error('[FriendshipService] IDs inválidos:', {
-                    sender_id: requestData.sender_id,
-                    receiver_id: requestData.receiver_id
+            return await sequelize.transaction(async (transaction) => {
+                const friendRequest = await FriendRequest.findOne({
+                    where: { request_id, receiver_id, status: 'pending' },
+                    transaction,
+                    lock: transaction.LOCK.UPDATE
                 });
-                throw new AppError(500, 'InvalidFriendRequestData');
-            }
 
-            await Friends.create({
-                user1_id: requestData.sender_id,
-                user2_id: requestData.receiver_id
+                if (!friendRequest) {
+                    throw new AppError(404, 'FriendRequestNotFound');
+                }
+
+                const requestData = friendRequest.toJSON();
+                if (!requestData.sender_id || !requestData.receiver_id) {
+                    throw new AppError(500, 'InvalidFriendRequestData');
+                }
+
+                await Friends.create({
+                    user1_id: requestData.sender_id,
+                    user2_id: requestData.receiver_id
+                }, { transaction });
+                await friendRequest.update({ status: 'accepted' }, { transaction });
+
+                return friendRequest;
             });
-
-            return friendRequest;
         } catch (error) {
             if (error instanceof AppError) {
                 throw error;
@@ -335,4 +322,4 @@ export class FriendshipService {
     }
 }
 
-export const friendshipService = new FriendshipService(); 
+export const friendshipService = new FriendshipService();
