@@ -214,7 +214,7 @@ export class VideoCallService {
             // Registrar información de depuración para entender qué datos tenemos
             dbLogger.info(`[VideoCallService] Active calls: ${VideoCallService.activeCalls.size}`);
 
-            // Buscar una llamada activa donde participe el usuario solicitante
+            // Solo se permite señalizar a la otra persona de la misma llamada activa.
             for (const [activeCallId, callData] of VideoCallService.activeCalls.entries()) {
                 dbLogger.info(`[VideoCallService] Checking call ${activeCallId} with ${callData.users.length} users`);
 
@@ -223,32 +223,11 @@ export class VideoCallService {
                     dbLogger.info(`[VideoCallService] Call ${activeCallId} - User ${index}: ID=${user.id}, SocketID=${user.socketId}`);
                 });
 
-                // Buscar por dos estrategias: ID de usuario y socketID
-                const fromUserInCall = callData.users.find(u => u.id === fromUserId || u.socketId === toSocketId);
+                const fromUserInCall = callData.users.find(user => user.id === fromUserId);
+                const toUser = callData.users.find(user => user.socketId === toSocketId);
 
-                if (fromUserInCall) {
-                    dbLogger.info(`[VideoCallService] Found user ${fromUserId} in call ${activeCallId}`);
-
-                    // Buscar al otro participante
-                    const toUser = callData.users.find(u => u.id !== fromUserId && u.socketId === toSocketId);
-
-                    if (toUser) {
-                        dbLogger.info(`[VideoCallService] Found recipient ${toSocketId} in call ${activeCallId}`);
-                        return {
-                            socketId: toSocketId,
-                            callId: activeCallId
-                        };
-                    } else {
-                        // Si no encontramos exactamente al destinatario, asumimos que es el otro participante
-                        const otherUser = callData.users.find(u => u.id !== fromUserId);
-                        if (otherUser) {
-                            dbLogger.info(`[VideoCallService] Assuming recipient is the other user in call: socketID=${otherUser.socketId}`);
-                            return {
-                                socketId: otherUser.socketId,
-                                callId: activeCallId
-                            };
-                        }
-                    }
+                if (fromUserInCall && toUser && toUser.id !== fromUserId) {
+                    return { socketId: toUser.socketId, callId: activeCallId };
                 }
             }
 
@@ -345,11 +324,20 @@ export class VideoCallService {
      * @param callId ID de la llamada
      * @returns true si se actualizó correctamente, false si no
      */
-    public async markCallAsConnected(callId: string) {
+    public async markCallAsConnected(callId: string, userId: string) {
         try {
             // Actualizar en la base de datos
             const call = await VideoCalls.findByPk(callId);
             if (!call) {
+                return false;
+            }
+
+            if (call.user1_id !== userId && call.user2_id !== userId) {
+                throw new AppError(403, 'Forbidden');
+            }
+
+            const activeCall = VideoCallService.activeCalls.get(callId);
+            if (!activeCall || !activeCall.users.some(user => user.id === userId)) {
                 return false;
             }
 
@@ -358,16 +346,9 @@ export class VideoCallService {
             });
 
             // Actualizar en memoria
-            if (VideoCallService.activeCalls.has(callId)) {
-                const callData = VideoCallService.activeCalls.get(callId);
-                if (!callData) return false;
-
-                callData.status = "connected";
-                VideoCallService.activeCalls.set(callId, callData);
-                return true;
-            }
-
-            return false;
+            activeCall.status = "connected";
+            VideoCallService.activeCalls.set(callId, activeCall);
+            return true;
         } catch (error) {
             dbLogger.error("[VideoCallService] Error in markCallAsConnected:", { error });
             return false;

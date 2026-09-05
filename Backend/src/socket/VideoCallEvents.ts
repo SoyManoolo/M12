@@ -73,7 +73,7 @@ export function videoCallEvents(socket: Socket, io: Server) {
                 return;
             }
 
-            const connected = await videoCallService.markCallAsConnected(callId);
+            const connected = await videoCallService.markCallAsConnected(callId, user_id);
             if (connected) {
                 socket.emit("call_connected_result", {
                     success: true,
@@ -116,9 +116,20 @@ export function videoCallEvents(socket: Socket, io: Server) {
                 callIdToUse = callData.callId;
             }
 
+            const activeCall = await videoCallService.getUserActiveCall(user_id);
+            if (!activeCall || activeCall.callId !== callIdToUse) {
+                throw new Error('Active call not found');
+            }
+            const otherParticipantId = activeCall.participants.find(id => id !== user_id);
+            const otherSocketId = otherParticipantId
+                ? await videoCallService.getUserSocketId(otherParticipantId)
+                : null;
             const resultEndCall = await videoCallService.endCall(user_id, callIdToUse);
 
             if (resultEndCall) {
+                if (otherSocketId) {
+                    io.to(otherSocketId).emit("partner_left_call", { callId: callIdToUse });
+                }
                 socket.emit("end_call_result", {
                     success: true,
                     message: "Call ended",

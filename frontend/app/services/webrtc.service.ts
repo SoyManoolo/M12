@@ -209,7 +209,8 @@ class WebRTCService {
 
                     if (this.currentCallId) {
                         this.socketService.emit(VideoCallEvent.CALL_CONNECTED, {
-                            call_id: this.currentCallId,
+                            callId: this.currentCallId,
+                            token: this.token ?? "",
                         });
                     }
 
@@ -556,6 +557,7 @@ class WebRTCService {
         if (notifyPartner && this.partnerSocketId && this.currentCallId) {
             this.socketService.emit(VideoCallEvent.END_CALL, {
                 to: this.partnerSocketId,
+                callId: this.currentCallId,
                 token: this.token ?? "",
             });
         }
