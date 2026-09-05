@@ -7,6 +7,8 @@ export interface ChatMessage {
   is_delivered: boolean;
   delivered_at: string | null;
   read_at: string | null;
+  // Solo se incluye en eventos en tiempo real para correlacionar un envío local.
+  client_message_id?: string;
 }
 
 export interface DeliveryStatus {

@@ -95,7 +95,7 @@ export function chatEvents(socket: Socket, io: Server) {
     });
 
     // Enviar mensaje
-    socket.on('chat-message', async (data: { data: { receiver_id: string; content: string }, token: string }) => {
+    socket.on('chat-message', async (data: { data: { receiver_id: string; content: string; client_message_id?: string }, token: string }) => {
         try {
             dbLogger.debug('[SOCKET] Datos del socket:', {
                 user: socket.data.user,
@@ -120,17 +120,22 @@ export function chatEvents(socket: Socket, io: Server) {
                 data.data.receiver_id,
                 data.data.content
             );
+            const messagePayload = {
+                ...message.toJSON(),
+                client_message_id: data.data.client_message_id
+            };
 
             // Emitir el mensaje a la sala del receptor
-            io.to(data.data.receiver_id).emit('new-message', { message });
+            io.to(data.data.receiver_id).emit('new-message', { message: messagePayload });
 
             // Emitir el mensaje a la sala del remitente también
-            io.to(sender.user_id).emit('new-message', { message });
+            io.to(sender.user_id).emit('new-message', { message: messagePayload });
 
             // Emitir confirmación al remitente
             socket.emit('chat-message-sent', {
                 success: true,
-                message
+                message: messagePayload,
+                client_message_id: data.data.client_message_id
             });
 
             // Emitir evento de entrega

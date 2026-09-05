@@ -31,6 +31,7 @@ interface Message {
   is_delivered: boolean;
   delivered_at: string | null;
   read_at: string | null;
+  client_message_id?: string;
   is_own?: boolean;
 }
 
@@ -99,7 +100,9 @@ export default function Chat() {
 
         // Si es un mensaje nuestro, reemplazar cualquier mensaje temporal
         if (message.sender_id === currentUser.user_id) {
-          const newMessages = prev.filter(msg => !msg.id.startsWith('temp-'));
+          const newMessages = message.client_message_id
+            ? prev.filter(msg => msg.id !== message.client_message_id)
+            : prev;
           newMessages.push({ ...message, is_own: true });
           return newMessages.sort((a, b) =>
             new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
@@ -347,7 +350,7 @@ export default function Chat() {
 
       // Enviar mensaje real
       // --- MODIFICACIÓN: Usar la instancia para createMessage ---
-      const sentMessage = await chatServiceInstance.createMessage(chatUser.user_id, messageContent, token);
+      const sentMessage = await chatServiceInstance.createMessage(chatUser.user_id, messageContent, token, tempId);
       // ----------------------------------------------------------
 
       // Actualizar el mensaje temporal con el real

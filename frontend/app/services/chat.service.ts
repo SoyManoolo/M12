@@ -440,7 +440,7 @@ class ChatService {
         }
     }
 
-    public async createMessage(receiverId: string, content: string, token: string): Promise<Message> {
+    public async createMessage(receiverId: string, content: string, token: string, clientMessageId?: string): Promise<Message> {
         // [ ... Implementación de fetch y socket ... ]
         try {
             console.log('Creando mensaje:', { receiverId, content });
@@ -451,14 +451,6 @@ class ChatService {
             // Solo enviar por socket si está conectado, y dejar que el backend maneje la persistencia
             if (this.socket?.connected) {
                 console.log('Enviando mensaje por socket');
-                this.socket.emit('chat-message', {
-                    data: {
-                        receiver_id: receiverId,
-                        content
-                    },
-                    token
-                });
-
                 // Esperar la respuesta del socket que incluirá el mensaje creado
                 return new Promise((resolve, reject) => {
                     const timeout = setTimeout(() => {
@@ -466,15 +458,26 @@ class ChatService {
                         reject(new Error('Timeout esperando respuesta del servidor'));
                     }, 5000);
 
-                    const handler = (data: { success: boolean; message: Message }) => {
-                        if (data.success) {
+                    const handler = (data: { success: boolean; message: Message; client_message_id?: string }) => {
+                        if (data.success && (!clientMessageId || data.client_message_id === clientMessageId)) {
                             clearTimeout(timeout);
                             this.socket?.off('chat-message-sent', handler);
                             resolve(data.message);
                         }
                     };
 
-                    this.socket?.once('chat-message-sent', handler);
+                    // Se mantiene el listener hasta recibir la confirmación de
+                    // este envío; `once` lo eliminaría al confirmar otro envío.
+                    this.socket?.on('chat-message-sent', handler);
+
+                    this.socket?.emit('chat-message', {
+                        data: {
+                            receiver_id: receiverId,
+                            content,
+                            client_message_id: clientMessageId
+                        },
+                        token
+                    });
                 });
             } else {
                 // Si no hay socket o no está conectado, usar HTTP
