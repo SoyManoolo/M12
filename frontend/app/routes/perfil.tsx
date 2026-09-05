@@ -12,7 +12,7 @@
  * @module Perfil
  */
 
-import { json, redirect } from "react-router";
+import { redirect } from "react-router";
 import { useLoaderData, useNavigate } from "react-router";
 import { useState, useEffect } from "react";
 import { FaCamera } from "react-icons/fa";
@@ -82,7 +82,7 @@ export async function loader({ request }: { request: Request }) {
       // Si hay username en la URL, cargar ese perfil
       const response = await userService.getUserByUsername(username, token);
       if (!response.success) {
-        return json({ error: "Usuario no encontrado" }, { status: 404 });
+        return Response.json({ error: "Usuario no encontrado" }, { status: 404 });
       }
       userData = response.data;
     } else {
@@ -90,13 +90,13 @@ export async function loader({ request }: { request: Request }) {
       userData = currentUserResponse.data;
     }
 
-    return json({
+    return Response.json({
       user: userData,
       isOwnProfile: userData.user_id === currentUserId
     });
   } catch (error) {
     console.error('Error en loader de perfil:', error);
-    return json({ error: "Error al cargar el perfil" }, { status: 500 });
+    return Response.json({ error: "Error al cargar el perfil" }, { status: 500 });
   }
 }
 
