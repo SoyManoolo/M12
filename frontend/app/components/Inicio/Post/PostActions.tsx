@@ -4,6 +4,7 @@ interface PostActionsProps {
   isLiked: boolean;
   likesCount: number;
   isLoading: boolean;
+  errorMessage?: string | null;
   onLike: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
@@ -18,6 +19,7 @@ export default function PostActions({
   isLiked,
   likesCount,
   isLoading,
+  errorMessage,
   onLike,
   onEdit,
   onDelete,
@@ -47,6 +49,11 @@ export default function PostActions({
         )}
         <span className="text-sm">{likesCount}</span>
       </button>
+      {errorMessage && (
+        <p className="text-xs text-red-400" role="alert" aria-live="polite">
+          {errorMessage}
+        </p>
+      )}
 
       {/* Edit & Delete (solo para el dueño) */}
       {isOwner && (

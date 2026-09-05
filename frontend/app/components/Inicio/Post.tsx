@@ -69,7 +69,7 @@ export default function Post({
   onImageClick,
 }: PostProps) {
   // Hooks personalizados para manejar la lógica
-  const { isLiked, likesCount, isLoading, toggleLike } = usePostLike(
+  const { isLiked, likesCount, isLoading, error: likeError, toggleLike } = usePostLike(
     post_id,
     likes_count
   );
@@ -80,8 +80,9 @@ export default function Post({
 
   // Handlers
   const handleLike = async () => {
-    await toggleLike();
-    onLike();
+    if (await toggleLike()) {
+      onLike();
+    }
   };
 
   const handleImageClick = () => {
@@ -132,6 +133,7 @@ export default function Post({
             isLiked={isLiked}
             likesCount={likesCount}
             isLoading={isLoading}
+            errorMessage={likeError}
             onLike={handleLike}
             onEdit={() => onEdit?.(post_id)}
             onDelete={() => onDelete?.(post_id)}
@@ -172,6 +174,7 @@ export default function Post({
               isLiked={isLiked}
               likesCount={likesCount}
               isLoading={isLoading}
+              errorMessage={likeError}
               onLike={handleLike}
               onEdit={() => onEdit?.(post_id)}
               onDelete={() => onDelete?.(post_id)}

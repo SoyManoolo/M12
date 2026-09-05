@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { postService } from "~/services/post.service";
+import { getSessionToken } from "~/utils/session";
 
 /**
  * Hook para manejar la lógica de likes en un post
@@ -8,12 +9,13 @@ export function usePostLike(postId: string, initialLikesCount: string) {
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(parseInt(initialLikesCount));
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Verificar si el usuario ya dio like al cargar
   useEffect(() => {
     const checkLikeStatus = async () => {
       try {
-        const token = localStorage.getItem("token");
+        const token = getSessionToken();
         if (!token) return;
 
         const { hasLiked } = await postService.checkUserLike(token, postId);
@@ -27,12 +29,15 @@ export function usePostLike(postId: string, initialLikesCount: string) {
   }, [postId]);
 
   const toggleLike = async () => {
+    const previousIsLiked = isLiked;
+
     try {
       setIsLoading(true);
-      const token = localStorage.getItem("token");
+      setError(null);
+      const token = getSessionToken();
       if (!token) throw new Error("No hay token de autenticación");
 
-      if (isLiked) {
+      if (previousIsLiked) {
         await postService.unlikePost(token, postId);
         setLikesCount((prev) => prev - 1);
       } else {
@@ -40,16 +45,18 @@ export function usePostLike(postId: string, initialLikesCount: string) {
         setLikesCount((prev) => prev + 1);
       }
 
-      setIsLiked(!isLiked);
+      setIsLiked(!previousIsLiked);
+      return true;
     } catch (error) {
       console.error("Error al manejar el like:", error);
-      // Revertir el estado en caso de error
-      setIsLiked(!isLiked);
-      setLikesCount((prev) => (isLiked ? prev + 1 : prev - 1));
+      // La interfaz solo cambia después de que el servidor confirma la acción,
+      // así que se conserva el estado anterior si la petición falla.
+      setError("No se pudo actualizar el like. Inténtalo de nuevo.");
+      return false;
     } finally {
       setIsLoading(false);
     }
   };
 
-  return { isLiked, likesCount, isLoading, toggleLike };
+  return { isLiked, likesCount, isLoading, error, toggleLike };
 }
