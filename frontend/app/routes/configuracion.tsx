@@ -182,7 +182,8 @@ export default function ConfiguracionPage() {
         requestBody.password = formData.password.trim();
       }
       
-      if (formData.bio !== user?.bio && formData.bio?.trim() !== '') {
+      if (formData.bio !== (user?.bio ?? '')) {
+        // Una cadena vacía es una actualización válida: elimina la biografía.
         requestBody.bio = formData.bio.trim();
       }
 
