@@ -74,10 +74,20 @@ export default function Chat() {
     let isComponentMounted = true;
     const unsubscribeFunctions: (() => void)[] = [];
 
+    const belongsToCurrentConversation = (message: Message) =>
+      (message.sender_id === currentUser.user_id && message.receiver_id === userId) ||
+      (message.sender_id === userId && message.receiver_id === currentUser.user_id);
+
     // Definir los handlers de eventos
     const handleNewMessage = (message: Message) => {
       console.log('Manejando nuevo mensaje:', message);
       if (!isComponentMounted) return;
+
+      // El socket recibe todos los mensajes del usuario conectado. Mostrar solo
+      // los que pertenecen a la conversación abierta en este momento.
+      if (!belongsToCurrentConversation(message)) {
+        return;
+      }
 
       setMessages(prev => {
         // Verificar si el mensaje ya existe usando el ID
@@ -196,7 +206,7 @@ export default function Chat() {
         if (isComponentMounted) {
           // Asegurarse de que no haya duplicados al cargar mensajes iniciales
           const uniqueMessages = chatMessages.reduce((acc: Message[], msg) => {
-            if (!acc.some(m => m.id === msg.id)) {
+            if (belongsToCurrentConversation(msg) && !acc.some(m => m.id === msg.id)) {
               acc.push({ ...msg, is_own: msg.sender_id === currentUser.user_id });
             }
             return acc;
