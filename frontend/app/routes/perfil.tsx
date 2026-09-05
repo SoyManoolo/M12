@@ -142,7 +142,7 @@ export default function Perfil() {
           // Transformar los posts para que coincidan con nuestra interfaz
           const transformedPosts = postsResponse.data.posts.map(post => ({
             ...post,
-            likes_count: 0, // Valor por defecto
+            likes_count: Number(post.likes_count ?? 0),
             is_saved: false, // Valor por defecto
             comments: [], // Valor por defecto
             author: post.author || {
@@ -197,7 +197,19 @@ export default function Perfil() {
     try {
       const response = await postService.getPosts(token, nextCursor, data.user.username);
       if (response.success) {
-        setPosts(prev => [...prev, ...(response.data.posts as unknown as Post[])]);
+        const additionalPosts = response.data.posts.map(post => ({
+          ...post,
+          likes_count: Number(post.likes_count ?? 0),
+          is_saved: false,
+          comments: [],
+          author: post.author || {
+            user_id: post.user_id,
+            username: data.user.username,
+            profile_picture: data.user.profile_picture || null,
+            name: data.user.name || ''
+          }
+        }));
+        setPosts(prev => [...prev, ...(additionalPosts as Post[])]);
         setNextCursor(response.data.nextCursor);
       } else {
         throw new Error(response.message || 'Error al cargar más posts');

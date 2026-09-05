@@ -9,6 +9,7 @@ interface Post {
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
+  likes_count?: number | string;
   author?: {
     user_id: string;
     username: string;
