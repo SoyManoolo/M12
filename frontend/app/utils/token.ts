@@ -4,6 +4,7 @@ import { developmentLogger } from './logger';
 interface DecodedToken {
     user_id: string;
     username: string;
+    exp?: number;
 }
 
 /**
@@ -24,7 +25,7 @@ export function decodeToken(token: string): DecodedToken | null {
             const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf8'));
             
             if (payload.user_id && payload.username) {
-                return { user_id: payload.user_id, username: payload.username };
+                return { user_id: payload.user_id, username: payload.username, exp: payload.exp };
             }
             return null;
 
@@ -49,7 +50,7 @@ export function decodeToken(token: string): DecodedToken | null {
             const payload = JSON.parse(jsonPayload);
             
             if (payload.user_id && payload.username) {
-                return { user_id: payload.user_id, username: payload.username };
+                return { user_id: payload.user_id, username: payload.username, exp: payload.exp };
             }
             return null;
         } catch {
@@ -96,4 +97,10 @@ export async function getUserInfo(user_id: string, token: string) {
         developmentLogger.error('No se pudo obtener la información del usuario.', error);
         return { success: false, status: 0 };
     }
+}
+
+/** Indica si el JWT está caducado sin verificar su firma (esa verificación es del servidor). */
+export function isTokenExpired(token: string): boolean {
+    const decoded = decodeToken(token);
+    return !decoded || (typeof decoded.exp === 'number' && decoded.exp * 1000 <= Date.now());
 }

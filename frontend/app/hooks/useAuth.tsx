@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { authService } from '../services/auth.service';
-import { decodeToken, getUserInfo } from '../utils/token';
+import { decodeToken, getUserInfo, isTokenExpired } from '../utils/token';
 import { developmentLogger } from '../utils/logger';
 import { clearSessionToken, getSessionToken, setSessionToken } from '../utils/session';
 
@@ -53,7 +53,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 if (storedToken) {
                     // Verificar que el token sea válido (usa el decodeToken ya seguro para SSR)
                     const decodedToken = decodeToken(storedToken);
-                    if (!decodedToken) {
+                    if (!decodedToken || isTokenExpired(storedToken)) {
                         clearSessionToken();
                         return null;
                     }
@@ -117,6 +117,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
         };
 
         initializeAuth();
+    }, [token]);
+
+    // Expira la sesión en el cliente aunque el usuario no navegue. Así las
+    // rutas protegidas redirigen al login inmediatamente al vencer el JWT.
+    useEffect(() => {
+        if (!token) return;
+        const decoded = decodeToken(token);
+        if (!decoded?.exp) return;
+        const delay = Math.max(0, decoded.exp * 1000 - Date.now());
+        const timer = window.setTimeout(() => {
+            setToken(null);
+            setUser(null);
+        }, delay);
+        return () => window.clearTimeout(timer);
     }, [token]);
 
     useEffect(() => {

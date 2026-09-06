@@ -46,10 +46,45 @@ interface AuthResponse {
     message?: string;   // Mensaje de respuesta (opcional)
 }
 
+interface PasswordResetResponse {
+    success: boolean;
+    status: number;
+    message: string;
+}
+
 /**
  * Objeto que contiene los métodos de autenticación
  */
 export const authService = {
+    /** Solicita el correo de recuperación sin revelar si la cuenta existe. */
+    async requestPasswordReset(email: string): Promise<PasswordResetResponse> {
+        if (!email.trim()) {
+            return { success: false, status: 400, message: 'Introduce tu correo electrónico.' };
+        }
+
+        try {
+            const response = await fetch(`${environment.apiUrl}/auth/forgot-password`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ email: email.trim() }),
+            });
+
+            if (response.ok) {
+                return {
+                    success: true,
+                    status: response.status,
+                    message: 'Si existe una cuenta con ese correo, recibirás instrucciones para restablecer tu contraseña.'
+                };
+            }
+
+            return { success: false, status: response.status, message: 'No pudimos procesar la solicitud. Inténtalo de nuevo en unos minutos.' };
+        } catch (error) {
+            developmentLogger.error('Error al solicitar el restablecimiento de contraseña.', error);
+            return { success: false, status: 0, message: 'No pudimos conectar con el servidor.' };
+        }
+    },
+
     /**
      * Inicia sesión con las credenciales proporcionadas
      * 
