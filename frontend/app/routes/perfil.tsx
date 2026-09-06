@@ -192,10 +192,11 @@ export default function Perfil() {
 
   const handleLoadMore = async () => {
     if (!token || !nextCursor || loading || !data.user) return;
+    const profileUser = data.user;
 
     setLoading(true);
     try {
-      const response = await postService.getPosts(token, nextCursor, data.user.username);
+      const response = await postService.getPosts(token, nextCursor, profileUser.username);
       if (response.success) {
         const additionalPosts = response.data.posts.map(post => ({
           ...post,
@@ -204,9 +205,9 @@ export default function Perfil() {
           comments: [],
           author: post.author || {
             user_id: post.user_id,
-            username: data.user.username,
-            profile_picture: data.user.profile_picture || null,
-            name: data.user.name || ''
+            username: profileUser.username,
+            profile_picture: profileUser.profile_picture || null,
+            name: profileUser.name || ''
           }
         }));
         setPosts(prev => [...prev, ...(additionalPosts as Post[])]);
@@ -322,33 +323,6 @@ export default function Perfil() {
       setLoading(false);
       setDeleteModalOpen(false);
       setPostToDelete(null);
-    }
-  };
-
-  const handleRemoveFriend = async (userId: string) => {
-    if (!token) return;
-
-    try {
-      const response = await friendshipService.removeFriendship(token, userId);
-      if (response.success) {
-        // Actualizar el estado local de amigos inmediatamente
-        const friendToRemove = friends.find(friend => friend.user.user_id === userId);
-        if (friendToRemove) {
-          // Eliminar de la lista de amigos
-          setFriends(prev => prev.filter(friend => friend.user.user_id !== userId));
-        }
-        setNotification({
-          message: 'Amistad eliminada correctamente',
-          type: 'success'
-        });
-      } else {
-        throw new Error(response.message);
-      }
-    } catch (err) {
-      setNotification({
-        message: err instanceof Error ? err.message : 'Error al eliminar la amistad',
-        type: 'error'
-      });
     }
   };
 

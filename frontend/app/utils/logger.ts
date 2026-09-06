@@ -2,7 +2,8 @@ type LogMethod = (...data: unknown[]) => void;
 
 const createDevelopmentLogger = (method: keyof Console): LogMethod => (...data) => {
   if (import.meta.env.DEV) {
-    console[method](...data);
+    const logger = console[method] as unknown as LogMethod;
+    logger(...data);
   }
 };
 
