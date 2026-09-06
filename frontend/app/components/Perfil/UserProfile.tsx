@@ -21,6 +21,7 @@ import ImageZoomModal from '../Shared/ImageZoomModal';
 import Notification from '../Shared/Notification';
 import { friendshipService } from '../../services/friendship.service';
 import SecureImage from '../Shared/SecureImage';
+import { sanitizeUserText } from '~/utils/sanitize';
 
 interface UserProfileProps {
     user?: User;
@@ -179,7 +180,7 @@ export default function UserProfile({ user, isOwnProfile, onEditProfile }: UserP
     return (
         <>
         <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
-            <div className="flex items-start space-x-6">
+            <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-start sm:gap-6">
                     {/* Foto de perfil con efecto hover */}
                     <div 
                         className="relative group"
@@ -190,12 +191,12 @@ export default function UserProfile({ user, isOwnProfile, onEditProfile }: UserP
                         <SecureImage
                             src={user.profile_picture}
                             alt={`${user.username} profile`}
-                            className="w-40 h-40 rounded-full object-cover border-4 border-gray-800 cursor-pointer transition-all duration-300 group-hover:border-blue-500/50 group-hover:scale-105"
+                            className="h-28 w-28 sm:h-40 sm:w-40 rounded-full object-cover border-4 border-gray-800 cursor-pointer transition-all duration-300 group-hover:border-blue-500/50 group-hover:scale-105"
                             onClick={() => setShowZoomModal(true)}
                         />
                     ) : (
-                            <div className="w-40 h-40 rounded-full border-4 border-gray-800 bg-gray-800 flex items-center justify-center cursor-pointer transition-all duration-300 group-hover:border-blue-500/50 group-hover:scale-105">
-                                <span className="text-gray-400 text-6xl group-hover:text-blue-500/50 transition-colors duration-300">
+                            <div className="h-28 w-28 sm:h-40 sm:w-40 rounded-full border-4 border-gray-800 bg-gray-800 flex items-center justify-center cursor-pointer transition-all duration-300 group-hover:border-blue-500/50 group-hover:scale-105">
+                                <span className="text-gray-400 text-4xl sm:text-6xl group-hover:text-blue-500/50 transition-colors duration-300">
                                     {user.username.charAt(0).toUpperCase()}
                                 </span>
                             </div>
@@ -229,7 +230,7 @@ export default function UserProfile({ user, isOwnProfile, onEditProfile }: UserP
                 </div>
 
                 {/* Información del usuario */}
-                <div className="flex-1">
+                <div className="flex-1 w-full text-center sm:text-left">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2 sm:gap-0">
                         <div>
                             <h1 className="text-2xl font-bold text-white">
@@ -283,7 +284,7 @@ export default function UserProfile({ user, isOwnProfile, onEditProfile }: UserP
 
                         {/* Biografía simple */}
                         <p className="text-gray-300 whitespace-pre-wrap">
-                            {user.bio || "Sin biografía"}
+                            {sanitizeUserText(user.bio) || "Sin biografía"}
                         </p>
                     </div>
                 </div>

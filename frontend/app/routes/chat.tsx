@@ -21,6 +21,7 @@ import { userService } from '~/services/user.service';
 // import { jwtDecode } from 'jwt-decode'; // No se usa, se puede dejar comentado o eliminar.
 import ClientEmojiPicker from '~/components/Chats/ClientEmojiPicker';
 import type { EmojiClickData } from 'emoji-picker-react';
+import { sanitizeUserText } from '~/utils/sanitize';
 
 interface Message {
   id: string;
@@ -476,9 +477,9 @@ export default function Chat() {
         {/* Área de chat */}
         <div className="flex flex-col h-[calc(100vh-4rem)] lg:h-screen pt-16 p-3 sm:p-6">
           {/* Encabezado del chat con estado de conexión */}
-          <div className="p-4 border-b border-gray-800">
-            <div className="flex justify-between items-center">
-              <h1 className="text-xl font-bold">{chatUser?.name} {chatUser?.surname}</h1>
+          <div className="p-3 sm:p-4 border-b border-gray-800">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <h1 className="truncate text-xl font-bold">{chatUser?.name} {chatUser?.surname}</h1>
               <div className="flex items-center space-x-2">
                 {connectionStatus === 'connected' && (
                   <span className="text-green-500 text-sm flex items-center">
@@ -506,7 +507,7 @@ export default function Chat() {
           </div>
 
           {/* Mensajes */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-4">
             {loading ? (
               <div className="flex justify-center items-center h-full">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
@@ -526,12 +527,12 @@ export default function Chat() {
                       }`}
                   >
                     <div
-                      className={`max-w-[70%] p-3 rounded-2xl ${message.is_own
+                      className={`max-w-[85%] sm:max-w-[70%] p-3 rounded-2xl ${message.is_own
                         ? 'bg-blue-600 text-white rounded-br-none'
                         : 'bg-gray-800 text-white rounded-bl-none'
                         } shadow-md hover:shadow-lg transition-shadow duration-200`}
                     >
-                      <p className="break-words text-[15px] leading-relaxed">{message.content}</p>
+                      <p className="break-words text-[15px] leading-relaxed">{sanitizeUserText(message.content)}</p>
                       <div className="flex items-center justify-end space-x-2 mt-1.5">
                         <p className="text-xs text-gray-400">
                           {new Date(message.created_at).toLocaleTimeString([], {
@@ -574,7 +575,7 @@ export default function Chat() {
           </style>
 
           {/* Input de mensaje con estado de conexión */}
-          <form onSubmit={handleSendMessage} className="p-4 border-t border-gray-800">
+          <form onSubmit={handleSendMessage} className="p-3 sm:p-4 border-t border-gray-800 bg-black/20">
             <div className="flex items-center relative">
               <div className="relative flex-1">
                 <input
@@ -615,7 +616,7 @@ export default function Chat() {
               <button
                 type="submit"
                 disabled={connectionStatus !== 'connected' || !newMessage.trim()}
-                className={`ml-4 p-2 bg-blue-600 rounded-lg transition-colors ${connectionStatus === 'connected' && newMessage.trim()
+                className={`ml-2 sm:ml-4 p-2.5 bg-blue-600 rounded-lg transition-colors ${connectionStatus === 'connected' && newMessage.trim()
                     ? 'hover:bg-blue-700'
                     : 'opacity-50 cursor-not-allowed'
                   }`}

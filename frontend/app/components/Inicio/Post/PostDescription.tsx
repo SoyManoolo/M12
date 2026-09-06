@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { sanitizeUserText } from "~/utils/sanitize";
 
 interface PostDescriptionProps {
   description: string;
@@ -13,11 +14,12 @@ export default function PostDescription({
   maxLength = 120,
 }: PostDescriptionProps) {
   const [showFull, setShowFull] = useState(false);
+  const safeDescription = sanitizeUserText(description);
 
-  const needsTruncation = description.length > maxLength;
+  const needsTruncation = safeDescription.length > maxLength;
   const displayText = showFull || !needsTruncation 
-    ? description 
-    : description.slice(0, maxLength);
+    ? safeDescription
+    : safeDescription.slice(0, maxLength);
 
   return (
     <div className="text-gray-300 text-sm sm:text-base">

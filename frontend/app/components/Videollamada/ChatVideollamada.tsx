@@ -14,6 +14,7 @@
 
 import { useState } from 'react';
 import { FaPaperPlane } from 'react-icons/fa';
+import { sanitizeUserText } from '~/utils/sanitize';
 
 /**
  * Interfaz que define la estructura de un mensaje
@@ -81,7 +82,7 @@ export default function ChatVideollamada({ messages, onSendMessage }: ChatVideol
                   : 'bg-gray-800 text-gray-200'
               }`}
             >
-              <p className="text-sm">{message.content}</p>
+              <p className="break-words text-sm">{sanitizeUserText(message.content)}</p>
               <p className="text-xs mt-1 opacity-70">
                 {new Date(message.timestamp).toLocaleTimeString()}
               </p>
@@ -111,4 +112,4 @@ export default function ChatVideollamada({ messages, onSendMessage }: ChatVideol
       </div>
     </div>
   );
-} 
+}

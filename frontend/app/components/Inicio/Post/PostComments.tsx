@@ -2,6 +2,7 @@ import { useState } from "react";
 import { FaTrash } from "react-icons/fa";
 import UserAvatar from "./UserAvatar";
 import { useTimeFormat } from "~/hooks/post/useTimeFormat";
+import { sanitizeUserText } from "~/utils/sanitize";
 
 interface Comment {
   comment_id: string;
@@ -79,7 +80,7 @@ export default function PostComments({
                   </span>
                 </div>
                 <p className="text-gray-300 text-xs sm:text-base mt-0.5 sm:mt-1.5">
-                  {comment.content}
+                  {sanitizeUserText(comment.content)}
                 </p>
               </div>
 
