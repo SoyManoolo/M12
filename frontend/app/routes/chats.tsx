@@ -221,19 +221,14 @@ export default function Chats() {
     };
   }, [token, user]); // Removí 'friends' para evitar el bucle infinito
 
-  // Filtrar chats basado en la búsqueda y solo mostrar chats con amigos
+  // Una conversación ya creada no debe desaparecer al eliminar una amistad.
+  // La amistad limita cómo se inicia un chat, no el acceso al historial.
   const filteredChats = chats.filter(chat => {
-    const isFriend = friends.some(friend => friend.user.user_id === chat.user.user_id);
-    return isFriend && chat.user.username.toLowerCase().includes(searchQuery.toLowerCase());
+    return chat.user.username.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
   const handleChatClick = (userId: string) => {
     window.location.href = `/chat?userId=${userId}`;
-  };
-
-  const handleStartNewChat = () => {
-    // Redirigir a la página de búsqueda de usuarios
-    window.location.href = '/buscar';
   };
 
   return (
@@ -275,16 +270,6 @@ export default function Chats() {
             </div>
           ) : error ? (
             <div className="text-red-500 text-center py-8">{error}</div>
-          ) : friends.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12">
-              <div className="w-24 h-24 bg-gradient-to-br from-blue-600/20 to-purple-600/20 rounded-full flex items-center justify-center mb-6">
-                <FaEnvelope className="text-5xl text-blue-500" />
-              </div>
-              <h3 className="text-xl font-semibold text-white mb-3">No tienes amigos aún</h3>
-              <p className="text-gray-400 text-center max-w-md mb-6">
-                Para poder chatear necesitas tener amigos. ¡Conecta con personas y empieza a conversar!
-              </p>
-            </div>
           ) : filteredChats.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12">
               <div className="w-24 h-24 bg-gradient-to-br from-blue-600/20 to-purple-600/20 rounded-full flex items-center justify-center mb-6">
@@ -292,7 +277,7 @@ export default function Chats() {
               </div>
               <h3 className="text-xl font-semibold text-white mb-3">No hay mensajes</h3>
               <p className="text-gray-400 text-center max-w-md mb-6">
-                {searchQuery ? 'No se encontraron mensajes con esa búsqueda' : 'No tienes conversaciones activas con tus amigos'}
+                {searchQuery ? 'No se encontraron mensajes con esa búsqueda' : 'No tienes conversaciones todavía'}
               </p>
             </div>
           ) : (

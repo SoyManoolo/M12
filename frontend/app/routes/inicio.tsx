@@ -221,9 +221,11 @@ export default function InicioPage() {
           const suggestedResponse = await userService.getAllUsers(token);
           if (suggestedResponse.success && suggestedResponse.data && Array.isArray(suggestedResponse.data.users)) {
             // Filtrar los usuarios que ya son amigos
-            const friendIds = new Set(friendsResponse.data.map(friend => friend.user.user_id));
-            const filteredSuggestedUsers = suggestedResponse.data.users.filter(
-              user => !friendIds.has(user.user_id)
+          const friendIds = new Set(friendsResponse.data.map(friend => friend.user.user_id));
+          const filteredSuggestedUsers = suggestedResponse.data.users.filter(
+              // La API devuelve al usuario autenticado y a veces usuarios ya
+              // conectados. Ninguno de ellos debe aparecer como sugerencia.
+              user => user.user_id !== currentUserId && !friendIds.has(user.user_id)
             );
             setSuggestedUsers(filteredSuggestedUsers);
           }
@@ -293,6 +295,13 @@ export default function InicioPage() {
       setLoading(false);
     }
   };
+
+  // El endpoint general también puede devolver publicaciones de usuarios que
+  // no forman parte de la red del usuario. El feed público solo muestra las
+  // propias y las de amistades confirmadas.
+  const visiblePosts = posts.filter(post =>
+    post.user_id === currentUserId || friends.some(friend => friend.user.user_id === post.user_id)
+  );
 
   const handleLike = async (postId: string) => {
     try {
@@ -413,7 +422,7 @@ export default function InicioPage() {
             <div className="flex justify-center items-center h-32">
               <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
             </div>
-          ) : posts.length === 0 ? (
+          ) : visiblePosts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 bg-gray-900/50 rounded-xl border border-gray-800">
               <div className="w-24 h-24 bg-gradient-to-br from-blue-600/20 to-purple-600/20 rounded-full flex items-center justify-center mb-6">
                 <FaCamera className="text-4xl text-blue-500" />
@@ -434,7 +443,7 @@ export default function InicioPage() {
             </div>
           ) : (
             <>
-              {posts.map((post) => (
+              {visiblePosts.map((post) => (
                 <Post
                   key={post.post_id}
                   post_id={post.post_id}
