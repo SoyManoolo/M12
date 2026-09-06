@@ -334,7 +334,7 @@ export default function VideollamadaPage() {
                             )}
 
                             {/* Controles de video/audio - Posicionados más arriba del borde inferior */}
-                            <div className="absolute bottom-20 md:bottom-4 left-1/2 transform -translate-x-1/2 flex gap-3 md:gap-4 bg-gray-900/80 p-4 md:p-3 rounded-full backdrop-blur-sm z-50">
+                            <div className="absolute bottom-28 md:bottom-6 left-1/2 transform -translate-x-1/2 flex gap-3 md:gap-4 bg-gray-900/80 p-4 md:p-3 rounded-full backdrop-blur-sm z-50">
                                 <button
                                     onClick={(e) => {
                                         e.stopPropagation();
