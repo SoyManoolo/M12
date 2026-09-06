@@ -32,7 +32,7 @@ Request → Router → Middleware (auth/validación) → Controller → Service 
 
 Los controladores son finos: extraen datos de `req`, delegan al servicio correspondiente y formatean la respuesta. Toda la lógica de negocio —incluida la validación de reglas de dominio (por ejemplo, comprobar que dos usuarios no estén ya bloqueados antes de aceptar una solicitud de amistad)— vive en la capa de servicio, no en el controlador ni en el modelo.
 
-**Particularidad importante:** las notificaciones y las videollamadas no tienen rutas REST propias (`routes/notification.ts` y `routes/videoCall.ts` existen como esqueletos pero no están montados en `app.ts`). Toda su lógica vive en los manejadores de Socket.IO (`socket/ChatEvents.ts`, `socket/VideoCallEvents.ts`), porque son flujos inherentemente de tiempo real sin necesidad de una representación REST.
+**Particularidad importante:** las notificaciones y las videollamadas no exponen rutas REST ni cuentan con routers propios. Sus flujos se gestionan mediante los manejadores de Socket.IO, porque son operaciones inherentemente de tiempo real sin necesidad de una representación REST.
 
 ### Sistema de emparejamiento de videollamadas
 
@@ -92,7 +92,7 @@ src/
 
 ## Decisiones de implementación
 
-- **JWT con verificación en base de datos:** además de comprobar la firma criptográfica del token, `AuthToken.verifyToken` consulta la tabla `JWT` para confirmar que el token sigue siendo válido. Esto permite invalidar sesiones de forma centralizada (logout real) sin perder la ventaja de un JWT sin estado para el resto de la petición.
+- **JWT con verificación en base de datos:** además de comprobar la firma criptográfica del token, `AuthToken.verifyToken` consulta `RefreshToken` para confirmar que el token sigue siendo válido. Esto permite invalidar sesiones de forma centralizada (logout real) sin perder la ventaja de un JWT sin estado para el resto de la petición.
 - **Errores tipados con `AppError`:** en vez de lanzar errores genéricos, los servicios lanzan `new AppError(status, type)`, donde `type` es una clave que el `AppErrorHandler` resuelve contra los ficheros de traducción siguiendo una jerarquía de categorías (`validation`, `jwt`, `user`, `registry`, `status`, `connection`). Esto desacopla el código de error del mensaje final mostrado al usuario.
 - **Doble pipeline de manejo de errores:** los errores de validación de Celebrate se interceptan en `CelebrateErrorHandler` antes de llegar al handler genérico de `AppError`, evitando que errores de esquema (Joi) se traten como errores de aplicación.
 - **Rate limiting diferenciado:** límite global de 1000 req/10min en producción, pero un limitador específico de 5 intentos/15min sobre `/auth`, que además ignora los logins exitosos (`skipSuccessfulRequests`) para no penalizar el uso normal.
@@ -104,7 +104,7 @@ src/
 
 ## Modelo de datos
 
-14 modelos Sequelize con relaciones explícitas (definidas en `models/index.ts`, no infraestructura automática):
+16 modelos Sequelize con relaciones explícitas (definidas en `models/index.ts`, no infraestructura automática):
 
 | Modelo | Propósito |
 |---|---|
@@ -117,7 +117,7 @@ src/
 | `UserBlocks` | Bloqueos entre usuarios |
 | `Reports` / `ContentModeration` | Reportes de usuarios/contenido y acciones de moderación |
 | `Notifications` | Notificaciones persistidas por usuario |
-| `JWT` | Tokens activos, para permitir invalidación server-side |
+| `RefreshToken` | Tokens de sesión activos, para permitir invalidación server-side |
 | `Logs` | Histórico de logs de aplicación |
 
 Todas las claves primarias son UUID. Las relaciones siguen el patrón `User.hasMany(...)` / `belongsTo(...)` con alias explícitos por dirección (p. ej. `sentFriendRequests` / `receivedFriendRequests`, `blockedUsers` / `blockedBy`), necesario porque varios modelos tienen dos claves foráneas distintas hacia `User`.
@@ -127,7 +127,7 @@ Todas las claves primarias son UUID. Las relaciones siguen el patrón `User.hasM
 ## Seguridad
 
 - Contraseñas con hash (bcrypt).
-- JWT con expiración (1h) + verificación de existencia en BD para invalidación real.
+- JWT con expiración (1h) + verificación de existencia en `RefreshToken` para invalidación real.
 - Cabeceras de seguridad vía Helmet y política CORS explícita por entorno.
 - Rate limiting global y específico para autenticación (ver [Decisiones de implementación](#decisiones-de-implementación)).
 - Enforcement de HTTPS en producción a nivel de aplicación.
@@ -168,7 +168,7 @@ npm run test:reset-db # Resetea la base de datos de test
 ## Instalación
 
 ### Requisitos previos
-- Node.js 18+ y npm 9+
+- Node.js 20+ y npm 9+
 - PostgreSQL 14+
 
 ### Pasos
@@ -240,20 +240,22 @@ curl -X POST http://localhost:3000/auth/login \
 
 #### `DELETE /auth/logout` 🔒
 
-Invalida el token actual eliminándolo de la tabla `JWT`.
+Invalida el token actual eliminándolo de `RefreshToken`.
 
 ### Usuarios (`/users`)
 
 | Método | Ruta | Descripción | Auth |
 |---|---|---|---|
 | GET | `/users` | Lista todos los usuarios | — |
+| GET | `/users/me` | Devuelve el usuario autenticado | 🔒 |
+| GET | `/users/admin` | Lista de usuarios para moderación | 🔒 Moderador |
 | GET | `/users/search` | Búsqueda flexible de usuarios | — |
 | GET | `/users/username?username=` | Busca por username exacto | — |
 | GET | `/users/:id` | Busca por UUID | — |
 | PATCH | `/users/username` | Actualiza el usuario autenticado | 🔒 |
 | PATCH | `/users/:id` | Actualiza un usuario por ID | 🔒 |
-| DELETE | `/users/username` | Elimina el usuario autenticado (soft delete) | — |
-| DELETE | `/users/:id` | Elimina un usuario por ID (soft delete) | — |
+| DELETE | `/users/username` | Elimina el usuario autenticado (soft delete) | 🔒 |
+| DELETE | `/users/:id` | Elimina un usuario por ID (soft delete) | 🔒 |
 | POST | `/users/username/profile-picture` | Sube foto de perfil (`multipart/form-data`, campo `media`) | 🔒 |
 | DELETE | `/users/username/profile-picture` | Elimina la foto de perfil | 🔒 |
 | POST | `/users/:id/profile-picture` | Sube foto de perfil por ID | 🔒 |

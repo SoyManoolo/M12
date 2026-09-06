@@ -77,8 +77,13 @@ sequenceDiagram
 ### Frontend
 - React Router 7 (SSR) + React, con protección explícita contra SSR en todo lo que depende de APIs del navegador (Socket.IO, WebRTC, almacenamiento local).
 - TailwindCSS 4.
-- Diseño responsive.
+- Diseño responsive en perfiles, mensajería, administración y videollamadas.
 - Fallback de vídeo sintético cuando no hay cámara disponible, para no romper la conexión P2P.
+- Feed limitado a publicaciones propias y de amistades confirmadas; las sugerencias excluyen amistades existentes.
+- Historiales de chat persistentes aunque se elimine una amistad.
+- Sanitización con DOMPurify de publicaciones, comentarios, biografías y mensajes.
+- Sesión cliente invalidada al expirar el JWT y vista de solicitud de recuperación de contraseña.
+- Pruebas unitarias con Vitest para expiración de tokens y sanitización.
 
 ### Mejoras recientes
 - Actualización de dependencias directas y transitivas de seguridad; las auditorías de los lockfiles del repositorio, backend y frontend no detectan vulnerabilidades conocidas.
@@ -86,6 +91,7 @@ sequenceDiagram
 - Adaptación del despliegue SSR a Vercel mediante `@vercel/react-router`, su preset oficial y `frontend/vercel.json`.
 - Actualización de Multer a 2.3, node-cron a 4.6 y de las resoluciones de Lodash, UUID, qs, Vite, esbuild y Ajv.
 - Base de datos de pruebas `friendsgo_test` inicializada localmente y batería de integración validada: 7 suites y 8 pruebas superadas.
+- Release `v1.2.0`: mejoras de experiencia social, seguridad del contenido y cobertura de pruebas del frontend.
 
 ---
 
@@ -122,7 +128,7 @@ El frontend se comunica con el backend a través de dos canales: peticiones REST
 | **Autenticación** | JWT (con verificación en base de datos) |
 | **Seguridad** | Helmet, CORS, express-rate-limit, enforcement de HTTPS |
 | **Internacionalización** | i18n (7 idiomas) |
-| **Testing** | Jest + Supertest |
+| **Testing** | Vitest (frontend) · Jest + Supertest (backend) |
 | **Calidad de código** | ESLint |
 | **Despliegue** | Vercel (frontend) · Railway (backend) |
 
@@ -256,6 +262,8 @@ npm run dev             # http://localhost:5173
 | `npm run dev` | Servidor de desarrollo (React Router + Vite) |
 | `npm run build` | Build de producción SSR (React Router + Vite) |
 | `npm start` | Sirve el build SSR fuera de Vercel |
+| `npm test` | Pruebas unitarias con Vitest |
+| `npm run test:watch` | Vitest en modo observación |
 | `npm run lint` | Linter (ESLint) |
 | `npm run preview` | Previsualiza el build de producción |
 | `npm run analyze` | Analiza el bundle de producción |
@@ -320,7 +328,7 @@ Las actualizaciones de seguridad se revisan localmente con auditorías, build y 
 | | [SoyManoolo](https://github.com/SoyManoolo) | [Rediaj04](https://github.com/Rediaj04) |
 |---|---|---|
 | **Rol principal** | Backend | Frontend |
-| **Responsabilidades** | Arquitectura del servidor, API REST, modelado de PostgreSQL, autenticación JWT, infraestructura Socket.IO, signalling WebRTC, servidor STUN/TURN, testing automatizado, seguridad (Helmet/CSP) | Interfaz con Remix y React, experiencia de usuario, componentes reutilizables, vistas de la aplicación, integración con la API REST, diseño responsive, soporte a funcionalidades en tiempo real |
+| **Responsabilidades** | Arquitectura del servidor, API REST, modelado de PostgreSQL, autenticación JWT, infraestructura Socket.IO, signalling WebRTC, servidor STUN/TURN, testing automatizado, seguridad (Helmet/CSP) | Interfaz con React Router y React, experiencia de usuario, componentes reutilizables, vistas de la aplicación, integración con la API REST, diseño responsive, soporte a funcionalidades en tiempo real |
 
 ---
 
