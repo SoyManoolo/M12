@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { commentService } from "~/services/comment.service";
-import { getSessionToken } from "~/utils/session";
+import { useAuth } from "~/hooks/useAuth";
 
 interface Comment {
   comment_id: string;
@@ -16,47 +16,54 @@ interface Comment {
 /**
  * Hook para manejar la lógica de comentarios en un post
  */
-export function useComments(postId: string, initialComments: Comment[], hasInitialComments = false) {
+export function useComments(postId: string, initialComments: Comment[], totalComments: number) {
+  const { token } = useAuth();
   const [comments, setComments] = useState<Comment[]>(initialComments);
   const [isCommenting, setIsCommenting] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(initialComments.length < totalComments);
+  const [commentCount, setCommentCount] = useState(totalComments);
+  const [loadMoreError, setLoadMoreError] = useState<string | null>(null);
 
-  // Cargar comentarios al montar
-  useEffect(() => {
-    const loadComments = async () => {
-      if (hasInitialComments) return;
-      try {
-        const token = getSessionToken();
-        if (!token) return;
+  const mapComment = (comment: any): Comment => ({
+    comment_id: comment.comment_id || "",
+    content: comment.content || "",
+    created_at: comment.created_at || "",
+    author: {
+      user_id: comment.author?.user_id || "",
+      username: comment.author?.username ?? "",
+      profile_picture: comment.author?.profile_picture || null,
+    },
+  });
 
-        const response = await commentService.getComments(token, postId);
-        if (response.success && response.data.comments) {
-          setComments(
-            response.data.comments.map((comment: any) => ({
-              comment_id: comment.comment_id || "",
-              content: comment.content || "",
-              created_at: comment.created_at || "",
-              author: {
-                user_id: comment.author?.user_id || "",
-                username: comment.author?.username ?? "",
-                profile_picture: comment.author?.profile_picture || null,
-              },
-            }))
-          );
-        }
-      } catch (error) {
-        console.error("Error al cargar comentarios:", error);
-      }
-    };
+  const loadMoreComments = async () => {
+    if (isLoadingMore || !hasMore) return;
 
-    loadComments();
-  }, [postId, hasInitialComments]);
+    try {
+      setIsLoadingMore(true);
+      setLoadMoreError(null);
+      if (!token) throw new Error("No hay token de autenticación");
+
+      const response = await commentService.getComments(token, postId, comments.length);
+      const nextComments = response.data.comments.map(mapComment);
+      setComments((prev) => {
+        const existingIds = new Set(prev.map((comment) => comment.comment_id));
+        return [...prev, ...nextComments.filter((comment) => !existingIds.has(comment.comment_id))];
+      });
+      setHasMore(response.data.nextOffset !== null);
+    } catch (error) {
+      console.error("Error al cargar más comentarios:", error);
+      setLoadMoreError("No se pudieron cargar más comentarios. Inténtalo de nuevo.");
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
 
   const addComment = async (content: string) => {
     if (!content.trim()) return;
 
     try {
       setIsCommenting(true);
-      const token = getSessionToken();
       if (!token) throw new Error("No hay token de autenticación");
 
       const response = await commentService.createComment(
@@ -79,6 +86,7 @@ export function useComments(postId: string, initialComments: Comment[], hasIniti
         },
         ...prev,
       ]);
+      setCommentCount((count) => count + 1);
     } catch (error) {
       console.error("Error al agregar comentario:", error);
       throw error;
@@ -89,18 +97,18 @@ export function useComments(postId: string, initialComments: Comment[], hasIniti
 
   const deleteComment = async (commentId: string) => {
     try {
-      const token = getSessionToken();
       if (!token) throw new Error("No hay token de autenticación");
 
       await commentService.deleteComment(token, commentId);
       setComments((prev) =>
         prev.filter((comment) => comment.comment_id !== commentId)
       );
+      setCommentCount((count) => Math.max(0, count - 1));
     } catch (error) {
       console.error("Error al eliminar comentario:", error);
       throw error;
     }
   };
 
-  return { comments, isCommenting, addComment, deleteComment };
+  return { comments, commentCount, isCommenting, isLoadingMore, hasMore, loadMoreError, addComment, deleteComment, loadMoreComments };
 }

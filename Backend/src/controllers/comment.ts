@@ -8,7 +8,7 @@ import { getRequiredRouteParam } from '../utils/request';
 export class CommentController {
     constructor(private readonly commentService: CommentService) {};
 
-    public async getComments(req: Request<{ postId?: string }>, res: Response, next: NextFunction) {
+    public async getComments(req: Request<{ postId?: string }, unknown, unknown, { offset?: string; limit?: string }>, res: Response, next: NextFunction) {
         try {
             dbLogger.info('[CommentController] Get comments request received');
 
@@ -18,7 +18,17 @@ export class CommentController {
 
             // Extraer postId de los parámetros de la solicitud
             const { postId } = req.params;
-            const comments = await this.commentService.getComments(getRequiredRouteParam(postId, 'postId'));
+            const offset = Number.parseInt(req.query.offset ?? '0', 10);
+            const requestedLimit = Number.parseInt(req.query.limit ?? '10', 10);
+            const safeOffset = Number.isFinite(offset) && offset > 0 ? offset : 0;
+            const safeLimit = Number.isFinite(requestedLimit)
+                ? Math.min(Math.max(requestedLimit, 1), 25)
+                : 10;
+            const { comments, hasMore } = await this.commentService.getComments(
+                getRequiredRouteParam(postId, 'postId'),
+                safeOffset,
+                safeLimit
+            );
 
             // Si no hay comentarios, lanza un error
             if (!comments) {
@@ -30,7 +40,8 @@ export class CommentController {
                 success: true,
                 status: 200,
                 data: {
-                    comments
+                    comments,
+                    nextOffset: hasMore ? safeOffset + comments.length : null
                 }
             });
         } catch (error) {

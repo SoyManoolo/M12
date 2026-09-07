@@ -35,6 +35,7 @@ import type { Post as BasePost } from "~/types/notifications";
 interface Post extends BasePost {
   deleted_at: string | null;
   likes_count: number;
+  comments_count?: string | number;
   is_liked?: boolean;
   is_saved: boolean;
   comments: Array<{
@@ -145,7 +146,8 @@ export default function Perfil() {
             ...post,
             likes_count: Number(post.likes_count ?? 0),
             is_saved: false, // Valor por defecto
-            comments: [], // Valor por defecto
+            comments: post.comments || [],
+            comments_count: post.comments_count,
             author: post.author || {
               user_id: post.user_id,
               username: data.user?.username || '',
@@ -203,7 +205,8 @@ export default function Perfil() {
           ...post,
           likes_count: Number(post.likes_count ?? 0),
           is_saved: false,
-          comments: [],
+          comments: post.comments || [],
+          comments_count: post.comments_count,
           author: post.author || {
             user_id: post.user_id,
             username: profileUser.username,

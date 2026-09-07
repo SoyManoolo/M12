@@ -97,6 +97,7 @@ interface Post {
   updated_at: string;
   deleted_at: string | null;
   likes_count: string;
+  comments_count?: string | number;
   is_liked?: boolean;
   author: {
     user_id: string;
@@ -132,23 +133,8 @@ interface Post {
  * @method handleSave - Maneja el guardado de publicaciones
  */
 
-// Función para decodificar el token JWT
-const decodeToken = (token: string) => {
-  try {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-    }).join(''));
-    return JSON.parse(jsonPayload);
-  } catch (e) {
-    console.error('Error decodificando token:', e);
-    return null;
-  }
-};
-
 export default function InicioPage() {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -162,18 +148,13 @@ export default function InicioPage() {
     message: string;
     type: 'success' | 'error';
   } | null>(null);
-  let currentUserId: string | undefined = undefined;
+  const currentUserId = user?.user_id;
 
   // Estados para el ImageZoomModal global
   const [showImageZoomModal, setShowImageZoomModal] = useState(false);
   const [zoomImageUrl, setZoomImageUrl] = useState('');
 
   const [suggestedUsers, setSuggestedUsers] = useState<User[]>([]);
-
-  if (token) {
-    const decodedToken = decodeToken(token);
-    currentUserId = decodedToken?.user_id;
-  }
 
   useEffect(() => {
     const fetchData = async () => {
@@ -196,6 +177,7 @@ export default function InicioPage() {
             updated_at: post.updated_at,
             deleted_at: post.deleted_at,
             likes_count: post.likes_count,
+            comments_count: post.comments_count,
             is_liked: post.is_liked,
             author: post.author,
             is_saved: false,
@@ -273,6 +255,7 @@ export default function InicioPage() {
           updated_at: post.updated_at,
           deleted_at: post.deleted_at,
           likes_count: post.likes_count,
+          comments_count: post.comments_count,
           is_liked: post.is_liked,
           author: post.author,
           is_saved: false,
@@ -461,6 +444,7 @@ export default function InicioPage() {
                   comments={post.comments || []}
                   created_at={post.created_at}
                   likes_count={post.likes_count}
+                  comments_count={post.comments_count}
                   is_liked={post.is_liked}
                   is_saved={post.is_saved || false}
                   onLike={() => handleLike(post.post_id)}

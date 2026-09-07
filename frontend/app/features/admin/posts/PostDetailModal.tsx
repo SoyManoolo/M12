@@ -43,9 +43,7 @@ export default function PostDetailModal({ isOpen, onClose, post, onImageClick }:
       if (!isOpen || !post) return;
       
       try {
-        const token = localStorage.getItem('token');
         if (!token) return;
-
         const response = await commentService.getComments(token, post.post_id);
         if (response.success && response.data.comments) {
           setComments(response.data.comments);
@@ -56,7 +54,7 @@ export default function PostDetailModal({ isOpen, onClose, post, onImageClick }:
     };
 
     loadComments();
-  }, [isOpen, post]);
+  }, [isOpen, post, token]);
 
   const handleDeleteComment = async (commentId: string) => {
     setCommentToDelete(commentId);

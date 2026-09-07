@@ -28,6 +28,7 @@ interface CommentsResponse {
   message: string;
   data: {
     comments: Comment[];
+    nextOffset: number | null;
   };
 }
 
@@ -36,6 +37,7 @@ class CommentService {
     try {
       const response = await fetch(`${environment.apiUrl}/comments`, {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -67,9 +69,11 @@ class CommentService {
     }
   }
 
-  async getComments(token: string, postId: string): Promise<CommentsResponse> {
+  async getComments(token: string, postId: string, offset = 0, limit = 10): Promise<CommentsResponse> {
     try {
-      const response = await fetch(`${environment.apiUrl}/comments/${postId}`, {
+      const params = new URLSearchParams({ offset: String(offset), limit: String(limit) });
+      const response = await fetch(`${environment.apiUrl}/comments/${postId}?${params}`, {
+        credentials: 'include',
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -100,6 +104,7 @@ class CommentService {
     try {
       const response = await fetch(`${environment.apiUrl}/comments/${commentId}`, {
         method: 'DELETE',
+        credentials: 'include',
         headers: {
           'Authorization': `Bearer ${token}`
         }

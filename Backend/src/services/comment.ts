@@ -59,7 +59,7 @@ export class CommentService {
     }
 
     // Método para obtener comentarios de un post
-    public async getComments(post_id: string): Promise<PostComments[]> {
+    public async getComments(post_id: string, offset = 0, limit = 10): Promise<{ comments: PostComments[]; hasMore: boolean }> {
         try {
             // Verificar si el post existe
             const post = await existsPost(post_id);
@@ -77,10 +77,15 @@ export class CommentService {
                     as: 'author',
                     attributes: ['user_id', 'username', 'profile_picture']
                 }],
-                order: [['created_at', 'DESC']]
+                order: [['created_at', 'DESC']],
+                offset,
+                limit: limit + 1
             });
 
-            return comments;
+            return {
+                comments: comments.slice(0, limit),
+                hasMore: comments.length > limit
+            };
         } catch (error) {
             if (error instanceof AppError) {
                 dbLogger.error("[CommentService] Error al obtener comentarios:", {error});

@@ -13,7 +13,6 @@ import Post from '~/components/Inicio/Post';
 import { useAuth } from '~/hooks/useAuth';
 import ImageZoomModal from '~/components/Shared/ImageZoomModal';
 import { useState } from 'react';
-import { decodeToken } from '~/utils/token';
 
 interface UserPostsProps {
   posts: Array<{
@@ -26,6 +25,7 @@ interface UserPostsProps {
     updated_at: string;
     deleted_at: string | null;
     likes_count: number;
+    comments_count?: string | number;
     is_liked?: boolean;
     is_saved: boolean;
     comments: Array<{
@@ -54,18 +54,12 @@ interface UserPostsProps {
 }
 
 export default function UserPosts({ posts = [], onLike, onSave, onDelete, onEdit }: UserPostsProps) {
-  const { token } = useAuth();
-  let currentUserId: string | undefined = undefined;
+  const { user } = useAuth();
+  const currentUserId = user?.user_id;
   
   // Estados para el ImageZoomModal global
   const [showImageZoomModal, setShowImageZoomModal] = useState(false);
   const [zoomImageUrl, setZoomImageUrl] = useState('');
-
-  if (token) {
-    const decodedToken = decodeToken(token);
-    currentUserId = decodedToken?.user_id;
-    console.log('Token decodificado:', decodedToken);
-  }
 
   if (!posts || posts.length === 0) {
     return (
@@ -101,6 +95,7 @@ export default function UserPosts({ posts = [], onLike, onSave, onDelete, onEdit
           })) || []}
           created_at={post.created_at}
           likes_count={post.likes_count.toString()}
+          comments_count={post.comments_count}
           is_liked={post.is_liked}
           is_saved={post.is_saved}
           onLike={() => onLike(post.post_id)}

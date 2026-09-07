@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { FaTrash } from "react-icons/fa";
 import UserAvatar from "./UserAvatar";
 import { useTimeFormat } from "~/hooks/post/useTimeFormat";
@@ -19,7 +18,10 @@ interface PostCommentsProps {
   comments: Comment[];
   currentUserId?: string;
   onDelete: (commentId: string) => void;
-  maxInitialComments?: number;
+  hasMore?: boolean;
+  isLoadingMore?: boolean;
+  loadMoreError?: string | null;
+  onLoadMore?: () => Promise<void>;
 }
 
 /**
@@ -29,18 +31,16 @@ export default function PostComments({
   comments,
   currentUserId,
   onDelete,
-  maxInitialComments = 3,
+  hasMore = false,
+  isLoadingMore = false,
+  loadMoreError,
+  onLoadMore,
 }: PostCommentsProps) {
-  const [showAll, setShowAll] = useState(false);
   const { formatRelativeTime } = useTimeFormat();
 
   const navigateToProfile = (username: string) => {
     window.location.href = `/perfil?username=${username}`;
   };
-
-  const displayedComments = showAll
-    ? comments
-    : comments.slice(0, maxInitialComments);
 
   if (comments.length === 0) {
     return (
@@ -57,7 +57,7 @@ export default function PostComments({
   return (
     <>
       <div className="space-y-3 sm:space-y-5">
-        {displayedComments.map((comment) => (
+        {comments.map((comment) => (
           <div key={comment.comment_id} className="flex items-start gap-2 sm:gap-4">
             <UserAvatar
               profilePicture={comment.author.profile_picture}
@@ -98,14 +98,16 @@ export default function PostComments({
         ))}
       </div>
 
-      {comments.length > maxInitialComments && (
+      {hasMore && onLoadMore && (
         <button
-          onClick={() => setShowAll(!showAll)}
+          onClick={() => void onLoadMore()}
+          disabled={isLoadingMore}
           className="text-blue-400 hover:text-blue-300 text-xs sm:text-base font-medium w-full text-center py-1 sm:py-3 cursor-pointer mt-2 sm:mt-3"
         >
-          {showAll ? "Ver menos comentarios" : "Ver todos los comentarios"}
+          {isLoadingMore ? "Cargando comentarios..." : "Ver más comentarios"}
         </button>
       )}
+      {loadMoreError && <p className="mt-2 text-center text-xs text-red-400" role="alert">{loadMoreError}</p>}
     </>
   );
 }

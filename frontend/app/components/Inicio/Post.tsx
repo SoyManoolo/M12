@@ -42,6 +42,7 @@ interface PostProps {
   }>;
   created_at: string;
   likes_count: string;
+  comments_count?: string | number;
   is_liked?: boolean;
   onLike: () => void;
   currentUserId?: string;
@@ -63,6 +64,7 @@ export default function Post({
   comments: initialComments,
   created_at,
   likes_count,
+  comments_count,
   is_liked,
   onLike,
   currentUserId,
@@ -76,10 +78,11 @@ export default function Post({
     likes_count,
     is_liked
   );
-  const { comments, isCommenting, addComment, deleteComment } = useComments(
+  const totalComments = Number(comments_count ?? initialComments.length);
+  const { comments, commentCount, isCommenting, isLoadingMore, hasMore, loadMoreError, addComment, deleteComment, loadMoreComments } = useComments(
     post_id,
     initialComments,
-    true
+    totalComments
   );
 
   // Handlers
@@ -150,14 +153,17 @@ export default function Post({
         <div className="mb-2">
           <div className="flex items-center gap-2 mb-2">
             <h3 className="text-white font-semibold text-base">Comentarios</h3>
-            <span className="text-xs text-gray-400">({comments.length})</span>
+            <span className="text-xs text-gray-400">({commentCount})</span>
           </div>
           <div className="max-h-32 overflow-y-auto">
             <PostComments
               comments={comments}
               currentUserId={currentUserId}
               onDelete={deleteComment}
-              maxInitialComments={2}
+              hasMore={hasMore}
+              isLoadingMore={isLoadingMore}
+              loadMoreError={loadMoreError}
+              onLoadMore={loadMoreComments}
             />
           </div>
         </div>
@@ -215,14 +221,17 @@ export default function Post({
             <div className="flex-1 flex flex-col overflow-hidden">
               <div className="flex items-center gap-2 mb-3 flex-shrink-0">
                 <h3 className="text-white font-semibold text-lg">Comentarios</h3>
-                <span className="text-sm text-gray-400">({comments.length})</span>
+                <span className="text-sm text-gray-400">({commentCount})</span>
               </div>
               <div className="flex-1 overflow-y-auto pr-2">
                 <PostComments
                   comments={comments}
                   currentUserId={currentUserId}
                   onDelete={deleteComment}
-                  maxInitialComments={3}
+                  hasMore={hasMore}
+                  isLoadingMore={isLoadingMore}
+                  loadMoreError={loadMoreError}
+                  onLoadMore={loadMoreComments}
                 />
               </div>
             </div>

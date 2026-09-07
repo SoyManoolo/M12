@@ -11,6 +11,19 @@ interface Post {
   deleted_at: string | null;
   likes_count?: number | string;
   is_liked?: boolean;
+  comments_count?: number | string;
+  comments?: Array<{
+    comment_id: string;
+    post_id: string;
+    user_id: string;
+    content: string;
+    created_at: string;
+    author?: {
+      user_id: string;
+      username: string;
+      profile_picture: string | null;
+    };
+  }>;
   author?: {
     user_id: string;
     username: string;
