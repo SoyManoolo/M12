@@ -23,7 +23,7 @@ export default function Notification({
   }, [duration, onClose]);
 
   return (
-    <div className="fixed top-4 right-4 z-50 animate-fade-in">
+    <div className="fixed top-4 right-4 z-50 animate-fade-in" role="status" aria-live="polite">
       <div className={`flex items-center p-4 rounded-lg shadow-lg ${
         type === 'success' ? 'bg-green-900 border-green-700' : 'bg-red-900 border-red-700'
       } border`}>
@@ -36,4 +36,4 @@ export default function Notification({
       </div>
     </div>
   );
-} 
+}
