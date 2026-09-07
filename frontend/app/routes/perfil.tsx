@@ -35,6 +35,7 @@ import type { Post as BasePost } from "~/types/notifications";
 interface Post extends BasePost {
   deleted_at: string | null;
   likes_count: number;
+  is_liked?: boolean;
   is_saved: boolean;
   comments: Array<{
     comment_id: string;
@@ -63,7 +64,7 @@ export async function loader({ request }: { request: Request }) {
   
   // Obtener el token de las cookies
   const cookieHeader = request.headers.get("Cookie");
-  const token = cookieHeader?.split(";").find(c => c.trim().startsWith("token="))?.split("=")[1];
+  const token = cookieHeader?.split(";").find(c => c.trim().startsWith("session="))?.split("=")[1];
 
   if (!token) {
     return redirect("/login");

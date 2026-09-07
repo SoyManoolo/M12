@@ -7,6 +7,16 @@ import { AppError } from '../middlewares/errors/AppError';
 export class AuthController {
     constructor(private readonly authService: AuthService) { }
 
+    private setSessionCookie(res: Response, token: string) {
+        res.cookie('session', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+            maxAge: 60 * 60 * 1000,
+            path: '/',
+        });
+    }
+
     public async login(req: Request, res: Response, next: NextFunction) {
         try {
             dbLogger.info('[AuthController] Login request received');
@@ -21,6 +31,8 @@ export class AuthController {
 
             // Llamar al servicio de autenticación para iniciar sesión
             const token = await this.authService.login(id, password);
+
+            this.setSessionCookie(res, token);
 
             res.status(200).json({
                 success: true,
@@ -47,6 +59,8 @@ export class AuthController {
 
             // Llamar al servicio de autenticación para registrar un nuevo usuario
             const token = await this.authService.register(email, username, name, surname, password);
+
+            this.setSessionCookie(res, token);
 
             res.status(200).json({
                 success: true,
@@ -79,6 +93,13 @@ export class AuthController {
                 throw new AppError(403, "FormatJWT");
             }
             const response = await this.authService.logout(token);
+
+            res.clearCookie('session', {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+                path: '/',
+            });
 
             res.status(200).json({
                 success: true,

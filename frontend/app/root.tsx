@@ -9,6 +9,7 @@ import {
 import { AuthProvider } from "./hooks/useAuth.tsx";
 
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { ProtectedAdminRoute } from "./components/ProtectedAdminRoute";
 
 import "./tailwind.css";
 import "./styles/globals.css";
@@ -37,6 +38,12 @@ export default function App() {
                     {/* El contenido se renderiza SIEMPRE, tanto en SSR como en Cliente */}
                     {isPublicRoute ? (
                         <Outlet />
+                    ) : location.pathname.startsWith('/admin') ? (
+                        <ProtectedRoute>
+                            <ProtectedAdminRoute>
+                                <Outlet />
+                            </ProtectedAdminRoute>
+                        </ProtectedRoute>
                     ) : (
                         <ProtectedRoute>
                             <Outlet />

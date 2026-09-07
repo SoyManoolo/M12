@@ -34,16 +34,6 @@ interface AuthProviderProps {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-function syncAuthenticationCookie(token: string | null) {
-    if (typeof document === 'undefined') return;
-
-    if (token) {
-        document.cookie = `token=${encodeURIComponent(token)}; Path=/; SameSite=Lax; Max-Age=3600`;
-    } else {
-        document.cookie = 'token=; Path=/; SameSite=Lax; Max-Age=0';
-    }
-}
-
 export function AuthProvider({ children }: AuthProviderProps) {
     const [token, setTokenState] = useState<string | null>(() => {
         // Inicializar el token desde el almacenamiento disponible en el cliente.
@@ -73,7 +63,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // Wrapper para setToken que usa el mismo mecanismo en toda la sesión.
     const setToken = (newToken: string | null) => {
         setTokenState(newToken);
-        syncAuthenticationCookie(newToken);
         if (typeof window !== 'undefined') {
             if (newToken) setSessionToken(newToken);
             else clearSessionToken();
@@ -131,10 +120,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
             setUser(null);
         }, delay);
         return () => window.clearTimeout(timer);
-    }, [token]);
-
-    useEffect(() => {
-        syncAuthenticationCookie(token);
     }, [token]);
 
     const logout = async () => {

@@ -32,14 +32,18 @@ export class AuthToken {
     };
 
     public static async verifyToken(req: Request, res: Response, next: NextFunction): Promise<void> {
-        // Comprobamos si existe el token
+        // La cookie HttpOnly es la fuente principal. Conservamos Bearer como
+        // compatibilidad para clientes antiguos y llamadas no navegadas.
+        const cookieToken = req.headers.cookie
+            ?.split(';')
+            .map(value => value.trim())
+            .find(value => value.startsWith('session='))
+            ?.slice('session='.length);
         const authHeader: string | undefined = req.headers['authorization'];
-
-        // Si no existe el token o no es un string devolvemos un error
-        if (!authHeader || typeof authHeader !== 'string') throw new AppError(403, "MissingJWT");
-
-        // Si existe el token lo extraemos
-        const token: string = authHeader.split(' ')[1];
+        const bearerToken = authHeader?.startsWith('Bearer ')
+            ? authHeader.slice('Bearer '.length).trim()
+            : undefined;
+        const token = cookieToken ? decodeURIComponent(cookieToken) : bearerToken;
 
         // Si no existe el token devolvemos un error
         if (!token) throw new AppError(403, "FormatJWT");
