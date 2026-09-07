@@ -16,13 +16,14 @@ interface Comment {
 /**
  * Hook para manejar la lógica de comentarios en un post
  */
-export function useComments(postId: string, initialComments: Comment[]) {
+export function useComments(postId: string, initialComments: Comment[], hasInitialComments = false) {
   const [comments, setComments] = useState<Comment[]>(initialComments);
   const [isCommenting, setIsCommenting] = useState(false);
 
   // Cargar comentarios al montar
   useEffect(() => {
     const loadComments = async () => {
+      if (hasInitialComments) return;
       try {
         const token = getSessionToken();
         if (!token) return;
@@ -48,7 +49,7 @@ export function useComments(postId: string, initialComments: Comment[]) {
     };
 
     loadComments();
-  }, [postId]);
+  }, [postId, hasInitialComments]);
 
   const addComment = async (content: string) => {
     if (!content.trim()) return;

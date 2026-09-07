@@ -26,7 +26,7 @@ export class PostController {
             const cursor = req.query.cursor as string | undefined;
 
             // Llama al servicio para obtener los posts
-            const posts = await this.postService.getPostsUser(filters, limit, cursor);
+            const posts = await this.postService.getPostsUser(filters, limit, cursor, req.user?.user_id);
 
             // Devuelve una respuesta JSON con los posts obtenidos (puede ser un array vacío)
             res.status(200).json({
@@ -82,7 +82,7 @@ export class PostController {
             const cursor = req.query.cursor as string | undefined;
 
             // Llama al servicio para obtener los posts
-            const posts = await this.postService.getPosts(limit, cursor);
+            const posts = await this.postService.getPosts(limit, cursor, req.user?.user_id);
 
             // Devuelve una respuesta JSON con los posts obtenidos (puede ser un array vacío)
             res.status(200).json({

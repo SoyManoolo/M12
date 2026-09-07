@@ -5,8 +5,8 @@ import { getSessionToken } from "~/utils/session";
 /**
  * Hook para manejar la lógica de likes en un post
  */
-export function usePostLike(postId: string, initialLikesCount: string) {
-  const [isLiked, setIsLiked] = useState(false);
+export function usePostLike(postId: string, initialLikesCount: string, initialIsLiked?: boolean) {
+  const [isLiked, setIsLiked] = useState(initialIsLiked ?? false);
   const [likesCount, setLikesCount] = useState(parseInt(initialLikesCount));
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -14,6 +14,7 @@ export function usePostLike(postId: string, initialLikesCount: string) {
   // Verificar si el usuario ya dio like al cargar
   useEffect(() => {
     const checkLikeStatus = async () => {
+      if (typeof initialIsLiked === "boolean") return;
       try {
         const token = getSessionToken();
         if (!token) return;
@@ -26,7 +27,7 @@ export function usePostLike(postId: string, initialLikesCount: string) {
     };
 
     checkLikeStatus();
-  }, [postId]);
+  }, [postId, initialIsLiked]);
 
   const toggleLike = async () => {
     const previousIsLiked = isLiked;

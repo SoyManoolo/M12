@@ -97,6 +97,7 @@ interface Post {
   updated_at: string;
   deleted_at: string | null;
   likes_count: string;
+  is_liked?: boolean;
   author: {
     user_id: string;
     username: string;
@@ -195,14 +196,15 @@ export default function InicioPage() {
             updated_at: post.updated_at,
             deleted_at: post.deleted_at,
             likes_count: post.likes_count,
+            is_liked: post.is_liked,
             author: post.author,
             is_saved: false,
             comments: (post.comments || []).map((c: any) => ({
               comment_id: c.comment_id,
               author: {
-                user_id: c.user_id,
-                username: c.username,
-                profile_picture: c.profile_picture || null
+                user_id: c.author?.user_id || c.user_id,
+                username: c.author?.username || '',
+                profile_picture: c.author?.profile_picture || null
               },
               content: c.content,
               created_at: c.created_at
@@ -271,14 +273,15 @@ export default function InicioPage() {
           updated_at: post.updated_at,
           deleted_at: post.deleted_at,
           likes_count: post.likes_count,
+          is_liked: post.is_liked,
           author: post.author,
           is_saved: false,
           comments: (post.comments || []).map((c: any) => ({
             comment_id: c.comment_id,
             author: {
-              user_id: c.user_id,
-              username: c.username,
-              profile_picture: c.profile_picture || null
+              user_id: c.author?.user_id || c.user_id,
+              username: c.author?.username || '',
+              profile_picture: c.author?.profile_picture || null
             },
             content: c.content,
             created_at: c.created_at
@@ -458,6 +461,7 @@ export default function InicioPage() {
                   comments={post.comments || []}
                   created_at={post.created_at}
                   likes_count={post.likes_count}
+                  is_liked={post.is_liked}
                   is_saved={post.is_saved || false}
                   onLike={() => handleLike(post.post_id)}
                   onSave={() => handleSave(post.post_id)}

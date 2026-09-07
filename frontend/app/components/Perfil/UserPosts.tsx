@@ -26,6 +26,7 @@ interface UserPostsProps {
     updated_at: string;
     deleted_at: string | null;
     likes_count: number;
+    is_liked?: boolean;
     is_saved: boolean;
     comments: Array<{
       comment_id: string;
@@ -33,6 +34,11 @@ interface UserPostsProps {
       user_id: string;
       content: string;
       created_at: string;
+      author?: {
+        user_id: string;
+        username: string;
+        profile_picture: string | null;
+      };
     }>;
     author: {
       user_id: string;
@@ -86,15 +92,16 @@ export default function UserPosts({ posts = [], onLike, onSave, onDelete, onEdit
           comments={post.comments?.map(comment => ({
             comment_id: comment.comment_id,
             author: {
-              user_id: comment.user_id,
-              username: post.author.username, // Temporal: usar el username del autor del post
-              profile_picture: null // Temporal: sin foto de perfil del comentarista
+              user_id: comment.author?.user_id || comment.user_id,
+              username: comment.author?.username || '',
+              profile_picture: comment.author?.profile_picture || null
             },
             content: comment.content,
             created_at: comment.created_at
           })) || []}
           created_at={post.created_at}
           likes_count={post.likes_count.toString()}
+          is_liked={post.is_liked}
           is_saved={post.is_saved}
           onLike={() => onLike(post.post_id)}
           onSave={() => onSave(post.post_id)}
@@ -115,4 +122,4 @@ export default function UserPosts({ posts = [], onLike, onSave, onDelete, onEdit
       />
     </div>
   );
-} 
+}

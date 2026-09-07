@@ -10,6 +10,7 @@ interface Post {
   updated_at: string;
   deleted_at: string | null;
   likes_count?: number | string;
+  is_liked?: boolean;
   author?: {
     user_id: string;
     username: string;
@@ -266,4 +267,4 @@ class PostService {
   }
 }
 
-export const postService = new PostService(); 
+export const postService = new PostService();

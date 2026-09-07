@@ -12,7 +12,7 @@ const postController = new PostController(postService);
 const postValidator = new PostValidator();
 const { CreatePostValidator, UpdatePostValidator } = postValidator;
 
-router.get('/username', async (req: Request, res: Response, next: NextFunction) => {
+router.get('/username', AuthToken.verifyToken, async (req: Request, res: Response, next: NextFunction) => {
     await postController.getPostsUser(req, res, next);
 });
 
@@ -20,7 +20,7 @@ router.post('/', AuthToken.verifyToken, CreatePostValidator, upload.single('medi
     await postController.createPost(req, res, next);
 });
 
-router.get('/', async (req: Request, res: Response, next: NextFunction) => {
+router.get('/', AuthToken.verifyToken, async (req: Request, res: Response, next: NextFunction) => {
     await postController.getPosts(req, res, next);
 });
 

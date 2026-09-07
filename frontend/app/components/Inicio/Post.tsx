@@ -42,6 +42,7 @@ interface PostProps {
   }>;
   created_at: string;
   likes_count: string;
+  is_liked?: boolean;
   onLike: () => void;
   currentUserId?: string;
   onDelete?: (postId: string) => void;
@@ -62,6 +63,7 @@ export default function Post({
   comments: initialComments,
   created_at,
   likes_count,
+  is_liked,
   onLike,
   currentUserId,
   onDelete,
@@ -71,11 +73,13 @@ export default function Post({
   // Hooks personalizados para manejar la lógica
   const { isLiked, likesCount, isLoading, error: likeError, toggleLike } = usePostLike(
     post_id,
-    likes_count
+    likes_count,
+    is_liked
   );
   const { comments, isCommenting, addComment, deleteComment } = useComments(
     post_id,
-    initialComments
+    initialComments,
+    true
   );
 
   // Handlers

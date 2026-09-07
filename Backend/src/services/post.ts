@@ -1,6 +1,6 @@
 import { Op, where } from "sequelize";
 import { AppError } from "../middlewares/errors/AppError";
-import { Post, PostLikes, User } from "../models";
+import { Post, PostComments, PostLikes, User } from "../models";
 import { existsPost, existsUser } from "../utils/modelExists";
 import { PostAttributes, UserFilters } from "../types/custom";
 import { sequelize } from "../config/database";
@@ -57,7 +57,7 @@ export class PostService {
     };
 
     // Método para obtener los posts de un usuario
-    public async getPostsUser(filters: UserFilters, limit: number = 10, cursor?: string) {
+    public async getPostsUser(filters: UserFilters, limit: number = 10, cursor?: string, viewerId?: string) {
         try {
             dbLogger.info(`[PostService] Getting posts for user with filters: ${JSON.stringify(filters)}`);
             if (Object.keys(filters).length === 0) {
@@ -85,6 +85,14 @@ export class PostService {
                         model: User,
                         attributes: ['user_id', 'username', 'profile_picture', 'name'],
                         as: 'author'
+                    },
+                    {
+                        model: PostComments,
+                        as: 'comments',
+                        separate: true,
+                        limit: 3,
+                        order: [['created_at', 'DESC']],
+                        include: [{ model: User, attributes: ['user_id', 'username', 'profile_picture'], as: 'author' }]
                     }
                 ],
                 attributes: {
@@ -105,6 +113,10 @@ export class PostService {
                                 AND post_comments.deleted_at IS NULL
                             )`),
                             'comments_count'
+                        ],
+                        [
+                            sequelize.literal(viewerId ? `EXISTS (SELECT 1 FROM post_likes WHERE post_likes.post_id = "Post".post_id AND post_likes.user_id = ${sequelize.escape(viewerId)})` : 'FALSE'),
+                            'is_liked'
                         ]
                     ]
                 },
@@ -161,7 +173,7 @@ export class PostService {
     }
 
     // Método para obtener los posts paginados
-    public async getPosts(limit: number = 10, cursor?: string) {
+    public async getPosts(limit: number = 10, cursor?: string, viewerId?: string) {
         try {
             dbLogger.info('[PostService] Getting all posts');
 
@@ -173,6 +185,14 @@ export class PostService {
                         model: User,
                         attributes: ['user_id', 'username', 'profile_picture', 'name'],
                         as: 'author'
+                    },
+                    {
+                        model: PostComments,
+                        as: 'comments',
+                        separate: true,
+                        limit: 3,
+                        order: [['created_at', 'DESC']],
+                        include: [{ model: User, attributes: ['user_id', 'username', 'profile_picture'], as: 'author' }]
                     }
                 ],
                 attributes: {
@@ -193,6 +213,10 @@ export class PostService {
                                 AND post_comments.deleted_at IS NULL
                             )`),
                             'comments_count'
+                        ],
+                        [
+                            sequelize.literal(viewerId ? `EXISTS (SELECT 1 FROM post_likes WHERE post_likes.post_id = "Post".post_id AND post_likes.user_id = ${sequelize.escape(viewerId)})` : 'FALSE'),
+                            'is_liked'
                         ]
                     ]
                 },
