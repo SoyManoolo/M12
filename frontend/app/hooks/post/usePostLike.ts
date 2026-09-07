@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { postService } from "~/services/post.service";
-import { getSessionToken } from "~/utils/session";
+import { useAuth } from "~/hooks/useAuth";
 
 /**
  * Hook para manejar la lógica de likes en un post
  */
 export function usePostLike(postId: string, initialLikesCount: string, initialIsLiked?: boolean) {
+  const { token } = useAuth();
   const [isLiked, setIsLiked] = useState(initialIsLiked ?? false);
   const [likesCount, setLikesCount] = useState(parseInt(initialLikesCount));
   const [isLoading, setIsLoading] = useState(false);
@@ -16,7 +17,6 @@ export function usePostLike(postId: string, initialLikesCount: string, initialIs
     const checkLikeStatus = async () => {
       if (typeof initialIsLiked === "boolean") return;
       try {
-        const token = getSessionToken();
         if (!token) return;
 
         const { hasLiked } = await postService.checkUserLike(token, postId);
@@ -27,7 +27,7 @@ export function usePostLike(postId: string, initialLikesCount: string, initialIs
     };
 
     checkLikeStatus();
-  }, [postId, initialIsLiked]);
+  }, [postId, initialIsLiked, token]);
 
   const toggleLike = async () => {
     const previousIsLiked = isLiked;
@@ -35,7 +35,6 @@ export function usePostLike(postId: string, initialLikesCount: string, initialIs
     try {
       setIsLoading(true);
       setError(null);
-      const token = getSessionToken();
       if (!token) throw new Error("No hay token de autenticación");
 
       if (previousIsLiked) {

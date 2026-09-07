@@ -7,6 +7,7 @@ import { Op } from "sequelize";
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../../errors/AppError";
 import { env } from './../../../config/env'
+import { ALLOWED_ORIGINS } from '../../../config/cors';
 
 
 export class AuthToken {
@@ -44,6 +45,16 @@ export class AuthToken {
             ? authHeader.slice('Bearer '.length).trim()
             : undefined;
         const token = cookieToken ? decodeURIComponent(cookieToken) : bearerToken;
+
+        // En producción la cookie puede viajar entre el frontend y la API.
+        // Las mutaciones autenticadas con cookie exigen un Origin permitido para
+        // impedir que una página externa aproveche esa sesión (CSRF).
+        if (cookieToken && !['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
+            const origin = req.headers.origin;
+            if (!origin || !ALLOWED_ORIGINS.includes(origin)) {
+                throw new AppError(403, 'Forbidden');
+            }
+        }
 
         // Si no existe el token devolvemos un error
         if (!token) throw new AppError(403, "FormatJWT");

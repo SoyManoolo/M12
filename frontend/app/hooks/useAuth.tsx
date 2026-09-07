@@ -1,8 +1,6 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { authService } from '../services/auth.service';
-import { decodeToken, getUserInfo, isTokenExpired } from '../utils/token';
 import { developmentLogger } from '../utils/logger';
-import { clearSessionToken, getSessionToken, setSessionToken } from '../utils/session';
 
 interface User {
     user_id: string;
@@ -21,9 +19,11 @@ interface User {
 }
 
 interface AuthContextType {
+    /** Marcador de compatibilidad para servicios heredados; nunca contiene un JWT. */
     token: string | null;
     setToken: (token: string | null) => void;
     isAuthenticated: boolean;
+    isLoading: boolean;
     user: User | null;
     logout: () => Promise<void>;
 }
@@ -35,92 +35,45 @@ interface AuthProviderProps {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: AuthProviderProps) {
-    const [token, setTokenState] = useState<string | null>(() => {
-        // Inicializar el token desde el almacenamiento disponible en el cliente.
-        if (typeof window !== 'undefined') {
-            try {
-                const storedToken = getSessionToken();
-                if (storedToken) {
-                    // Verificar que el token sea válido (usa el decodeToken ya seguro para SSR)
-                    const decodedToken = decodeToken(storedToken);
-                    if (!decodedToken || isTokenExpired(storedToken)) {
-                        clearSessionToken();
-                        return null;
-                    }
-                    return storedToken;
-                }
-            } catch (error) {
-                developmentLogger.warn('No se pudo acceder al almacenamiento de sesión.', error);
-                return null;
-            }
-        }
-        return null;
-    });
-
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [sessionVersion, setSessionVersion] = useState(0);
 
-    // Wrapper para setToken que usa el mismo mecanismo en toda la sesión.
-    const setToken = (newToken: string | null) => {
-        setTokenState(newToken);
-        if (typeof window !== 'undefined') {
-            if (newToken) setSessionToken(newToken);
-            else clearSessionToken();
+    // Se conserva la firma para los consumidores existentes. El valor recibido
+    // no se guarda: la cookie HttpOnly es la única fuente de sesión.
+    const setToken = useCallback((newToken: string | null) => {
+        if (!newToken) {
+            setIsAuthenticated(false);
+            setUser(null);
+            return;
         }
-    };
+        setIsAuthenticated(true);
+        setSessionVersion(version => version + 1);
+    }, []);
 
     useEffect(() => {
         const initializeAuth = async () => {
             setIsLoading(true);
-            if (token) {
-                try {
-                    const decodedToken = decodeToken(token);
-                    if (decodedToken) {
-                        // OJO: MODIFICACIÓN AQUÍ. Pasar el token como segundo argumento.
-                        const userInfo = await getUserInfo(decodedToken.user_id, token);
-                        if (userInfo?.success) {
-                            setUser(userInfo.data);
-                        } else if (userInfo?.status === 401 || userInfo?.status === 403) {
-                            // Solo una respuesta explícita de autorización invalida la sesión.
-                            setToken(null);
-                            setUser(null);
-                        } else {
-                            // Ante un fallo transitorio se conserva el token para que la siguiente
-                            // navegación o recarga pueda reintentar la consulta.
-                            setUser(null);
-                        }
-                    } else {
-                        // Token inválido
-                        setToken(null);
-                        setUser(null);
-                    }
-                } catch (error) {
-                    developmentLogger.error('Error al inicializar la autenticación.', error);
-                    setToken(null);
+            try {
+                const userInfo = await authService.getCurrentUser();
+                if (userInfo.success && userInfo.data) {
+                    setUser(userInfo.data as User);
+                    setIsAuthenticated(true);
+                } else {
                     setUser(null);
+                    setIsAuthenticated(false);
                 }
-            } else {
+            } catch (error) {
+                developmentLogger.error('Error al inicializar la autenticación.', error);
                 setUser(null);
+                setIsAuthenticated(false);
             }
             setIsLoading(false);
         };
 
         initializeAuth();
-    }, [token]);
-
-    // Expira la sesión en el cliente aunque el usuario no navegue. Así las
-    // rutas protegidas redirigen al login inmediatamente al vencer el JWT.
-    useEffect(() => {
-        if (!token) return;
-        const decoded = decodeToken(token);
-        if (!decoded?.exp) return;
-        const delay = Math.max(0, decoded.exp * 1000 - Date.now());
-        const timer = window.setTimeout(() => {
-            setToken(null);
-            setUser(null);
-        }, delay);
-        return () => window.clearTimeout(timer);
-    }, [token]);
+    }, [sessionVersion]);
 
     const logout = async () => {
         try {
@@ -136,11 +89,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     };
 
     const value: AuthContextType = {
-        token,
+        token: isAuthenticated ? 'cookie-session' : null,
         setToken,
         // CRÍTICO: isAuthenticated ahora verifica que tengamos token Y que no estemos cargando
         // Esto evita que se redirija a login mientras se está cargando el usuario
-        isAuthenticated: !!token && !isLoading,
+        isAuthenticated: isAuthenticated && !isLoading,
+        isLoading,
         user,
         logout
     };

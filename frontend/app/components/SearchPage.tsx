@@ -17,7 +17,6 @@ import {
 } from 'react-icons/fa';
 import { useAuth } from '~/hooks/useAuth';
 import { friendshipService } from '~/services/friendship.service';
-import { jwtDecode } from 'jwt-decode';
 import SecureImage from '~/components/Shared/SecureImage';
 
 interface User {
@@ -52,13 +51,14 @@ export default function SearchPage() {
   const [friendshipStatuses, setFriendshipStatuses] = useState<Record<string, FriendshipStatus>>({});
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const navigate = useNavigate();
-  const { token } = useAuth();
+  const { token, user: currentUser } = useAuth();
 
   // Cargar amigos al montar el componente
   useEffect(() => {
     const fetchFriends = async () => {
       try {
         const response = await fetch(`${environment.apiUrl}/friendship/friends`, {
+          credentials: 'include',
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
@@ -83,6 +83,7 @@ export default function SearchPage() {
         try {
           setLoading(true);
           const response = await fetch(`${environment.apiUrl}/users`, {
+            credentials: 'include',
             headers: {
               'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json',
@@ -90,14 +91,10 @@ export default function SearchPage() {
           });
           const data = await response.json();
           if (data.success && data.data && data.data.users) {
-            // Obtener el ID del usuario actual del token
-            const decodedToken = jwtDecode(token || '') as { user_id: string };
-            const currentUserId = decodedToken.user_id;
-
             // Filtrar usuarios que no son amigos y no es el usuario actual
             const friendIds = new Set(friends.map(friend => friend.user.user_id));
             const suggestedUsers = data.data.users.filter((user: User) => 
-              !friendIds.has(user.user_id) && user.user_id !== currentUserId
+              !friendIds.has(user.user_id) && user.user_id !== currentUser?.user_id
             );
             setSuggestedFriends(suggestedUsers);
           } else {
@@ -113,7 +110,7 @@ export default function SearchPage() {
     };
 
     fetchSuggestedUsers();
-  }, [activeTab, friends, token]);
+  }, [activeTab, friends, token, currentUser?.user_id]);
 
   // Cargar estados de amistad para usuarios sugeridos
   useEffect(() => {

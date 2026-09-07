@@ -19,7 +19,6 @@ import Message from '../components/Shared/Message';
 import { authService } from '../services/auth.service';
 import Notification from '../components/Shared/Notification';
 import ConfirmModal from '../components/Shared/ConfirmModal';
-import { decodeToken } from '../utils/token';
 import SecureImage from '../components/Shared/SecureImage';
 
 export default function ConfiguracionPage() {
@@ -59,6 +58,7 @@ export default function ConfiguracionPage() {
       try {
         const response = await fetch(`${environment.apiUrl}/users/me`, {
           method: 'GET',
+          credentials: 'include',
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
@@ -116,14 +116,6 @@ export default function ConfiguracionPage() {
     try {
       if (!token || !userId || !user) {
         showMessage('error', 'No pudimos obtener tu información de sesión');
-        return;
-      }
-
-      // Verificar que el token sea válido
-      const decodedToken = decodeToken(token);
-      if (!decodedToken) {
-        showMessage('error', 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
-        navigate('/login');
         return;
       }
 

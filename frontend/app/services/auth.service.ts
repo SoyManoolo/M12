@@ -1,6 +1,5 @@
 import { environment } from '../config/environment';
 import { developmentLogger } from '../utils/logger';
-import { clearSessionToken, getSessionToken } from '../utils/session';
 
 /**
  * Servicio de Autenticación
@@ -42,8 +41,13 @@ interface RegisterData {
 interface AuthResponse {
     success: boolean;   // Indica si la operación fue exitosa
     status: number;     // Código de estado HTTP
-    token?: string;     // Token JWT (opcional)
     message?: string;   // Mensaje de respuesta (opcional)
+}
+
+interface CurrentUserResponse {
+    success: boolean;
+    status: number;
+    data?: unknown;
 }
 
 interface PasswordResetResponse {
@@ -173,7 +177,6 @@ export const authService = {
             return {
                 success: true,
                 status: response.status,
-                token: data.token,
                 message: data.message || 'Inicio de sesión exitoso'
             };
 
@@ -296,20 +299,10 @@ export const authService = {
      */
     async logout(): Promise<AuthResponse> {
         try {
-            const token = getSessionToken();
-            if (!token) {
-                return {
-                    success: false,
-                    status: 401,
-                    message: 'No hay sesión activa'
-                };
-            }
-
             const response = await fetch(`${environment.apiUrl}/auth/logout`, {
                 method: 'DELETE',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                    'Content-Type': 'application/json'
                 },
                 credentials: 'include' // CRÍTICO: Necesario para CORS con credentials: true
             });
@@ -324,7 +317,6 @@ export const authService = {
                 };
             }
 
-            clearSessionToken();
             return {
                 success: true,
                 status: response.status,
@@ -337,6 +329,21 @@ export const authService = {
                 status: 500,
                 message: 'No pudimos conectarnos al servidor. Por favor, verifica tu conexión a internet'
             };
+        }
+    },
+
+    /** Restaura la identidad desde la cookie HttpOnly sin exponer el JWT al cliente. */
+    async getCurrentUser(): Promise<CurrentUserResponse> {
+        try {
+            const response = await fetch(`${environment.apiUrl}/users/me`, {
+                credentials: 'include',
+                headers: { 'Ngrok-Skip-Browser-Warning': 'true' }
+            });
+            const data = await response.json();
+            return { ...data, status: response.status };
+        } catch (error) {
+            developmentLogger.error('No se pudo restaurar la sesión.', error);
+            return { success: false, status: 0 };
         }
     }
 }; 

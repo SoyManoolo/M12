@@ -18,40 +18,10 @@
 
 import { useState, useEffect } from 'react';
 import { Form, Link, useNavigate } from "react-router";
-import type { ActionFunction } from "react-router";
-import { redirect } from "react-router";
 import { authService } from '../services/auth.service';
 import { useAuth } from '../hooks/useAuth.tsx';
 import Notification from '../components/Shared/Notification';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
-
-/**
- * @function action
- * @description Función del servidor que maneja el envío del formulario de inicio de sesión
- * @param {Object} request - Objeto de solicitud HTTP
- * @returns {Promise<Response>} Redirección a la página de inicio o de error
- */
-export const action: ActionFunction = async ({ request }) => {
-    const formData = await request.formData();
-    const id = formData.get('id') as string;
-    const password = formData.get('password') as string;
-
-    try {
-        const response = await authService.login({ id, password });
-
-        if (response.success && response.token) {
-            return redirect('/inicio', {
-                headers: {
-                    'Set-Cookie': `token=${response.token}; Path=/; HttpOnly; SameSite=Lax`
-                }
-            });
-        } else {
-            return redirect('/login');
-        }
-    } catch (error) {
-        return redirect('/login');
-    }
-};
 
 /**
  * @function LoginPage
@@ -99,8 +69,8 @@ export default function LoginPage() {
         try {
             const response = await authService.login({ id, password });
 
-            if (response.success && response.token) {
-                setToken(response.token);
+            if (response.success) {
+                setToken('cookie-session');
                 
                 setNotification({
                     message: response.message || '¡Bienvenido de nuevo!',

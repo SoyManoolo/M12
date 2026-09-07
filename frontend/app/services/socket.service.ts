@@ -25,7 +25,7 @@ class SocketService {
         return SocketService.instance;
     }
 
-    public async connect(token: string): Promise<void> {
+    public async connect(_token: string): Promise<void> {
         // Protección SSR
         if (typeof window === 'undefined') {
             console.warn('Socket.connect llamado en SSR, ignorando.');
@@ -53,7 +53,7 @@ class SocketService {
         }
 
         this.socket = socketIO.io(environment.apiUrl, {
-            auth: { token },
+            withCredentials: true,
             transports: ['websocket'],
             reconnection: true,
             reconnectionAttempts: 5,

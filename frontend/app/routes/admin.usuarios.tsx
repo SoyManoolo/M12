@@ -17,7 +17,6 @@ import ConfirmModal from '~/components/Shared/ConfirmModal';
 import Notification from '~/components/Shared/Notification';
 import { useAuth } from '~/hooks/useAuth';
 import { Link, useNavigate } from 'react-router';
-import { jwtDecode } from 'jwt-decode';
 import SecureImage from '../components/Shared/SecureImage';
 
 // El modal de edición espera UserProfile. Necesitaremos convertir User a UserProfile al abrir el modal.
@@ -39,7 +38,7 @@ function EditUserModal({ isOpen, onClose, user, onSave, isLoading }: EditUserMod
     password: ''
   });
   const [showWarningModal, setShowWarningModal] = useState(false);
-  const { token, logout } = useAuth();
+  const { user: currentUser, logout } = useAuth();
   const navigate = useNavigate();
   const [notification, setNotification] = useState<{
     message: string;
@@ -80,9 +79,7 @@ function EditUserModal({ isOpen, onClose, user, onSave, isLoading }: EditUserMod
   };
 
   const isCurrentUser = () => {
-    if (!token || !user) return false;
-    const decodedToken = jwtDecode(token) as { user_id: string };
-    return decodedToken.user_id === user.user_id;
+    return currentUser?.user_id === user?.user_id;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

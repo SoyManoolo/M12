@@ -1,38 +1,27 @@
 import { useNavigate, useLocation } from 'react-router';
 import { useAuth } from '../hooks/useAuth';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { isAuthenticated, token } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const [isChecking, setIsChecking] = useState(true);
-
   useEffect(() => {
-    // Dar un pequeño tiempo para que el token se cargue desde localStorage
-    const timer = setTimeout(() => {
-      setIsChecking(false);
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
-    if (!isChecking && !isAuthenticated && !token) {
+    if (!isLoading && !isAuthenticated) {
       // Redirigir al login usando navigate en lugar de Navigate component
       navigate('/login', { 
         state: { from: location.pathname }, 
         replace: true 
       });
     }
-  }, [isAuthenticated, token, isChecking, navigate, location.pathname]);
+  }, [isAuthenticated, isLoading, navigate, location.pathname]);
 
   // Mostrar loading mientras verificamos la autenticación
-  if (isChecking) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-950">
         <div className="text-center">
@@ -44,7 +33,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   // Si no está autenticado, no renderizar nada mientras se redirige
-  if (!isAuthenticated || !token) {
+  if (!isAuthenticated) {
     return null;
   }
 

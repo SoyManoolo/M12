@@ -12,17 +12,23 @@ const JWT_SECRET = env.JWT_SECRET;
 export const socketAuthMiddleware = (socket: Socket) => {
     socket.use(async (packet, next) => {
         try {
-            // Extraer el token del paquete de manera más robusta
-            let token: string | undefined;
+            // La cookie HttpOnly es la fuente primaria también en Socket.IO.
+            // Los tokens incluidos en eventos se conservan solo para clientes antiguos.
+            const cookieToken = socket.handshake.headers.cookie
+                ?.split(';')
+                .map(value => value.trim())
+                .find(value => value.startsWith('session='))
+                ?.slice('session='.length);
+            let token: string | undefined = cookieToken ? decodeURIComponent(cookieToken) : undefined;
 
             // Intentar obtener el token de diferentes ubicaciones posibles
-            if (packet[0] === 'join-user' && typeof packet[1] === 'object') {
+            if (!token && packet[0] === 'join-user' && typeof packet[1] === 'object') {
                 // Para el evento join-user, el token viene en el objeto data
                 token = packet[1].token;
-            } else if (packet[0] === 'chat-message' && typeof packet[1] === 'object') {
+            } else if (!token && packet[0] === 'chat-message' && typeof packet[1] === 'object') {
                 // Para el evento chat-message, el token viene en el objeto data
                 token = packet[1].token;
-            } else if (typeof packet[1] === 'object') {
+            } else if (!token && typeof packet[1] === 'object') {
                 // Para otros eventos, intentar obtener el token de diferentes ubicaciones
                 token = packet[1].token ||
                     (packet[1].data && packet[1].data.token) ||

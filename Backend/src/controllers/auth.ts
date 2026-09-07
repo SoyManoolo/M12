@@ -17,6 +17,20 @@ export class AuthController {
         });
     }
 
+    private getSessionToken(req: Request): string | undefined {
+        const cookieToken = req.headers.cookie
+            ?.split(';')
+            .map(value => value.trim())
+            .find(value => value.startsWith('session='))
+            ?.slice('session='.length);
+        const authorization = req.headers.authorization;
+        const bearerToken = authorization?.startsWith('Bearer ')
+            ? authorization.slice('Bearer '.length).trim()
+            : undefined;
+
+        return cookieToken ? decodeURIComponent(cookieToken) : bearerToken;
+    }
+
     public async login(req: Request, res: Response, next: NextFunction) {
         try {
             dbLogger.info('[AuthController] Login request received');
@@ -37,8 +51,7 @@ export class AuthController {
             res.status(200).json({
                 success: true,
                 status: 200,
-                message: i18n.__('success.auth.login'),
-                token
+                message: i18n.__('success.auth.login')
             });
         } catch (error) {
             next(error);
@@ -65,8 +78,7 @@ export class AuthController {
             res.status(200).json({
                 success: true,
                 status: 200,
-                message: i18n.__('success.auth.register'),
-                token
+                message: i18n.__('success.auth.register')
             });
         } catch (error) {
             next(error);
@@ -81,16 +93,9 @@ export class AuthController {
             const locale = req.headers['accept-language'] || 'en';
             i18n.setLocale(locale);
 
-            // Extraer el token del encabezado Authorization
-            const authHeader: string | undefined = req.headers['authorization'];
-            if (!authHeader || typeof authHeader !== 'string') {
-                throw new AppError(403, "MissingJWT");
-            }
-
-            // Verificar que el token tenga el formato correcto "Bearer token
-            const token: string = authHeader.split(' ')[1];
+            const token = this.getSessionToken(req);
             if (!token) {
-                throw new AppError(403, "FormatJWT");
+                throw new AppError(403, 'MissingJWT');
             }
             const response = await this.authService.logout(token);
 

@@ -2,36 +2,6 @@ import { environment } from '../config/environment';
 import type { UserProfile, ApiResponse, PaginatedUsersResponse } from '../types/user.types';
 import type { User } from '~/types/user.types';
 
-// Función helper para decodificar token JWT manualmente (funciona en SSR y cliente)
-function decodeTokenSafe(token: string): { user_id: string } | null {
-    try {
-        const parts = token.split('.');
-        if (parts.length !== 3) {
-            console.error('Token JWT inválido: no tiene 3 partes');
-            return null;
-        }
-        
-        // Decodificar la parte del payload (segunda parte)
-        const payload = parts[1];
-        
-        // En el navegador, usar atob; en Node.js, usar Buffer
-        let decoded: string;
-        if (typeof window !== 'undefined') {
-            // Cliente: usar atob (disponible en navegadores)
-            decoded = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
-        } else {
-            // SSR: usar Buffer
-            decoded = Buffer.from(payload, 'base64').toString('utf8');
-        }
-        
-        const parsed = JSON.parse(decoded);
-        return parsed.user_id ? { user_id: parsed.user_id } : null;
-    } catch (error) {
-        console.error('Error al decodificar token:', error);
-        return null;
-    }
-}
-
 export const userService = {
     /**
      * Obtiene todos los usuarios
@@ -51,9 +21,11 @@ export const userService = {
 
             const data = await response.json();
 
-            // Obtener el ID del usuario actual del token
-            const decodedToken = decodeTokenSafe(token);
-            const currentUserId = decodedToken?.user_id;
+            const currentUserResponse = await fetch(`${environment.apiUrl}/users/me`, {
+                credentials: 'include'
+            });
+            const currentUserData = currentUserResponse.ok ? await currentUserResponse.json() : null;
+            const currentUserId = currentUserData?.data?.user_id;
 
             // Filtrar el usuario actual de la lista
             const filteredUsers = data.data.users.filter((user: User) => user.user_id !== currentUserId);
@@ -140,10 +112,13 @@ export const userService = {
      */
     async getUserById(userId: string, token: string): Promise<ApiResponse<UserProfile>> {
         try {
-            // Si el userId es 'me', decodificamos el token para obtener el ID
+            // La API identifica al usuario actual mediante la cookie HttpOnly.
             if (userId === 'me') {
-                const decoded = decodeTokenSafe(token);
-                userId = decoded?.user_id || '';
+                const response = await fetch(`${environment.apiUrl}/users/me`, {
+                    credentials: 'include',
+                    method: 'GET'
+                });
+                return await response.json();
             }
 
             const response = await fetch(`${environment.apiUrl}/users/${userId}`, {
