@@ -295,8 +295,9 @@ Como Trabajo Final de Grado desarrollado en tres meses, se tomaron decisiones co
 
 - No se han realizado pruebas formales de usabilidad o accesibilidad, aunque se siguieron patrones de diseño habituales en redes sociales para mantener una navegación intuitiva.
 - El sistema de notificaciones en tiempo real vía Socket.IO está implementado pero no cubre aún el 100% de los eventos de la aplicación.
-- No hay un pipeline de CI/CD formal ni monitorización de errores en producción más allá del logging propio.
-- El emparejamiento de videollamadas funciona en memoria de un único proceso; escalar a varias instancias del backend requeriría mover esa cola a un almacén compartido (Redis, por ejemplo).
+- GitHub Actions ejecuta auditorías de dependencias, builds y pruebas de integración del backend contra PostgreSQL efímero; el despliegue continúa siendo manual.
+- Las llamadas directas y la presencia funcionan en memoria de un único proceso; varias instancias requieren afinidad de socket o estado compartido (por ejemplo, Redis).
+- El endpoint de salud comprueba la conexión con PostgreSQL. Todavía no hay monitorización de excepciones, alertas ni métricas de producción.
 
 Documentar estas decisiones explícitamente —en vez de presentarlas como si no existieran— fue una elección deliberada: permite distinguir entre lo que está terminado, lo que es una limitación de alcance y lo que queda como trabajo futuro.
 
@@ -311,17 +312,14 @@ La documentación detallada de cada parte del proyecto vive en su propio README:
 
 ## Pendiente y hoja de ruta
 
-Estas mejoras están identificadas, pero no forman parte de la versión actual. Se incluyen para hacer explícito el siguiente alcance técnico y de producto.
+Estas mejoras siguen pendientes y no forman parte de la versión actual. Las llamadas directas entre amistades y la autenticación con Google/recuperación de contraseña ya están implementadas; sus proveedores necesitan configuración de producción.
 
 | Prioridad | Área | Pendiente | Posible implementación |
 |---|---|---|---|
-| Alta | Entrega continua | Automatizar la validación antes de cada despliegue. | GitHub Actions con `npm ci`, `npm audit`, build de frontend/backend y pruebas de integración contra PostgreSQL efímero. |
-| Alta | Observabilidad | Detectar y diagnosticar errores de producción con rapidez. | Monitorización de excepciones (por ejemplo, Sentry), health checks, alertas y métricas de latencia/errores. |
-| Alta | Escalabilidad en tiempo real | Hacer que chat y matchmaking funcionen con varias instancias del backend. | Adaptador Socket.IO para Redis y cola de emparejamiento compartida, con métricas y caducidad de sesiones. |
-| Media | Calidad | Ampliar la cobertura funcional y de accesibilidad. | Pruebas E2E con Playwright, pruebas de componentes y auditorías periódicas con Lighthouse/axe. |
-| Media | Comunicación | Llamadas y videollamadas directas entre amistades. | Señalización Socket.IO con salas privadas, permisos de amistad y notificaciones de llamada. |
+| Alta | Observabilidad | Diagnosticar errores y rendimiento de producción. | Monitorización de excepciones (por ejemplo, Sentry), alertas y métricas de latencia/errores; ya existe un health check de base de datos. |
+| Alta | Escalabilidad en tiempo real | Hacer que chat y llamadas funcionen con varias instancias del backend. | Adaptador Socket.IO para Redis y presencia/cola compartidas, con métricas y caducidad de sesiones. |
+| Media | Calidad | Ampliar la cobertura funcional y de accesibilidad. | Pruebas E2E con Playwright y auditorías periódicas con Lighthouse/axe. |
 | Media | Chat | Envío de imágenes, vídeos y archivos. | Almacenamiento de objetos con URLs firmadas, validación de tipo/tamaño, análisis antimalware y CDN. |
-| Media | Autenticación | Inicio de sesión social y refuerzo de la recuperación de cuenta. | OAuth 2.0/OIDC (Google/Facebook), verificación de correo y tokens de recuperación con expiración. |
 | Baja | Cliente móvil | Aplicación móvil nativa. | React Native compartiendo contratos de API y capa de autenticación; notificaciones push con FCM/APNs. |
 
 ### Mantenimiento de dependencias
