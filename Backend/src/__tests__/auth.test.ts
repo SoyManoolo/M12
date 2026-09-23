@@ -1,6 +1,5 @@
 import supertest from "supertest";
 import { app } from "../app";
-import { sequelize } from "../config/database";
 import { User } from "../models";
 
 const api = supertest(app)
@@ -37,8 +36,4 @@ describe('Auth test:', () => {
             .expect('Content-Type', /application\/json/)
     });
 
-    afterAll(async () => {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        await sequelize.close()
-    })
 });

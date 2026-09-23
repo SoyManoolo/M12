@@ -1,3 +1,5 @@
+import { pageMeta } from '~/utils/seo';
+import { developmentLogger } from '~/utils/logger';
 /**
  * @file configuracion.tsx
  * @description Página de configuraciones que permite al usuario gestionar su cuenta y seguridad.
@@ -20,6 +22,8 @@ import { authService } from '../services/auth.service';
 import Notification from '../components/Shared/Notification';
 import ConfirmModal from '../components/Shared/ConfirmModal';
 import SecureImage from '../components/Shared/SecureImage';
+
+export const meta = () => pageMeta('Configuración', 'Administra la configuración de tu cuenta de FriendsGo.', { path: '/configuracion' });
 
 export default function ConfiguracionPage() {
   const { token, setToken } = useAuth();
@@ -81,7 +85,7 @@ export default function ConfiguracionPage() {
           navigate('/login');
         }
       } catch (error) {
-        console.error('Error al obtener datos:', error);
+        developmentLogger.error('Error al obtener datos:', error);
         navigate('/login');
       } finally {
         setLoading(false);
@@ -202,7 +206,7 @@ export default function ConfiguracionPage() {
         }
       }
     } catch (error) {
-      console.error('Error al actualizar:', error);
+      developmentLogger.error('Error al actualizar:', error);
       if (error instanceof Error && error.message.includes('401')) {
         showMessage('error', 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
         navigate('/login');
@@ -225,7 +229,7 @@ export default function ConfiguracionPage() {
         showMessage('error', response.message || 'No pudimos cerrar tu sesión');
       }
     } catch (error) {
-      console.error('Error al cerrar sesión:', error);
+      developmentLogger.error('Error al cerrar sesión:', error);
       showMessage('error', 'No pudimos conectarnos al servidor. Por favor, verifica tu conexión a internet');
     }
   };
@@ -241,10 +245,10 @@ export default function ConfiguracionPage() {
       await userService.deleteUserById(userId, token);
       setToken(null);
       document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-      window.location.href = '/login';
+      navigate('/login', { replace: true });
     } catch (error) {
-      console.error('Error al eliminar cuenta:', error);
-      window.location.href = '/login';
+      developmentLogger.error('Error al eliminar cuenta:', error);
+      navigate('/login', { replace: true });
     }
   };
 
@@ -332,7 +336,7 @@ export default function ConfiguracionPage() {
                                       setNotification({ message: res.message || "Error al actualizar la foto de perfil", type: "error" });
                                     }
                                   } catch (err) {
-                                    console.error("Error al actualizar foto de perfil:", err);
+                                    developmentLogger.error("Error al actualizar foto de perfil:", err);
                                     setNotification({ message: (err instanceof Error) ? err.message : "Error al actualizar la foto de perfil", type: "error" });
                                   }
                                 })();
@@ -355,7 +359,7 @@ export default function ConfiguracionPage() {
                                   setNotification({ message: res.message || "Error al eliminar la foto de perfil", type: "error" });
                                 }
                               } catch (err) {
-                                console.error("Error al eliminar foto de perfil:", err);
+                                developmentLogger.error("Error al eliminar foto de perfil:", err);
                                 setNotification({ message: (err instanceof Error) ? err.message : "Error al eliminar la foto de perfil", type: "error" });
                               }
                             })();

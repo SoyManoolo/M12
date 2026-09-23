@@ -2,7 +2,7 @@ import express from "express";
 import { Request, Response, NextFunction } from 'express';
 import { AuthToken } from '../middlewares/validation/authentication/jwt';
 import { CommentValidation } from '../middlewares/validation/commentValidation';
-const { validateComment } = new CommentValidation();
+const { validateComment, validatePostId, validateCommentId, validatePagination } = new CommentValidation();
 
 const router = express.Router();
 import { CommentService } from '../services/comment';
@@ -16,12 +16,12 @@ router.post('/', AuthToken.verifyToken, validateComment, async (req: Request, re
 });
 
 // Obtener comentarios de un post
-router.get('/:postId', async (req: Request, res: Response, next: NextFunction) => {
+router.get('/:postId', validatePostId, validatePagination, async (req: Request, res: Response, next: NextFunction) => {
     await commentController.getComments(req, res, next);
 });
 
 // Eliminar un comentario
-router.delete('/:commentId', AuthToken.verifyToken, async (req: Request, res: Response, next: NextFunction) => {
+router.delete('/:commentId', AuthToken.verifyToken, validateCommentId, async (req: Request, res: Response, next: NextFunction) => {
     await commentController.deleteComment(req, res, next);
 });
 

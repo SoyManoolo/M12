@@ -10,7 +10,7 @@ const router = express.Router();
 const postService = new PostService();
 const postController = new PostController(postService);
 const postValidator = new PostValidator();
-const { CreatePostValidator, UpdatePostValidator } = postValidator;
+const { CreatePostValidator, UpdatePostValidator, PostIdValidator } = postValidator;
 
 router.get('/username', AuthToken.verifyToken, async (req: Request, res: Response, next: NextFunction) => {
     await postController.getPostsUser(req, res, next);
@@ -24,11 +24,11 @@ router.get('/', AuthToken.verifyToken, async (req: Request, res: Response, next:
     await postController.getPosts(req, res, next);
 });
 
-router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
+router.get('/:id', PostIdValidator, async (req: Request, res: Response, next: NextFunction) => {
     await postController.getPostsUser(req, res, next);
 });
 
-router.patch('/:id', AuthToken.verifyToken, UpdatePostValidator,async (req: Request, res: Response, next: NextFunction) => {
+router.patch('/:id', AuthToken.verifyToken, UpdatePostValidator, async (req: Request, res: Response, next: NextFunction) => {
     await postController.updatePost(req, res, next);
 });
 

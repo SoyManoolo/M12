@@ -1,3 +1,4 @@
+import { developmentLogger } from '~/utils/logger';
 import { environment } from '../config/environment';
 import type { UserProfile, ApiResponse, PaginatedUsersResponse } from '../types/user.types';
 import type { User } from '~/types/user.types';
@@ -43,7 +44,7 @@ export const userService = {
                 }
             };
         } catch (error) {
-            console.error('Error al obtener usuarios:', error);
+            developmentLogger.error('Error al obtener usuarios:', error);
             return {
                 success: false,
                 status: 500,
@@ -91,7 +92,7 @@ export const userService = {
                 }
             };
         } catch (error) {
-            console.error('Error al obtener usuarios:', error);
+            developmentLogger.error('Error al obtener usuarios:', error);
             return {
                 success: false,
                 status: 500,
@@ -133,7 +134,7 @@ export const userService = {
             const data = await response.json();
             return data;
         } catch (error) {
-            console.error('Error al obtener el perfil:', error);
+            developmentLogger.error('Error al obtener el perfil:', error);
             return {
                 success: false,
                 status: 500,
@@ -160,7 +161,7 @@ export const userService = {
             const data = await response.json();
             return data;
         } catch (error) {
-            console.error('Error al obtener el perfil:', error);
+            developmentLogger.error('Error al obtener el perfil:', error);
             return {
                 success: false,
                 status: 500,
@@ -188,7 +189,7 @@ export const userService = {
             const data = await response.json();
             return data;
         } catch (error) {
-            console.error('Error al actualizar el perfil:', error);
+            developmentLogger.error('Error al actualizar el perfil:', error);
             return {
                 success: false,
                 status: 500,
@@ -216,7 +217,7 @@ export const userService = {
             const data = await response.json();
             return data;
         } catch (error) {
-            console.error('Error al actualizar el perfil:', error);
+            developmentLogger.error('Error al actualizar el perfil:', error);
             return {
                 success: false,
                 status: 500,
@@ -243,7 +244,7 @@ export const userService = {
             const data = await response.json();
             return data;
         } catch (error) {
-            console.error('Error al eliminar el usuario:', error);
+            developmentLogger.error('Error al eliminar el usuario:', error);
             return {
                 success: false,
                 status: 500,
@@ -270,7 +271,7 @@ export const userService = {
             const data = await response.json();
             return data;
         } catch (error) {
-            console.error('Error al eliminar el usuario:', error);
+            developmentLogger.error('Error al eliminar el usuario:', error);
             return {
                 success: false,
                 status: 500,
@@ -300,7 +301,7 @@ export const userService = {
             const data = await response.json();
             return data;
         } catch (error) {
-            console.error('Error al actualizar la foto de perfil:', error);
+            developmentLogger.error('Error al actualizar la foto de perfil:', error);
             return {
                 success: false,
                 status: 500,
@@ -327,7 +328,7 @@ export const userService = {
             const data = await response.json();
             return data;
         } catch (error) {
-            console.error('Error al eliminar la foto de perfil:', error);
+            developmentLogger.error('Error al eliminar la foto de perfil:', error);
             return {
                 success: false,
                 status: 500,
@@ -363,7 +364,7 @@ export const userService = {
             const data = await response.json();
             return data;
         } catch (error) {
-            console.error('Error al obtener el usuario:', error);
+            developmentLogger.error('Error al obtener el usuario:', error);
             return {
                 success: false,
                 status: 500,
@@ -389,7 +390,7 @@ export const userService = {
             const data = await response.json();
             return data;
         } catch (error) {
-            console.error('Error al buscar usuarios:', error);
+            developmentLogger.error('Error al buscar usuarios:', error);
             return {
                 success: false,
                 status: 500,

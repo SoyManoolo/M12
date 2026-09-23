@@ -1,3 +1,4 @@
+import { developmentLogger } from '~/utils/logger';
 import { useState, useEffect } from "react";
 import { postService } from "~/services/post.service";
 import { useAuth } from "~/hooks/useAuth";
@@ -22,7 +23,7 @@ export function usePostLike(postId: string, initialLikesCount: string, initialIs
         const { hasLiked } = await postService.checkUserLike(token, postId);
         setIsLiked(hasLiked);
       } catch (error) {
-        console.error("Error al verificar el estado del like:", error);
+        developmentLogger.error("Error al verificar el estado del like:", error);
       }
     };
 
@@ -48,7 +49,7 @@ export function usePostLike(postId: string, initialLikesCount: string, initialIs
       setIsLiked(!previousIsLiked);
       return true;
     } catch (error) {
-      console.error("Error al manejar el like:", error);
+      developmentLogger.error("Error al manejar el like:", error);
       // La interfaz solo cambia después de que el servidor confirma la acción,
       // así que se conserva el estado anterior si la petición falla.
       setError("No se pudo actualizar el like. Inténtalo de nuevo.");

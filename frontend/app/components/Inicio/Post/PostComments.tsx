@@ -2,6 +2,7 @@ import { FaTrash } from "react-icons/fa";
 import UserAvatar from "./UserAvatar";
 import { useTimeFormat } from "~/hooks/post/useTimeFormat";
 import { sanitizeUserText } from "~/utils/sanitize";
+import { useNavigate } from "react-router";
 
 interface Comment {
   comment_id: string;
@@ -37,9 +38,10 @@ export default function PostComments({
   onLoadMore,
 }: PostCommentsProps) {
   const { formatRelativeTime } = useTimeFormat();
+  const navigate = useNavigate();
 
   const navigateToProfile = (username: string) => {
-    window.location.href = `/perfil?username=${username}`;
+    navigate(`/perfil?username=${encodeURIComponent(username)}`);
   };
 
   if (comments.length === 0) {

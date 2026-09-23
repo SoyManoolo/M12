@@ -12,6 +12,7 @@ import { corsOptions } from './config/cors';
 import { helmetOptions } from './config/helmet';
 import dbLogger from './config/logger';
 import { env } from './config/env';
+import { sequelize } from './config/database';
 
 // Rutas
 import userRoutes from './routes/user'
@@ -20,6 +21,7 @@ import postRoutes from './routes/post';
 import chatRoutes from './routes/chat';
 import commentRoutes from './routes/comment';
 import friendshipRoutes from './routes/friendship';
+import adminRoutes from './routes/admin';
 
 // Middlewares de error
 import { celebrateErrorHandler } from './middlewares/errors/CelebrateErrorHandler';
@@ -91,7 +93,17 @@ const authLimiter = rateLimit({
     },
     standardHeaders: true,
     legacyHeaders: false,
-    skipSuccessfulRequests: true  //  No contar logins exitosos
+    skipSuccessfulRequests: true,  // No contar logins exitosos
+    skip: (req) => req.path.startsWith('/google'),
+});
+
+// Recovery endpoints send email and can be abused even when requests succeed.
+const passwordResetLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 5,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, status: 429, message: 'Too many password reset attempts. Please try again later.' },
 });
 
 // Parsing
@@ -102,24 +114,15 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(compression());
 
 // Health check endpoint - SIN autenticación, para probar conectividad
-app.get('/health', (req, res) => {
+app.get('/health', async (_req, res) => {
     const timestamp = new Date().toISOString();
-    dbLogger.debug('[HEALTH] Health check recibido en', { timestamp });
-    dbLogger.debug('[HEALTH] Headers:', { headers: req.headers });
-    dbLogger.debug('[HEALTH] IP:', { ip: req.ip });
-    dbLogger.debug('[HEALTH] Protocol:', { protocol: req.protocol });
-
-    const responseData = {
-        status: 'OK',
-        timestamp,
-        environment: env.NODE_ENV,
-        port: env.PORT,
-        host: req.hostname,
-        ip: req.ip
-    };
-
-    dbLogger.debug('[HEALTH] Enviando respuesta:', responseData);
-    res.status(200).json(responseData);
+    try {
+        await sequelize.authenticate();
+        res.status(200).json({ status: 'ok', timestamp, checks: { database: 'ok' } });
+    } catch (error) {
+        dbLogger.error('[Health] Database check failed', { error });
+        res.status(503).json({ status: 'unavailable', timestamp, checks: { database: 'unavailable' } });
+    }
 });
 
 // Configurar middleware para servir archivos estáticos desde la carpeta 'media'
@@ -133,11 +136,14 @@ app.use('/public', express.static(path.join(process.cwd(), 'public')));
 
 // Rutas
 app.use('/users', userRoutes);
+app.use('/auth/forgot-password', passwordResetLimiter);
+app.use('/auth/reset-password', passwordResetLimiter);
 app.use('/auth', authLimiter, authRoutes);
 app.use('/posts', postRoutes);
 app.use('/chat', chatRoutes);
 app.use('/comments', commentRoutes);
 app.use('/friendship', friendshipRoutes);
+app.use('/admin', adminRoutes);
 
 // Ruta no encontrada (404)
 app.use((req: Request, res: Response) => {
@@ -151,7 +157,7 @@ app.use((req: Request, res: Response) => {
 });
 
 // Middleware de manejo de errores
-app.use((error: any, req: Request, res: Response, next: NextFunction) => {
+app.use((error: unknown, req: Request, res: Response, next: NextFunction) => {
     celebrateErrorHandler(error, req, res, next);
 });
 

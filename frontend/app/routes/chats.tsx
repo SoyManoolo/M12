@@ -9,6 +9,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import type { MetaFunction } from 'react-router';
+import { useNavigate } from 'react-router';
 import Navbar from '~/components/Inicio/Navbar';
 import ChatItem from '~/components/Chats/ChatItem';
 import RightPanel from '~/components/Shared/RightPanel';
@@ -17,6 +18,7 @@ import { useAuth } from "~/hooks/useAuth";
 // Importación de la función Singleton segura para el cliente
 import { getChatService } from "~/services/chat.service"; 
 import { friendshipService } from '~/services/friendship.service';
+import { developmentLogger } from '~/utils/logger';
 
 export const meta: MetaFunction = () => {
   return [
@@ -64,11 +66,13 @@ interface Friend {
 
 export default function Chats() {
   const { token, user } = useAuth();
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [friends, setFriends] = useState<Friend[]>([]);
   const [chats, setChats] = useState<Chat[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [deletingChatId, setDeletingChatId] = useState<string | null>(null);
   
   // Usar ref para mantener la última versión de friends sin causar re-renders
   const friendsRef = useRef<Friend[]>([]);
@@ -100,7 +104,6 @@ export default function Chats() {
         const activeChats = await chatServiceInstance.getActiveChats(token);
         // ---------------------------------------------
         
-        console.log('Chats activos recibidos:', activeChats);
         const formattedChats: Chat[] = activeChats
           .filter((chat: any) => chat.other_user && chat.other_user.user_id !== user.user_id) // Filtrar chats con uno mismo
           .map((chat: any) => ({
@@ -117,7 +120,6 @@ export default function Chats() {
             },
             unread_count: chat.unread_count || 0
           }));
-        console.log('Chats formateados:', formattedChats);
         setChats(formattedChats);
 
         // Cargar solo amigos reales
@@ -146,7 +148,7 @@ export default function Chats() {
           setFriends([]);
         }
       } catch (err) {
-        console.error('Error al cargar datos:', err);
+        developmentLogger.error('Error al cargar datos:', err);
         setError('Error al cargar los datos');
       } finally {
         setLoading(false);
@@ -156,7 +158,6 @@ export default function Chats() {
     // --- MODIFICACIÓN: Usar chatServiceInstance para el handler del socket ---
     const unsubscribeNewMessage = chatServiceInstance.onNewMessage((message) => {
     // -------------------------------------------------------------------------
-      console.log('Nuevo mensaje recibido:', message);
       if (message.sender_id === user.user_id || message.receiver_id === user.user_id) {
         setChats(prevChats => {
           const otherUserId = message.sender_id === user.user_id ? message.receiver_id : message.sender_id;
@@ -215,7 +216,6 @@ export default function Chats() {
 
     // Limpiar al desmontar
     return () => {
-      console.log('Limpiando suscripciones de chats...');
       unsubscribeFunctions.forEach(unsubscribe => unsubscribe());
       hasLoadedRef.current = false; // Resetear flag para permitir recarga si vuelve a montar
     };
@@ -228,7 +228,23 @@ export default function Chats() {
   });
 
   const handleChatClick = (userId: string) => {
-    window.location.href = `/chat?userId=${userId}`;
+    navigate(`/chat?userId=${userId}`);
+  };
+
+  const handleDeleteChat = async (chat: Chat) => {
+    if (!token || deletingChatId) return;
+    const confirmed = window.confirm(`¿Eliminar permanentemente la conversación y todos sus mensajes con @${chat.user.username} para ambos usuarios?`);
+    if (!confirmed) return;
+
+    setDeletingChatId(chat.chat_id);
+    try {
+      await getChatService().deleteConversation(chat.user.user_id, token);
+      setChats(current => current.filter(item => item.chat_id !== chat.chat_id));
+    } catch {
+      setError('No se pudo eliminar la conversación. Inténtalo de nuevo.');
+    } finally {
+      setDeletingChatId(null);
+    }
   };
 
   return (
@@ -287,6 +303,7 @@ export default function Chats() {
                   key={chat.chat_id}
                   chat={chat}
                   onClick={() => handleChatClick(chat.user.user_id)}
+                  onDelete={() => handleDeleteChat(chat)}
                 />
               ))}
             </div>

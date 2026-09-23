@@ -132,6 +132,17 @@ export class ChatController {
         }
     }
 
+    public async deleteConversation(req: Request<{ receiver_id?: string }>, res: Response, next: NextFunction) {
+        try {
+            if (!req.user?.user_id) throw new AppError(401, 'Unauthorized');
+            const receiverId = getRequiredRouteParam(req.params.receiver_id, 'receiver_id');
+            const result = await this.chatService.deleteConversation(req.user.user_id, receiverId);
+            res.status(200).json({ success: true, data: result });
+        } catch (error) {
+            next(error);
+        }
+    }
+
     public async markMessageAsDelivered(req: Request<{ message_id?: string }>, res: Response, next: NextFunction) {
         try {
             dbLogger.info(`[ChatController] Request to mark message as delivered with ID: ${req.params.message_id} for user: ${req.user?.user_id}`);

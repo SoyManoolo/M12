@@ -4,25 +4,28 @@ import { sequelize } from "../config/database";
 
 const api = supertest(app)
 
-let token = ""
+let sessionCookie = '';
 
 describe('Post test:', () => {
     beforeAll(async () => {
+        const suffix = `${Date.now()}-${Math.floor(Math.random() * 1_000_000)}`;
         const response = await api
-        .post('/auth/login')
+        .post('/auth/register')
         .send({
-            id: "erik.saldi.diaz@gmail.com",
-            password: "12345678"
+            email: `post-ci-${suffix}@example.com`,
+            username: `post-ci-${suffix}`,
+            name: "CI",
+            surname: "Test",
+            password: "Test1234!"
         })
-        token = response.body.token
+        .expect(200);
+        sessionCookie = response.headers['set-cookie'];
     })
 
         test('Test de prueba', async () => {
         await api
             .get('/posts')
-            .set({
-                Authorization: `Bearer ${token}`
-            })
+            .set('Cookie', sessionCookie)
             .send({
 
             })

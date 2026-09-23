@@ -1,17 +1,268 @@
-import { User, VideoCalls } from "../models";
+import { Friends, User, UserBlocks, VideoCalls } from "../models";
 import { AppError } from "../middlewares/errors/AppError";
 import { existsUser } from "../utils/modelExists";
 import { Op } from "sequelize";
 import { Server } from "socket.io";
 import dbLogger from "../config/logger";
+import { randomUUID } from "crypto";
+
+type FriendCallInvitation = {
+    inviteId: string;
+    callerId: string;
+    callerSocketId: string;
+    targetId: string;
+    targetSocketId: string;
+    expiresAt: number;
+    timeout: NodeJS.Timeout;
+    processing: boolean;
+};
+
+const FRIEND_CALL_INVITE_TTL_MS = 30_000;
 
 export class VideoCallService {
     private static waitingQueue: Map<string, string> = new Map();
     private static activeCalls: Map<string, { users: { id: string; socketId: string; }[]; startTime: Date; status: string; }> = new Map();
+    private static onlineSockets: Map<string, Set<string>> = new Map();
+    private static friendCallInvitations = new Map<string, FriendCallInvitation>();
 
     private static instance: VideoCallService;
 
     private constructor() { }
+
+    private static readonly callEvents = {
+        incoming: 'incoming_call_invite',
+        result: 'call_invite_result',
+        status: 'call_invite_status',
+        cancelled: 'call_invite_cancelled',
+        accepted: 'call_invite_accepted',
+    };
+
+    public registerCallPresence(userId: string, socketId: string) {
+        const sockets = VideoCallService.onlineSockets.get(userId) ?? new Set<string>();
+        sockets.add(socketId);
+        VideoCallService.onlineSockets.set(userId, sockets);
+    }
+
+    private getOnlineSocket(io: Server, userId: string): string | null {
+        const sockets = VideoCallService.onlineSockets.get(userId);
+        if (!sockets) return null;
+        for (const socketId of [...sockets]) {
+            if (io.sockets.sockets.has(socketId)) return socketId;
+            sockets.delete(socketId);
+        }
+        if (sockets.size === 0) VideoCallService.onlineSockets.delete(userId);
+        return null;
+    }
+
+    private async areUnblockedFriends(userId: string, otherUserId: string): Promise<boolean> {
+        if (userId === otherUserId) return false;
+        const [friendship, block] = await Promise.all([
+            Friends.findOne({
+                where: {
+                    [Op.or]: [
+                        { user1_id: userId, user2_id: otherUserId },
+                        { user1_id: otherUserId, user2_id: userId }
+                    ]
+                }
+            }),
+            UserBlocks.findOne({
+                where: {
+                    [Op.or]: [
+                        { blocker_id: userId, blocked_id: otherUserId },
+                        { blocker_id: otherUserId, blocked_id: userId }
+                    ]
+                }
+            })
+        ]);
+        return Boolean(friendship && !block);
+    }
+
+    private hasPendingInvitation(userId: string): boolean {
+        return [...VideoCallService.friendCallInvitations.values()]
+            .some(invite => invite.callerId === userId || invite.targetId === userId);
+    }
+
+    private async userIsInCall(userId: string): Promise<boolean> {
+        return Boolean(await this.getUserActiveCall(userId));
+    }
+
+    private emitInvitationStatus(io: Server, invitation: FriendCallInvitation, status: string, message?: string) {
+        if (io.sockets.sockets.has(invitation.callerSocketId)) {
+            io.to(invitation.callerSocketId).emit(VideoCallService.callEvents.status, {
+                inviteId: invitation.inviteId,
+                status,
+                ...(message ? { message } : {})
+            });
+        }
+    }
+
+    private removeInvitation(invitation: FriendCallInvitation) {
+        clearTimeout(invitation.timeout);
+        VideoCallService.friendCallInvitations.delete(invitation.inviteId);
+    }
+
+    private expireInvitation(io: Server, invitation: FriendCallInvitation) {
+        if (!VideoCallService.friendCallInvitations.has(invitation.inviteId)) return;
+        this.removeInvitation(invitation);
+        this.emitInvitationStatus(io, invitation, 'expired', 'La invitación ha caducado.');
+        if (io.sockets.sockets.has(invitation.targetSocketId)) {
+            io.to(invitation.targetSocketId).emit(VideoCallService.callEvents.cancelled, {
+                inviteId: invitation.inviteId,
+                reason: 'expired'
+            });
+        }
+    }
+
+    public async requestFriendCall(io: Server, callerId: string, callerSocketId: string, targetId: string) {
+        const fail = (message: string) => ({ success: false, message });
+        if (!targetId || callerId === targetId) return fail('No puedes llamarte a ti mismo.');
+        if (!io.sockets.sockets.has(callerSocketId)) return fail('La conexión no está disponible.');
+        if (!(await this.areUnblockedFriends(callerId, targetId))) return fail('Solo puedes llamar a una amistad disponible.');
+        if (VideoCallService.waitingQueue.has(callerId) || VideoCallService.waitingQueue.has(targetId)) return fail('Una de las personas está buscando otra llamada.');
+        if (await this.userIsInCall(callerId) || await this.userIsInCall(targetId)) return fail('Una de las personas ya está en una llamada.');
+        if (this.hasPendingInvitation(callerId) || this.hasPendingInvitation(targetId)) return fail('Una de las personas ya tiene una invitación pendiente.');
+
+        const targetSocketId = this.getOnlineSocket(io, targetId);
+        if (!targetSocketId) return fail('Esta persona no está conectada ahora.');
+        const [caller, target] = await Promise.all([
+            User.findByPk(callerId, { attributes: ['user_id', 'username', 'profile_picture'] }),
+            User.findByPk(targetId, { attributes: ['user_id', 'username', 'profile_picture'] })
+        ]);
+        if (!caller || !target) return fail('No se encontró a una de las personas.');
+
+        const inviteId = randomUUID();
+        const expiresAt = Date.now() + FRIEND_CALL_INVITE_TTL_MS;
+        const invitation = {
+            inviteId,
+            callerId,
+            callerSocketId,
+            targetId,
+            targetSocketId,
+            expiresAt,
+            processing: false,
+            timeout: setTimeout(() => this.expireInvitation(io, invitation), FRIEND_CALL_INVITE_TTL_MS)
+        };
+        VideoCallService.friendCallInvitations.set(inviteId, invitation);
+        io.to(targetSocketId).emit(VideoCallService.callEvents.incoming, {
+            inviteId,
+            caller: {
+                id: caller.user_id,
+                username: caller.username,
+                profile_picture: caller.profile_picture
+            },
+            expiresAt
+        });
+        return { success: true, inviteId, expiresAt };
+    }
+
+    public async respondToFriendCall(io: Server, inviteId: string, targetId: string, targetSocketId: string, accept: boolean) {
+        const invitation = VideoCallService.friendCallInvitations.get(inviteId);
+        if (!invitation || invitation.targetId !== targetId || invitation.targetSocketId !== targetSocketId || invitation.processing) {
+            return { success: false, message: 'La invitación ya no es válida.' };
+        }
+        if (Date.now() >= invitation.expiresAt) {
+            this.expireInvitation(io, invitation);
+            return { success: false, message: 'La invitación ha caducado.' };
+        }
+        invitation.processing = true;
+
+        const callerConnected = io.sockets.sockets.has(invitation.callerSocketId);
+        const targetConnected = io.sockets.sockets.has(invitation.targetSocketId);
+        const stillFriends = await this.areUnblockedFriends(invitation.callerId, invitation.targetId);
+        const alreadyInCall = VideoCallService.waitingQueue.has(invitation.callerId)
+            || VideoCallService.waitingQueue.has(invitation.targetId)
+            || await this.userIsInCall(invitation.callerId)
+            || await this.userIsInCall(invitation.targetId);
+        if (!callerConnected || !targetConnected || !stillFriends || alreadyInCall) {
+            this.removeInvitation(invitation);
+            const status = !callerConnected ? 'offline' : 'cancelled';
+            this.emitInvitationStatus(io, invitation, status, 'La invitación ya no está disponible.');
+            return { success: false, message: 'La invitación ya no está disponible.' };
+        }
+
+        this.removeInvitation(invitation);
+        if (!accept) {
+            this.emitInvitationStatus(io, invitation, 'rejected', 'La invitación fue rechazada.');
+            return { success: true, status: 'rejected' };
+        }
+
+        try {
+            const call = await VideoCalls.create({ user1_id: invitation.callerId, user2_id: invitation.targetId });
+            const callId = call.dataValues.call_id;
+            VideoCallService.activeCalls.set(callId, {
+                users: [
+                    { id: invitation.callerId, socketId: invitation.callerSocketId },
+                    { id: invitation.targetId, socketId: invitation.targetSocketId }
+                ],
+                startTime: new Date(),
+                status: 'connecting'
+            });
+            const callerData = await User.findByPk(invitation.callerId, { attributes: ['user_id', 'username', 'profile_picture'] });
+            const targetData = await User.findByPk(invitation.targetId, { attributes: ['user_id', 'username', 'profile_picture'] });
+            if (!callerData || !targetData || !io.sockets.sockets.has(invitation.callerSocketId) || !io.sockets.sockets.has(invitation.targetSocketId)) {
+                await this.endCall(invitation.callerId, callId);
+                return { success: false, message: 'No se pudo iniciar la llamada.' };
+            }
+
+            io.to(invitation.callerSocketId).emit(VideoCallService.callEvents.accepted, {
+                call_id: callId,
+                match: { id: targetData.user_id, socketId: invitation.targetSocketId },
+                self: { id: callerData.user_id, socketId: invitation.callerSocketId },
+                isInitiator: true,
+                direct: true
+            });
+            io.to(invitation.targetSocketId).emit(VideoCallService.callEvents.accepted, {
+                call_id: callId,
+                match: { id: callerData.user_id, socketId: invitation.callerSocketId },
+                self: { id: targetData.user_id, socketId: invitation.targetSocketId },
+                isInitiator: false,
+                direct: true
+            });
+            this.emitInvitationStatus(io, invitation, 'accepted');
+            return { success: true, status: 'accepted', callId };
+        } catch (error) {
+            dbLogger.error('[VideoCallService] Failed to create friend call:', { error });
+            this.emitInvitationStatus(io, invitation, 'cancelled', 'No se pudo iniciar la llamada.');
+            return { success: false, message: 'No se pudo iniciar la llamada.' };
+        }
+    }
+
+    public async unregisterCallPresence(io: Server, userId: string, socketId: string) {
+        const sockets = VideoCallService.onlineSockets.get(userId);
+        sockets?.delete(socketId);
+        if (sockets?.size === 0) VideoCallService.onlineSockets.delete(userId);
+
+        for (const invitation of [...VideoCallService.friendCallInvitations.values()]) {
+            if (invitation.callerSocketId === socketId) {
+                this.removeInvitation(invitation);
+                if (io.sockets.sockets.has(invitation.targetSocketId)) {
+                    io.to(invitation.targetSocketId).emit(VideoCallService.callEvents.cancelled, {
+                        inviteId: invitation.inviteId,
+                        reason: 'caller_disconnected'
+                    });
+                }
+            } else if (invitation.targetSocketId === socketId) {
+                this.removeInvitation(invitation);
+                this.emitInvitationStatus(io, invitation, 'offline', 'La otra persona se desconectó.');
+            }
+        }
+    }
+
+    public cancelFriendCall(io: Server, inviteId: string, callerId: string, callerSocketId: string) {
+        const invitation = VideoCallService.friendCallInvitations.get(inviteId);
+        if (!invitation || invitation.callerId !== callerId || invitation.callerSocketId !== callerSocketId) {
+            return false;
+        }
+        this.removeInvitation(invitation);
+        this.emitInvitationStatus(io, invitation, 'cancelled', 'Has cancelado la invitación.');
+        if (io.sockets.sockets.has(invitation.targetSocketId)) {
+            io.to(invitation.targetSocketId).emit(VideoCallService.callEvents.cancelled, {
+                inviteId: invitation.inviteId,
+                reason: 'caller_cancelled'
+            });
+        }
+        return true;
+    }
 
     public static getInstance(): VideoCallService {
         if (!VideoCallService.instance) {
@@ -29,7 +280,9 @@ export class VideoCallService {
                 throw new AppError(404, 'UserNotFound')
             };
 
-            if (VideoCallService.waitingQueue.has(user_id)) return false;
+            if (VideoCallService.waitingQueue.has(user_id)
+                || this.hasPendingInvitation(user_id)
+                || await this.userIsInCall(user_id)) return false;
 
             VideoCallService.waitingQueue.set(user_id, socket_id);
 
@@ -40,31 +293,6 @@ export class VideoCallService {
                 throw error;
             }
             dbLogger.error("[VideoCallService] Unexpected error in QueueVideoCall:", { error });
-            throw new AppError(500, 'InternalServerError');
-        };
-    };
-
-    // Método para empearejar usuarios
-    public async initiateVideoCall(caller_id: string, friend_id: string) {
-        try {
-            const caller: User | null = await existsUser({ user_id: caller_id });
-            const friend: User | null = await existsUser({ user_id: friend_id });
-            if (!caller) {
-                dbLogger.error(`[VideoCallService] Caller not found for ID: ${caller_id}`);
-                throw new AppError(404, 'UserNotFound')
-            };
-            if (!friend) {
-                dbLogger.error(`[VideoCallService] Friend not found for ID: ${friend_id}`);
-                throw new AppError(404, 'UserNotFound')
-            };
-
-            // TODO: hacer verificacion de si son amigos y crear la llamada
-        } catch (error) {
-            if (error instanceof AppError) {
-                dbLogger.error("[VideoCallService] Error in initiateVideoCall:", { error });
-                throw error;
-            }
-            dbLogger.error("[VideoCallService] Unexpected error in initiateVideoCall:", { error });
             throw new AppError(500, 'InternalServerError');
         };
     };
@@ -145,34 +373,6 @@ export class VideoCallService {
         };
     };
 
-    // Método para que usuarios se envien solicitud de amistad dentro de la llamada
-    public async sendFriendRequest(user_id: string, user_id2: string) {
-        try {
-            const user: User | null = await existsUser({ user_id });
-            const user2: User | null = await existsUser({ user_id: user_id2 });
-
-            if (!user) {
-                dbLogger.error(`[VideoCallService] User not found for ID: ${user_id}`);
-                throw new AppError(404, 'UserNotFound')
-            };
-            if (!user2) {
-                dbLogger.error(`[VideoCallService] User not found for ID: ${user_id2}`);
-                throw new AppError(404, 'UserNotFound')
-            };
-
-            // TODO
-
-            return user;
-        } catch (error) {
-            if (error instanceof AppError) {
-                dbLogger.error("[VideoCallService] Error in sendFriendRequest:", { error });
-                throw error;
-            }
-            dbLogger.error("[VideoCallService] Unexpected error in sendFriendRequest:", { error });
-            throw new AppError(500, 'InternalServerError');
-        };
-    };
-
 
     // Método para dejar la cola de espera
     public async leaveQueue(user_id: string) {
@@ -207,7 +407,7 @@ export class VideoCallService {
      * @param toSocketId Socket ID del usuario destinatario
      * @returns Objeto con socketId y callId del destinatario
      */
-    public async getCallRecipient(fromUserId: string, toSocketId: string) {
+    public async getCallRecipient(fromUserId: string, toSocketId: string, expectedCallId: string) {
         try {
             dbLogger.info(`[VideoCallService] Getting call recipient data for user ${toSocketId} requested by ${fromUserId}`);
 
@@ -215,7 +415,9 @@ export class VideoCallService {
             dbLogger.info(`[VideoCallService] Active calls: ${VideoCallService.activeCalls.size}`);
 
             // Solo se permite señalizar a la otra persona de la misma llamada activa.
+            if (!expectedCallId) return null;
             for (const [activeCallId, callData] of VideoCallService.activeCalls.entries()) {
+                if (activeCallId !== expectedCallId) continue;
                 dbLogger.info(`[VideoCallService] Checking call ${activeCallId} with ${callData.users.length} users`);
 
                 // Registrar información de cada participante en la llamada

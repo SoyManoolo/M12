@@ -1,167 +1,127 @@
-/**
- * Página de Estadísticas
- * 
- * Esta página muestra estadísticas detalladas de la aplicación.
- * Incluye:
- * - Gráficos de actividad
- * - Métricas clave
- * - Tendencias y análisis
- */
-
+import { useEffect, useState } from 'react';
 import Navbar from '~/components/Inicio/Navbar';
-import { FaUsers, FaVideo, FaComments, FaChartLine, FaCalendarAlt } from 'react-icons/fa';
+import { FaUsers, FaVideo, FaComments, FaNewspaper, FaCalendarAlt } from 'react-icons/fa';
+import { useAuth } from '~/hooks/useAuth';
+import { environment } from '~/config/environment';
+
+interface DailyCount {
+  date: string;
+  count: number;
+}
+
+interface AdminStats {
+  generatedAt: string;
+  periodDays: number;
+  totals: { users: number; posts: number; messages: number; videoCalls: number };
+  trends: { users: DailyCount[]; posts: DailyCount[]; messages: DailyCount[]; videoCalls: DailyCount[] };
+}
+
+const metrics = [
+  { key: 'users', label: 'Usuarios', icon: FaUsers, color: 'text-blue-400', fill: 'bg-blue-500' },
+  { key: 'posts', label: 'Publicaciones', icon: FaNewspaper, color: 'text-purple-400', fill: 'bg-purple-500' },
+  { key: 'messages', label: 'Mensajes', icon: FaComments, color: 'text-green-400', fill: 'bg-green-500' },
+  { key: 'videoCalls', label: 'Videollamadas', icon: FaVideo, color: 'text-yellow-400', fill: 'bg-yellow-500' }
+] as const;
+
+const numberFormat = new Intl.NumberFormat('es-ES');
 
 export default function AdminEstadisticas() {
+  const { token } = useAuth();
+  const [stats, setStats] = useState<AdminStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const loadStats = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await fetch(`${environment.apiUrl}/admin/stats`, {
+          credentials: 'include',
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          signal: controller.signal
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success || !result.data) {
+          throw new Error(result.message || 'No se pudieron cargar las estadísticas.');
+        }
+        setStats(result.data as AdminStats);
+      } catch (loadError) {
+        if (controller.signal.aborted) return;
+        setError(loadError instanceof Error ? loadError.message : 'No se pudieron cargar las estadísticas.');
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
+      }
+    };
+    void loadStats();
+    return () => controller.abort();
+  }, [token]);
+
   return (
-    <div className="min-h-screen bg-black text-white flex">
+    <div className="min-h-screen bg-black text-white lg:flex">
       <Navbar />
-      
-      <div className="w-5/6 ml-[16.666667%] p-8">
-        <div className="max-w-7xl mx-auto">
-          {/* Encabezado */}
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Estadísticas
-            </h1>
-            <p className="text-gray-400 mt-2">Análisis y métricas de la plataforma</p>
-          </div>
+      <main className="w-full px-4 pb-10 pt-20 sm:px-8 lg:ml-[16.666667%] lg:w-5/6 lg:pt-8" aria-busy={loading}>
+        <div className="mx-auto max-w-7xl">
+          <header className="mb-8">
+            <h1 className="bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-4xl font-bold text-transparent">Estadísticas</h1>
+            <p className="mt-2 text-gray-400">Datos agregados de la plataforma y actividad diaria de los últimos {stats?.periodDays ?? 30} días.</p>
+          </header>
 
-          {/* Selector de período */}
-          <div className="bg-gray-900 rounded-lg p-4 mb-8 border border-gray-800">
-            <div className="flex items-center space-x-4">
-              <FaCalendarAlt className="text-gray-400" />
-              <button className="px-4 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors">
-                Hoy
-              </button>
-              <button className="px-4 py-2 rounded-lg bg-gray-800 text-white hover:bg-gray-700 transition-colors">
-                Esta semana
-              </button>
-              <button className="px-4 py-2 rounded-lg bg-gray-800 text-white hover:bg-gray-700 transition-colors">
-                Este mes
-              </button>
-              <button className="px-4 py-2 rounded-lg bg-gray-800 text-white hover:bg-gray-700 transition-colors">
-                Este año
-              </button>
-            </div>
-          </div>
+          {loading && <p className="rounded-lg border border-gray-800 bg-gray-900 p-5 text-gray-300" role="status">Cargando estadísticas…</p>}
+          {error && <p className="rounded-lg border border-red-800 bg-red-950/40 p-5 text-red-200" role="alert">{error}</p>}
 
-          {/* Tarjetas de métricas principales */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {/* Usuarios activos */}
-            <div className="bg-gray-900 rounded-lg p-6 border border-gray-800 hover:border-blue-500 transition-colors">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-400 text-sm">Usuarios Activos</p>
-                  <p className="text-2xl font-bold mt-1">1,234</p>
-                  <p className="text-green-500 text-sm mt-1">↑ 12% desde ayer</p>
-                </div>
-                <div className="bg-blue-500/10 p-3 rounded-full">
-                  <FaUsers className="text-blue-500 text-xl" />
-                </div>
+          {!loading && !error && stats && (
+            <>
+              <div className="mb-8 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
+                {metrics.map(({ key, label, icon: Icon, color }) => (
+                  <article key={key} className="rounded-xl border border-gray-800 bg-gray-900 p-6">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <h2 className="text-sm text-gray-400">{label}</h2>
+                        <p className="mt-1 text-3xl font-bold">{numberFormat.format(stats.totals[key])}</p>
+                      </div>
+                      <Icon aria-hidden="true" className={`${color} text-2xl`} />
+                    </div>
+                  </article>
+                ))}
               </div>
-            </div>
 
-            {/* Videollamadas */}
-            <div className="bg-gray-900 rounded-lg p-6 border border-gray-800 hover:border-purple-500 transition-colors">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-400 text-sm">Videollamadas</p>
-                  <p className="text-2xl font-bold mt-1">456</p>
-                  <p className="text-green-500 text-sm mt-1">↑ 8% desde ayer</p>
+              <section aria-labelledby="activity-trends-title" className="space-y-6">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h2 id="activity-trends-title" className="text-2xl font-semibold">Actividad diaria</h2>
+                  <p className="inline-flex items-center gap-2 text-sm text-gray-400"><FaCalendarAlt aria-hidden="true" />Últimos {stats.periodDays} días</p>
                 </div>
-                <div className="bg-purple-500/10 p-3 rounded-full">
-                  <FaVideo className="text-purple-500 text-xl" />
+                <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+                  {metrics.map(({ key, label, fill }) => {
+                    const points = stats.trends[key];
+                    const maximum = Math.max(1, ...points.map(point => point.count));
+                    return (
+                      <article key={key} className="rounded-xl border border-gray-800 bg-gray-900 p-5">
+                        <h3 className="mb-5 font-semibold">{label}</h3>
+                        {points.length ? (
+                          <div className="flex h-36 items-end gap-1 border-b border-gray-700 pb-1" role="img" aria-label={`${label} por día durante los últimos ${stats.periodDays} días`}>
+                            {points.map(point => (
+                              <div key={point.date} className="group relative flex h-full min-w-0 flex-1 items-end" title={`${point.date}: ${numberFormat.format(point.count)}`}>
+                                <span className={`w-full rounded-t-sm ${fill} opacity-75 transition-opacity group-hover:opacity-100`} style={{ height: `${Math.max(point.count ? 4 : 0, (point.count / maximum) * 100)}%` }} />
+                                <span className="sr-only">{point.date}: {numberFormat.format(point.count)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="flex h-36 items-center justify-center text-sm text-gray-400">No hay actividad registrada.</p>
+                        )}
+                        {points.length > 0 && <div className="mt-2 flex justify-between text-xs text-gray-500"><span>{points[0].date}</span><span>{points[points.length - 1].date}</span></div>}
+                      </article>
+                    );
+                  })}
                 </div>
-              </div>
-            </div>
-
-            {/* Mensajes */}
-            <div className="bg-gray-900 rounded-lg p-6 border border-gray-800 hover:border-green-500 transition-colors">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-400 text-sm">Mensajes</p>
-                  <p className="text-2xl font-bold mt-1">8,765</p>
-                  <p className="text-red-500 text-sm mt-1">↓ 3% desde ayer</p>
-                </div>
-                <div className="bg-green-500/10 p-3 rounded-full">
-                  <FaComments className="text-green-500 text-xl" />
-                </div>
-              </div>
-            </div>
-
-            {/* Tiempo promedio */}
-            <div className="bg-gray-900 rounded-lg p-6 border border-gray-800 hover:border-yellow-500 transition-colors">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-400 text-sm">Tiempo Promedio</p>
-                  <p className="text-2xl font-bold mt-1">24m</p>
-                  <p className="text-green-500 text-sm mt-1">↑ 5% desde ayer</p>
-                </div>
-                <div className="bg-yellow-500/10 p-3 rounded-full">
-                  <FaChartLine className="text-yellow-500 text-xl" />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Gráficos y análisis */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Gráfico de actividad */}
-            <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
-              <h2 className="text-xl font-bold mb-4">Actividad por Hora</h2>
-              <div className="h-64 flex items-center justify-center text-gray-400">
-                [Aquí irá el gráfico de actividad]
-              </div>
-            </div>
-
-            {/* Distribución de usuarios */}
-            <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
-              <h2 className="text-xl font-bold mb-4">Distribución de Usuarios</h2>
-              <div className="h-64 flex items-center justify-center text-gray-400">
-                [Aquí irá el gráfico de distribución]
-              </div>
-            </div>
-
-            {/* Tendencias */}
-            <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
-              <h2 className="text-xl font-bold mb-4">Tendencias</h2>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-400">Videollamadas grupales</span>
-                  <span className="text-green-500">↑ 25%</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-400">Mensajes directos</span>
-                  <span className="text-green-500">↑ 15%</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-400">Publicaciones</span>
-                  <span className="text-red-500">↓ 5%</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Métricas adicionales */}
-            <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
-              <h2 className="text-xl font-bold mb-4">Métricas Adicionales</h2>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-400">Tasa de retención</span>
-                  <span className="text-green-500">85%</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-400">Usuarios nuevos</span>
-                  <span className="text-green-500">234</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-400">Tiempo promedio de sesión</span>
-                  <span className="text-green-500">32m</span>
-                </div>
-              </div>
-            </div>
-          </div>
+              </section>
+              <p className="mt-8 text-right text-xs text-gray-500">Actualizado: {new Date(stats.generatedAt).toLocaleString('es-ES')}</p>
+            </>
+          )}
         </div>
-      </div>
+      </main>
     </div>
   );
-} 
+}

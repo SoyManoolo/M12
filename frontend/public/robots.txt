@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /
+Disallow: /inicio
+Disallow: /buscar
+Disallow: /search
+Disallow: /perfil
+Disallow: /chat
+Disallow: /chats
+Disallow: /admin
+Disallow: /configuracion
+Disallow: /notificaciones
+Disallow: /publicar
+Disallow: /videollamada
+
+Sitemap: https://friendsgofrontend.vercel.app/sitemap.xml

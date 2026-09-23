@@ -3,6 +3,7 @@ import { useAuth } from './useAuth';
 import WebRTCService from '~/services/webrtc.service';
 import SocketService from '~/services/socket.service';
 import { VideoCallEvent, VideoCallState, QueueResult, MatchFoundData } from '~/types/videocall.types';
+import { developmentLogger } from '~/utils/logger';
 
 const initialState: VideoCallState = {
     isCallActive: false,
@@ -43,6 +44,8 @@ export function useVideoCall() {
                 await socketService.connect(token);
             }
 
+            await new Promise<void>(resolve => socketService.onConnect(resolve));
+
             webRTCService.initializeService(token); // Debe llamarse después de conectar el socket o manejar la conexión asíncrona
 
             webRTCService.setUICallbacks(
@@ -52,10 +55,10 @@ export function useVideoCall() {
                     setLocalStreamForUI(null);
                     setRemoteStreamForUI(null);
                     setPartnerInfo({ dbId: null, socketId: null });
-                    console.log("Hook: Llamada finalizada, estado reseteado.");
+                    developmentLogger.info("Hook: Llamada finalizada, estado reseteado.");
                 },
                 (iceState) => {
-                    console.log("Hook: Nuevo estado ICE:", iceState);
+                    developmentLogger.info("Hook: Nuevo estado ICE:", iceState);
                     if (iceState === 'connected' || iceState === 'completed') {
                         setState(prev => ({ ...prev, isCallActive: true, isConnecting: false, error: null, callDuration: 0 }));
                     } else if (iceState === 'failed') {
@@ -75,13 +78,33 @@ export function useVideoCall() {
                     setLocalStreamForUI(stream);
                 }
             );
+
+            let storedCall: string | null = null;
+            try {
+                storedCall = sessionStorage.getItem('friendsgo:accepted-call');
+            } catch {
+                setState(prev => ({ ...prev, error: 'No se pudo recuperar la llamada aceptada. Vuelve a iniciar la invitación.' }));
+            }
+            if (storedCall) {
+                try {
+                    sessionStorage.removeItem('friendsgo:accepted-call');
+                    const call = JSON.parse(storedCall) as MatchFoundData & { isInitiator: boolean };
+                    if (call.call_id && call.match?.socketId && call.self?.socketId && call.self.id === user?.user_id) {
+                        setState(prev => ({ ...prev, callId: call.call_id, isConnecting: true, error: null }));
+                        setPartnerInfo({ dbId: call.match.id, socketId: call.match.socketId });
+                        await webRTCService.startMatchedCall(call);
+                    }
+                } catch {
+                    setState(prev => ({ ...prev, isConnecting: false, error: 'No se pudo recuperar la llamada aceptada. Vuelve a iniciar la invitación.' }));
+                }
+            }
         };
 
         // Ejecutar la inicialización
         initializeConnection();
 
         return () => {
-            console.log("Hook useVideoCall desmontándose. Llamando a webRTCService.closeConnection()");
+            developmentLogger.info("Hook useVideoCall desmontándose. Llamando a webRTCService.closeConnection()");
             if (webRTCService) {
                 webRTCService.closeConnection(); // Limpia la conexión WebRTC
             }
@@ -93,7 +116,7 @@ export function useVideoCall() {
         if (!socketService) return;
 
         const handleQueueResult = (result: QueueResult) => {
-            console.log("Hook: QUEUE_RESULT", result);
+            developmentLogger.info("Hook: QUEUE_RESULT", result);
             setState(prev => ({
                 ...prev,
                 inQueue: result.success,
@@ -103,9 +126,8 @@ export function useVideoCall() {
         };
 
         const handleMatchFound = (data: MatchFoundData & { isInitiator: boolean }) => {
-            console.log("Hook: MATCH_FOUND recibido con datos completos:", JSON.stringify(data));
-            console.log("isInitiator:", data.isInitiator);
-            console.log("callId:", data.call_id); setState(prev => ({
+            developmentLogger.info("Hook: MATCH_FOUND recibido con datos completos:", data);
+            setState(prev => ({
                 ...prev,
                 isConnecting: true,
                 inQueue: false,
@@ -117,10 +139,12 @@ export function useVideoCall() {
 
         socketService.on(VideoCallEvent.QUEUE_RESULT, handleQueueResult);
         socketService.on(VideoCallEvent.MATCH_FOUND, handleMatchFound);
+        socketService.on(VideoCallEvent.CALL_INVITE_ACCEPTED, handleMatchFound);
 
         return () => {
             socketService.off(VideoCallEvent.QUEUE_RESULT, handleQueueResult);
             socketService.off(VideoCallEvent.MATCH_FOUND, handleMatchFound);
+            socketService.off(VideoCallEvent.CALL_INVITE_ACCEPTED, handleMatchFound);
         };
     }, [socketService]);
 
@@ -146,7 +170,7 @@ export function useVideoCall() {
             setState(prev => ({ ...prev, error: "Usuario no autenticado para unirse a la cola." }));
             return;
         }
-        console.log("Hook: Solicitando unirse a la cola...");
+        developmentLogger.info("Hook: Solicitando unirse a la cola...");
         setState({
             ...initialState,
             inQueue: true,
@@ -164,14 +188,20 @@ export function useVideoCall() {
         setState(prev => ({ ...prev, inQueue: false, isConnecting: false }));
     }, [webRTCService]);
 
-    // Implementación futura para llamadas directas.
     const startCall = useCallback(async (targetUserSocketId?: string) => {
         if (!targetUserSocketId) {
-            console.warn("startCall invocada sin targetUserSocketId. Para llamadas aleatorias, usa joinQueue.");
+            setState(prev => ({ ...prev, error: "Las llamadas directas todavía no están disponibles. Puedes buscar una llamada aleatoria desde esta página." }));
             return;
         }
-        console.log(`Hook: Intentando iniciar llamada directa a ${targetUserSocketId} (funcionalidad futura).`);
-    }, []);
+        if (!socketService) {
+            setState(prev => ({ ...prev, error: 'No se pudo conectar con el servicio de llamadas.' }));
+            return;
+        }
+        setState(prev => ({ ...prev, isConnecting: true, error: null }));
+        const sendInvitation = () => socketService.emit(VideoCallEvent.CALL_INVITE, { targetUserId: targetUserSocketId });
+        if (socketService.isConnected()) sendInvitation();
+        else socketService.onConnect(sendInvitation);
+    }, [socketService]);
 
     const endCall = useCallback(() => {
         if (!webRTCService) return;
@@ -213,11 +243,11 @@ export function useVideoCall() {
                     
                     if (audioSender && audioSender.track) {
                         audioSender.track.enabled = newState;
-                        console.log(`🔊 Audio sender también ${newState ? 'habilitado' : 'deshabilitado'}`);
+                        developmentLogger.info(`Audio sender también ${newState ? 'habilitado' : 'deshabilitado'}`);
                     }
                 }
                 
-                console.log(`🎤 Audio toggled: ${newState ? 'ENABLED' : 'MUTED'}`, {
+                developmentLogger.info(`Audio toggled: ${newState ? 'ENABLED' : 'MUTED'}`, {
                     trackId: audioTrack.id,
                     label: audioTrack.label,
                     readyState: audioTrack.readyState,
@@ -226,10 +256,10 @@ export function useVideoCall() {
                 });
                 setState(prev => ({ ...prev, isAudioEnabled: newState }));
             } else {
-                console.error('❌ No hay audio track disponible');
+                developmentLogger.warn('No hay audio track disponible');
             }
         } else {
-            console.error('❌ No hay stream local disponible');
+            developmentLogger.warn('No hay stream local disponible');
         }
     }, [webRTCService]);
 

@@ -53,6 +53,15 @@ export default function VideoCall({ remoteUserId, onEndCall }: VideoCallProps) {
         };
     }, [remoteUserId]);
 
+    if (state.error) {
+        return (
+            <div className="rounded-lg border border-amber-700 bg-amber-950/60 p-4 text-amber-100" role="alert">
+                <p>{state.error}</p>
+                <button type="button" onClick={onEndCall} className="mt-3 rounded bg-gray-800 px-3 py-2 text-sm hover:bg-gray-700">Volver</button>
+            </div>
+        );
+    }
+
     if (!state.isCallActive) {
         return null;
     }

@@ -1,4 +1,5 @@
 import UserAvatar from "./UserAvatar";
+import { useNavigate } from "react-router";
 
 interface PostHeaderProps {
   user: {
@@ -13,8 +14,9 @@ interface PostHeaderProps {
  * Componente para mostrar el header del post con info del usuario
  */
 export default function PostHeader({ user, layout = "horizontal" }: PostHeaderProps) {
+  const navigate = useNavigate();
   const navigateToProfile = () => {
-    window.location.href = `/perfil?username=${user.username}`;
+    navigate(`/perfil?username=${encodeURIComponent(user.username)}`);
   };
 
   if (layout === "vertical") {

@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { FaCheckCircle } from 'react-icons/fa';
+import { useAccessibleDialog } from '~/hooks/useAccessibleDialog';
 
 interface RedirectModalProps {
   isOpen: boolean;
@@ -15,6 +16,8 @@ export default function RedirectModal({
   onRedirect
 }: RedirectModalProps) {
   const [countdown, setCountdown] = useState(redirectTime);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useAccessibleDialog(isOpen, dialogRef, onRedirect, undefined, false);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -37,14 +40,14 @@ export default function RedirectModal({
 
   return (
     <div className="fixed inset-0 backdrop-blur-sm bg-black/30 flex items-center justify-center z-50">
-      <div className="bg-gray-900/95 rounded-xl p-8 max-w-md w-full mx-4 border border-gray-800 shadow-xl">
+      <div ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="redirect-modal-title" className="bg-gray-900/95 rounded-xl p-8 max-w-md w-full mx-4 border border-gray-800 shadow-xl">
         <div className="flex flex-col items-center text-center space-y-6">
           <div className="flex items-center justify-center w-16 h-16 rounded-full bg-green-900/50">
             <FaCheckCircle className="text-green-500 text-4xl" />
           </div>
 
           <div className="space-y-2">
-            <h3 className="text-xl font-bold text-center bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <h3 id="redirect-modal-title" className="text-xl font-bold text-center bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
               {message}
             </h3>
             <p className="text-gray-400">
@@ -53,7 +56,7 @@ export default function RedirectModal({
           </div>
 
           <div className="w-full bg-gray-800 rounded-full h-2 mt-4">
-            <div 
+            <div
               className="bg-green-500 h-2 rounded-full transition-all duration-1000"
               style={{ width: `${(countdown / redirectTime) * 100}%` }}
             />
@@ -62,4 +65,4 @@ export default function RedirectModal({
       </div>
     </div>
   );
-} 
+}

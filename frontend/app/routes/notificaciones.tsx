@@ -1,3 +1,5 @@
+import { pageMeta } from '~/utils/seo';
+import { developmentLogger } from '~/utils/logger';
 /**
  * Página de Notificaciones
  * 
@@ -23,6 +25,8 @@ import { userService } from "~/services/user.service";
 import { formatDistanceToNow, isToday, isYesterday, isThisWeek, isThisMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { friendshipService } from "~/services/friendship.service";
+
+export const meta = () => pageMeta('Notificaciones', 'Consulta tus novedades y solicitudes de amistad.', { path: '/notificaciones' });
 
 export default function Notificaciones(): React.ReactElement {
   const { token } = useAuth();
@@ -62,7 +66,7 @@ export default function Notificaciones(): React.ReactElement {
           setSuggestedUsers([]);
         }
       } catch (err) {
-        console.error('Error al cargar los amigos:', err);
+        developmentLogger.error('Error al cargar los amigos:', err);
         setError('Error al cargar la lista de amigos');
       } finally {
         setLoading(false);
@@ -74,7 +78,7 @@ export default function Notificaciones(): React.ReactElement {
 
   const handleAcceptFriend = async (friendshipId: string) => {
     try {
-      console.log('Aceptando solicitud de amistad:', friendshipId);
+      developmentLogger.log('Aceptando solicitud de amistad:', friendshipId);
       setCurrentNotifications(prev =>
         prev.map(notification =>
           notification.related_id === friendshipId
@@ -83,24 +87,24 @@ export default function Notificaciones(): React.ReactElement {
         )
       );
     } catch (error) {
-      console.error('Error al aceptar solicitud:', error);
+      developmentLogger.error('Error al aceptar solicitud:', error);
     }
   };
 
   const handleRejectFriend = async (friendshipId: string) => {
     try {
-      console.log('Rechazando solicitud de amistad:', friendshipId);
+      developmentLogger.log('Rechazando solicitud de amistad:', friendshipId);
       setCurrentNotifications(prev =>
         prev.filter(notification => notification.related_id !== friendshipId)
       );
     } catch (error) {
-      console.error('Error al rechazar solicitud:', error);
+      developmentLogger.error('Error al rechazar solicitud:', error);
     }
   };
 
   const handleMarkAsRead = async (notificationId: string) => {
     try {
-      console.log('Marcando notificación como leída:', notificationId);
+      developmentLogger.log('Marcando notificación como leída:', notificationId);
       setCurrentNotifications(prev =>
         prev.map(notification =>
           notification.notification_id === notificationId
@@ -109,7 +113,7 @@ export default function Notificaciones(): React.ReactElement {
         )
       );
     } catch (error) {
-      console.error('Error al marcar como leída:', error);
+      developmentLogger.error('Error al marcar como leída:', error);
     }
   };
 
@@ -119,7 +123,7 @@ export default function Notificaciones(): React.ReactElement {
         prev.map(notification => ({ ...notification, is_read: true }))
       );
     } catch (error) {
-      console.error('Error al marcar todas como leídas:', error);
+      developmentLogger.error('Error al marcar todas como leídas:', error);
     }
   };
 
@@ -129,7 +133,7 @@ export default function Notificaciones(): React.ReactElement {
         prev.filter(notification => notification.notification_id !== notificationId)
       );
     } catch (error) {
-      console.error('Error al eliminar notificación:', error);
+      developmentLogger.error('Error al eliminar notificación:', error);
     }
   };
 

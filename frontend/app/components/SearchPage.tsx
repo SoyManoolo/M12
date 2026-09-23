@@ -1,3 +1,4 @@
+import { developmentLogger } from '~/utils/logger';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { environment } from '~/config/environment';
@@ -69,7 +70,7 @@ export default function SearchPage() {
           setFriends(data.data);
         }
       } catch (error) {
-        console.error('Error fetching friends:', error);
+        developmentLogger.error('Error fetching friends:', error);
       }
     };
 
@@ -101,7 +102,7 @@ export default function SearchPage() {
             setSuggestedFriends([]);
           }
         } catch (error) {
-          console.error('Error fetching suggested users:', error);
+          developmentLogger.error('Error fetching suggested users:', error);
           setSuggestedFriends([]);
         } finally {
           setLoading(false);
@@ -132,7 +133,7 @@ export default function SearchPage() {
           return prev;
         });
       } catch (error) {
-        console.error('Error fetching friendship statuses:', error);
+        developmentLogger.error('Error fetching friendship statuses:', error);
       }
     };
 
@@ -166,7 +167,7 @@ export default function SearchPage() {
          setUsers([]);
       }
     } catch (error) {
-      console.error('Error fetching users:', error);
+      developmentLogger.error('Error fetching users:', error);
       setUsers([]);
     } finally {
       setLoading(false);

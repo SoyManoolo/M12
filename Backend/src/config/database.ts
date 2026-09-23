@@ -3,6 +3,7 @@ import { AppError } from "../middlewares/errors/AppError";
 import dbLogger, { enableDatabaseLogging } from "./logger";
 import { env } from './env';
 import { createDatabase } from "../scripts/seedUsers";
+import { runMigrations } from "../migrations";
 
 const isTestEnv = env.NODE_ENV === "test";
 const DatabaseURL = isTestEnv ? env.DATABASE_URL_TEST : env.DATABASE_URL;
@@ -104,15 +105,14 @@ async function initializeDatabase() {
         await sequelize.authenticate();
         dbLogger.info("Connection has been established successfully.");
 
-        // Sincroniza los modelos con la base de datos (crea las tablas si no existen con alter: true)
+        // Tests conservan su base efímera; las bases persistentes usan migraciones versionadas.
         if (dbUpdate) {
-            // En tests usamos force para entorno controlado; en otros entornos usamos alter para evitar pérdida de datos
             if (isTestEnv) {
                 await sequelize.sync({ force: true });
             } else {
-                await sequelize.sync({ alter: true });
+                await runMigrations(sequelize);
             }
-            dbLogger.info("All models were synchronized successfully.");
+            dbLogger.info("Database migrations completed successfully.");
         } else {
             dbLogger.info("Skipping model synchronization (DB_UPDATE is not 'true')");
         }

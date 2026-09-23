@@ -13,7 +13,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { FaEdit, FaCamera, FaTimes, FaUserPlus, FaUserMinus, FaCheck } from 'react-icons/fa';
+import { FaEdit, FaCamera, FaTimes, FaUserPlus, FaUserMinus, FaCheck, FaVideo } from 'react-icons/fa';
 import { userService } from '../../services/user.service';
 import { useAuth } from '../../hooks/useAuth.tsx';
 import type { User } from '~/types/user.types';
@@ -22,6 +22,9 @@ import Notification from '../Shared/Notification';
 import { friendshipService } from '../../services/friendship.service';
 import SecureImage from '../Shared/SecureImage';
 import { sanitizeUserText } from '~/utils/sanitize';
+import SocketService from '~/services/socket.service';
+import { VideoCallEvent } from '~/types/videocall.types';
+import { developmentLogger } from '~/utils/logger';
 
 interface UserProfileProps {
     user?: User;
@@ -33,6 +36,7 @@ interface UserProfileProps {
 
 export default function UserProfile({ user, isOwnProfile, onEditProfile }: UserProfileProps) {
     const { token } = useAuth();
+    const [profilePicture, setProfilePicture] = useState(user?.profile_picture ?? null);
     const [showZoomModal, setShowZoomModal] = useState(false);
     const [isHovering, setIsHovering] = useState(false);
     const [notification, setNotification] = useState<{
@@ -40,6 +44,50 @@ export default function UserProfile({ user, isOwnProfile, onEditProfile }: UserP
         type: 'success' | 'error';
     } | null>(null);
     const [friendshipStatus, setFriendshipStatus] = useState<'none' | 'pending' | 'friends'>('none');
+    const [callInviteId, setCallInviteId] = useState<string | null>(null);
+    const [isSendingCallInvite, setIsSendingCallInvite] = useState(false);
+
+    useEffect(() => {
+        const socket = SocketService.getInstance();
+        let active = true;
+        const onInviteResult = (result: { success?: boolean; inviteId?: string; message?: string }) => {
+            setIsSendingCallInvite(false);
+            if (result?.success && result.inviteId) {
+                setCallInviteId(result.inviteId);
+                setNotification({ message: 'Invitación enviada. Esperando respuesta…', type: 'success' });
+            } else {
+                setNotification({ message: result?.message || 'No se pudo enviar la invitación.', type: 'error' });
+            }
+        };
+        const onInviteStatus = (result: { inviteId?: string; status?: string; message?: string }) => {
+            if (!result?.inviteId || result.inviteId !== callInviteId) return;
+            setCallInviteId(null);
+            const messages: Record<string, string> = {
+                accepted: 'La invitación fue aceptada. Abriendo la videollamada…',
+                rejected: 'La invitación fue rechazada.',
+                expired: 'La invitación caducó.',
+                offline: 'La otra persona se desconectó.',
+                cancelled: result.message || 'La invitación ya no está disponible.'
+            };
+            const status = result.status || 'cancelled';
+            setNotification({ message: messages[status] || result.message || 'La invitación terminó.', type: status === 'accepted' ? 'success' : 'error' });
+        };
+
+        socket.onConnect(() => {
+            if (!active) return;
+            socket.on(VideoCallEvent.CALL_INVITE_RESULT, onInviteResult);
+            socket.on(VideoCallEvent.CALL_INVITE_STATUS, onInviteStatus);
+        });
+        return () => {
+            active = false;
+            socket.off(VideoCallEvent.CALL_INVITE_RESULT, onInviteResult);
+            socket.off(VideoCallEvent.CALL_INVITE_STATUS, onInviteStatus);
+        };
+    }, [callInviteId]);
+
+    useEffect(() => {
+        setProfilePicture(user?.profile_picture ?? null);
+    }, [user?.user_id, user?.profile_picture]);
 
     useEffect(() => {
         const checkFriendshipStatus = async () => {
@@ -51,7 +99,7 @@ export default function UserProfile({ user, isOwnProfile, onEditProfile }: UserP
                     setFriendshipStatus(response.data.status);
                 }
             } catch (error) {
-                console.error('Error al verificar estado de amistad:', error);
+                developmentLogger.error('Error al verificar estado de amistad:', error);
             }
         };
 
@@ -67,11 +115,7 @@ export default function UserProfile({ user, isOwnProfile, onEditProfile }: UserP
             if (response.success) {
                 const updatedUser = await userService.getUser({ user_id: user.user_id }, token);
                 if (updatedUser.success && updatedUser.data) {
-                    // Actualizar la imagen en el DOM
-                    const img = document.querySelector(`img[alt="${user.username} profile"]`) as HTMLImageElement;
-                    if (img) {
-                        img.src = `${updatedUser.data.profile_picture}?t=${new Date().getTime()}`;
-                    }
+                    setProfilePicture(updatedUser.data.profile_picture ?? null);
                     setNotification({
                         message: 'Foto de perfil actualizada correctamente',
                         type: 'success'
@@ -84,7 +128,7 @@ export default function UserProfile({ user, isOwnProfile, onEditProfile }: UserP
                 });
             }
         } catch (error) {
-            console.error('Error al actualizar foto de perfil:', error);
+            developmentLogger.error('Error al actualizar foto de perfil:', error);
             setNotification({
                 message: error instanceof Error ? error.message : 'Error al actualizar la foto de perfil',
                 type: 'error'
@@ -100,11 +144,7 @@ export default function UserProfile({ user, isOwnProfile, onEditProfile }: UserP
             if (response.success) {
                 const updatedUser = await userService.getUser({ user_id: user.user_id }, token);
                 if (updatedUser.success && updatedUser.data) {
-                    // Actualizar la imagen en el DOM
-                    const img = document.querySelector(`img[alt="${user.username} profile"]`) as HTMLImageElement;
-                    if (img) {
-                        img.src = '/default-avatar.png';
-                    }
+                    setProfilePicture(updatedUser.data.profile_picture ?? null);
                     setNotification({
                         message: 'Foto de perfil eliminada correctamente',
                         type: 'success'
@@ -117,7 +157,7 @@ export default function UserProfile({ user, isOwnProfile, onEditProfile }: UserP
                 });
             }
         } catch (error) {
-            console.error('Error al eliminar foto de perfil:', error);
+            developmentLogger.error('Error al eliminar foto de perfil:', error);
             setNotification({
                 message: error instanceof Error ? error.message : 'Error al eliminar la foto de perfil',
                 type: 'error'
@@ -175,6 +215,25 @@ export default function UserProfile({ user, isOwnProfile, onEditProfile }: UserP
         }
     };
 
+    const handleCallFriend = () => {
+        if (!user?.user_id || friendshipStatus !== 'friends' || isSendingCallInvite || callInviteId) return;
+        const socket = SocketService.getInstance();
+        if (!socket.isConnected()) {
+            setNotification({ message: 'No hay conexión para iniciar la llamada. Inténtalo de nuevo.', type: 'error' });
+            return;
+        }
+        setIsSendingCallInvite(true);
+        setNotification(null);
+        socket.emit(VideoCallEvent.CALL_INVITE, { targetUserId: user.user_id });
+    };
+
+    const handleCancelCallInvite = () => {
+        if (!callInviteId) return;
+        SocketService.getInstance().emit(VideoCallEvent.CALL_INVITE_CANCEL, { inviteId: callInviteId });
+        setCallInviteId(null);
+        setNotification({ message: 'Invitación cancelada.', type: 'success' });
+    };
+
     if (!user) return null;
 
     return (
@@ -186,14 +245,19 @@ export default function UserProfile({ user, isOwnProfile, onEditProfile }: UserP
                         className="relative group"
                         onMouseEnter={() => setIsHovering(true)}
                         onMouseLeave={() => setIsHovering(false)}
+                        onFocus={() => setIsHovering(true)}
+                        onBlur={(event) => {
+                            if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setIsHovering(false);
+                        }}
                     >
-                    {user.profile_picture ? (
-                        <SecureImage
-                            src={user.profile_picture}
-                            alt={`${user.username} profile`}
-                            className="h-28 w-28 sm:h-40 sm:w-40 rounded-full object-cover border-4 border-gray-800 cursor-pointer transition-all duration-300 group-hover:border-blue-500/50 group-hover:scale-105"
-                            onClick={() => setShowZoomModal(true)}
-                        />
+                    {profilePicture ? (
+                        <button type="button" aria-label={`Ampliar foto de perfil de ${user.username}`} onClick={() => setShowZoomModal(true)} className="block rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-400">
+                            <SecureImage
+                                src={profilePicture}
+                                alt={`${user.username} profile`}
+                                className="h-28 w-28 sm:h-40 sm:w-40 rounded-full object-cover border-4 border-gray-800 transition-all duration-300 group-hover:border-blue-500/50 group-hover:scale-105"
+                            />
+                        </button>
                     ) : (
                             <div className="h-28 w-28 sm:h-40 sm:w-40 rounded-full border-4 border-gray-800 bg-gray-800 flex items-center justify-center cursor-pointer transition-all duration-300 group-hover:border-blue-500/50 group-hover:scale-105">
                                 <span className="text-gray-400 text-4xl sm:text-6xl group-hover:text-blue-500/50 transition-colors duration-300">
@@ -202,8 +266,8 @@ export default function UserProfile({ user, isOwnProfile, onEditProfile }: UserP
                             </div>
                         )}
                         {/* Overlay con botones al hover */}
-                        {isOwnProfile && isHovering && (
-                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-full bg-black/50 backdrop-blur-sm">
+                        {isOwnProfile && (
+                            <div className={`absolute inset-0 flex items-center justify-center transition-all duration-300 rounded-full bg-black/50 backdrop-blur-sm ${isHovering ? 'opacity-100' : 'pointer-events-none opacity-0'}`}>
                                 <div className="flex flex-col space-y-2">
                                     <label className="px-3 py-1.5 bg-blue-600/90 text-white rounded-lg cursor-pointer hover:bg-blue-500 transition-all duration-300 text-xs shadow-lg flex items-center space-x-1.5 transform hover:scale-105">
                                         <FaCamera className="text-xs" />
@@ -211,11 +275,12 @@ export default function UserProfile({ user, isOwnProfile, onEditProfile }: UserP
                                         <input
                                             type="file"
                                             accept="image/*"
-                                            className="hidden"
+                                            className="sr-only"
+                                            aria-label="Seleccionar nueva foto de perfil"
                                             onChange={handleProfilePictureChange}
                                         />
                                     </label>
-                                    {user.profile_picture && (
+                                    {profilePicture && (
                                         <button
                                             onClick={handleDeleteProfilePicture}
                                             className="px-3 py-1.5 bg-red-600/90 text-white rounded-lg hover:bg-red-500 transition-all duration-300 text-xs shadow-lg flex items-center space-x-1.5 transform hover:scale-105"
@@ -260,13 +325,28 @@ export default function UserProfile({ user, isOwnProfile, onEditProfile }: UserP
                                         </button>
                                     )}
                                     {friendshipStatus === 'friends' && (
-                                        <button
-                                            onClick={handleRemoveFriend}
-                                            className="px-4 py-2 bg-red-500/90 hover:bg-red-400 text-white rounded-lg flex items-center justify-center space-x-2 transition-colors cursor-pointer w-full sm:w-auto"
-                                        >
-                                            <FaUserMinus />
-                                            <span>Eliminar amigo</span>
-                                        </button>
+                                        <>
+                                            <button
+                                                type="button"
+                                                onClick={handleCallFriend}
+                                                disabled={isSendingCallInvite || !!callInviteId}
+                                                className="px-4 py-2 bg-green-600/90 hover:bg-green-500 text-white rounded-lg flex items-center justify-center space-x-2 transition-colors cursor-pointer w-full sm:w-auto disabled:cursor-not-allowed disabled:opacity-60"
+                                            >
+                                                <FaVideo />
+                                                <span>{isSendingCallInvite ? 'Enviando…' : callInviteId ? 'Esperando respuesta…' : 'Videollamar'}</span>
+                                            </button>
+                                            {callInviteId ? (
+                                                <button type="button" onClick={handleCancelCallInvite} className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg">Cancelar invitación</button>
+                                            ) : (
+                                                <button
+                                                    onClick={handleRemoveFriend}
+                                                    className="px-4 py-2 bg-red-500/90 hover:bg-red-400 text-white rounded-lg flex items-center justify-center space-x-2 transition-colors cursor-pointer w-full sm:w-auto"
+                                                >
+                                                    <FaUserMinus />
+                                                    <span>Eliminar amigo</span>
+                                                </button>
+                                            )}
+                                        </>
                                     )}
                                 </>
                             )}
@@ -291,11 +371,11 @@ export default function UserProfile({ user, isOwnProfile, onEditProfile }: UserP
             </div>
 
             {/* Modal de zoom para la imagen de perfil */}
-            {user.profile_picture && (
+            {profilePicture && (
                 <ImageZoomModal
                     isOpen={showZoomModal}
                     onClose={() => setShowZoomModal(false)}
-                    imageUrl={user.profile_picture}
+                    imageUrl={profilePicture}
                     alt={`Foto de perfil de ${user.username}`}
                 />
             )}

@@ -42,7 +42,7 @@ export default function Navbar() {
       <div className="mb-6 flex justify-center">
         <Link to="/inicio">
           <img 
-            src="/images/logo.png"
+            src="/images/friendsgo-mark.svg"
             alt="Logo FriendsGo"
             className="h-24 cursor-pointer"
           />
@@ -160,7 +160,7 @@ export default function Navbar() {
         {/* Logo */}
         <Link to="/inicio" className="flex items-center">
           <img 
-            src="/images/logo.png"
+            src="/images/friendsgo-mark.svg"
             alt="Logo FriendsGo"
             className="h-10 cursor-pointer"
           />

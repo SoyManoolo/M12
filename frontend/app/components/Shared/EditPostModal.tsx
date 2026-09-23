@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { FaTimes } from 'react-icons/fa';
+import { useAccessibleDialog } from '~/hooks/useAccessibleDialog';
 
 interface EditPostModalProps {
   isOpen: boolean;
@@ -21,6 +22,9 @@ export default function EditPostModal({
   cancelText = "Cancelar"
 }: EditPostModalProps) {
   const [description, setDescription] = useState(currentDescription);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  useAccessibleDialog(isOpen, dialogRef, onClose, closeButtonRef);
 
   useEffect(() => {
     setDescription(currentDescription);
@@ -36,15 +40,18 @@ export default function EditPostModal({
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50">
       {/* Overlay con efecto blur */}
-      <div 
+      <div
         className="fixed inset-0 backdrop-blur-sm bg-black/30"
         onClick={onClose}
       />
 
       {/* Modal */}
-      <div className="bg-gray-900 rounded-lg w-full max-w-lg relative z-10">
+      <div ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="edit-post-modal-title" className="bg-gray-900 rounded-lg w-full max-w-lg relative z-10">
         {/* Botón de cerrar */}
         <button
+          ref={closeButtonRef}
+          type="button"
+          aria-label="Cerrar edición de publicación"
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
         >
@@ -53,7 +60,7 @@ export default function EditPostModal({
 
         {/* Título */}
         <div className="p-6 border-b border-gray-800">
-          <h2 className="text-xl font-bold text-center bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <h2 id="edit-post-modal-title" className="text-xl font-bold text-center bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
             {title}
           </h2>
         </div>
@@ -95,4 +102,4 @@ export default function EditPostModal({
       </div>
     </div>
   );
-} 
+}

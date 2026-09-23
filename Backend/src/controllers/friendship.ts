@@ -1,17 +1,24 @@
 import { Request, Response, NextFunction } from 'express';
 import { friendshipService } from '../services/friendship';
-import { AppError } from '../middlewares/errors/AppError';
-import dbLogger from '../config/logger';
-import { getRequiredRouteParam } from '../utils/request';
+import { getAuthenticatedUserId, getRequiredRouteParam } from '../utils/request';
 
 export class FriendshipController {
+    public async getFriendSuggestions(req: Request, res: Response, next: NextFunction) {
+        try {
+            const suggestions = await friendshipService.getFriendSuggestions(getAuthenticatedUserId(req));
+            res.json({ success: true, data: suggestions });
+        } catch (error) {
+            next(error);
+        }
+    }
+
     /**
      * Envía una solicitud de amistad
      */
     public async sendFriendRequest(req: Request, res: Response, next: NextFunction) {
         try {
             const { receiver_id, created_from } = req.body;
-            const sender_id = (req as any).user.user_id;
+            const sender_id = getAuthenticatedUserId(req);
 
             const friendRequest = await friendshipService.sendFriendRequest(sender_id, receiver_id, created_from);
             res.status(201).json(friendRequest);
@@ -26,7 +33,7 @@ export class FriendshipController {
     public async acceptFriendRequest(req: Request<{ request_id?: string }>, res: Response, next: NextFunction) {
         try {
             const { request_id } = req.params;
-            const receiver_id = (req as any).user.user_id;
+            const receiver_id = getAuthenticatedUserId(req);
 
             const friendRequest = await friendshipService.acceptFriendRequest(getRequiredRouteParam(request_id, 'request_id'), receiver_id);
             res.json(friendRequest);
@@ -41,7 +48,7 @@ export class FriendshipController {
     public async rejectFriendRequest(req: Request<{ request_id?: string }>, res: Response, next: NextFunction) {
         try {
             const { request_id } = req.params;
-            const receiver_id = (req as any).user.user_id;
+            const receiver_id = getAuthenticatedUserId(req);
 
             const friendRequest = await friendshipService.rejectFriendRequest(getRequiredRouteParam(request_id, 'request_id'), receiver_id);
             res.json(friendRequest);
@@ -55,7 +62,7 @@ export class FriendshipController {
      */
     public async getPendingFriendRequests(req: Request, res: Response, next: NextFunction) {
         try {
-            const user_id = (req as any).user.user_id;
+            const user_id = getAuthenticatedUserId(req);
             const requests = await friendshipService.getPendingFriendRequests(user_id);
             res.json(requests);
         } catch (error) {
@@ -68,7 +75,7 @@ export class FriendshipController {
      */
     public async getUserFriends(req: Request, res: Response, next: NextFunction) {
         try {
-            const user_id = (req as any).user.user_id;
+            const user_id = getAuthenticatedUserId(req);
             const friends = await friendshipService.getUserFriends(user_id);
             res.json(friends);
         } catch (error) {
@@ -81,7 +88,7 @@ export class FriendshipController {
      */
     public async removeFriendship(req: Request<{ friend_id?: string }>, res: Response, next: NextFunction) {
         try {
-            const user_id = (req as any).user.user_id;
+            const user_id = getAuthenticatedUserId(req);
             const { friend_id } = req.params;
 
             await friendshipService.removeFriendship(user_id, getRequiredRouteParam(friend_id, 'friend_id'));
@@ -99,7 +106,7 @@ export class FriendshipController {
      */
     public async getSentFriendRequests(req: Request, res: Response, next: NextFunction) {
         try {
-            const user_id = (req as any).user.user_id;
+            const user_id = getAuthenticatedUserId(req);
             const requests = await friendshipService.getSentFriendRequests(user_id);
             res.json(requests);
         } catch (error) {
@@ -112,7 +119,7 @@ export class FriendshipController {
      */
     public async getFriendshipStatus(req: Request<{ other_user_id?: string }>, res: Response, next: NextFunction) {
         try {
-            const user_id = (req as any).user.user_id;
+            const user_id = getAuthenticatedUserId(req);
             const { other_user_id } = req.params;
             const status = await friendshipService.getFriendshipStatus(user_id, getRequiredRouteParam(other_user_id, 'other_user_id'));
             res.json({ success: true, data: status });
@@ -127,7 +134,7 @@ export class FriendshipController {
     public async cancelFriendRequest(req: Request<{ request_id?: string }>, res: Response, next: NextFunction) {
         try {
             const { request_id } = req.params;
-            const sender_id = (req as any).user.user_id;
+            const sender_id = getAuthenticatedUserId(req);
 
             const friendRequest = await friendshipService.cancelFriendRequest(getRequiredRouteParam(request_id, 'request_id'), sender_id);
             res.json(friendRequest);

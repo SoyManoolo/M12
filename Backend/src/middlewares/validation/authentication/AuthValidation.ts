@@ -65,4 +65,22 @@ export class AuthValidation {
             })
         })(req, res, next);
     }
+
+    public forgotPasswordValidation(req: Request, res: Response, next: NextFunction) {
+        return celebrate({
+            [Segments.BODY]: Joi.object({
+                email: Joi.string().email().max(254).required(),
+            }),
+        })(req, res, next);
+    }
+
+    public resetPasswordValidation(req: Request, res: Response, next: NextFunction) {
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&.#])[A-Za-z\d@$!%*?&.#]{8,}$/;
+        return celebrate({
+            [Segments.BODY]: Joi.object({
+                token: Joi.string().pattern(/^[A-Za-z0-9_-]{40,100}$/).required(),
+                password: Joi.string().pattern(passwordRegex).required(),
+            }),
+        })(req, res, next);
+    }
 }

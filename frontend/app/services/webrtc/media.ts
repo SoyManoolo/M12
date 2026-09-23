@@ -1,3 +1,4 @@
+import { developmentLogger } from '~/utils/logger';
 const mobileUserAgent = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
 
 function constraintsFor(userAgent: string): MediaStreamConstraints {
@@ -34,11 +35,11 @@ export async function acquireLocalMedia(): Promise<MediaStream> {
   try {
     stream = await navigator.mediaDevices.getUserMedia(constraintsFor(navigator.userAgent));
   } catch (videoError) {
-    console.warn('WebRTC: no se pudo obtener vídeo; se intentará solo audio.', videoError);
+    developmentLogger.warn('WebRTC: no se pudo obtener vídeo; se intentará solo audio.', videoError);
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
     } catch (audioError) {
-      console.error('WebRTC: no se pudo obtener ningún medio.', audioError);
+      developmentLogger.error('WebRTC: no se pudo obtener ningún medio.', audioError);
       throw new Error('No se encontró ningún dispositivo de entrada. Comprueba permisos y micrófono.');
     }
   }

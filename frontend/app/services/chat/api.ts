@@ -27,6 +27,9 @@ export const chatApi = {
   deleteMessage(messageId: string, token: string) {
     return request<{ result: boolean; message_id: string }>(`/chat/${messageId}`, token, { method: 'DELETE' });
   },
+  deleteConversation(userId: string, token: string) {
+    return request<{ deleted: boolean; deleted_messages: number }>(`/chat/conversation/${encodeURIComponent(userId)}`, token, { method: 'DELETE', credentials: 'include' });
+  },
   markDelivered(messageId: string, token: string) {
     return request<ChatMessage>(`/chat/${messageId}/delivered`, token, { method: 'POST' });
   },

@@ -1,3 +1,4 @@
+import { developmentLogger } from '~/utils/logger';
 import { useState, useRef, useEffect } from "react";
 import { FaSmile, FaComment } from "react-icons/fa";
 import type { EmojiClickData } from "emoji-picker-react";
@@ -43,7 +44,7 @@ export default function CommentInput({
       setContent("");
       setShowEmojiPicker(false);
     } catch (error) {
-      console.error("Error al enviar comentario:", error);
+      developmentLogger.error("Error al enviar comentario:", error);
     }
   };
 

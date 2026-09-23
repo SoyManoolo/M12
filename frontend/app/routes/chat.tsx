@@ -1,3 +1,5 @@
+import { pageMeta } from '~/utils/seo';
+import { developmentLogger } from '~/utils/logger';
 /**
  * Página de Chat Individual
  * * Esta página muestra el chat con un usuario específico.
@@ -9,10 +11,10 @@
  */
 
 import { useState, useEffect, useRef } from 'react';
-import { useSearchParams } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import Navbar from '~/components/Inicio/Navbar';
 import ChatUserInfo from '~/components/Chats/ChatUserInfo';
-import { FaPaperPlane, FaSmile } from 'react-icons/fa';
+import { FaPaperPlane, FaSmile, FaVideo } from 'react-icons/fa';
 import type { User } from '~/types/user.types';
 // Importación de la función Singleton segura para el cliente
 import { getChatService } from "~/services/chat.service"; 
@@ -22,6 +24,9 @@ import { userService } from '~/services/user.service';
 import ClientEmojiPicker from '~/components/Chats/ClientEmojiPicker';
 import type { EmojiClickData } from 'emoji-picker-react';
 import { sanitizeUserText } from '~/utils/sanitize';
+import { friendshipService } from '~/services/friendship.service';
+import SocketService from '~/services/socket.service';
+import { VideoCallEvent } from '~/types/videocall.types';
 
 interface Message {
   id: string;
@@ -36,7 +41,10 @@ interface Message {
   is_own?: boolean;
 }
 
+export const meta = () => pageMeta('Conversación', 'Mensajes privados en FriendsGo.', { path: '/chat' });
+
 export default function Chat() {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -50,11 +58,50 @@ export default function Chat() {
   const userId = searchParams.get('userId');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const [isFriend, setIsFriend] = useState(false);
+  const [isSendingCallInvite, setIsSendingCallInvite] = useState(false);
+  const [callInviteMessage, setCallInviteMessage] = useState('');
+
+  useEffect(() => {
+    let active = true;
+    setIsFriend(false);
+    if (!token || !chatUser?.user_id || !currentUser || chatUser.user_id === currentUser.user_id) return;
+
+    void friendshipService.getFriendshipStatus(token, chatUser.user_id).then(response => {
+      if (active) setIsFriend(response.success && response.data?.status === 'friends');
+    });
+
+    return () => { active = false; };
+  }, [token, chatUser?.user_id, currentUser?.user_id]);
+
+  useEffect(() => {
+    const socket = SocketService.getInstance();
+    const handleInviteResult = (result: { success?: boolean; message?: string }) => {
+      setIsSendingCallInvite(false);
+      setCallInviteMessage(result?.success
+        ? 'Invitación enviada. Esperando respuesta…'
+        : result?.message || 'No se pudo enviar la invitación.');
+    };
+    socket.onConnect(() => socket.on(VideoCallEvent.CALL_INVITE_RESULT, handleInviteResult));
+    return () => socket.off(VideoCallEvent.CALL_INVITE_RESULT, handleInviteResult);
+  }, []);
+
+  const handleCallFriend = () => {
+    if (!chatUser?.user_id || !isFriend || isSendingCallInvite) return;
+    const socket = SocketService.getInstance();
+    if (!socket.isConnected()) {
+      setCallInviteMessage('No hay conexión para iniciar la llamada. Inténtalo de nuevo.');
+      return;
+    }
+    setIsSendingCallInvite(true);
+    setCallInviteMessage('Enviando invitación…');
+    socket.emit(VideoCallEvent.CALL_INVITE, { targetUserId: chatUser.user_id });
+  };
 
   // Efecto para manejar la carga inicial
   useEffect(() => {
     if (!token || !userId || !currentUser) {
-      console.log('Datos no disponibles:', {
+      developmentLogger.log('Datos no disponibles:', {
         noToken: !token,
         noUserId: !userId,
         noCurrentUser: !currentUser
@@ -67,7 +114,7 @@ export default function Chat() {
     const chatServiceInstance = getChatService();
     // --------------------------------------------------------------------
 
-    console.log('Datos disponibles:', {
+    developmentLogger.log('Datos disponibles:', {
       token: !!token,
       userId,
       currentUserId: currentUser.user_id
@@ -82,7 +129,7 @@ export default function Chat() {
 
     // Definir los handlers de eventos
     const handleNewMessage = (message: Message) => {
-      console.log('Manejando nuevo mensaje:', message);
+      developmentLogger.log('Manejando nuevo mensaje:', message);
       if (!isComponentMounted) return;
 
       // El socket recibe todos los mensajes del usuario conectado. Mostrar solo
@@ -95,7 +142,7 @@ export default function Chat() {
         // Verificar si el mensaje ya existe usando el ID
         const messageExists = prev.some(msg => msg.id === message.id);
         if (messageExists) {
-          console.log('Mensaje ya existe, ignorando:', message.id);
+          developmentLogger.log('Mensaje ya existe, ignorando:', message.id);
           return prev;
         }
 
@@ -124,13 +171,13 @@ export default function Chat() {
     };
 
     const handleDeliveryStatus = (data: { message_id: string; status: string; delivered_at?: string }) => {
-      console.log('Manejando estado de entrega:', data);
+      developmentLogger.log('Manejando estado de entrega:', data);
       if (!isComponentMounted) return;
 
       setMessages(prev => {
         const messageExists = prev.some(msg => msg.id === data.message_id);
         if (!messageExists) {
-          console.log('Mensaje no encontrado para actualizar entrega:', data.message_id);
+          developmentLogger.log('Mensaje no encontrado para actualizar entrega:', data.message_id);
           return prev;
         }
 
@@ -143,13 +190,13 @@ export default function Chat() {
     };
 
     const handleReadStatus = (data: { message_id: string; status: string; read_at?: string }) => {
-      console.log('Manejando estado de lectura:', data);
+      developmentLogger.log('Manejando estado de lectura:', data);
       if (!isComponentMounted) return;
 
       setMessages(prev => {
         const messageExists = prev.some(msg => msg.id === data.message_id);
         if (!messageExists) {
-          console.log('Mensaje no encontrado para actualizar lectura:', data.message_id);
+          developmentLogger.log('Mensaje no encontrado para actualizar lectura:', data.message_id);
           return prev;
         }
 
@@ -166,7 +213,7 @@ export default function Chat() {
 
       // Solo actualizar si es el usuario del chat actual
       if (data.userId === userId) {
-        console.log('Actualizando estado de escritura:', data);
+        developmentLogger.log('Actualizando estado de escritura:', data);
         setIsTyping(data.isTyping);
       }
     };
@@ -178,7 +225,7 @@ export default function Chat() {
     const unsubscribeTyping = chatServiceInstance.onTyping(handleTyping);
     const unsubscribeConnection = chatServiceInstance.onConnectionStatus((status) => {
       if (!isComponentMounted) return;
-      console.log('Estado de conexión actualizado:', status);
+      developmentLogger.log('Estado de conexión actualizado:', status);
       setConnectionStatus(status);
     });
     // --------------------------------------------------------
@@ -247,7 +294,7 @@ export default function Chat() {
         }
 
       } catch (error) {
-        console.error('Error al cargar el chat:', error);
+        developmentLogger.error('Error al cargar el chat:', error);
         if (isComponentMounted) {
           setConnectionStatus('disconnected');
         }
@@ -262,7 +309,7 @@ export default function Chat() {
 
     // Limpiar suscripciones al desmontar
     return () => {
-      console.log('Limpiando suscripciones del chat...');
+      developmentLogger.log('Limpiando suscripciones del chat...');
       isComponentMounted = false;
       unsubscribeFunctions.forEach(unsubscribe => unsubscribe());
       // --- MODIFICACIÓN: Usar la instancia para desconectar ---
@@ -314,7 +361,7 @@ export default function Chat() {
     const chatServiceInstance = getChatService(); 
 
     if (!newMessage.trim() || !token || !userId || !chatUser || !currentUser || connectionStatus !== 'connected') {
-      console.log('No se puede enviar mensaje:', {
+      developmentLogger.log('No se puede enviar mensaje:', {
         messageEmpty: !newMessage.trim(),
         noToken: !token,
         noUserId: !userId,
@@ -371,7 +418,7 @@ export default function Chat() {
       });
 
     } catch (error) {
-      console.error('Error al enviar mensaje:', error);
+      developmentLogger.error('Error al enviar mensaje:', error);
       // Remover el mensaje temporal en caso de error
       setMessages(prev => prev.filter(msg => msg.id !== tempId));
       // Restaurar el mensaje en el input
@@ -390,7 +437,7 @@ export default function Chat() {
     const chatServiceInstance = getChatService(); 
 
     if (!chatUser || !token || connectionStatus !== 'connected') {
-      console.log('No se puede enviar estado de escritura:', {
+      developmentLogger.log('No se puede enviar estado de escritura:', {
         noChatUser: !chatUser,
         noToken: !token,
         connectionStatus
@@ -457,7 +504,7 @@ export default function Chat() {
           <h1 className="text-2xl font-bold mb-4">No tienes chats activos</h1>
           <p className="text-gray-400 mb-4">Busca usuarios para comenzar una conversación</p>
           <button
-            onClick={() => window.location.href = '/buscar'}
+            onClick={() => navigate('/buscar')}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
           >
             Buscar usuarios
@@ -480,7 +527,19 @@ export default function Chat() {
           <div className="p-3 sm:p-4 border-b border-gray-800">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <h1 className="truncate text-xl font-bold">{chatUser?.name} {chatUser?.surname}</h1>
-              <div className="flex items-center space-x-2">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                {isFriend && (
+                  <button
+                    type="button"
+                    onClick={handleCallFriend}
+                    disabled={isSendingCallInvite}
+                    aria-label={`Iniciar videollamada con ${chatUser.username}`}
+                    className="inline-flex items-center gap-2 rounded-lg border border-blue-500/40 bg-blue-600/15 px-3 py-2 text-sm font-semibold text-blue-200 transition-colors hover:bg-blue-600/30 focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    <FaVideo aria-hidden="true" />
+                    {isSendingCallInvite ? 'Enviando…' : 'Videollamada'}
+                  </button>
+                )}
                 {connectionStatus === 'connected' && (
                   <span className="text-green-500 text-sm flex items-center">
                     <span className="w-2 h-2 bg-green-500 rounded-full mr-1"></span>
@@ -501,6 +560,7 @@ export default function Chat() {
                 )}
               </div>
             </div>
+            {callInviteMessage && <p role="status" aria-live="polite" className="mt-2 text-sm text-gray-300">{callInviteMessage}</p>}
             {isTyping && (
               <p className="text-sm text-gray-400 mt-1">Escribiendo...</p>
             )}

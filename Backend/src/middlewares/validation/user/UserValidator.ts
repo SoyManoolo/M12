@@ -20,6 +20,15 @@ export class UserValidator {
         })(req, res, next);
     };
 
+    public SearchValidator(req: Request, res: Response, next: NextFunction) {
+        return celebrate({
+            [Segments.QUERY]: Joi.object({
+                term: Joi.string().trim().min(1).max(100).required(),
+                limit: Joi.number().integer().min(1).max(50)
+            }).unknown(true)
+        })(req, res, next);
+    }
+
     public updateUserValidator(req: Request, res: Response, next: NextFunction) {
         // Regex para contraseña segura: al menos 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial
         const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&.#])[A-Za-z\d@$!%*?&.#]{8,}$/;

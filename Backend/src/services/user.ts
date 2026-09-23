@@ -2,7 +2,7 @@ import { RefreshToken, User } from "../models";
 import { AppError } from "../middlewares/errors/AppError";
 import { existsUser } from "../utils/modelExists";
 import { UserFilters, UpdateUserData, UserAttributes } from '../types/custom';
-import { Op } from "sequelize";
+import { FindOptions, Op } from "sequelize";
 import path from "path";
 import fs from "fs";
 import dbLogger from "../config/logger";
@@ -48,7 +48,7 @@ export class UserService {
     public async getUsers(limit: number = 10, cursor?: string, attributes = this.publicAttributes) {
         try {
             dbLogger.info('[UserService] Getting all users');
-            const queryOptions: any = {
+            const queryOptions: FindOptions = {
                 limit: limit + 1, // +1 para verificar si hay más páginas
                 order: [['created_at', 'DESC']], // Ordenamiento explícito
                 attributes,

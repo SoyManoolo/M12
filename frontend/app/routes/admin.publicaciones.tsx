@@ -1,3 +1,4 @@
+import { pageMeta } from '~/utils/seo';
 /**
  * Página de Administración de Publicaciones
  * 
@@ -24,6 +25,8 @@ import { formatTimeAgo } from '~/features/admin/posts/time';
 import { filterAdminPosts, type PostSort } from '~/features/admin/posts/filters';
 
 import PostDetailModal from '~/features/admin/posts/PostDetailModal';
+
+export const meta = () => pageMeta('Administrar publicaciones', 'Gestión de publicaciones de FriendsGo.', { path: '/admin/publicaciones' });
 
 export default function AdminPublicaciones() {
   const { token } = useAuth();

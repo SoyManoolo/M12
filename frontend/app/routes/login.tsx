@@ -22,6 +22,10 @@ import { authService } from '../services/auth.service';
 import { useAuth } from '../hooks/useAuth.tsx';
 import Notification from '../components/Shared/Notification';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { environment } from '~/config/environment';
+import { pageMeta } from '~/utils/seo';
+
+export const meta = () => pageMeta('Iniciar sesión', 'Accede a tu cuenta de FriendsGo para conectar con tus amigos.', { path: '/login' });
 
 /**
  * @function LoginPage
@@ -142,9 +146,9 @@ export default function LoginPage() {
                             />
                             <button
                                 type="button"
+                                aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                                 onClick={() => setShowPassword(!showPassword)}
                                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors cursor-pointer"
-                                tabIndex={-1}
                             >
                                 {showPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
                             </button>
@@ -166,6 +170,15 @@ export default function LoginPage() {
                     >
                         INICIA SESIÓN
                     </button>
+
+                    <a
+                        href={`${environment.apiUrl}/auth/google`}
+                        aria-label="Continuar con Google"
+                        className="flex w-full items-center justify-center gap-3 rounded-md border border-gray-600 px-4 py-2 text-white transition-colors hover:bg-gray-900"
+                    >
+                        <span aria-hidden="true" className="rounded bg-white px-2 py-0.5 font-bold text-blue-600">G</span>
+                        Continuar con Google
+                    </a>
 
                     <div className="text-center mt-6">
                         <Link

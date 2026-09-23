@@ -1,3 +1,5 @@
+import { pageMeta } from '~/utils/seo';
+import { developmentLogger } from '~/utils/logger';
 /**
  * @file inicio.tsx
  * @description Componente principal de la página de inicio que muestra el feed de publicaciones
@@ -132,6 +134,8 @@ interface Post {
  * @method handleLike - Maneja los likes en publicaciones
  * @method handleSave - Maneja el guardado de publicaciones
  */
+
+export const meta = () => pageMeta('Inicio', 'Publicaciones y momentos compartidos por tu comunidad.', { path: '/inicio' });
 
 export default function InicioPage() {
   const { token, user } = useAuth();
@@ -299,7 +303,7 @@ export default function InicioPage() {
         )
       );
     } catch (error) {
-      console.error('Error al dar like:', error);
+      developmentLogger.error('Error al dar like:', error);
     }
   };
 
@@ -313,7 +317,7 @@ export default function InicioPage() {
         )
       );
     } catch (error) {
-      console.error('Error al guardar el post:', error);
+      developmentLogger.error('Error al guardar el post:', error);
     }
   };
 

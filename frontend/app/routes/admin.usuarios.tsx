@@ -1,3 +1,5 @@
+import { pageMeta } from '~/utils/seo';
+import { developmentLogger } from '~/utils/logger';
 /**
  * Página de Administración de Usuarios
  * 
@@ -8,7 +10,7 @@
  * - Gestión de roles y permisos
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Navbar from '~/components/Inicio/Navbar';
 import { FaSearch, FaEdit, FaTrash, FaFilter } from 'react-icons/fa';
 import { userService } from '~/services/user.service';
@@ -18,6 +20,7 @@ import Notification from '~/components/Shared/Notification';
 import { useAuth } from '~/hooks/useAuth';
 import { Link, useNavigate } from 'react-router';
 import SecureImage from '../components/Shared/SecureImage';
+import { useAccessibleDialog } from '~/hooks/useAccessibleDialog';
 
 // El modal de edición espera UserProfile. Necesitaremos convertir User a UserProfile al abrir el modal.
 interface EditUserModalProps {
@@ -38,6 +41,8 @@ function EditUserModal({ isOpen, onClose, user, onSave, isLoading }: EditUserMod
     password: ''
   });
   const [showWarningModal, setShowWarningModal] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const firstInputRef = useRef<HTMLInputElement>(null);
   const { user: currentUser, logout } = useAuth();
   const navigate = useNavigate();
   const [notification, setNotification] = useState<{
@@ -47,6 +52,7 @@ function EditUserModal({ isOpen, onClose, user, onSave, isLoading }: EditUserMod
 
   // Regex para validar contraseñas (al menos 8 caracteres, mayúscula, minúscula, número, caracter especial)
   const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&.#])[A-Za-z\d@$!%*?&.#]{8,}$/;
+  useAccessibleDialog(isOpen && !showWarningModal, dialogRef, onClose, firstInputRef);
 
   useEffect(() => {
     if (user) {
@@ -121,7 +127,7 @@ function EditUserModal({ isOpen, onClose, user, onSave, isLoading }: EditUserMod
         onClose();
       }
     } catch (error) {
-      console.error('Error al guardar:', error);
+      developmentLogger.error('Error al guardar:', error);
     }
   };
 
@@ -129,9 +135,9 @@ function EditUserModal({ isOpen, onClose, user, onSave, isLoading }: EditUserMod
 
   return (
     <>
-      <div className="fixed inset-0 backdrop-blur-sm bg-black/30 flex items-center justify-center z-50">
-        <div className="bg-gray-900/95 rounded-xl p-6 max-w-md w-full mx-4 border border-gray-800 shadow-xl" onClick={e => e.stopPropagation()}>
-          <h2 className="text-2xl font-bold mb-6 text-center bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 backdrop-blur-sm sm:p-6" onMouseDown={() => !showWarningModal && onClose()}>
+        <div ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="edit-user-title" className="max-h-[calc(100dvh-1.5rem)] w-full max-w-xl overflow-y-auto rounded-xl border border-gray-800 bg-gray-900/95 p-4 shadow-xl sm:max-h-[calc(100dvh-3rem)] sm:p-6" onMouseDown={e => e.stopPropagation()}>
+          <h2 id="edit-user-title" className="mb-5 text-center text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent sm:text-2xl">
             Editar Usuario
           </h2>
           {notification && (
@@ -143,9 +149,11 @@ function EditUserModal({ isOpen, onClose, user, onSave, isLoading }: EditUserMod
           )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-300">Nombre de usuario</label>
+              <label htmlFor="edit-user-username" className="block text-sm font-medium mb-1 text-gray-300">Nombre de usuario</label>
               <input
+                ref={firstInputRef}
                 type="text"
+                id="edit-user-username"
                 name="username"
                 value={formData.username}
                 onChange={handleInputChange}
@@ -153,9 +161,10 @@ function EditUserModal({ isOpen, onClose, user, onSave, isLoading }: EditUserMod
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-300">Correo electrónico</label>
+              <label htmlFor="edit-user-email" className="block text-sm font-medium mb-1 text-gray-300">Correo electrónico</label>
               <input
                 type="email"
+                id="edit-user-email"
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
@@ -163,9 +172,10 @@ function EditUserModal({ isOpen, onClose, user, onSave, isLoading }: EditUserMod
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-300">Nombre</label>
+              <label htmlFor="edit-user-name" className="block text-sm font-medium mb-1 text-gray-300">Nombre</label>
               <input
                 type="text"
+                id="edit-user-name"
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
@@ -173,9 +183,10 @@ function EditUserModal({ isOpen, onClose, user, onSave, isLoading }: EditUserMod
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-300">Apellido</label>
+              <label htmlFor="edit-user-surname" className="block text-sm font-medium mb-1 text-gray-300">Apellido</label>
               <input
                 type="text"
+                id="edit-user-surname"
                 name="surname"
                 value={formData.surname}
                 onChange={handleInputChange}
@@ -183,8 +194,9 @@ function EditUserModal({ isOpen, onClose, user, onSave, isLoading }: EditUserMod
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-300">Biografía</label>
+              <label htmlFor="edit-user-bio" className="block text-sm font-medium mb-1 text-gray-300">Biografía</label>
               <textarea
+                id="edit-user-bio"
                 name="bio"
                 value={formData.bio}
                 onChange={handleInputChange}
@@ -192,9 +204,10 @@ function EditUserModal({ isOpen, onClose, user, onSave, isLoading }: EditUserMod
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-300">Nueva Contraseña</label>
+              <label htmlFor="edit-user-password" className="block text-sm font-medium mb-1 text-gray-300">Nueva Contraseña</label>
               <input
                 type="password"
+                id="edit-user-password"
                 name="password"
                 value={formData.password}
                 onChange={handleInputChange}
@@ -239,6 +252,8 @@ function EditUserModal({ isOpen, onClose, user, onSave, isLoading }: EditUserMod
     </>
   );
 }
+
+export const meta = () => pageMeta('Administrar usuarios', 'Gestión de usuarios de FriendsGo.', { path: '/admin/usuarios' });
 
 export default function AdminUsuarios() {
   const { token } = useAuth();
@@ -418,7 +433,7 @@ export default function AdminUsuarios() {
         setNotification({ message: response.message || 'Error al actualizar usuario', type: 'error' });
       }
     } catch (error) {
-      console.error('Error al guardar edición:', error);
+      developmentLogger.error('Error al guardar edición:', error);
       setNotification({ message: 'Error al guardar cambios', type: 'error' });
     } finally {
       setIsSaving(false);
@@ -440,7 +455,7 @@ export default function AdminUsuarios() {
       setShowDeleteModal(false);
       setUserToDelete(null);
     } catch (error) {
-      console.error('Error al eliminar usuario:', error);
+      developmentLogger.error('Error al eliminar usuario:', error);
       setNotification({ message: 'Error al eliminar usuario', type: 'error' });
     }
   };

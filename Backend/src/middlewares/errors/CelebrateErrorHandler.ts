@@ -3,7 +3,7 @@ import { isCelebrateError } from "celebrate";
 import i18n from "../../config/i18n";
 import dbLogger from "../../config/logger";
 
-export const celebrateErrorHandler = (error: any, req: Request, res: Response, next: NextFunction) => {
+export const celebrateErrorHandler = (error: unknown, req: Request, res: Response, next: NextFunction) => {
     if (!isCelebrateError(error)) return next(error);
 
     const locale = req.headers['accept-language'] || 'es';

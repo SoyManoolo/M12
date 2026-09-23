@@ -1,3 +1,5 @@
+import { pageMeta } from '~/utils/seo';
+import { developmentLogger } from '~/utils/logger';
 /**
  * Página de perfil de usuario
  * 
@@ -97,10 +99,12 @@ export async function loader({ request }: { request: Request }) {
       isOwnProfile: userData.user_id === currentUserId
     });
   } catch (error) {
-    console.error('Error en loader de perfil:', error);
+    developmentLogger.error('Error en loader de perfil:', error);
     return Response.json({ error: "Error al cargar el perfil" }, { status: 500 });
   }
 }
+
+export const meta = () => pageMeta('Perfil', 'Perfil y publicaciones de usuario en FriendsGo.', { path: '/perfil' });
 
 export default function Perfil() {
   const data = useLoaderData<typeof loader>() as LoaderData;
@@ -176,7 +180,7 @@ export default function Perfil() {
           setFriends([]);
         }
       } catch (err) {
-        console.error('Error al cargar los amigos:', err);
+        developmentLogger.error('Error al cargar los amigos:', err);
         setNotification({
           message: 'Error al cargar la lista de amigos',
           type: 'error'
@@ -231,7 +235,7 @@ export default function Perfil() {
 
   const handleLike = async (postId: string) => {
     try {
-      console.log('Dando like al post:', postId);
+      developmentLogger.log('Dando like al post:', postId);
       setPosts(prev =>
         prev.map(post =>
           post.post_id === postId
@@ -240,13 +244,13 @@ export default function Perfil() {
         )
       );
     } catch (error) {
-      console.error('Error al dar like:', error);
+      developmentLogger.error('Error al dar like:', error);
     }
   };
 
   const handleSave = async (postId: string) => {
     try {
-      console.log('Guardando post:', postId);
+      developmentLogger.log('Guardando post:', postId);
       setPosts(prev =>
         prev.map(post =>
           post.post_id === postId
@@ -255,7 +259,7 @@ export default function Perfil() {
         )
       );
     } catch (error) {
-      console.error('Error al guardar el post:', error);
+      developmentLogger.error('Error al guardar el post:', error);
     }
   };
 
@@ -318,7 +322,7 @@ export default function Perfil() {
         throw new Error(response.message || 'Error al eliminar la publicación');
       }
     } catch (err) {
-      console.error('Error al eliminar el post:', err);
+      developmentLogger.error('Error al eliminar el post:', err);
       setNotification({
         message: err instanceof Error ? err.message : 'Error al eliminar la publicación',
         type: 'error'

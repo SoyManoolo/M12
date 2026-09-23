@@ -89,6 +89,33 @@ export const authService = {
         }
     },
 
+    /** Completes a password reset using the opaque token sent by email. */
+    async resetPassword(token: string, password: string): Promise<PasswordResetResponse> {
+        if (!token || !password) {
+            return { success: false, status: 400, message: 'El enlace o la contraseña no son válidos.' };
+        }
+
+        try {
+            const response = await fetch(`${environment.apiUrl}/auth/reset-password`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ token, password }),
+            });
+            const data = await response.json().catch(() => ({}));
+            return {
+                success: response.ok,
+                status: response.status,
+                message: response.ok
+                    ? 'Tu contraseña se actualizó. Ya puedes iniciar sesión.'
+                    : data.message || 'El enlace ha caducado o no es válido. Solicita uno nuevo.',
+            };
+        } catch (error) {
+            developmentLogger.error('Error al restablecer la contraseña.', error);
+            return { success: false, status: 0, message: 'No pudimos conectar con el servidor.' };
+        }
+    },
+
     /**
      * Inicia sesión con las credenciales proporcionadas
      * 

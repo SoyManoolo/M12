@@ -12,7 +12,7 @@ const router = express.Router();
 const userService = new UserService();
 const userController = new UserController(userService);
 const userValidator = new UserValidator();
-const { IdValidator, UsernameValidator, updateUserValidator } = userValidator;
+const { IdValidator, UsernameValidator, SearchValidator, updateUserValidator } = userValidator;
 
 const authorizeUserMutation = async (req: Request<{ id?: string }>, res: Response, next: NextFunction) => {
     try {
@@ -53,7 +53,7 @@ router.get('/username', UsernameValidator, async (req: Request, res: Response, n
 });
 
 // Nueva ruta para buscar usuarios de forma flexible
-router.get('/search', async (req: Request, res: Response, next: NextFunction) => {
+router.get('/search', SearchValidator, async (req: Request, res: Response, next: NextFunction) => {
     await userController.searchUsers(req, res, next);
 });
 

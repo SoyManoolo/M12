@@ -1,4 +1,4 @@
-import { Op, where } from "sequelize";
+import { FindOptions, Op } from "sequelize";
 import { AppError } from "../middlewares/errors/AppError";
 import { Post, PostComments, PostLikes, User } from "../models";
 import { existsPost, existsUser } from "../utils/modelExists";
@@ -74,7 +74,7 @@ export class PostService {
             const user_id = user.getDataValue("user_id");
             dbLogger.info(`[PostService] User ID: ${JSON.stringify(user_id)}`);
 
-            const queryOptions: any = {
+            const queryOptions: FindOptions = {
                 limit: limit + 1,
                 where: {
                     user_id
@@ -177,7 +177,7 @@ export class PostService {
         try {
             dbLogger.info('[PostService] Getting all posts');
 
-            const queryOptions: any = {
+            const queryOptions: FindOptions = {
                 limit: limit + 1,
                 order: [['created_at', 'DESC']],
                 include: [

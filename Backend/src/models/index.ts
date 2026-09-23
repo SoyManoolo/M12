@@ -14,6 +14,8 @@ import { Notifications } from './Notifications';
 import { Logs } from './Logs';
 import { SavedPosts } from './SavedPosts';
 import { RefreshToken } from './RefreshToken';
+import { PasswordResetToken } from './PasswordResetToken';
+import { SessionRefreshToken } from './SessionRefreshToken';
 
 // User & Post relationships
 User.hasMany(Post, {
@@ -309,6 +311,18 @@ User.hasMany(SavedPosts, {
     as: 'savedPosts'
 });
 
+User.hasMany(PasswordResetToken, {
+    foreignKey: 'user_id',
+    sourceKey: 'user_id',
+    as: 'passwordResetTokens'
+});
+
+PasswordResetToken.belongsTo(User, {
+    foreignKey: 'user_id',
+    targetKey: 'user_id',
+    as: 'user'
+});
+
 SavedPosts.belongsTo(User, {
     foreignKey: 'user_id',
     targetKey: 'user_id',
@@ -344,5 +358,7 @@ export {
     Notifications,
     Logs,
     RefreshToken,
-    SavedPosts
+    SavedPosts,
+    PasswordResetToken,
+    SessionRefreshToken
 };

@@ -1,3 +1,4 @@
+import { developmentLogger } from '~/utils/logger';
 import type { Socket } from 'socket.io-client';
 import { environment } from '~/config/environment';
 
@@ -28,27 +29,27 @@ class SocketService {
     public async connect(_token: string): Promise<void> {
         // Protección SSR
         if (typeof window === 'undefined') {
-            console.warn('Socket.connect llamado en SSR, ignorando.');
+            developmentLogger.warn('Socket.connect llamado en SSR, ignorando.');
             return;
         }
 
         if (this.socket?.connected) {
-            console.log('Socket ya conectado.');
+            developmentLogger.log('Socket ya conectado.');
             this.connectCallbacks.forEach(cb => cb());
             this.connectCallbacks = [];
             return;
         }
 
         if (this.socket?.connected) {
-            console.log('Socket ya está intentando conectar.');
+            developmentLogger.log('Socket ya está intentando conectar.');
             return;
         }
 
-        console.log('Intentando conectar a Socket.IO en:', environment.apiUrl);
+        developmentLogger.log('Intentando conectar a Socket.IO en:', environment.apiUrl);
         
         const socketIO = await getSocketIO();
         if (!socketIO) {
-            console.error('No se pudo cargar socket.io-client');
+            developmentLogger.error('No se pudo cargar socket.io-client');
             return;
         }
 
@@ -67,31 +68,31 @@ class SocketService {
         if (!this.socket) return;
 
         this.socket.on('connect', () => {
-            console.log('Conectado al servidor de Socket.IO con ID:', this.socket?.id);
+            developmentLogger.log('Conectado al servidor de Socket.IO con ID:', this.socket?.id);
             this.connectCallbacks.forEach(cb => cb());
             this.connectCallbacks = [];
         });
 
         this.socket.on('disconnect', (reason) => {
-            console.warn('Desconectado del servidor Socket.IO:', reason);
+            developmentLogger.warn('Desconectado del servidor Socket.IO:', reason);
         });
 
         this.socket.on('connect_error', (error) => {
-            console.error('Error de conexión Socket.IO:', error.message);
+            developmentLogger.error('Error de conexión Socket.IO:', error.message);
         });
 
     }
 
     public disconnect(): void {
         if (this.socket) {
-            console.log('Desconectando socket...');
+            developmentLogger.log('Desconectando socket...');
             this.socket.disconnect();
         }
     }
 
     public emit(event: string, data: any): void {
         if (!this.socket?.connected) {
-            console.error('Socket no conectado. No se puede emitir el evento:', event, data);
+            developmentLogger.error('Socket no conectado. No se puede emitir el evento:', event, data);
             return;
         }
         this.socket.emit(event, data);
@@ -99,7 +100,7 @@ class SocketService {
 
     public on(event: string, callback: (data: any) => void): void {
         if (!this.socket) {
-            console.warn('Socket no inicializado al intentar registrar listener para:', event);
+            developmentLogger.warn('Socket no inicializado al intentar registrar listener para:', event);
             return;
         }
         this.socket.on(event, callback);
@@ -129,7 +130,7 @@ class SocketService {
             this.socket.on('connect', callback);
         } else {
             this.connectCallbacks.push(callback);
-            console.warn("Socket no existe al registrar onConnect. El callback se ejecutará después de llamar a connect() y que la conexión sea exitosa.");
+            developmentLogger.warn("Socket no existe al registrar onConnect. El callback se ejecutará después de llamar a connect() y que la conexión sea exitosa.");
         }
     }
 }

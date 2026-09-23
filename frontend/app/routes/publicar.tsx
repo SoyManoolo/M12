@@ -1,3 +1,4 @@
+import { pageMeta } from '~/utils/seo';
 import { useState, useEffect } from 'react';
 import Navbar from '~/components/Inicio/Navbar';
 import { useAuth } from '~/hooks/useAuth';
@@ -21,6 +22,8 @@ interface CreatePostResponse {
     is_saved: boolean;
   };
 }
+
+export const meta = () => pageMeta('Crear publicación', 'Comparte un momento con tus amistades en FriendsGo.', { path: '/publicar' });
 
 export default function Publicar() {
   const { token } = useAuth();

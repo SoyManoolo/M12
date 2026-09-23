@@ -15,6 +15,8 @@ import { Link } from 'react-router';
 import { FaArrowLeft, FaEnvelope } from 'react-icons/fa';
 import { authService } from '~/services/auth.service';
 
+export const meta = () => pageMeta('Recuperar contraseña', 'Solicita ayuda para recuperar el acceso a tu cuenta de FriendsGo.', { path: '/forgot-password' });
+
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);

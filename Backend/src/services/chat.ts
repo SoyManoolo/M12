@@ -330,6 +330,25 @@ export class ChatService {
         }
     }
 
+    /** Elimina de forma permanente todo el historial de una conversación. */
+    public async deleteConversation(requesterId: string, otherUserId: string) {
+        if (requesterId === otherUserId) throw new AppError(400, 'InvalidReceiverId');
+
+        const otherUser = await existsUser({ user_id: otherUserId });
+        if (!otherUser) throw new AppError(404, 'UserNotFound');
+
+        const result = await ChatMessages.destroy({
+            where: {
+                [Op.or]: [
+                    { sender_id: requesterId, receiver_id: otherUserId },
+                    { sender_id: otherUserId, receiver_id: requesterId },
+                ],
+            },
+        });
+
+        return { deleted: true, deleted_messages: result };
+    }
+
     // Método para marcar mensaje como entregado
     public async markMessageAsDelivered(message_id: string, requesterId: string) {
         try {

@@ -12,6 +12,7 @@ const createDevelopmentLogger = (method: keyof Console): LogMethod => (...data) 
  * No debe recibir contraseñas, tokens ni cuerpos completos de respuestas HTTP.
  */
 export const developmentLogger = {
+  log: createDevelopmentLogger('log'),
   debug: createDevelopmentLogger('debug'),
   info: createDevelopmentLogger('info'),
   warn: createDevelopmentLogger('warn'),

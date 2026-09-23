@@ -230,6 +230,13 @@ DB_NAME_TEST=friendsgo_test
 DB_HOST=localhost
 DB_UPDATE=true   # crea las tablas automáticamente al iniciar
 
+FRONTEND_URL=http://localhost:5173
+RESEND_API_KEY=   # necesario para entregar enlaces de recuperación por correo
+EMAIL_FROM=FriendsGo <no-reply@tu-dominio-verificado.example>
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GOOGLE_CALLBACK_URL=http://localhost:3000/auth/google/callback
+
 LOGS_DAYS=7
 CLEAN_USERS=30     # días de retención antes de purgar usuarios eliminados
 CLEAN_POSTS=15     # días de retención antes de purgar publicaciones eliminadas

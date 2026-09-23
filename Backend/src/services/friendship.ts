@@ -1,11 +1,60 @@
-import { FriendRequest, Friends, User } from '../models';
+import { FriendRequest, Friends, User, UserBlocks } from '../models';
 import { AppError } from '../middlewares/errors/AppError';
 import dbLogger from '../config/logger';
 import { Op } from 'sequelize';
 import { verifyFriendship } from '../utils/modelExists';
 import { sequelize } from '../config/database';
+import { UserAttributes } from '../types/custom';
 
 export class FriendshipService {
+    /** Lista candidatos de amistad sin incluir al usuario actual ni relaciones existentes. */
+    public async getFriendSuggestions(userId: string, limit = 20) {
+        try {
+            const [friendships, requests, blocks] = await Promise.all([
+                Friends.findAll({
+                    where: { [Op.or]: [{ user1_id: userId }, { user2_id: userId }] },
+                    attributes: ['user1_id', 'user2_id']
+                }),
+                FriendRequest.findAll({
+                    where: {
+                        [Op.or]: [{ sender_id: userId }, { receiver_id: userId }],
+                        status: 'pending'
+                    },
+                    attributes: ['sender_id', 'receiver_id']
+                }),
+                // No sugerimos cuentas bloqueadas ni las que han bloqueado al usuario.
+                UserBlocks.findAll({
+                    where: { [Op.or]: [{ blocker_id: userId }, { blocked_id: userId }] },
+                    attributes: ['blocker_id', 'blocked_id']
+                })
+            ]);
+
+            const excludedIds = new Set<string>([userId]);
+            for (const friendship of friendships) {
+                const row = friendship.get({ plain: true }) as { user1_id: string; user2_id: string };
+                excludedIds.add(row.user1_id === userId ? row.user2_id : row.user1_id);
+            }
+            for (const request of requests) {
+                const row = request.get({ plain: true }) as { sender_id: string; receiver_id: string };
+                excludedIds.add(row.sender_id === userId ? row.receiver_id : row.sender_id);
+            }
+            for (const block of blocks) {
+                const row = block.get({ plain: true }) as { blocker_id: string; blocked_id: string };
+                excludedIds.add(row.blocker_id === userId ? row.blocked_id : row.blocker_id);
+            }
+
+            return await User.findAll({
+                where: { user_id: { [Op.notIn]: [...excludedIds] } },
+                attributes: ['user_id', 'username', 'name', 'surname', 'profile_picture', 'bio', 'created_at'],
+                order: [['created_at', 'DESC']],
+                limit
+            });
+        } catch (error) {
+            dbLogger.error('[FriendshipService] Error en getFriendSuggestions:', { error });
+            throw new AppError(500, 'InternalServerError');
+        }
+    }
+
     /**
      * Envía una solicitud de amistad
      */
@@ -183,7 +232,14 @@ export class FriendshipService {
             return {
                 success: true,
                 data: friendships.map(friendship => {
-                    const f = friendship.toJSON() as any;
+                    const f = friendship.toJSON() as {
+                        friendship_id: string;
+                        user1_id: string;
+                        user2_id: string;
+                        created_at: Date;
+                        user1: UserAttributes;
+                        user2: UserAttributes;
+                    };
                     const isUser1 = f.user1.user_id === user_id;
                     const amigo = isUser1 ? f.user2 : f.user1;
                     return {

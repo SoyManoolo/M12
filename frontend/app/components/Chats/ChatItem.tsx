@@ -15,6 +15,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useAuth } from "~/hooks/useAuth";
 import SecureImage from '../Shared/SecureImage';
+import { FaTrash } from 'react-icons/fa';
 
 interface ChatItemProps {
   chat: {
@@ -32,9 +33,10 @@ interface ChatItemProps {
     unread_count: number;
   };
   onClick: () => void;
+  onDelete: () => void;
 }
 
-export default function ChatItem({ chat, onClick }: ChatItemProps) {
+export default function ChatItem({ chat, onClick, onDelete }: ChatItemProps) {
   const { user } = useAuth();
 
   const formatTime = (timestamp: string) => {
@@ -55,60 +57,29 @@ export default function ChatItem({ chat, onClick }: ChatItemProps) {
   const isLastMessageFromMe = user?.user_id === chat.last_message.sender_id;
 
   return (
-    <div 
-      onClick={onClick}
-      className="group bg-gray-900/50 hover:bg-gray-800/80 rounded-xl p-4 cursor-pointer transition-all duration-200 border border-transparent hover:border-gray-700"
-    >
-    <div className="flex items-center space-x-4">
-      {/* Avatar con indicador de estado */}
-      <div className="relative flex-shrink-0">
-        {chat.user.profile_picture ? (
-          <SecureImage
-            src={chat.user.profile_picture}
-            alt={chat.user.username}
-            className="w-14 h-14 rounded-full object-cover border-2 border-gray-800 group-hover:border-blue-500/50 transition-colors"
-          />
-        ) : (
-          <div className="w-14 h-14 rounded-full border-2 border-gray-800 group-hover:border-blue-500/50 bg-gray-800 flex items-center justify-center transition-colors">
-            <span className="text-gray-400 text-xl group-hover:text-blue-400 transition-colors">
-              {chat.user.username.charAt(0).toUpperCase()}
-            </span>
-          </div>
-        )}
-        {/* Indicador de mensajes no leídos */}
-        {chat.unread_count > 0 && (
-          <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1 shadow-lg">
-            {chat.unread_count}
-          </span>
-        )}
-      </div>
-
-      {/* Información del chat */}
-      <div className="flex-1 min-w-0">
-        <div className="flex justify-between items-start">
-          <div>
-            <h3 className="text-white font-semibold text-base group-hover:text-blue-400 transition-colors">
-              {chat.user.username}
-            </h3>
-              <div className="flex items-center mt-0.5">
-                {!isEmpty && (
-                  <>
-                    <span className="text-sm text-gray-500 mr-1">
-                      {isLastMessageFromMe ? 'Tú: ' : `${chat.user.username}: `}
-                    </span>
-                    <p className={`text-sm truncate max-w-[200px] text-gray-400 group-hover:text-gray-300 transition-colors`}>
-                      {chat.last_message.content}
-            </p>
-                  </>
-                )}
-              </div>
+    <div className="flex items-center gap-2 rounded-xl border border-transparent bg-gray-900/50 p-3 transition-all duration-200 hover:border-gray-700 hover:bg-gray-800/80">
+      <button type="button" onClick={onClick} className="group flex min-w-0 flex-1 items-center space-x-4 rounded-lg p-1 text-left focus:outline-none focus:ring-2 focus:ring-blue-500" aria-label={`Abrir conversación con ${chat.user.username}`}>
+        <div className="relative flex-shrink-0">
+          {chat.user.profile_picture ? (
+            <SecureImage src={chat.user.profile_picture} alt={chat.user.username} className="h-14 w-14 rounded-full border-2 border-gray-800 object-cover transition-colors group-hover:border-blue-500/50" />
+          ) : (
+            <div className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-gray-800 bg-gray-800 transition-colors group-hover:border-blue-500/50">
+              <span className="text-xl text-gray-400 transition-colors group-hover:text-blue-400">{chat.user.username.charAt(0).toUpperCase()}</span>
+            </div>
+          )}
+          {chat.unread_count > 0 && <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-blue-600 px-1 text-xs font-bold text-white shadow-lg">{chat.unread_count}</span>}
         </div>
-          <span className="text-xs text-gray-500 group-hover:text-gray-400 whitespace-nowrap ml-2 transition-colors">
-            {isEmpty ? '' : formatTime(chat.last_message.timestamp)}
+        <span className="flex min-w-0 flex-1 items-start justify-between">
+          <span className="min-w-0">
+            <span className="block text-base font-semibold text-white transition-colors group-hover:text-blue-400">{chat.user.username}</span>
+            {!isEmpty && <span className="mt-0.5 block truncate text-sm text-gray-400 transition-colors group-hover:text-gray-300"><span className="text-gray-500">{isLastMessageFromMe ? 'Tú: ' : `${chat.user.username}: `}</span>{chat.last_message.content}</span>}
           </span>
-          </div>
-        </div>
-      </div>
+          <span className="ml-2 whitespace-nowrap text-xs text-gray-500 transition-colors group-hover:text-gray-400">{isEmpty ? '' : formatTime(chat.last_message.timestamp)}</span>
+        </span>
+      </button>
+      <button type="button" onClick={onDelete} aria-label={`Eliminar conversación con ${chat.user.username}`} title="Eliminar conversación" className="rounded-lg p-3 text-gray-500 transition-colors hover:bg-red-950 hover:text-red-400 focus:outline-none focus:ring-2 focus:ring-red-500">
+        <FaTrash aria-hidden="true" />
+      </button>
     </div>
   );
-} 
+}

@@ -20,4 +20,23 @@ export class CommentValidation {
             })
         }) (req, res, next);
     };
+
+    public validatePostId = celebrate({
+        [Segments.PARAMS]: Joi.object({
+            postId: Joi.string().uuid().required()
+        })
+    });
+
+    public validateCommentId = celebrate({
+        [Segments.PARAMS]: Joi.object({
+            commentId: Joi.string().uuid().required()
+        })
+    });
+
+    public validatePagination = celebrate({
+        [Segments.QUERY]: Joi.object({
+            offset: Joi.number().integer().min(0).default(0),
+            limit: Joi.number().integer().min(1).max(25).default(10)
+        }).unknown(true)
+    });
 }

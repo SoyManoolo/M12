@@ -1,5 +1,6 @@
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import { FaExclamationTriangle } from 'react-icons/fa';
+import { useAccessibleDialog } from '~/hooks/useAccessibleDialog';
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -21,22 +22,14 @@ export default function ConfirmModal({
   cancelText = 'Cancelar'
 }: ConfirmModalProps) {
   const cancelButtonRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    cancelButtonRef.current?.focus();
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
-    };
-    document.addEventListener('keydown', onKeyDown);
-    return () => document.removeEventListener('keydown', onKeyDown);
-  }, [isOpen, onClose]);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useAccessibleDialog(isOpen, dialogRef, onClose, cancelButtonRef);
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 backdrop-blur-sm bg-black/30 flex items-center justify-center z-50" onMouseDown={onClose}>
-      <div role="dialog" aria-modal="true" aria-labelledby="confirm-modal-title" className="bg-gray-900/95 rounded-xl p-6 max-w-md w-full mx-4 border border-gray-800 shadow-xl" onMouseDown={(event) => event.stopPropagation()}>
+      <div ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="confirm-modal-title" className="bg-gray-900/95 rounded-xl p-6 max-w-md w-full mx-4 border border-gray-800 shadow-xl" onMouseDown={(event) => event.stopPropagation()}>
         <div className="flex items-center justify-center mb-4">
           <FaExclamationTriangle className="text-yellow-500 text-4xl" />
         </div>

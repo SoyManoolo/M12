@@ -1,3 +1,4 @@
+import { developmentLogger } from '~/utils/logger';
 import { environment } from '~/config/environment';
 import type { User } from '~/types/user.types';
 
@@ -56,7 +57,7 @@ class FriendshipService {
         data: data.data
       };
     } catch (error) {
-      console.error('Error al enviar solicitud de amistad:', error);
+      developmentLogger.error('Error al enviar solicitud de amistad:', error);
       return {
         success: false,
         message: 'Error al enviar solicitud de amistad'
@@ -79,7 +80,7 @@ class FriendshipService {
         message: data.message
       };
     } catch (error) {
-      console.error('Error al aceptar solicitud de amistad:', error);
+      developmentLogger.error('Error al aceptar solicitud de amistad:', error);
       return {
         success: false,
         message: 'Error al aceptar solicitud de amistad'
@@ -102,7 +103,7 @@ class FriendshipService {
         message: data.message
       };
     } catch (error) {
-      console.error('Error al rechazar solicitud de amistad:', error);
+      developmentLogger.error('Error al rechazar solicitud de amistad:', error);
       return {
         success: false,
         message: 'Error al rechazar solicitud de amistad'
@@ -125,7 +126,7 @@ class FriendshipService {
         message: data.message
       };
     } catch (error) {
-      console.error('Error al cancelar solicitud de amistad:', error);
+      developmentLogger.error('Error al cancelar solicitud de amistad:', error);
       return {
         success: false,
         message: 'Error al cancelar solicitud de amistad'
@@ -148,7 +149,7 @@ class FriendshipService {
         data: data.data
       };
     } catch (error) {
-      console.error('Error al obtener solicitudes pendientes:', error);
+      developmentLogger.error('Error al obtener solicitudes pendientes:', error);
       return {
         success: false,
         message: 'Error al obtener solicitudes pendientes'
@@ -171,7 +172,7 @@ class FriendshipService {
         data: data.data
       };
     } catch (error) {
-      console.error('Error al obtener solicitudes enviadas:', error);
+      developmentLogger.error('Error al obtener solicitudes enviadas:', error);
       return {
         success: false,
         message: 'Error al obtener solicitudes enviadas'
@@ -194,7 +195,7 @@ class FriendshipService {
         data: data.data
       };
     } catch (error) {
-      console.error('Error al obtener lista de amigos:', error);
+      developmentLogger.error('Error al obtener lista de amigos:', error);
       return {
         success: false,
         message: 'Error al obtener lista de amigos'
@@ -217,7 +218,7 @@ class FriendshipService {
         data: data.data
       };
     } catch (error) {
-      console.error('Error al obtener estado de amistad:', error);
+      developmentLogger.error('Error al obtener estado de amistad:', error);
       return {
         success: false,
         message: 'Error al obtener estado de amistad'
@@ -240,7 +241,7 @@ class FriendshipService {
         message: data.message
       };
     } catch (error) {
-      console.error('Error al eliminar amistad:', error);
+      developmentLogger.error('Error al eliminar amistad:', error);
       return {
         success: false,
         message: 'Error al eliminar amistad'

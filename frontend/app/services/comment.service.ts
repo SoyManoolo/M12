@@ -1,3 +1,4 @@
+import { developmentLogger } from '~/utils/logger';
 import { environment } from '../config/environment';
 
 export interface Comment {
@@ -61,7 +62,7 @@ class CommentService {
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error('Error en createComment:', error);
+      developmentLogger.error('Error en createComment:', error);
       if (error instanceof Error) {
         throw new Error(error.message);
       }
@@ -92,7 +93,7 @@ class CommentService {
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error('Error en getComments:', error);
+      developmentLogger.error('Error en getComments:', error);
       if (error instanceof Error) {
         throw new Error(error.message);
       }
@@ -126,7 +127,7 @@ class CommentService {
         message: 'Comentario eliminado correctamente'
       };
     } catch (error) {
-      console.error('Error en deleteComment:', error);
+      developmentLogger.error('Error en deleteComment:', error);
       if (error instanceof Error) {
         throw new Error(error.message);
       }

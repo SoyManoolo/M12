@@ -1,4 +1,15 @@
 export enum VideoCallEvent {
+    REGISTER_CALL_PRESENCE = 'register_call_presence',
+    CALL_INVITE = 'call_invite',
+    CALL_INVITE_RESULT = 'call_invite_result',
+    INCOMING_CALL_INVITE = 'incoming_call_invite',
+    CALL_INVITE_RESPONSE = 'call_invite_response',
+    CALL_INVITE_RESPONSE_RESULT = 'call_invite_response_result',
+    CALL_INVITE_STATUS = 'call_invite_status',
+    CALL_INVITE_CANCEL = 'call_invite_cancel',
+    CALL_INVITE_CANCEL_RESULT = 'call_invite_cancel_result',
+    CALL_INVITE_CANCELLED = 'call_invite_cancelled',
+    CALL_INVITE_ACCEPTED = 'call_invite_accepted',
     // Eventos de cola
     ADD_TO_QUEUE = 'add_to_queue',
     QUEUE_RESULT = 'queue_result',
@@ -65,24 +76,33 @@ export interface MatchFoundData {
 }
 
 export interface VideoCallOffer {
-    offer: RTCSessionDescriptionInit;
-    from: string;
-    to: string;
-    token: string;
+  offer: RTCSessionDescriptionInit;
+  from: string;
+  to: string;
+  callId: string;
+  token: string;
 }
 
 export interface VideoCallAnswer {
-    answer: RTCSessionDescriptionInit;
-    from: string;
-    to: string;
-    token: string;
+  answer: RTCSessionDescriptionInit;
+  from: string;
+  to: string;
+  callId: string;
+  token: string;
 }
 
 export interface VideoCallIceCandidate {
-    candidate: RTCIceCandidateInit;
-    from: string;
-    to: string;
-    token: string;
+  candidate: RTCIceCandidateInit;
+  from: string;
+  to: string;
+  callId: string;
+  token: string;
+}
+
+export interface IncomingCallInvitation {
+    inviteId: string;
+    caller: { id: string; username: string; profile_picture: string | null };
+    expiresAt: number;
 }
 
 export interface VideoCallError {

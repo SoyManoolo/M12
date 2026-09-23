@@ -1,0 +1,93 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: friendsgo
+          POSTGRES_PASSWORD: friendsgo
+          POSTGRES_DB: friendsgo_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U friendsgo -d friendsgo_ci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      NODE_ENV: test
+      PORT: 3000
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_USER: friendsgo
+      DB_PASS: friendsgo
+      DB_NAME: friendsgo_application
+      DB_NAME_TEST: friendsgo_ci
+      JWT_SECRET: ci-only-secret-with-at-least-thirty-two-characters
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            Backend/package-lock.json
+            frontend/package-lock.json
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Audit root dependencies
+        run: npm audit --audit-level=high
+
+      - name: Build root package
+        run: npm run build --if-present
+
+      - name: Install backend dependencies
+        working-directory: Backend
+        run: npm ci
+
+      - name: Audit backend dependencies
+        working-directory: Backend
+        run: npm audit --audit-level=high
+
+      - name: Build backend
+        working-directory: Backend
+        run: npm run build
+
+      - name: Prepare ephemeral backend database
+        working-directory: Backend
+        run: npm run test:prepare-db
+
+      - name: Run backend integration tests
+        working-directory: Backend
+        run: npm test
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Audit frontend dependencies
+        working-directory: frontend
+        run: npm audit --audit-level=high
+
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build

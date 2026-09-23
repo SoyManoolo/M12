@@ -1,4 +1,4 @@
-import { useState, useEffect, MouseEvent } from 'react';
+import { useEffect, useRef, useState, type MouseEvent } from 'react';
 import { environment } from '../../config/environment';
 
 interface SecureImageProps {
@@ -8,60 +8,80 @@ interface SecureImageProps {
   onClick?: (e: MouseEvent<HTMLImageElement>) => void;
 }
 
+// Share fetched blobs between repeated avatars while keeping object URLs scoped
+// to the mounted image so they can be revoked as soon as the image is replaced.
+const imageRequests = new Map<string, Promise<Blob>>();
+
+function getImageRequest(src: string): Promise<Blob> {
+  const url = src.startsWith('/') ? `${environment.apiUrl}${src}` : src;
+  let request = imageRequests.get(url);
+  if (!request) {
+    request = fetch(url, { headers: { 'Ngrok-Skip-Browser-Warning': 'true' } })
+      .then(response => {
+        if (!response.ok) throw new Error(`Image request failed (${response.status})`);
+        return response.blob();
+      })
+      .catch(error => {
+        imageRequests.delete(url);
+        throw error;
+      });
+    imageRequests.set(url, request);
+  }
+  return request;
+}
+
 export default function SecureImage({ src, alt, className, onClick }: SecureImageProps) {
-  const [imageUrl, setImageUrl] = useState<string>('');
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+  const [imageUrl, setImageUrl] = useState('');
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
-    const fetchImage = async () => {
-      try {
-        // Construir la URL completa si es una ruta relativa
-        let fullUrl = src;
-        if (src.startsWith('/')) {
-          fullUrl = `${environment.apiUrl}${src}`;
-        }
-
-        const response = await fetch(fullUrl, {
-          headers: {
-            'Ngrok-Skip-Browser-Warning': 'true'
-          }
-        });
-        
-        if (response.ok) {
-          const blob = await response.blob();
-          const objectUrl = URL.createObjectURL(blob);
-          setImageUrl(objectUrl);
-        } else {
-          console.error('Error al cargar la imagen:', response.statusText);
-        }
-      } catch (error) {
-        console.error('Error al cargar la imagen:', error);
-      }
-    };
-
-    if (src) {
-      fetchImage();
+    const element = containerRef.current;
+    if (!element) return;
+    if (!('IntersectionObserver' in window)) {
+      setIsVisible(true);
+      return;
     }
-
-    // Limpiar el objeto URL cuando el componente se desmonte
-    return () => {
-      if (imageUrl) {
-        URL.revokeObjectURL(imageUrl);
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setIsVisible(true);
+        observer.disconnect();
       }
-    };
-  }, [src]);
+    }, { rootMargin: '200px' });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
 
-  if (!imageUrl) {
-    return (
-      <div className={`${className} bg-gray-800 animate-pulse`} />
-    );
-  }
+  useEffect(() => {
+    let active = true;
+    let objectUrl: string | undefined;
+    setImageUrl('');
+    setFailed(false);
+    if (src && isVisible) {
+      getImageRequest(src).then(blob => {
+        if (!active) return;
+        objectUrl = URL.createObjectURL(blob);
+        setImageUrl(objectUrl);
+      }).catch(() => {
+        if (active) setFailed(true);
+      });
+    }
+    return () => {
+      active = false;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [src, isVisible]);
 
   return (
-    <img
-      src={imageUrl}
-      alt={alt}
-      className={className}
-      onClick={onClick}
-    />
+    <div ref={containerRef} className={`${className || ''} ${!imageUrl ? 'bg-gray-800' : ''}`}>
+      {imageUrl ? (
+        <img src={imageUrl} alt={alt} className="h-full w-full object-cover" onClick={onClick} loading="lazy" />
+      ) : failed ? (
+        <span className="sr-only">No se pudo cargar la imagen de {alt}</span>
+      ) : (
+        <span className="block h-full w-full animate-pulse" aria-hidden="true" />
+      )}
+    </div>
   );
-} 
+}

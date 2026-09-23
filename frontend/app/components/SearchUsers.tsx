@@ -34,8 +34,8 @@ export default function SearchUsers() {
         }
     };
 
-    const handleUserClick = (userId: string) => {
-        navigate(`/profile/${userId}`);
+    const handleUserClick = (username: string) => {
+        navigate(`/perfil?username=${encodeURIComponent(username)}`);
     };
 
     return (
@@ -74,7 +74,7 @@ export default function SearchUsers() {
                     <button
                         type="button"
                         key={user.user_id}
-                        onClick={() => handleUserClick(user.user_id)}
+                        onClick={() => handleUserClick(user.username)}
                         className="flex w-full items-center space-x-3 rounded-lg p-3 text-left transition-colors hover:bg-gray-800"
                     >
                         <div className="h-10 w-10 overflow-hidden rounded-full bg-gray-800">

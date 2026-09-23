@@ -23,6 +23,11 @@ router.post('/', AuthToken.verifyToken, async (req: Request, res: Response, next
     await chatController.createMessage(req, res, next);
 });
 
+// Eliminar el historial completo de una conversación entre el usuario y un contacto.
+router.delete('/conversation/:receiver_id', AuthToken.verifyToken, async (req: Request, res: Response, next: NextFunction) => {
+    await chatController.deleteConversation(req, res, next);
+});
+
 // Eliminar un mensaje
 router.delete('/:message_id', AuthToken.verifyToken, async (req: Request, res: Response, next: NextFunction) => {
     await chatController.deleteMessage(req, res, next);

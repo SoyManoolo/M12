@@ -19,6 +19,7 @@ import { useVideoCall } from '~/hooks/useVideoCall';
 import { VideoCallEvent } from '~/types/videocall.types';
 import SocketService from '~/services/socket.service';
 import RatingModal from '~/components/Videollamada/RatingModal';
+import { developmentLogger } from '~/utils/logger';
 
 /**
  * @interface Message
@@ -89,10 +90,10 @@ export default function VideollamadaPage() {
         }
     }, [remoteStream]);
 
-    // Iniciar la llamada cuando se monta el componente
+    // Si la ruta heredada incluye un usuario, iniciar una invitación protegida.
     useEffect(() => {
         if (userId) {
-            startCall();
+            startCall(userId);
         }
         return () => {
             endCall();
@@ -154,7 +155,7 @@ export default function VideollamadaPage() {
 
     // MODIFICADO: Ahora implementa correctamente la lógica de búsqueda
     const handleSearchCall = () => {
-        console.log("Buscando nueva videollamada...");
+        developmentLogger.info("Buscando nueva videollamada...");
         if (videoCallState.inQueue) {
             // Si ya está en cola, salir de la cola
             leaveQueue();
@@ -175,7 +176,6 @@ export default function VideollamadaPage() {
         }
         navigate('/inicio');
     };
-
 
     return (
         <div className="h-screen w-screen bg-black text-white overflow-hidden fixed inset-0">

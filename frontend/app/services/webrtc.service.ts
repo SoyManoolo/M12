@@ -1,3 +1,4 @@
+import { developmentLogger } from '~/utils/logger';
 import { iceServersConfig } from "../config/rtc.config";
 import {
     VideoCallEvent,
@@ -47,7 +48,7 @@ class WebRTCService {
     public static getInstance(): WebRTCService {
         // Protección SSR: Solo crear instancia en el cliente
         if (typeof window === 'undefined') {
-            console.warn('WebRTCService.getInstance llamado en SSR, devolviendo instancia vacía');
+            developmentLogger.warn('WebRTCService.getInstance llamado en SSR, devolviendo instancia vacía');
             // Devolver un objeto dummy que no hace nada
             return {} as WebRTCService;
         }
@@ -90,14 +91,14 @@ class WebRTCService {
             return;
         }
 
-        console.log(`WebRTCService: Procesando ${this.iceCandidateBuffer.length} candidatos ICE en buffer`);
+        developmentLogger.log(`WebRTCService: Procesando ${this.iceCandidateBuffer.length} candidatos ICE en buffer`);
 
         for (const candidate of this.iceCandidateBuffer) {
             try {
                 await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
-                console.log("WebRTCService: Candidato ICE del buffer añadido correctamente");
+                developmentLogger.log("WebRTCService: Candidato ICE del buffer añadido correctamente");
             } catch (err) {
-                console.error("WebRTCService: Error añadiendo candidato ICE del buffer:", err);
+                developmentLogger.error("WebRTCService: Error añadiendo candidato ICE del buffer:", err);
             }
         }
 
@@ -142,7 +143,7 @@ class WebRTCService {
             rtcpMuxPolicy: 'require',
         } as RTCConfiguration);
 
-        console.log(
+        developmentLogger.log(
             "WebRTCService: RTCPeerConnection inicializado con:",
             iceServersConfig
         );
@@ -150,7 +151,7 @@ class WebRTCService {
         // El resto del método permanece igual
         this.peerConnection.onicecandidate = (event) => {
             if (event.candidate && this.partnerSocketId && this.currentCallId) {
-                console.log("WebRTCService: Candidato generado:",
+                developmentLogger.log("WebRTCService: Candidato generado:",
                     event.candidate.candidate.includes("relay") ? "TURN/RELAY" :
                         event.candidate.candidate.includes("srflx") ? "STUN/SRFLX" :
                             "LOCAL/HOST"
@@ -161,15 +162,16 @@ class WebRTCService {
                     candidate: event.candidate,
                     from: this.socketService.getSocketId(),
                     to: this.partnerSocketId,
+                    callId: this.currentCallId,
                     token: this.token ?? "",
                 });
             } else if (!event.candidate) {
-                console.log("WebRTCService: Recopilación de candidatos ICE completada");
+                developmentLogger.log("WebRTCService: Recopilación de candidatos ICE completada");
             }
         };
 
         this.peerConnection.ontrack = (event) => {
-            console.log("WebRTCService: Track remoto recibido:", {
+            developmentLogger.log("WebRTCService: Track remoto recibido:", {
                 kind: event.track.kind,
                 enabled: event.track.enabled,
                 muted: event.track.muted,
@@ -177,16 +179,16 @@ class WebRTCService {
             });
 
             // Log de todos los tracks en el stream
-            console.log(`WebRTCService: Stream remoto tiene ${event.streams[0].getTracks().length} tracks:`,
+            developmentLogger.log(`WebRTCService: Stream remoto tiene ${event.streams[0].getTracks().length} tracks:`,
                 event.streams[0].getTracks().map(t => `${t.kind} (${t.readyState})`).join(', '));
 
             this.remoteStream = event.streams[0];
             this.ensureTracksEnabled(this.remoteStream);
 
             // Monitorear cambios en el track
-            event.track.onmute = () => console.log("WebRTCService: Track remoto muteado");
-            event.track.onunmute = () => console.log("WebRTCService: Track remoto desmuteado");
-            event.track.onended = () => console.log("WebRTCService: Track remoto finalizado");
+            event.track.onmute = () => developmentLogger.log("WebRTCService: Track remoto muteado");
+            event.track.onunmute = () => developmentLogger.log("WebRTCService: Track remoto desmuteado");
+            event.track.onended = () => developmentLogger.log("WebRTCService: Track remoto finalizado");
 
             if (this.onRemoteStreamArrived) {
                 this.onRemoteStreamArrived(this.remoteStream);
@@ -196,7 +198,7 @@ class WebRTCService {
         this.peerConnection.oniceconnectionstatechange = () => {
             if (this.peerConnection) {
                 const state = this.peerConnection.iceConnectionState;
-                console.log(`WebRTCService: ICE Connection State cambiado a: ${state}`);
+                developmentLogger.log(`WebRTCService: ICE Connection State cambiado a: ${state}`);
 
                 if (this.onConnectionStateChange) this.onConnectionStateChange(state);
 
@@ -209,7 +211,7 @@ class WebRTCService {
 
                     if (this.currentCallId) {
                         this.socketService.emit(VideoCallEvent.CALL_CONNECTED, {
-                            callId: this.currentCallId,
+                            callId: this.currentCallId!,
                             token: this.token ?? "",
                         });
                     }
@@ -222,11 +224,11 @@ class WebRTCService {
 
 
                 } else if (state === "failed") {
-                    console.log("WebRTCService: Conexión WebRTC fallida. Cerrando llamada...");
+                    developmentLogger.log("WebRTCService: Conexión WebRTC fallida. Cerrando llamada...");
                     this.closeConnection();
 
                 } else if (state === "disconnected") {
-                    console.log("WebRTCService: Conexión WebRTC fallida. Cerrando llamada...");
+                    developmentLogger.log("WebRTCService: Conexión WebRTC fallida. Cerrando llamada...");
                     this.closeConnection();
 
                 } else if (state === "closed") {
@@ -238,19 +240,19 @@ class WebRTCService {
 
         // Monitoreo avanzado para depuración TURN
         this.peerConnection.onconnectionstatechange = () => {
-            console.log(`WebRTCService: Connection State: ${this.peerConnection?.connectionState}`);
+            developmentLogger.log(`WebRTCService: Connection State: ${this.peerConnection?.connectionState}`);
         };
 
         this.peerConnection.onsignalingstatechange = () => {
-            console.log(`WebRTCService: Signaling State: ${this.peerConnection?.signalingState}`);
+            developmentLogger.log(`WebRTCService: Signaling State: ${this.peerConnection?.signalingState}`);
         };
 
         this.peerConnection.onicegatheringstatechange = () => {
-            console.log(`WebRTCService: ICE Gathering State: ${this.peerConnection?.iceGatheringState}`);
+            developmentLogger.log(`WebRTCService: ICE Gathering State: ${this.peerConnection?.iceGatheringState}`);
         };
 
         this.peerConnection.onicecandidateerror = (event) => {
-            console.error("WebRTCService: Error en candidato ICE:", event);
+            developmentLogger.error("WebRTCService: Error en candidato ICE:", event);
         };
 
         if (this.localStream) {
@@ -261,19 +263,14 @@ class WebRTCService {
         return this.peerConnection;
     }
 
-    private setupSignalingListeners() {
-        console.log("WebRTCService: Configurando listeners de señalización...");
-
-        this.socketService.on(
-            VideoCallEvent.MATCH_FOUND,
-            async (data: MatchFoundData & { isInitiator: boolean }) => {
-                console.log("WebRTCService: match_found recibido:", data);
+    private handleMatchedCall = async (data: MatchFoundData & { isInitiator: boolean }) => {
+                developmentLogger.log("WebRTCService: match_found recibido:", data);
                 if (
                     this.currentCallId ||
                     (this.peerConnection &&
                         this.peerConnection.signalingState !== "closed")
                 ) {
-                    console.warn(
+                    developmentLogger.warn(
                         "WebRTCService: MATCH_FOUND recibido pero una llamada parece estar activa o en proceso. Limpiando primero."
                     );
                     await this.closeConnection(); // Usa el método público para asegurar limpieza completa
@@ -288,7 +285,7 @@ class WebRTCService {
                     await this.getUserMedia();
 
                     if (this.isInitiator) {
-                        console.log(
+                        developmentLogger.log(
                             "WebRTCService: Soy iniciador, creando y enviando oferta..."
                         );
                         const offer = await this.createOffer();
@@ -296,18 +293,24 @@ class WebRTCService {
                             offer,
                             from: this.socketService.getSocketId()!,
                             to: this.partnerSocketId,
+                            callId: this.currentCallId!,
                             token: this.token ?? "",
                         };
                         this.socketService.emit(VideoCallEvent.SEND_OFFER, payload);
                     } else {
-                        console.log("WebRTCService: No soy iniciador, esperando oferta.");
+                        developmentLogger.log("WebRTCService: No soy iniciador, esperando oferta.");
                     }
                 } catch (error) {
-                    console.error("WebRTCService: Error en MATCH_FOUND:", error);
+                    developmentLogger.error("WebRTCService: Error en MATCH_FOUND:", error);
                     this.closeConnection();
                 }
-            }
-        );
+            };
+
+  private setupSignalingListeners() {
+    developmentLogger.log("WebRTCService: Configurando listeners de señalización...");
+
+        this.socketService.on(VideoCallEvent.MATCH_FOUND, this.handleMatchedCall);
+        this.socketService.on(VideoCallEvent.CALL_INVITE_ACCEPTED, this.handleMatchedCall);
 
         // Escucha el mismo evento que se usa para enviar, asumiendo que el backend
         // reenvía el payload original, pero dirigido a este socket.
@@ -318,9 +321,10 @@ class WebRTCService {
                 if (
                     !this.isInitiator &&
                     data.from === this.partnerSocketId &&
+                    data.callId === this.currentCallId &&
                     this.currentCallId
                 ) {
-                    console.log("WebRTCService: Oferta recibida de:", data.from);
+                    developmentLogger.log("WebRTCService: Oferta recibida de:", data.from);
                     try {
                         if (!this.peerConnection) await this.initializePeerConnection(); // Podría ser necesario si el par fue más rápido
                         await this.getUserMedia(); // Asegurar que la media local esté lista
@@ -330,11 +334,12 @@ class WebRTCService {
                             answer,
                             from: this.socketService.getSocketId()!,
                             to: data.from, // Responder a quien envió la oferta
+                            callId: this.currentCallId,
                             token: this.token ?? "",
                         };
                         this.socketService.emit(VideoCallEvent.SEND_ANSWER, payload);
                     } catch (error) {
-                        console.error(
+                        developmentLogger.error(
                             "WebRTCService: Error al manejar oferta recibida:",
                             error
                         );
@@ -350,13 +355,14 @@ class WebRTCService {
                 if (
                     this.isInitiator &&
                     data.from === this.partnerSocketId &&
+                    data.callId === this.currentCallId &&
                     this.currentCallId
                 ) {
-                    console.log("WebRTCService: Respuesta recibida de:", data.from);
+                    developmentLogger.log("WebRTCService: Respuesta recibida de:", data.from);
                     try {
                         await this.handleAnswer(data.answer);
                     } catch (error) {
-                        console.error(
+                        developmentLogger.error(
                             "WebRTCService: Error al manejar respuesta recibida:",
                             error
                         );
@@ -371,14 +377,15 @@ class WebRTCService {
             async (data: ReceivedIceCandidateData) => {
                 if (
                     data.from === this.partnerSocketId &&
+                    data.callId === this.currentCallId &&
                     this.peerConnection &&
                     this.currentCallId
                 ) {
-                    console.log("WebRTCService: Candidato ICE recibido de:", data.from);
+                    developmentLogger.log("WebRTCService: Candidato ICE recibido de:", data.from);
                     try {
                         await this.handleIceCandidate(data.candidate);
                     } catch (error) {
-                        console.warn(
+                        developmentLogger.warn(
                             "WebRTCService: Error menor al manejar candidato ICE recibido:",
                             error
                         );
@@ -394,7 +401,7 @@ class WebRTCService {
                 (data?.callId && data.callId !== this.currentCallId)
             )
                 return; // Ignorar si no es para esta llamada
-            console.log("WebRTCService: El otro usuario ha dejado la llamada.");
+            developmentLogger.log("WebRTCService: El otro usuario ha dejado la llamada.");
             this.closeConnection(); // El método closeConnection se encarga de notificar al hook/UI
         });
 
@@ -409,7 +416,7 @@ class WebRTCService {
                     data.from === this.partnerSocketId &&
                     this.currentCallId
                 ) {
-                    console.log(
+                    developmentLogger.log(
                         "WebRTCService: Llamada finalizada por el par (recibido evento END_CALL)."
                     );
                     this.closeConnection();
@@ -420,7 +427,7 @@ class WebRTCService {
 
     public async getUserMedia(): Promise<void> {
         if (this.localStream) {
-            console.log("WebRTCService: Stream local ya existente, verificando estado...");
+            developmentLogger.log("WebRTCService: Stream local ya existente, verificando estado...");
             this.ensureTracksEnabled(this.localStream);
 
             if (this.onLocalStreamReady) this.onLocalStreamReady(this.localStream);
@@ -443,7 +450,7 @@ class WebRTCService {
                 this.peerConnection?.addTrack(track, this.localStream!);
             });
         } catch (error) {
-            console.error("WebRTCService: Error al obtener getUserMedia:", error);
+            developmentLogger.error("WebRTCService: Error al obtener getUserMedia:", error);
             throw error;
         }
     }
@@ -501,7 +508,7 @@ class WebRTCService {
 
         // Si aún no tenemos una descripción remota, almacenar en buffer
         if (!this.hasRemoteDescription) {
-            console.log("WebRTCService: Guardando candidato ICE en buffer");
+            developmentLogger.log("WebRTCService: Guardando candidato ICE en buffer");
             this.iceCandidateBuffer.push(candidate);
             return;
         }
@@ -510,7 +517,7 @@ class WebRTCService {
         try {
             await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
         } catch (error) {
-            console.warn("WebRTCService: Error añadiendo candidato ICE:", error);
+            developmentLogger.warn("WebRTCService: Error añadiendo candidato ICE:", error);
         }
     }
 
@@ -518,22 +525,27 @@ class WebRTCService {
         if (!stream) return;
 
         enableTracks(stream);
-        console.log("WebRTCService: Verificando estado de tracks en stream:", stream.id);
+        developmentLogger.log("WebRTCService: Verificando estado de tracks en stream:", stream.id);
 
         // Habilitar explícitamente todos los tracks
         stream.getTracks().forEach(track => {
-            console.log(`WebRTCService: Track ${track.kind} está ${track.enabled ? 'habilitado' : 'deshabilitado'} y ${track.readyState}`);
+            developmentLogger.log(`WebRTCService: Track ${track.kind} está ${track.enabled ? 'habilitado' : 'deshabilitado'} y ${track.readyState}`);
         });
     }
 
     public joinQueue(userId: string): void {
         this.closeConnection(); // Limpieza completa antes de unirse a una nueva búsqueda
-        console.log("WebRTCService: Usuario uniéndose a la cola:", userId);
+        developmentLogger.log("WebRTCService: Usuario uniéndose a la cola:", userId);
         this.socketService.emit(VideoCallEvent.ADD_TO_QUEUE, { token: this.token });
     }
 
+    /** Starts WebRTC after an authenticated friend invitation was accepted. */
+    public async startMatchedCall(data: MatchFoundData & { isInitiator: boolean }): Promise<void> {
+        await this.handleMatchedCall(data);
+    }
+
     public leaveQueue(): void {
-        console.log("WebRTCService: Usuario abandonando la cola.");
+        developmentLogger.log("WebRTCService: Usuario abandonando la cola.");
         this.socketService.emit(VideoCallEvent.LEAVE_QUEUE, {
             token: this.token
         });
@@ -541,7 +553,7 @@ class WebRTCService {
     }
 
     public endCall(): void {
-        console.log("WebRTCService: Solicitando finalizar llamada...");
+        developmentLogger.log("WebRTCService: Solicitando finalizar llamada...");
         this.closeConnectionInternals(true); // Notificar al par
         if (this.onCallEndedByService) {
             // Asegurar que la UI sepa inmediatamente
@@ -551,7 +563,7 @@ class WebRTCService {
     }
 
     private closeConnectionInternals(notifyPartner: boolean): void {
-        console.log(
+        developmentLogger.log(
             `WebRTCService: Cerrando conexión interna. Notificar: ${notifyPartner}. CallID: ${this.currentCallId}, Partner: ${this.partnerSocketId}`
         );
         if (notifyPartner && this.partnerSocketId && this.currentCallId) {
@@ -597,7 +609,7 @@ class WebRTCService {
         this.partnerSocketId = null;
         this.partnerDBId = null;
         this.isInitiator = false;
-        console.log("WebRTCService: Estado interno reseteado en closeConnection.");
+        developmentLogger.log("WebRTCService: Estado interno reseteado en closeConnection.");
     }
 
     public getPartnerDBId(): string | null {

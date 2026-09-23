@@ -1,3 +1,4 @@
+import { developmentLogger } from '~/utils/logger';
 /**
  * Componente RightPanel
  * 
@@ -130,7 +131,7 @@ export default function RightPanel({
           return prev;
         });
       } catch (error) {
-        console.error('Error fetching friendship statuses:', error);
+        developmentLogger.error('Error fetching friendship statuses:', error);
       }
     };
     fetchFriendshipStatuses();

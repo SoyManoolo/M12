@@ -1,3 +1,4 @@
+import { developmentLogger } from '~/utils/logger';
 import { environment } from '../config/environment';
 
 interface Post {
@@ -48,16 +49,16 @@ class PostService {
 
     // Si ya es una URL absoluta (comienza con http o https), la devolvemos tal cual
     if (mediaUrl.startsWith('http')) {
-      console.log("URL en getMediaUrl", mediaUrl);
+      developmentLogger.log("URL en getMediaUrl", mediaUrl);
       return mediaUrl
     };
 
     // Si es una ruta relativa, le añadimos la URL base de la API
     if (mediaUrl.startsWith('/')) {
-      console.log(`URL en getMediaUrl ${environment.apiUrl}${mediaUrl}`)
+      developmentLogger.log(`URL en getMediaUrl ${environment.apiUrl}${mediaUrl}`)
       return `${environment.apiUrl}${mediaUrl}`;
     }
-    console.log(`URL en getMediaUrl ${environment.apiUrl}/${mediaUrl}`);
+    developmentLogger.log(`URL en getMediaUrl ${environment.apiUrl}/${mediaUrl}`);
     // Si no tiene la barra inicial, se la añadimos
     return `${environment.apiUrl}/${mediaUrl}`;
   }
@@ -94,7 +95,7 @@ class PostService {
 
       const data = await response.json();
 
-      console.log('getPosts response:', data);
+      developmentLogger.log('getPosts response:', data);
 
       if (response.status === 404 && data.message === "PostNotFound") {
         return {
@@ -126,7 +127,7 @@ class PostService {
 
       return data;
     } catch (error) {
-      console.error('Error en getPosts:', error);
+      developmentLogger.error('Error en getPosts:', error);
       if (error instanceof Error) {
         throw new Error('No pudimos cargar las publicaciones. Por favor, intenta de nuevo.');
       }
@@ -160,7 +161,7 @@ class PostService {
         message: 'Publicación eliminada correctamente'
       };
     } catch (error) {
-      console.error('Error en deletePost:', error);
+      developmentLogger.error('Error en deletePost:', error);
       if (error instanceof Error) {
         throw new Error('No pudimos eliminar la publicación. Por favor, intenta de nuevo.');
       }
@@ -191,7 +192,7 @@ class PostService {
         data: data.data
       };
     } catch (error) {
-      console.error('Error en updatePost:', error);
+      developmentLogger.error('Error en updatePost:', error);
       if (error instanceof Error) {
         throw new Error(error.message);
       }
@@ -219,7 +220,7 @@ class PostService {
         message: 'Like agregado correctamente'
       };
     } catch (error) {
-      console.error('Error en likePost:', error);
+      developmentLogger.error('Error en likePost:', error);
       if (error instanceof Error) {
         throw new Error(error.message);
       }
@@ -247,7 +248,7 @@ class PostService {
         message: 'Like quitado correctamente'
       };
     } catch (error) {
-      console.error('Error en unlikePost:', error);
+      developmentLogger.error('Error en unlikePost:', error);
       if (error instanceof Error) {
         throw new Error(error.message);
       }
@@ -271,7 +272,7 @@ class PostService {
 
       return data.data;
     } catch (error) {
-      console.error('Error en checkUserLike:', error);
+      developmentLogger.error('Error en checkUserLike:', error);
       if (error instanceof Error) {
         throw new Error(error.message);
       }

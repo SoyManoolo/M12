@@ -1,4 +1,5 @@
 import React, { useRef, useEffect } from 'react';
+import { developmentLogger } from '~/utils/logger';
 
 interface DebugVideoProps {
     stream: MediaStream | null;
@@ -17,24 +18,24 @@ export const DebugVideo: React.FC<DebugVideoProps> = ({ stream, type, className 
 
             // Gestionar errores de reproducción
             video.onplay = () => {
-                console.log(`Video ${type} reproducción iniciada`);
+                developmentLogger.info(`Video ${type} reproducción iniciada`);
             };
 
             video.onloadedmetadata = () => {
-                console.log(`Video ${type} metadata cargada:`, {
+                developmentLogger.info(`Video ${type} metadata cargada:`, {
                     width: video.videoWidth,
                     height: video.videoHeight
                 });
                 video.play()
-                    .then(() => console.log(`Video ${type} play() exitoso`))
-                    .catch(err => console.error(`Error al reproducir video ${type}:`, err));
+                    .then(() => developmentLogger.info(`Video ${type} play() exitoso`))
+                    .catch(err => developmentLogger.error(`Error al reproducir video ${type}:`, err));
             };
 
             video.onerror = () => {
-                console.error(`Error en video ${type}:`, video.error);
+                developmentLogger.error(`Error en video ${type}:`, video.error);
             };
         } else if (!stream) {
-            console.log(`Stream ${type} no disponible`);
+            developmentLogger.info(`Stream ${type} no disponible`);
         }
     }, [stream, type]);
 

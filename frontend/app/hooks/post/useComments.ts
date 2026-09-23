@@ -1,3 +1,4 @@
+import { developmentLogger } from '~/utils/logger';
 import { useState } from "react";
 import { commentService } from "~/services/comment.service";
 import { useAuth } from "~/hooks/useAuth";
@@ -52,7 +53,7 @@ export function useComments(postId: string, initialComments: Comment[], totalCom
       });
       setHasMore(response.data.nextOffset !== null);
     } catch (error) {
-      console.error("Error al cargar más comentarios:", error);
+      developmentLogger.error("Error al cargar más comentarios:", error);
       setLoadMoreError("No se pudieron cargar más comentarios. Inténtalo de nuevo.");
     } finally {
       setIsLoadingMore(false);
@@ -88,7 +89,7 @@ export function useComments(postId: string, initialComments: Comment[], totalCom
       ]);
       setCommentCount((count) => count + 1);
     } catch (error) {
-      console.error("Error al agregar comentario:", error);
+      developmentLogger.error("Error al agregar comentario:", error);
       throw error;
     } finally {
       setIsCommenting(false);
@@ -105,7 +106,7 @@ export function useComments(postId: string, initialComments: Comment[], totalCom
       );
       setCommentCount((count) => Math.max(0, count - 1));
     } catch (error) {
-      console.error("Error al eliminar comentario:", error);
+      developmentLogger.error("Error al eliminar comentario:", error);
       throw error;
     }
   };

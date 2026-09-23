@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react';
+import { developmentLogger } from '~/utils/logger';
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router';
 import { FaTrash } from 'react-icons/fa';
 import { useAuth } from '~/hooks/useAuth';
 import { commentService } from '~/services/comment.service';
@@ -8,6 +10,7 @@ import Notification from '~/components/Shared/Notification';
 import SecureImage from '~/components/Shared/SecureImage';
 import { formatTimeAgo } from './time';
 import type { AdminPost as Post } from './types';
+import { useAccessibleDialog } from '~/hooks/useAccessibleDialog';
 
 interface PostDetailModalProps {
   isOpen: boolean;
@@ -17,6 +20,10 @@ interface PostDetailModalProps {
 }
 
 export default function PostDetailModal({ isOpen, onClose, post, onImageClick }: PostDetailModalProps) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const navigate = useNavigate();
+  useAccessibleDialog(isOpen && !!post, dialogRef, onClose, closeButtonRef);
   const { token } = useAuth();
   const [comments, setComments] = useState<Comment[]>([]);
   const [notification, setNotification] = useState<{
@@ -49,7 +56,7 @@ export default function PostDetailModal({ isOpen, onClose, post, onImageClick }:
           setComments(response.data.comments);
         }
       } catch (error) {
-        console.error('Error al cargar comentarios:', error);
+        developmentLogger.error('Error al cargar comentarios:', error);
       }
     };
 
@@ -96,12 +103,15 @@ export default function PostDetailModal({ isOpen, onClose, post, onImageClick }:
         onClick={onClose}
       />
       <div
+        ref={dialogRef}
+        tabIndex={-1}
         role="dialog"
         aria-modal="true"
         aria-label="Detalle de publicación"
         className="relative z-10 bg-gray-900 rounded-2xl shadow-2xl w-full max-w-7xl h-[95vh] sm:h-[90vh] mx-auto p-0 overflow-hidden flex flex-col"
       >
         <button
+          ref={closeButtonRef}
           type="button"
           onClick={onClose}
           aria-label="Cerrar detalle de publicación"
@@ -144,7 +154,7 @@ export default function PostDetailModal({ isOpen, onClose, post, onImageClick }:
                 <button
                   type="button"
                   className="flex items-center gap-3 cursor-pointer hover:bg-gray-800/50 p-2 rounded-lg transition-colors duration-200 text-left"
-                  onClick={() => { window.location.href = `/perfil?username=${post.author.username}`; }}
+                  onClick={() => navigate(`/perfil?username=${encodeURIComponent(post.author.username)}`)}
                 >
                   {post.author.profile_picture ? (
                     <SecureImage

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title">
+  <title id="title">FriendsGo</title>
+  <defs>
+    <linearGradient id="friendsgo-gradient" x1="12" y1="14" x2="116" y2="116" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#38bdf8"/>
+      <stop offset="1" stop-color="#8b5cf6"/>
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="120" height="120" rx="34" fill="#090b14"/>
+  <path d="M64 19c-22.1 0-40 16.1-40 36 0 11.2 5.7 21.2 14.7 27.8L35 101l21.1-8.5c2.6.5 5.2.8 7.9.8 22.1 0 40-16.1 40-36S86.1 19 64 19Z" fill="url(#friendsgo-gradient)"/>
+  <path d="M45 47h23a8 8 0 0 1 0 16H56v14H42V50a3 3 0 0 1 3-3Z" fill="#fff"/>
+  <path d="M73 47h14a8 8 0 0 1 0 16H73V47Z" fill="#fff" opacity=".88"/>
+  <circle cx="91" cy="83" r="8" fill="#f0abfc"/>
+</svg>

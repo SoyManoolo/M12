@@ -9,6 +9,55 @@ export function videoCallEvents(socket: Socket, io: Server) {
     // Autenticación
     socketAuthMiddleware(socket)
 
+    socket.on("register_call_presence", () => {
+        const userId = socket.data.user_id;
+        if (userId) videoCallService.registerCallPresence(userId, socket.id);
+    });
+
+    socket.on("call_invite", async (data: { targetUserId?: string } = {}) => {
+        try {
+            const result = await videoCallService.requestFriendCall(
+                io,
+                socket.data.user_id,
+                socket.id,
+                typeof data.targetUserId === 'string' ? data.targetUserId : ''
+            );
+            socket.emit("call_invite_result", result);
+        } catch (error) {
+            dbLogger.error('[VideoCallEvents] Error creating friend call invitation:', { error });
+            socket.emit("call_invite_result", { success: false, message: 'No se pudo enviar la invitación.' });
+        }
+    });
+
+    socket.on("call_invite_response", async (data: { inviteId?: string; accept?: boolean } = {}) => {
+        try {
+            if (typeof data.inviteId !== 'string' || typeof data.accept !== 'boolean') {
+                socket.emit("call_invite_response_result", { success: false, message: 'La respuesta no es válida.' });
+                return;
+            }
+            const result = await videoCallService.respondToFriendCall(
+                io,
+                data.inviteId,
+                socket.data.user_id,
+                socket.id,
+                data.accept
+            );
+            socket.emit("call_invite_response_result", result);
+        } catch (error) {
+            dbLogger.error('[VideoCallEvents] Error responding to friend call invitation:', { error });
+            socket.emit("call_invite_response_result", { success: false, message: 'No se pudo responder a la invitación.' });
+        }
+    });
+
+    socket.on("call_invite_cancel", (data: { inviteId?: string } = {}) => {
+        const cancelled = typeof data.inviteId === 'string'
+            && videoCallService.cancelFriendCall(io, data.inviteId, socket.data.user_id, socket.id);
+        socket.emit("call_invite_cancel_result", {
+            success: cancelled,
+            message: cancelled ? 'Invitación cancelada.' : 'La invitación ya no está disponible.'
+        });
+    });
+
     socket.on("add_to_queue", async () => {
         try {
             const user_id = socket.data.user_id;  // Ya verificado por el middleware
@@ -152,10 +201,14 @@ export function videoCallEvents(socket: Socket, io: Server) {
         try {
             const user_id = socket.data.user_id;
 
-            const { offer, to } = data;
+            const { offer, to, callId } = data;
+            if (!offer || typeof to !== 'string' || typeof callId !== 'string') {
+                socket.emit("send_offer_result", { success: false, message: 'Invalid signaling payload' });
+                return;
+            }
 
             // Buscar el socketId del destinatario usando el servicio
-            const recipientData = await videoCallService.getCallRecipient(user_id, to);
+            const recipientData = await videoCallService.getCallRecipient(user_id, to, callId);
 
             if (!recipientData || !recipientData.socketId) {
                 socket.emit("send_offer_result", {
@@ -189,10 +242,14 @@ export function videoCallEvents(socket: Socket, io: Server) {
         try {
             const user_id = socket.data.user_id;
 
-            const { answer, to } = data;
+            const { answer, to, callId } = data;
+            if (!answer || typeof to !== 'string' || typeof callId !== 'string') {
+                socket.emit("send_answer_result", { success: false, message: 'Invalid signaling payload' });
+                return;
+            }
 
             // Buscar el socketId del destinatario usando el servicio
-            const recipientData = await videoCallService.getCallRecipient(user_id, to);
+            const recipientData = await videoCallService.getCallRecipient(user_id, to, callId);
 
             if (!recipientData || !recipientData.socketId) {
                 socket.emit("send_answer_result", {
@@ -226,10 +283,14 @@ export function videoCallEvents(socket: Socket, io: Server) {
         try {
             const user_id = socket.data.user_id;
 
-            const { candidate, to } = data;
+            const { candidate, to, callId } = data;
+            if (!candidate || typeof to !== 'string' || typeof callId !== 'string') {
+                socket.emit("send_ice_candidate_result", { success: false, message: 'Invalid signaling payload' });
+                return;
+            }
 
             // Buscar el socketId del destinatario usando el servicio
-            const recipientData = await videoCallService.getCallRecipient(user_id, to);
+            const recipientData = await videoCallService.getCallRecipient(user_id, to, callId);
 
             if (!recipientData || !recipientData.socketId) {
                 socket.emit("send_ice_candidate_result", {
@@ -262,6 +323,8 @@ export function videoCallEvents(socket: Socket, io: Server) {
     socket.on("disconnect", async () => {
         try {
             const user_id = socket.data.user_id;
+
+            if (user_id) await videoCallService.unregisterCallPresence(io, user_id, socket.id);
 
             dbLogger.info(`User ${user_id} disconnected`);
 

@@ -87,7 +87,7 @@ export default function UserPosts({ posts = [], onLike, onSave, onDelete, onEdit
             comment_id: comment.comment_id,
             author: {
               user_id: comment.author?.user_id || comment.user_id,
-              username: comment.author?.username || '',
+              username: comment.author?.username || 'Usuario',
               profile_picture: comment.author?.profile_picture || null
             },
             content: comment.content,

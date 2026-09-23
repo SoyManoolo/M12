@@ -160,7 +160,7 @@ Tests de integración con **Jest + Supertest**, ejecutados contra la app de Expr
 ```bash
 npm test              # Suite completa con coverage
 npm run test:watch    # Modo watch
-npm run test:reset-db # Resetea la base de datos de test
+npm run test:prepare-db # Recrea el esquema de DB_NAME_TEST antes de la suite (destructivo para esa base)
 ```
 
 ---
@@ -191,9 +191,15 @@ DB_PASS=tu_contraseña
 DB_NAME=friendsgo
 DB_NAME_TEST=friendsgo_test
 DB_PORT=5432
-DB_UPDATE=true
+DB_UPDATE=true # Ejecuta migraciones versionadas durante el arranque; no usa sync alter
 
 JWT_SECRET=         # openssl rand -hex 64
+FRONTEND_URL=http://localhost:5173
+RESEND_API_KEY=     # necesario para enviar enlaces de recuperación
+EMAIL_FROM=FriendsGo <no-reply@tu-dominio-verificado.example>
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GOOGLE_CALLBACK_URL=http://localhost:3000/auth/google/callback
 LOGS_DAYS=7
 CLEAN_USERS=30
 CLEAN_POSTS=15
@@ -202,9 +208,12 @@ CLEAN_COMMENTS=7
 
 ```bash
 npm run build   # Compila TypeScript y copia los ficheros de idioma a dist/
+npm run migrate # Aplica migraciones pendientes a la base configurada
 npm run dev      # Modo desarrollo (nodemon)
 npm start         # Modo producción
 ```
+
+Las migraciones quedan registradas en `SequelizeMeta`. La migración inicial crea el esquema de modelos solo cuando la base está vacía; si ya existe `users`, adopta el esquema existente y aplica únicamente las migraciones posteriores. Antes de habilitar `DB_UPDATE=true` en producción, respalda la base y confirma que las tablas existentes coinciden con los modelos: la adopción inicial no repara diferencias de esquema. Los tests mantienen su sincronización aislada.
 
 ---
 
@@ -241,6 +250,20 @@ curl -X POST http://localhost:3000/auth/login \
 #### `DELETE /auth/logout` 🔒
 
 Invalida el token actual eliminándolo de `RefreshToken`.
+
+Las sesiones usan una cookie de acceso `HttpOnly` de una hora y una cookie de renovación `HttpOnly` con expiración deslizante de 30 días. Una petición autenticada mientras la persona sigue activa renueva el acceso antes de que caduque; cerrar sesión, restablecer la contraseña o superar 30 días sin actividad revoca la renovación.
+
+#### `POST /auth/forgot-password`
+
+Recibe `{ "email": "..." }` y siempre responde con un mensaje genérico. Si la dirección pertenece a una cuenta y Resend está configurado, envía un enlace de un solo uso que caduca en una hora. Para habilitar la entrega configura `RESEND_API_KEY`, `EMAIL_FROM` y `FRONTEND_URL` con un dominio verificado.
+
+#### `POST /auth/reset-password`
+
+Recibe `{ "token": "...", "password": "..." }`. El token se almacena como hash, se invalida tras el primer uso o al caducar y, al cambiar la contraseña, se revocan las sesiones activas.
+
+#### OAuth con Google
+
+`GET /auth/google` inicia el flujo y `GET /auth/google/callback` valida el estado, intercambia el código en el backend y establece las cookies de sesión. Configura el ID, secreto, URL de callback y origen del frontend en Google Cloud antes de habilitarlo en producción.
 
 ### Usuarios (`/users`)
 
@@ -291,6 +314,8 @@ Invalida el token actual eliminándolo de `RefreshToken`.
 | GET | `/comments/:postId` | Lista comentarios de una publicación | — |
 | DELETE | `/comments/:commentId` | Elimina un comentario | 🔒 |
 
+Los comentarios creados y listados incluyen `author` con `user_id`, `username` y `profile_picture`.
+
 ### Chat (`/chat`) 🔒
 
 Todas las rutas requieren autenticación. El envío en tiempo real ocurre vía Socket.IO; estos endpoints cubren consulta e historial.
@@ -311,6 +336,7 @@ Todas las rutas requieren autenticación.
 | Método | Ruta | Descripción |
 |---|---|---|
 | POST | `/friendship/request` | Envía solicitud de amistad |
+| GET | `/friendship/suggestions` | Lista usuarios sin amistad, solicitud pendiente ni bloqueo con el usuario actual |
 | POST | `/friendship/request/:request_id/accept` | Acepta solicitud |
 | POST | `/friendship/request/:request_id/reject` | Rechaza solicitud |
 | POST | `/friendship/request/:request_id/cancel` | Cancela solicitud enviada |
