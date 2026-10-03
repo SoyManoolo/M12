@@ -10,7 +10,7 @@ export class RefreshToken extends Model {
 
 RefreshToken.init({
     token: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
         allowNull: false,
         primaryKey: true,
         unique: true

@@ -96,6 +96,13 @@ const migrations: Migration[] = [
                 });
             }
         }
+    },
+    {
+        name: '20261003000000-unbounded-jwt-token',
+        async up(_queryInterface, sequelize, transaction) {
+            // JWT claims can exceed Sequelize's default VARCHAR(255) limit.
+            await sequelize.query('ALTER TABLE "jwt" ALTER COLUMN "token" TYPE TEXT', { transaction });
+        }
     }
 ];
 
