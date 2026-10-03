@@ -1,7 +1,12 @@
 import { sequelize } from "../config/database";
 import { Model, DataTypes } from "sequelize";
 
-export class RefreshToken extends Model { }
+export class RefreshToken extends Model {
+    declare token: string;
+    declare user_id: string;
+    declare created_at: Date;
+    declare expires_at: Date;
+}
 
 RefreshToken.init({
     token: {
