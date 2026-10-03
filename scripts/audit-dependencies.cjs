@@ -15,8 +15,14 @@ function evaluateAudit(report, now = Date.now()) {
     }
 
     const advisories = new Map();
-    for (const vulnerability of Object.values(report.vulnerabilities)) {
-        if (!Array.isArray(vulnerability.via) || vulnerability.via.length === 0 ||
+    const visited = new Set();
+    const visiting = new Set();
+    function visit(name) {
+        if (visiting.has(name)) throw new Error(`Circular vulnerability reference: ${name}`);
+        if (visited.has(name)) return;
+        visiting.add(name);
+        const vulnerability = report.vulnerabilities[name];
+        if (!vulnerability || !Array.isArray(vulnerability.via) || vulnerability.via.length === 0 ||
             !SEVERITIES.includes(vulnerability.severity)) {
             throw new Error('Unrecognized vulnerability entry');
         }
@@ -26,6 +32,7 @@ function evaluateAudit(report, now = Date.now()) {
                 if (!Object.hasOwn(report.vulnerabilities, via)) {
                     throw new Error(`Missing underlying vulnerability: ${via}`);
                 }
+                visit(via);
                 continue;
             }
             if (!via || typeof via.url !== 'string' || typeof via.name !== 'string' ||
@@ -34,10 +41,10 @@ function evaluateAudit(report, now = Date.now()) {
             }
             advisories.set(`${via.name}:${via.url}`, via);
         }
+        visiting.delete(name);
+        visited.add(name);
     }
-    if (Object.keys(report.vulnerabilities).length > 0 && advisories.size === 0) {
-        throw new Error('Audit contains vulnerabilities without underlying advisories');
-    }
+    for (const name of Object.keys(report.vulnerabilities)) visit(name);
 
     const ignored = [];
     const blocked = [];

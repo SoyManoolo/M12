@@ -52,6 +52,7 @@ test('fails closed on audit errors, malformed entries and missing references', (
         report({ braces: { severity: 'high', via: [] } }),
         report({ parent: { severity: 'high', via: ['missing'] } }),
         report({ parent: { severity: 'high', via: ['parent'] } }),
+        report({ braces: entry(braces), parent: { severity: 'high', via: ['parent'] } }),
         report({ braces: entry({ ...braces, severity: 'unknown' }) }),
     ]) {
         assert.throws(() => evaluateAudit(invalid, now));
