@@ -4,20 +4,20 @@ import { UserAttributes } from "../types/custom";
 import { UserCreationAttributes } from "../types/custom";
 
 export class User extends Model<UserAttributes, UserCreationAttributes> implements UserAttributes {
-    public user_id!: string;
-    public name!: string;
-    public surname!: string;
-    public username!: string;
-    public email!: string;
-    public password!: string;
-    public profile_picture!: string | null;
-    public bio!: string | null;
-    public email_verified!: boolean;
-    public is_moderator!: boolean;
-    public active_video_call!: boolean;
-    public readonly created_at!: Date;
-    public readonly updated_at!: Date;
-    public readonly deleted_at!: Date | null;
+    declare user_id: string;
+    declare name: string;
+    declare surname: string;
+    declare username: string;
+    declare email: string;
+    declare password: string;
+    declare profile_picture: string | null;
+    declare bio: string | null;
+    declare email_verified: boolean;
+    declare is_moderator: boolean;
+    declare active_video_call: boolean;
+    declare readonly created_at: Date;
+    declare readonly updated_at: Date;
+    declare readonly deleted_at: Date | null;
 }
 
 User.init(
