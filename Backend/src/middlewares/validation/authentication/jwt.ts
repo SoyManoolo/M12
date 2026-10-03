@@ -74,8 +74,8 @@ export class AuthToken {
     public static async verifyToken(req: Request, res: Response, next: NextFunction): Promise<void> {
         // La cookie HttpOnly es la fuente principal. Conservamos Bearer como
         // compatibilidad para clientes antiguos y llamadas no navegadas.
-        const cookieToken = this.readCookie(req, 'session');
-        const refreshToken = this.readCookie(req, 'session_refresh');
+        const cookieToken = AuthToken.readCookie(req, 'session');
+        const refreshToken = AuthToken.readCookie(req, 'session_refresh');
         const authHeader: string | undefined = req.headers['authorization'];
         const bearerToken = authHeader?.startsWith('Bearer ')
             ? authHeader.slice('Bearer '.length).trim()
@@ -93,7 +93,7 @@ export class AuthToken {
         }
 
         // Si no existe el token devolvemos un error
-        if (!token && refreshToken) token = await this.renewSession(refreshToken, undefined, res) ?? undefined;
+        if (!token && refreshToken) token = await AuthToken.renewSession(refreshToken, undefined, res) ?? undefined;
         if (!token) throw new AppError(403, "FormatJWT");
 
         try {
@@ -103,7 +103,7 @@ export class AuthToken {
                 payload = jwt.verify(token, AuthToken.secretKey) as jwt.JwtPayload;
             } catch (error) {
                 if (!cookieToken || !refreshToken) throw error;
-                token = await this.renewSession(refreshToken, cookieToken, res) ?? '';
+                token = await AuthToken.renewSession(refreshToken, cookieToken, res) ?? '';
                 if (!token) throw error;
                 payload = jwt.verify(token, AuthToken.secretKey) as jwt.JwtPayload;
             }
@@ -121,7 +121,7 @@ export class AuthToken {
             ]);
 
             if ((!activeToken || !activeUser) && cookieToken && refreshToken) {
-                token = await this.renewSession(refreshToken, cookieToken, res) ?? '';
+                token = await AuthToken.renewSession(refreshToken, cookieToken, res) ?? '';
                 if (token) {
                     payload = jwt.verify(token, AuthToken.secretKey) as jwt.JwtPayload;
                 }
@@ -131,7 +131,7 @@ export class AuthToken {
             if (!renewedActiveToken || !renewedActiveUser) throw new AppError(403, "FormatJWT");
 
             if (cookieToken && refreshToken && payload.exp && payload.exp * 1000 - Date.now() < 15 * 60 * 1000) {
-                token = await this.renewSession(refreshToken, token, res) ?? token;
+                token = await AuthToken.renewSession(refreshToken, token, res) ?? token;
                 payload = jwt.verify(token, AuthToken.secretKey) as jwt.JwtPayload;
             }
             req.user = payload;
