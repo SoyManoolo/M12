@@ -55,7 +55,10 @@ jobs:
         run: npm ci
 
       - name: Audit root dependencies
-        run: npm audit --audit-level=high
+        run: node scripts/audit-dependencies.cjs
+
+      - name: Test dependency audit policy
+        run: node --test scripts/audit-dependencies.test.cjs
 
       - name: Build root package
         run: npm run build --if-present
@@ -66,7 +69,7 @@ jobs:
 
       - name: Audit backend dependencies
         working-directory: Backend
-        run: npm audit --audit-level=high
+        run: node ../scripts/audit-dependencies.cjs
 
       - name: Build backend
         working-directory: Backend
@@ -86,7 +89,7 @@ jobs:
 
       - name: Audit frontend dependencies
         working-directory: frontend
-        run: npm audit --audit-level=high
+        run: node ../scripts/audit-dependencies.cjs
 
       - name: Build frontend
         working-directory: frontend
