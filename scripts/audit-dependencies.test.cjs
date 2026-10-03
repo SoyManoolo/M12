@@ -31,6 +31,15 @@ test('blocks other high and critical advisories even alongside the exception', (
     }
 });
 
+test('supports npm dependency cycles that lead to an underlying advisory', () => {
+    const result = evaluateAudit(report({
+        braces: entry(braces),
+        commitizen: { severity: 'high', via: ['changelog', 'braces'] },
+        changelog: { severity: 'high', via: ['commitizen'] },
+    }), now);
+    assert.deepEqual(result, { ignored: [braces], blocked: [] });
+});
+
 test('blocks a new advisory for braces', () => {
     const other = { ...braces, url: 'https://github.com/advisories/another-braces-issue' };
     assert.deepEqual(evaluateAudit(report({ braces: entry(other) }), now).blocked, [other]);
