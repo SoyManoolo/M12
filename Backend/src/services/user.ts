@@ -1,4 +1,4 @@
-import { RefreshToken, User } from "../models";
+import { RefreshToken, SessionRefreshToken, User } from "../models";
 import { AppError } from "../middlewares/errors/AppError";
 import { existsUser } from "../utils/modelExists";
 import { UserFilters, UpdateUserData, UserAttributes } from '../types/custom';
@@ -163,6 +163,7 @@ export class UserService {
 
             if (updateData.password) {
                 await RefreshToken.destroy({ where: { user_id: user.user_id } });
+                await SessionRefreshToken.destroy({ where: { user_id: user.user_id } });
             }
 
             return this.toSafeUser(newUser);
