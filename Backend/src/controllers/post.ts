@@ -3,7 +3,7 @@ import i18n from '../config/i18n';
 import { PostService } from '../services/post';
 import { AppError } from '../middlewares/errors/AppError';
 import dbLogger from '../config/logger';
-import { getRequiredRouteParam } from '../utils/request';
+import { getOptionalRouteParam, getRequiredRouteParam } from '../utils/request';
 
 
 export class PostController {
@@ -17,10 +17,9 @@ export class PostController {
             const locale = req.headers['accept-language'] || 'en';
             i18n.setLocale(locale);
 
-            const filters = {
-                user_id: getRequiredRouteParam(req.params.id, 'id'),
-                username: req.query.username as string
-            };
+            const userId = getOptionalRouteParam(req.params.id);
+            const username = typeof req.query.username === 'string' ? req.query.username : undefined;
+            const filters = userId ? { user_id: userId } : username ? { username } : {};
 
             const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : undefined;
             const cursor = req.query.cursor as string | undefined;
