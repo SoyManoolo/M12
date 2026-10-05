@@ -147,15 +147,11 @@ export const userService = {
     /**
      * Obtiene un usuario por username
      */
-    async getUserByUsername(username: string, token: string): Promise<ApiResponse<UserProfile>> {
+    async getUserByUsername(username: string): Promise<ApiResponse<UserProfile>> {
         try {
-            const response = await fetch(`${environment.apiUrl}/users/username?username=${username}`, {
+            const response = await fetch(`${environment.apiUrl}/users/username?username=${encodeURIComponent(username)}`, {
                 credentials: 'include',
                 method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
             });
 
             const data = await response.json();

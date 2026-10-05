@@ -14,8 +14,7 @@ import { developmentLogger } from '~/utils/logger';
  * @module Perfil
  */
 
-import { redirect } from "react-router";
-import { useLoaderData, useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { useState, useEffect } from "react";
 import { FaCamera } from "react-icons/fa";
 import { Link } from "react-router";
@@ -61,54 +60,14 @@ interface LoaderData {
   error?: string;
 }
 
-export async function loader({ request }: { request: Request }) {
-  const url = new URL(request.url);
-  const username = url.searchParams.get("username");
-  
-  // Obtener el token de las cookies
-  const cookieHeader = request.headers.get("Cookie");
-  const token = cookieHeader?.split(";").find(c => c.trim().startsWith("session="))?.split("=")[1];
-
-  if (!token) {
-    return redirect("/login");
-  }
-
-  try {
-    // Primero obtenemos el usuario actual para comparar IDs
-    const currentUserResponse = await userService.getUserById('me', token);
-    if (!currentUserResponse.success) {
-      return redirect("/login");
-    }
-    const currentUserId = currentUserResponse.data.user_id;
-
-    let userData;
-    if (username) {
-      // Si hay username en la URL, cargar ese perfil
-      const response = await userService.getUserByUsername(username, token);
-      if (!response.success) {
-        return Response.json({ error: "Usuario no encontrado" }, { status: 404 });
-      }
-      userData = response.data;
-    } else {
-      // Si no hay username, usar el usuario actual
-      userData = currentUserResponse.data;
-    }
-
-    return Response.json({
-      user: userData,
-      isOwnProfile: userData.user_id === currentUserId
-    });
-  } catch (error) {
-    developmentLogger.error('Error en loader de perfil:', error);
-    return Response.json({ error: "Error al cargar el perfil" }, { status: 500 });
-  }
-}
-
 export const meta = () => pageMeta('Perfil', 'Perfil y publicaciones de usuario en FriendsGo.', { path: '/perfil' });
 
 export default function Perfil() {
-  const data = useLoaderData<typeof loader>() as LoaderData;
-  const { token, isAuthenticated } = useAuth();
+  const { token, isAuthenticated, isLoading, user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const username = searchParams.get('username');
+  const [profile, setProfile] = useState<{ key: string | null; ownerId: string; data: LoaderData } | null>(null);
+  const data = profile && profile.key === username && profile.ownerId === user?.user_id ? profile.data : null;
   const navigate = useNavigate();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(false);
@@ -124,14 +83,38 @@ export default function Perfil() {
   } | null>(null);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/login');
-      return;
+    if (isLoading || !isAuthenticated || !user) return;
+
+    let active = true;
+    if (!username || username === user.username) {
+      setProfile({ key: username, ownerId: user.user_id, data: { user, isOwnProfile: true } });
+    } else {
+      userService.getUserByUsername(username).then(response => {
+        if (!active) return;
+        setProfile({
+          key: username,
+          ownerId: user.user_id,
+          data: response.success
+            ? { user: response.data as User, isOwnProfile: response.data.user_id === user.user_id }
+            : { error: response.status === 404 ? 'Usuario no encontrado' : 'Error al cargar el perfil' }
+        });
+      }).catch(error => {
+        developmentLogger.error('Error al cargar el perfil:', error);
+        if (active) setProfile({ key: username, ownerId: user.user_id, data: { error: 'Error al cargar el perfil' } });
+      });
     }
-  }, [isAuthenticated, navigate]);
+
+    return () => { active = false; };
+  }, [isLoading, isAuthenticated, user, username]);
 
   useEffect(() => {
+    let active = true;
     const fetchData = async () => {
+      const profileUser = data?.user;
+      if (!profileUser) return;
+      setPosts([]);
+      setFriends([]);
+      setNextCursor(null);
       if (!token) {
         setNotification({
           message: 'Por favor, inicia sesión para ver el perfil',
@@ -143,7 +126,8 @@ export default function Perfil() {
 
       try {
         // Cargar posts del usuario
-        const postsResponse = await postService.getPosts(token, undefined, data.user?.username);
+        const postsResponse = await postService.getPosts(token, undefined, profileUser.username);
+        if (!active) return;
         if (postsResponse.success && postsResponse.data) {
           // Transformar los posts para que coincidan con nuestra interfaz
           const transformedPosts = postsResponse.data.posts.map(post => ({
@@ -154,9 +138,9 @@ export default function Perfil() {
             comments_count: post.comments_count,
             author: post.author || {
               user_id: post.user_id,
-              username: data.user?.username || '',
-              profile_picture: data.user?.profile_picture || null,
-              name: data.user?.name || ''
+              username: profileUser.username,
+              profile_picture: profileUser.profile_picture || null,
+              name: profileUser.name || ''
             }
           }));
           setPosts(transformedPosts);
@@ -165,6 +149,7 @@ export default function Perfil() {
 
         // Cargar amigos
         const friendsResponse = await friendshipService.getUserFriends(token);
+        if (!active) return;
         if (friendsResponse.success && friendsResponse.data) {
           // Asegurarnos de que los usuarios tengan todos los campos requeridos
           const friendsWithCompleteUser = friendsResponse.data.map(friend => ({
@@ -180,25 +165,27 @@ export default function Perfil() {
           setFriends([]);
         }
       } catch (err) {
+        if (!active) return;
         developmentLogger.error('Error al cargar los amigos:', err);
         setNotification({
           message: 'Error al cargar la lista de amigos',
           type: 'error'
         });
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     };
 
     fetchData();
-  }, [token, data.user]);
+    return () => { active = false; };
+  }, [token, data?.user]);
 
   const handleEditProfile = () => {
     navigate('/configuracion?section=cuenta');
   };
 
   const handleLoadMore = async () => {
-    if (!token || !nextCursor || loading || !data.user) return;
+    if (!token || !nextCursor || loading || !data?.user) return;
     const profileUser = data.user;
 
     setLoading(true);
@@ -334,12 +321,12 @@ export default function Perfil() {
     }
   };
 
-  if (data.error) {
+  if (data?.error) {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Usuario no encontrado</h1>
-          <p className="text-gray-400 mb-4">El perfil que buscas no existe o ha sido eliminado.</p>
+          <h1 className="text-2xl font-bold mb-4">{data.error}</h1>
+          <p className="text-gray-400 mb-4">No se pudo mostrar el perfil solicitado.</p>
           <button
             onClick={() => navigate('/inicio')}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
@@ -351,7 +338,7 @@ export default function Perfil() {
     );
   }
 
-  if (!data.user) {
+  if (!data?.user) {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
