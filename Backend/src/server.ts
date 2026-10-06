@@ -18,6 +18,15 @@ import { ALLOWED_ORIGINS } from './config/cors';
 const server = createServer(app);
 
 const io = new Server(server, {
+    // CORS no protege el transporte WebSocket: validar el Origin antes de
+    // aceptar cualquier transporte, especialmente si viajan cookies de sesión.
+    allowRequest: (request, callback) => {
+        const origin = request.headers.origin;
+        const allowed = origin
+            ? ALLOWED_ORIGINS.includes(origin)
+            : !request.headers.cookie;
+        callback(null, allowed);
+    },
     cors: {
         origin: ALLOWED_ORIGINS,
         methods: ['GET', 'POST', 'PATCH', 'DELETE', 'PUT', 'OPTIONS'],
@@ -97,4 +106,3 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 export { io }
-
