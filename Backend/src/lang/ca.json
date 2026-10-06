@@ -104,8 +104,9 @@
       "PostAlreadyLiked": "Ya has indicado que te gusta esta publicación",
       "PostNotLiked": "No has indicado que te gusta esta publicación"
     },
-    "friendship": {
-      "FriendRequestAlreadyExists": "Ya existe una solicitud de amistad",
+      "friendship": {
+        "CannotFriendYourself": "No et pots enviar ni acceptar la teva pròpia sol·licitud d'amistat",
+        "FriendRequestAlreadyExists": "Ya existe una solicitud de amistad",
       "UsersAlreadyFriends": "Los usuarios ya son amigos",
       "FriendRequestNotFound": "Solicitud de amistad no encontrada",
       "InvalidFriendRequestData": "Los datos de la solicitud de amistad no son válidos",

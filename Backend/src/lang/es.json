@@ -105,6 +105,7 @@
         "PostNotLiked": "No has indicado que te gusta esta publicación"
       },
       "friendship": {
+        "CannotFriendYourself": "No puedes enviarte ni aceptar tu propia solicitud de amistad",
         "FriendRequestAlreadyExists": "Ya existe una solicitud de amistad",
         "UsersAlreadyFriends": "Los usuarios ya son amigos",
         "FriendRequestNotFound": "Solicitud de amistad no encontrada",

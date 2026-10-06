@@ -60,6 +60,10 @@ export class FriendshipService {
      */
     public async sendFriendRequest(sender_id: string, receiver_id: string, created_from: 'search' | 'video_call' | 'suggestion' = 'search') {
         try {
+            if (sender_id === receiver_id) {
+                throw new AppError(400, 'CannotFriendYourself');
+            }
+
             // Verificar que ambos usuarios existan
             const [sender, receiver] = await Promise.all([
                 User.findByPk(sender_id),
@@ -128,6 +132,9 @@ export class FriendshipService {
                 const requestData = friendRequest.toJSON();
                 if (!requestData.sender_id || !requestData.receiver_id) {
                     throw new AppError(500, 'InvalidFriendRequestData');
+                }
+                if (requestData.sender_id === requestData.receiver_id) {
+                    throw new AppError(400, 'CannotFriendYourself');
                 }
 
                 await Friends.create({
