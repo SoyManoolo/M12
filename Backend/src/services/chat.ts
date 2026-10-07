@@ -1,4 +1,4 @@
-import { ChatMessages, PostComments, User, Friends } from "../models";
+import { ChatMessages, PostComments, User, Friends, UserBlocks } from "../models";
 import { AppError } from "../middlewares/errors/AppError";
 import { Op } from "sequelize";
 import { existsUser } from "../utils/modelExists";
@@ -33,6 +33,41 @@ export class ChatService {
                 dbLogger.error("[ChatService] Mensaje demasiado largo");
                 throw new AppError(400, 'MessageTooLong')
             };
+
+            if (sender_id === receiver_id) {
+                throw new AppError(403, 'Forbidden');
+            }
+
+            const pair = [
+                { user1_id: sender_id, user2_id: receiver_id },
+                { user1_id: receiver_id, user2_id: sender_id }
+            ];
+            const blocked = await UserBlocks.findOne({
+                where: {
+                    [Op.or]: [
+                        { blocker_id: sender_id, blocked_id: receiver_id },
+                        { blocker_id: receiver_id, blocked_id: sender_id }
+                    ]
+                }
+            });
+            if (blocked) {
+                throw new AppError(403, 'Forbidden');
+            }
+
+            const friendship = await Friends.findOne({ where: { [Op.or]: pair } });
+            if (!friendship) {
+                const previousMessage = await ChatMessages.findOne({
+                    where: {
+                        [Op.or]: [
+                            { sender_id, receiver_id },
+                            { sender_id: receiver_id, receiver_id: sender_id }
+                        ]
+                    }
+                });
+                if (!previousMessage) {
+                    throw new AppError(403, 'Forbidden');
+                }
+            }
 
             // Crear el mensaje
             const messageData: ChatMessagesCreationAttributes = {
