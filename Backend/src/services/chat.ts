@@ -1,4 +1,4 @@
-import { ChatMessages, PostComments, User, Friends } from "../models";
+import { ChatMessages, PostComments, User, Friends, UserBlocks } from "../models";
 import { AppError } from "../middlewares/errors/AppError";
 import { Op } from "sequelize";
 import { existsUser } from "../utils/modelExists";
@@ -33,6 +33,41 @@ export class ChatService {
                 dbLogger.error("[ChatService] Mensaje demasiado largo");
                 throw new AppError(400, 'MessageTooLong')
             };
+
+            if (sender_id === receiver_id) {
+                throw new AppError(403, 'Forbidden');
+            }
+
+            const pair = [
+                { user1_id: sender_id, user2_id: receiver_id },
+                { user1_id: receiver_id, user2_id: sender_id }
+            ];
+            const blocked = await UserBlocks.findOne({
+                where: {
+                    [Op.or]: [
+                        { blocker_id: sender_id, blocked_id: receiver_id },
+                        { blocker_id: receiver_id, blocked_id: sender_id }
+                    ]
+                }
+            });
+            if (blocked) {
+                throw new AppError(403, 'Forbidden');
+            }
+
+            const friendship = await Friends.findOne({ where: { [Op.or]: pair } });
+            if (!friendship) {
+                const previousMessage = await ChatMessages.findOne({
+                    where: {
+                        [Op.or]: [
+                            { sender_id, receiver_id },
+                            { sender_id: receiver_id, receiver_id: sender_id }
+                        ]
+                    }
+                });
+                if (!previousMessage) {
+                    throw new AppError(403, 'Forbidden');
+                }
+            }
 
             // Crear el mensaje
             const messageData: ChatMessagesCreationAttributes = {
@@ -80,17 +115,33 @@ export class ChatService {
                 }
             });
 
-            // Obtener los IDs de los amigos
-            const friendIds = friendships.map((friendship) => 
+            // Incluir conversaciones anteriores aunque se haya eliminado la amistad.
+            const previousConversations = await ChatMessages.findAll({
+                attributes: ['sender_id', 'receiver_id'],
+                where: {
+                    [Op.or]: [
+                        { sender_id: user_id },
+                        { receiver_id: user_id }
+                    ]
+                },
+                group: ['sender_id', 'receiver_id']
+            });
+
+            const friendIds = friendships.map((friendship) =>
                 friendship.get('user1_id') === user_id ? friendship.get('user2_id') : friendship.get('user1_id')
             ) as string[];
 
-            if (friendIds.length === 0) {
+            const contactIds = new Set(friendIds);
+            for (const message of previousConversations) {
+                contactIds.add(message.sender_id === user_id ? message.receiver_id : message.sender_id);
+            }
+
+            if (contactIds.size === 0) {
                 return [];
             }
 
             // Procesar los chats para obtener el último mensaje y la información del otro usuario
-            const processedChats = await Promise.all(friendIds.map(async (friendId) => {
+            const processedChats = await Promise.all([...contactIds].map(async (friendId) => {
                 // Obtener el último mensaje entre el usuario y el amigo
                 const lastMessage: ChatMessages | null = await ChatMessages.findOne({
                     where: {
