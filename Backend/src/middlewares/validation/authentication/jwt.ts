@@ -52,20 +52,34 @@ export class AuthToken {
 
     private static async renewSession(refreshToken: string, previousAccessToken: string | undefined, res: Response): Promise<string | null> {
         const tokenHash = createHash('sha256').update(refreshToken).digest('hex');
-        const stored = await SessionRefreshToken.findOne({ where: { token_hash: tokenHash, expires_at: { [Op.gt]: new Date() } } });
-        if (!stored) return null;
-        const user = await User.findByPk(stored.user_id);
-        if (!user) return null;
+        const candidate = await SessionRefreshToken.findOne({ where: { token_hash: tokenHash, expires_at: { [Op.gt]: new Date() } } });
+        if (!candidate) return null;
+        const sequelize = User.sequelize;
+        if (!sequelize) throw new AppError(500, 'DatabaseUnavailable');
 
-        const accessToken = new AuthToken().generateToken(user);
-        const now = Date.now();
-        if (previousAccessToken) {
-            await RefreshToken.destroy({ where: { token: previousAccessToken, user_id: user.user_id } });
-        }
-        await RefreshToken.create({ token: accessToken, user_id: user.user_id, expires_at: new Date(now + 60 * 60 * 1000) });
-        if (stored.expires_at.getTime() < now + 15 * 24 * 60 * 60 * 1000) {
-            await stored.update({ expires_at: new Date(now + 30 * 24 * 60 * 60 * 1000) });
-        }
+        // El cambio de contraseña actualiza la misma fila antes de revocar los tokens.
+        // Bloquearla y volver a leer la renovación impide crear un acceso tras la revocación.
+        const accessToken = await sequelize.transaction(async transaction => {
+            const user = await User.findByPk(candidate.user_id, { transaction, lock: transaction.LOCK.UPDATE });
+            if (!user) return null;
+            const stored = await SessionRefreshToken.findOne({
+                where: { token_hash: tokenHash, user_id: user.user_id, expires_at: { [Op.gt]: new Date() } },
+                transaction,
+            });
+            if (!stored) return null;
+
+            const token = new AuthToken().generateToken(user);
+            const now = Date.now();
+            if (previousAccessToken) {
+                await RefreshToken.destroy({ where: { token: previousAccessToken, user_id: user.user_id }, transaction });
+            }
+            await RefreshToken.create({ token, user_id: user.user_id, expires_at: new Date(now + 60 * 60 * 1000) }, { transaction });
+            if (stored.expires_at.getTime() < now + 15 * 24 * 60 * 60 * 1000) {
+                await stored.update({ expires_at: new Date(now + 30 * 24 * 60 * 60 * 1000) }, { transaction });
+            }
+            return token;
+        });
+        if (!accessToken) return null;
         res.cookie('session', accessToken, this.cookieOptions(60 * 60 * 1000));
         res.cookie('session_refresh', refreshToken, this.cookieOptions(30 * 24 * 60 * 60 * 1000));
         return accessToken;
