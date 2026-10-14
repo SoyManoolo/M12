@@ -1,4 +1,4 @@
-import { RefreshToken, User } from "../models";
+import { RefreshToken, SessionRefreshToken, User } from "../models";
 import { AppError } from "../middlewares/errors/AppError";
 import { existsUser } from "../utils/modelExists";
 import { UserFilters, UpdateUserData, UserAttributes } from '../types/custom';
@@ -155,15 +155,24 @@ export class UserService {
             }
 
             dbLogger.info(`[UserService] Updating user with ID: ${user.user_id}`);
-            const newUser: User = await user.update(updateData);
+            let newUser: User;
+            if (updateData.password) {
+                const sequelize = User.sequelize;
+                if (!sequelize) throw new AppError(500, 'DatabaseUnavailable');
+
+                newUser = await sequelize.transaction(async transaction => {
+                    const updatedUser = await user.update(updateData, { transaction });
+                    await RefreshToken.destroy({ where: { user_id: user.user_id }, transaction });
+                    await SessionRefreshToken.destroy({ where: { user_id: user.user_id }, transaction });
+                    return updatedUser;
+                });
+            } else {
+                newUser = await user.update(updateData);
+            }
 
             if (!newUser) throw new AppError(500, 'UserUpdateFailed');
 
             await user.reload();
-
-            if (updateData.password) {
-                await RefreshToken.destroy({ where: { user_id: user.user_id } });
-            }
 
             return this.toSafeUser(newUser);
         } catch (error) {
