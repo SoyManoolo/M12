@@ -148,6 +148,7 @@ export interface Post {
     user_id: string;            // ID del usuario que publicó
     description: string;        // Descripción del post
     media_url: string | null;   // URL del medio (imagen/video)
+    media_type?: 'image' | 'video' | null;
     created_at: string;         // Fecha de creación
     updated_at: string;         // Fecha de última actualización
     user?: User;                // Datos del usuario (opcional)
