@@ -22,6 +22,7 @@ export function useVideoCall() {
     const [localStreamForUI, setLocalStreamForUI] = useState<MediaStream | null>(null);
     const [remoteStreamForUI, setRemoteStreamForUI] = useState<MediaStream | null>(null);
     const [partnerInfo, setPartnerInfo] = useState<{ dbId: string | null, socketId: string | null }>({ dbId: null, socketId: null });
+    const [partnerEndedCall, setPartnerEndedCall] = useState<{ callId: string; ratedId: string } | null>(null);
 
     // Lazy initialization: Solo obtener instancias cuando estamos en el cliente
     // Usar useMemo para mantener las mismas instancias durante el ciclo de vida del componente
@@ -76,7 +77,8 @@ export function useVideoCall() {
                 },
                 (stream) => {
                     setLocalStreamForUI(stream);
-                }
+                },
+                (callId, ratedId) => setPartnerEndedCall({ callId, ratedId })
             );
 
             let storedCall: string | null = null;
@@ -127,6 +129,7 @@ export function useVideoCall() {
 
         const handleMatchFound = (data: MatchFoundData & { isInitiator: boolean }) => {
             developmentLogger.info("Hook: MATCH_FOUND recibido con datos completos:", data);
+            setPartnerEndedCall(null);
             setState(prev => ({
                 ...prev,
                 isConnecting: true,
@@ -274,6 +277,7 @@ export function useVideoCall() {
         setState,
         localStream: localStreamForUI,
         remoteStream: remoteStreamForUI,
-        partnerDBId: partnerInfo.dbId
+        partnerDBId: partnerInfo.dbId,
+        partnerEndedCall
     };
 }

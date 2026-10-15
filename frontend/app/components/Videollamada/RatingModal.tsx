@@ -4,7 +4,6 @@
  * Este componente representa un modal para calificar la experiencia de videollamada.
  * Incluye:
  * - Selección de calificación (1-5 estrellas)
- * - Campo para comentarios
  * - Botones de acción
  * 
  * @module RatingModal
@@ -20,8 +19,10 @@ import { FaDiamond } from 'react-icons/fa6';
  */
 interface RatingModalProps {
   isOpen: boolean;
+  canSubmit: boolean;
+  statusMessage?: string | null;
   onClose: () => void;
-  onSubmit: (rating: number, comment: string) => void;
+  onSubmit: (rating: number) => Promise<string | null>;
 }
 
 /**
@@ -30,10 +31,11 @@ interface RatingModalProps {
  * @param {RatingModalProps} props - Propiedades del componente
  * @returns {JSX.Element | null} Modal de calificación o null si no está abierto
  */
-export default function RatingModal({ isOpen, onClose, onSubmit }: RatingModalProps) {
-  // Estados para la calificación y comentarios
+export default function RatingModal({ isOpen, canSubmit, statusMessage, onClose, onSubmit }: RatingModalProps) {
+  // Estado para la calificación y el envío
   const [rating, setRating] = useState(0);
-  const [comment, setComment] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   /**
    * Manejador para establecer la calificación
@@ -47,11 +49,23 @@ export default function RatingModal({ isOpen, onClose, onSubmit }: RatingModalPr
   /**
    * Manejador para enviar la calificación
    */
-  const handleSubmit = () => {
-    onSubmit(rating, comment);
-    setRating(0);
-    setComment('');
-    onClose();
+  const handleSubmit = async () => {
+    if (submitting || !canSubmit || rating < 1) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      const message = await onSubmit(rating);
+      if (message) {
+        setError(message);
+      } else {
+        setRating(0);
+        onClose();
+      }
+    } catch {
+      setError('No se pudo guardar la valoración.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   // Si el modal no está abierto, no renderizar nada
@@ -79,27 +93,24 @@ export default function RatingModal({ isOpen, onClose, onSubmit }: RatingModalPr
           ))}
         </div>
 
-        {/* Campo de comentarios */}
-        <textarea
-          placeholder="Deja un comentario (opcional)"
-          className="w-full h-24 bg-gray-800 rounded-lg p-3 text-white mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
-        />
+        {statusMessage && <p role="status" className="text-gray-300 mb-4">{statusMessage}</p>}
+        {error && <p role="alert" className="text-red-400 mb-4">{error}</p>}
 
         {/* Botones de acción */}
         <div className="flex justify-end space-x-4">
           <button
             onClick={onClose}
+            disabled={submitting}
             className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500"
           >
             Cancelar
           </button>
           <button
             onClick={handleSubmit}
+            disabled={!canSubmit || rating < 1 || submitting}
             className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            Enviar
+            {submitting ? 'Guardando...' : 'Enviar'}
           </button>
         </div>
       </div>

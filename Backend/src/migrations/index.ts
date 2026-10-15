@@ -103,6 +103,17 @@ const migrations: Migration[] = [
             // JWT claims can exceed Sequelize's default VARCHAR(255) limit.
             await sequelize.query('ALTER TABLE "jwt" ALTER COLUMN "token" TYPE TEXT', { transaction });
         }
+    },
+    {
+        name: '20261015000000-unique-video-call-rating',
+        async up(queryInterface, _sequelize, transaction) {
+            const indexes = await queryInterface.showIndex('video_call_ratings', { transaction }) as Array<{ name: string }>;
+            if (!indexes.some(index => index.name === 'unique_rating')) {
+                await queryInterface.addIndex('video_call_ratings', ['video_call_id', 'rater_id'], {
+                    name: 'unique_rating', unique: true, transaction
+                });
+            }
+        }
     }
 ];
 

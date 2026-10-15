@@ -37,6 +37,7 @@ class WebRTCService {
         | null = null;
     public onLocalStreamReady: ((stream: MediaStream | null) => void) | null =
         null;
+    public onPartnerLeftCall: ((callId: string, ratedId: string) => void) | null = null;
 
     private constructor() {
         // Protección SSR: Solo inicializar el socket service en el cliente
@@ -111,12 +112,14 @@ class WebRTCService {
         onRemoteStream: (stream: MediaStream | null) => void,
         onCallEnded: () => void,
         onConnectionState: (state: RTCIceConnectionState) => void,
-        onLocalStream: (stream: MediaStream | null) => void
+        onLocalStream: (stream: MediaStream | null) => void,
+        onPartnerLeftCall: (callId: string, ratedId: string) => void
     ) {
         this.onRemoteStreamArrived = onRemoteStream;
         this.onCallEndedByService = onCallEnded;
         this.onConnectionStateChange = onConnectionState;
         this.onLocalStreamReady = onLocalStream;
+        this.onPartnerLeftCall = onPartnerLeftCall;
     }
 
     private async initializePeerConnection(): Promise<RTCPeerConnection> {
@@ -229,7 +232,9 @@ class WebRTCService {
 
                 } else if (state === "disconnected") {
                     developmentLogger.log("WebRTCService: Conexión WebRTC fallida. Cerrando llamada...");
-                    this.closeConnection();
+                    // El socket aún puede recibir partner_disconnected: conservar los IDs para valorar.
+                    this.closeConnectionInternals(false);
+                    if (this.onCallEndedByService) this.onCallEndedByService();
 
                 } else if (state === "closed") {
                     this.closeConnectionInternals(false);
@@ -394,16 +399,17 @@ class WebRTCService {
             }
         );
 
-        // Evento que el backend DEBERÍA enviar cuando el otro usuario se desconecta o cuelga
-        this.socketService.on("partner_left_call", (data?: { callId?: string }) => {
-            if (
-                !this.currentCallId ||
-                (data?.callId && data.callId !== this.currentCallId)
-            )
-                return; // Ignorar si no es para esta llamada
+        // Tanto el fin voluntario como la desconexión conservan los IDs antes de limpiar la llamada.
+        const handlePartnerLeft = (data?: { callId?: string }) => {
+            if (!this.currentCallId || data?.callId !== this.currentCallId) return;
             developmentLogger.log("WebRTCService: El otro usuario ha dejado la llamada.");
+            if (this.partnerDBId && this.onPartnerLeftCall) {
+                this.onPartnerLeftCall(this.currentCallId, this.partnerDBId);
+            }
             this.closeConnection(); // El método closeConnection se encarga de notificar al hook/UI
-        });
+        };
+        this.socketService.on("partner_left_call", handlePartnerLeft);
+        this.socketService.on("partner_disconnected", handlePartnerLeft);
 
         // Este evento es emitido por ESTE cliente cuando cuelga.
         // Si el backend lo retransmite como el mismo evento al otro par, el otro par también lo recibirá.

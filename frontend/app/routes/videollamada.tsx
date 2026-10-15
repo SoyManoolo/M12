@@ -58,12 +58,19 @@ export default function VideollamadaPage() {
         toggleAudio,
         localStream,
         remoteStream,
+        partnerDBId,
+        partnerEndedCall,
         joinQueue,
         leaveQueue
     } = useVideoCall();
 
     const [messages, setMessages] = useState<Message[]>([]);
     const [showRatingModal, setShowRatingModal] = useState(false);
+    const [callToRate, setCallToRate] = useState<{ callId: string; ratedId: string } | null>(null);
+    const [ratingReady, setRatingReady] = useState(false);
+    const [ratingStatus, setRatingStatus] = useState<string | null>(null);
+    const [searchAfterRating, setSearchAfterRating] = useState(false);
+    const pendingEndCleanup = useRef<(() => void) | null>(null);
     const [debugMessage, setDebugMessage] = useState<string>('');
 
     // Referencias para los elementos de video
@@ -121,6 +128,18 @@ export default function VideollamadaPage() {
         };
     }, []);
 
+    useEffect(() => {
+        if (partnerEndedCall) {
+            setCallToRate(partnerEndedCall);
+            setRatingReady(true);
+            setRatingStatus(null);
+            setSearchAfterRating(false);
+            setShowRatingModal(true);
+        }
+    }, [partnerEndedCall]);
+
+    useEffect(() => () => pendingEndCleanup.current?.(), []);
+
     // Función para formatear el tiempo
     const formatTime = (seconds: number) => {
         const hours = Math.floor(seconds / 3600);
@@ -148,21 +167,43 @@ export default function VideollamadaPage() {
         setMessages(prev => [...prev, newMessage]);
     };
 
-    // MODIFICADO: Ahora termina la llamada y muestra el modal de calificación
-    const handleEndCall = () => {
-        if (videoCallState.isCallActive) {
-            endCall();
-            setShowRatingModal(true);
+    const finishCall = (searchNext: boolean) => {
+        if (!videoCallState.isCallActive || pendingEndCleanup.current) return;
+        const callId = videoCallState.callId;
+        const ratedId = partnerDBId;
+        setCallToRate(callId && ratedId ? { callId, ratedId } : null);
+        setSearchAfterRating(searchNext);
+        setRatingReady(false);
+        setRatingStatus('Esperando confirmación del fin de la llamada...');
+        setShowRatingModal(true);
+
+        if (callId) {
+            const onResult = (result: { success: boolean; message?: string; callId?: string }) => {
+                if (result.callId !== callId) return;
+                pendingEndCleanup.current?.();
+                setRatingReady(result.success && !!ratedId);
+                setRatingStatus(result.success
+                    ? (ratedId ? null : 'No se pudo identificar al otro participante.')
+                    : (result.message || 'No se pudo confirmar el fin de la llamada.'));
+            };
+            const timeout = setTimeout(() => {
+                pendingEndCleanup.current?.();
+                setRatingStatus('No se recibió confirmación del fin de la llamada.');
+            }, 10000);
+            socketService.on(VideoCallEvent.END_CALL_RESULT, onResult);
+            pendingEndCleanup.current = () => {
+                clearTimeout(timeout);
+                socketService.off(VideoCallEvent.END_CALL_RESULT, onResult);
+                pendingEndCleanup.current = null;
+            };
+        } else {
+            setRatingStatus('No se pudo identificar la llamada.');
         }
+        endCall();
     };
 
-    // MODIFICADO: Ahora termina la llamada y busca una nueva
-    const handleNextCall = () => {
-        if (videoCallState.isCallActive) {
-            endCall();
-            handleSearchCall();
-        }
-    };
+    const handleEndCall = () => finishCall(false);
+    const handleNextCall = () => finishCall(true);
 
     // MODIFICADO: Ahora implementa correctamente la lógica de búsqueda
     const handleSearchCall = () => {
@@ -177,15 +218,26 @@ export default function VideollamadaPage() {
     };
 
     // MODIFICADO: Ahora envía la calificación con el ID correcto
-    const handleRatingSubmit = (rating: number) => {
-        if (videoCallState.callId) {
-            socketService.emit(VideoCallEvent.CALL_RATING, {
-                rating,
-                to: videoCallState.callId,
-                callId: videoCallState.callId
-            });
+    const handleRatingSubmit = (rating: number): Promise<string | null> => {
+        if (!callToRate || !socketService.isConnected()) {
+            return Promise.resolve('No se pudo identificar la llamada.');
         }
-        navigate('/inicio');
+        return new Promise(resolve => {
+            const timeout = setTimeout(() => {
+                socketService.off(VideoCallEvent.CALL_RATING_RESULT, onResult);
+                resolve('No se recibió confirmación. Inténtalo de nuevo.');
+            }, 10000);
+            const onResult = (result: { success: boolean; message: string }) => {
+                clearTimeout(timeout);
+                socketService.off(VideoCallEvent.CALL_RATING_RESULT, onResult);
+                if (result.success && !searchAfterRating) {
+                    navigate('/inicio');
+                }
+                resolve(result.success ? null : (result.message || 'No se pudo guardar la valoración.'));
+            };
+            socketService.on(VideoCallEvent.CALL_RATING_RESULT, onResult);
+            socketService.emit(VideoCallEvent.CALL_RATING, { ...callToRate, rating });
+        });
     };
 
     return (
@@ -390,7 +442,15 @@ export default function VideollamadaPage() {
 
             <RatingModal
                 isOpen={showRatingModal}
-                onClose={() => setShowRatingModal(false)}
+                canSubmit={ratingReady && !!callToRate}
+                statusMessage={ratingStatus}
+                onClose={() => {
+                    pendingEndCleanup.current?.();
+                    setShowRatingModal(false);
+                    setCallToRate(null);
+                    if (searchAfterRating && ratingReady) joinQueue();
+                    setSearchAfterRating(false);
+                }}
                 onSubmit={handleRatingSubmit}
             />
         </div>
