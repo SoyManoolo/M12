@@ -79,7 +79,7 @@ export class PostService {
                 where: {
                     user_id
                 },
-                order: [['created_at', 'DESC']],
+                order: [['created_at', 'DESC'], ['post_id', 'DESC']],
                 include: [
                     {
                         model: User,
@@ -126,12 +126,15 @@ export class PostService {
             if (cursor) {
                 const lastPost = await Post.findByPk(cursor);
                 if (lastPost) {
-                    // Mantén todas las condiciones existentes
                     queryOptions.where = {
-                        user_id, // Mantener la condición de user_id
-                        created_at: {
-                            [Op.lt]: lastPost.getDataValue("created_at") // Usa acceso directo a la propiedad
-                        }
+                        user_id,
+                        [Op.or]: [
+                            { created_at: { [Op.lt]: lastPost.getDataValue("created_at") } },
+                            {
+                                created_at: lastPost.getDataValue("created_at"),
+                                post_id: { [Op.lt]: lastPost.getDataValue("post_id") }
+                            }
+                        ]
                     };
                 }
             }
@@ -179,7 +182,7 @@ export class PostService {
 
             const queryOptions: FindOptions = {
                 limit: limit + 1,
-                order: [['created_at', 'DESC']],
+                order: [['created_at', 'DESC'], ['post_id', 'DESC']],
                 include: [
                     {
                         model: User,
@@ -227,9 +230,13 @@ export class PostService {
                 const lastPost = await Post.findByPk(cursor);
                 if (lastPost) {
                     queryOptions.where = {
-                        created_at: {
-                            [Op.lt]: lastPost.getDataValue("created_at")
-                        }
+                        [Op.or]: [
+                            { created_at: { [Op.lt]: lastPost.getDataValue("created_at") } },
+                            {
+                                created_at: lastPost.getDataValue("created_at"),
+                                post_id: { [Op.lt]: lastPost.getDataValue("post_id") }
+                            }
+                        ]
                     };
                 };
             };
