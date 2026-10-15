@@ -70,6 +70,18 @@ export class FriendshipService {
                 throw new AppError(404, 'UserNotFound');
             }
 
+            const block = await UserBlocks.findOne({
+                where: {
+                    [Op.or]: [
+                        { blocker_id: sender_id, blocked_id: receiver_id },
+                        { blocker_id: receiver_id, blocked_id: sender_id }
+                    ]
+                }
+            });
+            if (block) {
+                throw new AppError(403, 'UsersBlocked');
+            }
+
             // Verificar que no exista una solicitud pendiente
             const existingRequest = await FriendRequest.findOne({
                 where: {
@@ -128,6 +140,19 @@ export class FriendshipService {
                 const requestData = friendRequest.toJSON();
                 if (!requestData.sender_id || !requestData.receiver_id) {
                     throw new AppError(500, 'InvalidFriendRequestData');
+                }
+
+                const block = await UserBlocks.findOne({
+                    where: {
+                        [Op.or]: [
+                            { blocker_id: requestData.sender_id, blocked_id: requestData.receiver_id },
+                            { blocker_id: requestData.receiver_id, blocked_id: requestData.sender_id }
+                        ]
+                    },
+                    transaction
+                });
+                if (block) {
+                    throw new AppError(403, 'UsersBlocked');
                 }
 
                 await Friends.create({

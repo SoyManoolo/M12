@@ -107,6 +107,7 @@
       "friendship": {
         "FriendRequestAlreadyExists": "Ya existe una solicitud de amistad",
         "UsersAlreadyFriends": "Los usuarios ya son amigos",
+        "UsersBlocked": "No se puede crear una amistad entre usuarios bloqueados",
         "FriendRequestNotFound": "Solicitud de amistad no encontrada",
         "InvalidFriendRequestData": "Los datos de la solicitud de amistad no son válidos",
         "FriendshipNotFound": "Amistad no encontrada"
