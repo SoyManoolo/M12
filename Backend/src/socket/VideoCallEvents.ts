@@ -320,6 +320,34 @@ export function videoCallEvents(socket: Socket, io: Server) {
         }
     });
 
+    socket.on("video:chat-message", (data: unknown) => {
+        const message = data && typeof data === 'object' ? data as Record<string, unknown> : null;
+        const callId = message?.to;
+        const content = message?.content;
+        const id = message?.id;
+        const userId = socket.data.user_id;
+        if (typeof userId !== 'string' || typeof callId !== 'string' || !callId
+            || typeof content !== 'string' || !content.trim() || content.length > 2000
+            || typeof id !== 'string' || !id || id.length > 100) {
+            socket.emit("video:chat-message_result", { success: false, message: 'Mensaje no válido.' });
+            return;
+        }
+
+        const recipientSocketId = videoCallService.getChatRecipient(callId, userId, socket.id);
+        if (!recipientSocketId || !io.sockets.sockets.has(recipientSocketId)) {
+            socket.emit("video:chat-message_result", { success: false, message: 'La llamada no está disponible.' });
+            return;
+        }
+
+        io.to(recipientSocketId).emit("video:chat-message", {
+            id,
+            content,
+            sender: socket.data.user?.username || 'Participante',
+            timestamp: new Date().toISOString(),
+            isOwn: false
+        });
+    });
+
     socket.on("disconnect", async () => {
         try {
             const user_id = socket.data.user_id;
