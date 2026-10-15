@@ -445,6 +445,15 @@ export class VideoCallService {
         }
     }
 
+    /** Returns the other participant only for the socket that joined this active call. */
+    public getChatRecipient(callId: string, fromUserId: string, fromSocketId: string): string | null {
+        const call = VideoCallService.activeCalls.get(callId);
+        // WebRTC can be ready before the asynchronous call_connected update finishes.
+        if (!call || (call.status !== 'connecting' && call.status !== 'connected') || call.users.length !== 2) return null;
+        if (!call.users.some(user => user.id === fromUserId && user.socketId === fromSocketId)) return null;
+        return call.users.find(user => user.id !== fromUserId)?.socketId ?? null;
+    }
+
     /**
      * Obtiene el socketId de un usuario
      * @param userId ID del usuario

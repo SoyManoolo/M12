@@ -102,12 +102,22 @@ export default function VideollamadaPage() {
 
     // Escuchar eventos de chat
     useEffect(() => {
-        socketService.on(VideoCallEvent.CHAT_MESSAGE, (message: Message) => {
+        let active = true;
+        let registered = false;
+        const handleMessage = (message: Message) => {
             setMessages(prev => [...prev, message]);
-        });
+        };
+        const registerListener = () => {
+            if (active && !registered) {
+                socketService.on(VideoCallEvent.CHAT_MESSAGE, handleMessage);
+                registered = true;
+            }
+        };
+        socketService.onConnect(registerListener);
 
         return () => {
-            socketService.off(VideoCallEvent.CHAT_MESSAGE);
+            active = false;
+            if (registered) socketService.off(VideoCallEvent.CHAT_MESSAGE, handleMessage);
         };
     }, []);
 
@@ -121,6 +131,7 @@ export default function VideollamadaPage() {
     };
 
     const handleSendMessage = (content: string) => {
+        if (!videoCallState.isCallActive || !videoCallState.callId || !content.trim() || content.length > 2000) return;
         const newMessage: Message = {
             id: Date.now().toString(),
             content,
@@ -131,7 +142,7 @@ export default function VideollamadaPage() {
 
         socketService.emit(VideoCallEvent.CHAT_MESSAGE, {
             ...newMessage,
-            to: videoCallState.callId || userId
+            to: videoCallState.callId
         });
 
         setMessages(prev => [...prev, newMessage]);
