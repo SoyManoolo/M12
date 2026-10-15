@@ -159,6 +159,7 @@ export function videoCallEvents(socket: Socket, io: Server) {
                     socket.emit("end_call_result", {
                         success: false,
                         message: "No active call found",
+                        callId,
                     });
                     return;
                 }
@@ -182,18 +183,36 @@ export function videoCallEvents(socket: Socket, io: Server) {
                 socket.emit("end_call_result", {
                     success: true,
                     message: "Call ended",
+                    callId: callIdToUse,
                 });
             } else {
                 socket.emit("end_call_result", {
                     success: false,
                     message: "Error ending call",
+                    callId: callIdToUse,
                 });
             }
         } catch (error) {
             socket.emit("end_call_result", {
                 success: false,
                 message: "Error ending call",
+                callId: data?.callId,
             });
+        }
+    });
+
+    socket.on("video:call-rating", async (data: { callId?: unknown; ratedId?: unknown; rating?: unknown } = {}) => {
+        try {
+            if (typeof data?.callId !== 'string' || typeof data.ratedId !== 'string' ||
+                typeof data.rating !== 'number' || !socket.data.user_id) {
+                socket.emit('video:call-rating-result', { success: false, message: 'Valoración no válida.' });
+                return;
+            }
+            const result = await videoCallService.rateCall(data.callId, socket.data.user_id, data.ratedId, data.rating);
+            socket.emit('video:call-rating-result', result);
+        } catch (error) {
+            dbLogger.error('[VideoCallEvents] Error saving call rating:', { error });
+            socket.emit('video:call-rating-result', { success: false, message: 'No se pudo guardar la valoración.' });
         }
     });
 
@@ -365,20 +384,19 @@ export function videoCallEvents(socket: Socket, io: Server) {
             // 2. Si el usuario está en una llamada, terminarla y notificar al otro usuario
             const callData = await videoCallService.getUserActiveCall(user_id);
             if (callData) {
-                // Notificar al otro participante
                 const otherParticipantId = callData.participants.find(p => p !== user_id);
-                if (otherParticipantId) {
-                    const otherSocketId = await videoCallService.getUserSocketId(otherParticipantId);
-                    if (otherSocketId) {
-                        io.to(otherSocketId).emit("partner_disconnected", {
-                            callId: callData.callId,
-                            reason: "Partner disconnected from server"
-                        });
-                    }
+                const otherSocketId = otherParticipantId
+                    ? await videoCallService.getUserSocketId(otherParticipantId)
+                    : null;
+                // endCall borra activeCalls; conservar el socket antes de persistir el fin.
+                await videoCallService.endCall(user_id, callData.callId);
+                if (otherSocketId) {
+                    io.to(otherSocketId).emit("partner_disconnected", {
+                        callId: callData.callId,
+                        reason: "Partner disconnected from server"
+                    });
                 }
 
-                // Terminar la llamada en la base de datos
-                await videoCallService.endCall(user_id, callData.callId); // Correcto
                 dbLogger.info(`Call ${callData.callId} ended due to user ${user_id} disconnect`);
             }
         } catch (error) {

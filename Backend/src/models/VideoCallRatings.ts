@@ -59,6 +59,11 @@ VideoCallRatings.init(
         updatedAt: false,
         indexes: [
             {
+                unique: true,
+                fields: ["video_call_id", "rater_id"],
+                name: "unique_rating",
+            },
+            {
                 fields: ["video_call_id"],
                 name: "idx_video_call_ratings_video_call_id",
             },

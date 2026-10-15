@@ -1,7 +1,7 @@
-import { Friends, User, UserBlocks, VideoCalls } from "../models";
+import { Friends, User, UserBlocks, VideoCalls, VideoCallRatings } from "../models";
 import { AppError } from "../middlewares/errors/AppError";
 import { existsUser } from "../utils/modelExists";
-import { Op } from "sequelize";
+import { Op, UniqueConstraintError } from "sequelize";
 import { Server } from "socket.io";
 import dbLogger from "../config/logger";
 import { randomUUID } from "crypto";
@@ -28,6 +28,34 @@ export class VideoCallService {
     private static instance: VideoCallService;
 
     private constructor() { }
+
+    public async rateCall(callId: string, raterId: string, ratedId: string, rating: number) {
+        if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+            return { success: false, message: 'La valoración debe estar entre 1 y 5.' };
+        }
+
+        const call = await VideoCalls.findByPk(callId);
+        if (!call || call.status !== 'ended' ||
+            !((call.user1_id === raterId && call.user2_id === ratedId) ||
+                (call.user2_id === raterId && call.user1_id === ratedId))) {
+            return { success: false, message: 'La llamada o el destinatario no son válidos.' };
+        }
+
+        try {
+            await VideoCallRatings.create({
+                video_call_id: callId,
+                rater_id: raterId,
+                rated_id: ratedId,
+                rating
+            });
+            return { success: true, message: 'Valoración guardada.' };
+        } catch (error) {
+            if (error instanceof UniqueConstraintError) {
+                return { success: false, message: 'Ya has valorado esta llamada.' };
+            }
+            throw error;
+        }
+    }
 
     private static readonly callEvents = {
         incoming: 'incoming_call_invite',

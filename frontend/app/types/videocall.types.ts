@@ -44,7 +44,8 @@ export enum VideoCallEvent {
 
     // Eventos de chat y calificación
     CHAT_MESSAGE = 'video:chat-message',
-    CALL_RATING = 'video:call-rating'
+    CALL_RATING = 'video:call-rating',
+    CALL_RATING_RESULT = 'video:call-rating-result'
 }
 
 export interface VideoCallState {
