@@ -16,7 +16,6 @@ import PostComments from "./Post/PostComments";
 import CommentInput from "./Post/CommentInput";
 import PostDescription from "./Post/PostDescription";
 import PostMedia from "./Post/PostMedia";
-import SecureImage from "~/components/Shared/SecureImage";
 import { usePostLike } from "~/hooks/post/usePostLike";
 import { useComments } from "~/hooks/post/useComments";
 
@@ -30,6 +29,7 @@ interface PostProps {
   };
   description: string;
   media_url: string;
+  media_type?: 'image' | 'video' | null;
   comments: Array<{
     comment_id: string;
     author: {
@@ -61,6 +61,7 @@ export default function Post({
   user,
   description,
   media_url,
+  media_type,
   comments: initialComments,
   created_at,
   likes_count,
@@ -113,14 +114,12 @@ export default function Post({
         {/* Imagen arriba (mobile) */}
         {hasMedia && (
           <div className="w-full mb-3">
-            <div className="rounded-lg overflow-hidden bg-gray-800 cursor-pointer">
-              <SecureImage
-                src={media_url}
-                alt="Contenido del post"
-                className="w-full h-60 object-cover"
-                onClick={handleImageClick}
-              />
-            </div>
+            <PostMedia
+              mediaUrl={media_url}
+              mediaType={media_type}
+              onImageClick={handleImageClick}
+              mobile
+            />
           </div>
         )}
 
@@ -198,6 +197,7 @@ export default function Post({
             <div className="w-[520px] px-4 h-full flex items-center">
               <PostMedia
                 mediaUrl={media_url}
+                mediaType={media_type}
                 createdAt={created_at}
                 onImageClick={handleImageClick}
               />
