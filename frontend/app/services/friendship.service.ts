@@ -183,6 +183,7 @@ class FriendshipService {
   async getUserFriends(token: string): Promise<{ success: boolean; message: string; data?: Friend[] }> {
     try {
       const response = await fetch(`${this.baseUrl}/friendship/friends`, {
+        credentials: 'include',
         headers: {
           'Authorization': `Bearer ${token}`
         }
