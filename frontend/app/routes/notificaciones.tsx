@@ -15,22 +15,24 @@ import { developmentLogger } from '~/utils/logger';
  */
 
 import { useState, useEffect } from "react";
-import type { Notification } from "~/types/notifications";
-import type { User } from "~/types/user.types";
+import { notificationService, type InboxNotification } from '~/services/notification.service';
+import { friendshipService } from '~/services/friendship.service';
+import { userService } from '~/services/user.service';
+import type { User } from '~/types/user.types';
+import { environment } from '~/config/environment';
 import Navbar from "~/components/Inicio/Navbar";
 import RightPanel from "~/components/Shared/RightPanel";
 import { FaUserFriends, FaComment, FaHeart, FaVideo, FaCheck, FaTimes, FaSearch, FaTrash, FaCheckDouble, FaBell } from 'react-icons/fa';
 import { useAuth } from "~/hooks/useAuth";
-import { userService } from "~/services/user.service";
 import { formatDistanceToNow, isToday, isYesterday, isThisWeek, isThisMonth } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { friendshipService } from "~/services/friendship.service";
 
 export const meta = () => pageMeta('Notificaciones', 'Consulta tus novedades y solicitudes de amistad.', { path: '/notificaciones' });
 
 export default function Notificaciones(): React.ReactElement {
-  const { token } = useAuth();
-  const [currentNotifications, setCurrentNotifications] = useState<(Notification & { user: User })[]>([]);
+  const { isAuthenticated, isLoading, token, user } = useAuth();
+  const currentUserId = user?.user_id;
+  const [currentNotifications, setCurrentNotifications] = useState<InboxNotification[]>([]);
   const [suggestedUsers, setSuggestedUsers] = useState<User[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -39,72 +41,97 @@ export default function Notificaciones(): React.ReactElement {
   const [selectedFilter, setSelectedFilter] = useState<string>('all');
 
   useEffect(() => {
-    const fetchFriends = async () => {
+    let cancelled = false;
+    const fetchNotifications = async () => {
+      if (isLoading) return;
       setLoading(true);
       setError(null);
-      if (!token) {
+      if (!isAuthenticated) {
+        setCurrentNotifications([]);
         setError('Por favor, inicia sesión para ver las notificaciones');
         setLoading(false);
         return;
       }
 
       try {
-        // Cargar amigos
-        const friendsResponse = await friendshipService.getUserFriends(token);
-        if (friendsResponse.success && friendsResponse.data) {
-          // Cargar usuarios sugeridos
-          const suggestedResponse = await userService.getAllUsers(token);
-          if (suggestedResponse.success && suggestedResponse.data && Array.isArray(suggestedResponse.data.users)) {
-            // Filtrar los usuarios que ya son amigos
-            const friendIds = new Set(friendsResponse.data.map(friend => friend.user.user_id));
-            const filteredSuggestedUsers = suggestedResponse.data.users.filter(
-              user => !friendIds.has(user.user_id)
-            );
-            setSuggestedUsers(filteredSuggestedUsers);
-          }
-        } else {
-          setSuggestedUsers([]);
-        }
+        const notifications = await notificationService.list();
+        if (!cancelled) setCurrentNotifications(notifications);
       } catch (err) {
-        developmentLogger.error('Error al cargar los amigos:', err);
-        setError('Error al cargar la lista de amigos');
+        developmentLogger.error('Error al cargar las notificaciones:', err);
+        if (!cancelled) setError('Error al cargar las notificaciones');
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
-    fetchFriends();
-  }, [token, reloadKey]);
+    fetchNotifications();
+    return () => { cancelled = true; };
+  }, [isAuthenticated, isLoading, reloadKey]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!token || !currentUserId) {
+      setSuggestedUsers([]);
+      return;
+    }
+
+    const fetchSuggestedUsers = async () => {
+      try {
+        const friendsResponse = await friendshipService.getUserFriends(token);
+        if (!friendsResponse.success || !friendsResponse.data) {
+          if (!cancelled) setSuggestedUsers([]);
+          return;
+        }
+
+        const usersResponse = await userService.getAllUsers(token);
+        if (!cancelled) {
+          const friendIds = new Set(friendsResponse.data.map(friend => friend.user.user_id));
+          setSuggestedUsers(usersResponse.success && Array.isArray(usersResponse.data?.users)
+            ? usersResponse.data.users.filter(candidate => candidate.user_id !== currentUserId && !friendIds.has(candidate.user_id))
+            : []);
+        }
+      } catch (err) {
+        developmentLogger.error('Error al cargar sugerencias:', err);
+        if (!cancelled) setSuggestedUsers([]);
+      }
+    };
+
+    fetchSuggestedUsers();
+    return () => { cancelled = true; };
+  }, [token, currentUserId]);
+
+  const showActionError = (error: unknown) => {
+    developmentLogger.error('Error al actualizar la notificación:', error);
+    setError('No se pudo actualizar la notificación. Inténtalo de nuevo.');
+  };
+
+  const respondToFriend = async (requestId: string, action: 'accept' | 'reject') => {
+    const response = await fetch(`${environment.apiUrl}/friendship/request/${encodeURIComponent(requestId)}/${action}`, {
+      method: 'POST', credentials: 'include'
+    });
+    if (!response.ok) throw new Error(`Error en solicitud de amistad (${response.status})`);
+    setCurrentNotifications(prev => prev.filter(item => item.related_id !== requestId));
+  };
 
   const handleAcceptFriend = async (friendshipId: string) => {
     try {
-      developmentLogger.log('Aceptando solicitud de amistad:', friendshipId);
-      setCurrentNotifications(prev =>
-        prev.map(notification =>
-          notification.related_id === friendshipId
-            ? { ...notification, is_read: true }
-            : notification
-        )
-      );
+      await respondToFriend(friendshipId, 'accept');
     } catch (error) {
-      developmentLogger.error('Error al aceptar solicitud:', error);
+      showActionError(error);
     }
   };
 
   const handleRejectFriend = async (friendshipId: string) => {
     try {
-      developmentLogger.log('Rechazando solicitud de amistad:', friendshipId);
-      setCurrentNotifications(prev =>
-        prev.filter(notification => notification.related_id !== friendshipId)
-      );
+      await respondToFriend(friendshipId, 'reject');
     } catch (error) {
-      developmentLogger.error('Error al rechazar solicitud:', error);
+      showActionError(error);
     }
   };
 
   const handleMarkAsRead = async (notificationId: string) => {
     try {
-      developmentLogger.log('Marcando notificación como leída:', notificationId);
+      await notificationService.markRead(notificationId);
       setCurrentNotifications(prev =>
         prev.map(notification =>
           notification.notification_id === notificationId
@@ -113,27 +140,29 @@ export default function Notificaciones(): React.ReactElement {
         )
       );
     } catch (error) {
-      developmentLogger.error('Error al marcar como leída:', error);
+      showActionError(error);
     }
   };
 
   const handleMarkAllAsRead = async () => {
     try {
+      await notificationService.markAllRead();
       setCurrentNotifications(prev =>
         prev.map(notification => ({ ...notification, is_read: true }))
       );
     } catch (error) {
-      developmentLogger.error('Error al marcar todas como leídas:', error);
+      showActionError(error);
     }
   };
 
   const handleDeleteNotification = async (notificationId: string) => {
     try {
+      await notificationService.remove(notificationId);
       setCurrentNotifications(prev =>
         prev.filter(notification => notification.notification_id !== notificationId)
       );
     } catch (error) {
-      developmentLogger.error('Error al eliminar notificación:', error);
+      showActionError(error);
     }
   };
 
@@ -145,7 +174,7 @@ export default function Notificaciones(): React.ReactElement {
         return <FaComment className="text-green-500" />;
       case 'comment':
         return <FaComment className="text-yellow-500" />;
-      case 'post_like':
+      case 'post':
         return <FaHeart className="text-red-500" />;
       case 'video_call':
         return <FaVideo className="text-purple-500" />;
@@ -165,7 +194,7 @@ export default function Notificaciones(): React.ReactElement {
         return `${baseStyle} ${isRead ? 'border-gray-800 bg-gray-900/50' : 'border-green-500 bg-green-500/10'}`;
       case 'comment':
         return `${baseStyle} ${isRead ? 'border-gray-800 bg-gray-900/50' : 'border-yellow-500 bg-yellow-500/10'}`;
-      case 'post_like':
+      case 'post':
         return `${baseStyle} ${isRead ? 'border-gray-800 bg-gray-900/50' : 'border-red-500 bg-red-500/10'}`;
       case 'video_call':
         return `${baseStyle} ${isRead ? 'border-gray-800 bg-gray-900/50' : 'border-purple-500 bg-purple-500/10'}`;
@@ -185,7 +214,7 @@ export default function Notificaciones(): React.ReactElement {
 
   const filteredNotifications = currentNotifications
     .filter(notification => {
-      const matchesSearch = notification.user?.username.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = !searchQuery || (notification.user?.username.toLowerCase().includes(searchQuery.toLowerCase()) ?? false);
       const matchesFilter = selectedFilter === 'all' || notification.type === selectedFilter;
       return matchesSearch && matchesFilter;
     })
@@ -196,7 +225,7 @@ export default function Notificaciones(): React.ReactElement {
       }
       groups[group].push(notification);
       return groups;
-    }, {} as Record<string, Notification[]>);
+    }, {} as Record<string, InboxNotification[]>);
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col lg:flex-row">
@@ -265,9 +294,9 @@ export default function Notificaciones(): React.ReactElement {
                   Mensajes
                 </button>
                 <button
-                  onClick={() => setSelectedFilter('post_like')}
+                  onClick={() => setSelectedFilter('post')}
                   className={`px-3 py-1.5 rounded-lg text-sm transition-colors whitespace-nowrap ${
-                    selectedFilter === 'post_like' 
+                    selectedFilter === 'post' 
                       ? 'bg-blue-600 text-white' 
                       : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                   }`}
@@ -314,12 +343,12 @@ export default function Notificaciones(): React.ReactElement {
                         </div>
                         <div>
                           <p className="text-xs sm:text-sm">
-                            <span className="font-semibold">{notification.user?.username}</span>
-                            {notification.type === 'friend_request' && ' te envió una solicitud de amistad'}
-                            {notification.type === 'message' && ' te envió un mensaje'}
-                            {notification.type === 'comment' && ' comentó tu publicación'}
-                            {notification.type === 'post_like' && ' le gustó tu publicación'}
-                            {notification.type === 'video_call' && ' te llamó'}
+                            {notification.type === 'friend_request' && (notification.user
+                              ? `${notification.user.username} te envió una solicitud de amistad`
+                              : 'Solicitud de amistad')}
+                            {notification.type === 'message' && 'Nuevo mensaje'}
+                            {notification.type === 'comment' && 'Nuevo comentario en tu publicación'}
+                            {notification.type === 'post' && 'Nueva publicación'}
                           </p>
                           <p className="text-xs text-gray-400">
                             {formatDistanceToNow(new Date(notification.created_at), {
@@ -331,7 +360,7 @@ export default function Notificaciones(): React.ReactElement {
                       </div>
 
                       <div className="flex items-center space-x-2">
-                        {notification.type === 'friend_request' ? (
+                        {notification.type === 'friend_request' && notification.user && (
                           <>
                             <button
                               onClick={() => handleAcceptFriend(notification.related_id)}
@@ -348,7 +377,8 @@ export default function Notificaciones(): React.ReactElement {
                               <FaTimes />
                             </button>
                           </>
-                        ) : !notification.is_read && (
+                        )}
+                        {!notification.is_read && (
                           <button
                             onClick={() => handleMarkAsRead(notification.notification_id)}
                             className="text-blue-400 hover:text-blue-300 text-sm transition-colors"

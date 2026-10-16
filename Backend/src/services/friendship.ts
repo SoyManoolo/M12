@@ -1,4 +1,4 @@
-import { FriendRequest, Friends, User, UserBlocks } from '../models';
+import { FriendRequest, Friends, Notifications, User, UserBlocks } from '../models';
 import { AppError } from '../middlewares/errors/AppError';
 import dbLogger from '../config/logger';
 import { Op } from 'sequelize';
@@ -104,11 +104,16 @@ export class FriendshipService {
             }
 
             // Crear la solicitud
-            const friendRequest = await FriendRequest.create({
-                sender_id,
-                receiver_id,
-                status: 'pending',
-                created_from
+            const friendRequest = await sequelize.transaction(async transaction => {
+                const request = await FriendRequest.create({
+                    sender_id, receiver_id, status: 'pending', created_from
+                }, { transaction });
+                await Notifications.create({
+                    user_id: receiver_id,
+                    type: 'friend_request',
+                    related_id: request.getDataValue('request_id')
+                }, { transaction });
+                return request;
             });
 
             return friendRequest;
@@ -160,6 +165,10 @@ export class FriendshipService {
                     user2_id: requestData.receiver_id
                 }, { transaction });
                 await friendRequest.update({ status: 'accepted' }, { transaction });
+                await Notifications.destroy({
+                    where: { user_id: receiver_id, type: 'friend_request', related_id: request_id },
+                    transaction
+                });
 
                 return friendRequest;
             });
@@ -177,20 +186,21 @@ export class FriendshipService {
      */
     public async rejectFriendRequest(request_id: string, receiver_id: string) {
         try {
-            const friendRequest = await FriendRequest.findOne({
-                where: {
-                    request_id,
-                    receiver_id,
-                    status: 'pending'
-                }
+            return await sequelize.transaction(async transaction => {
+                const friendRequest = await FriendRequest.findOne({
+                    where: { request_id, receiver_id, status: 'pending' },
+                    transaction,
+                    lock: transaction.LOCK.UPDATE
+                });
+                if (!friendRequest) throw new AppError(404, 'FriendRequestNotFound');
+
+                await friendRequest.update({ status: 'rejected' }, { transaction });
+                await Notifications.destroy({
+                    where: { user_id: receiver_id, type: 'friend_request', related_id: request_id },
+                    transaction
+                });
+                return friendRequest;
             });
-
-            if (!friendRequest) {
-                throw new AppError(404, 'FriendRequestNotFound');
-            }
-
-            await friendRequest.update({ status: 'rejected' });
-            return friendRequest;
         } catch (error) {
             if (error instanceof AppError) {
                 throw error;
@@ -379,20 +389,28 @@ export class FriendshipService {
      */
     public async cancelFriendRequest(request_id: string, sender_id: string) {
         try {
-            const friendRequest = await FriendRequest.findOne({
-                where: {
-                    request_id,
-                    sender_id,
-                    status: 'pending'
+            return await sequelize.transaction(async transaction => {
+                const friendRequest = await FriendRequest.findOne({
+                    where: { request_id, sender_id, status: 'pending' },
+                    transaction,
+                    lock: transaction.LOCK.UPDATE
+                });
+
+                if (!friendRequest) {
+                    throw new AppError(404, 'FriendRequestNotFound');
                 }
+
+                await friendRequest.update({ status: 'cancelled' }, { transaction });
+                await Notifications.destroy({
+                    where: {
+                        user_id: friendRequest.getDataValue('receiver_id'),
+                        type: 'friend_request',
+                        related_id: request_id
+                    },
+                    transaction
+                });
+                return friendRequest;
             });
-
-            if (!friendRequest) {
-                throw new AppError(404, 'FriendRequestNotFound');
-            }
-
-            await friendRequest.update({ status: 'cancelled' });
-            return friendRequest;
         } catch (error) {
             if (error instanceof AppError) {
                 throw error;
