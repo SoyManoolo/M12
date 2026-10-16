@@ -50,19 +50,22 @@ export class UserService {
             dbLogger.info('[UserService] Getting all users');
             const queryOptions: FindOptions = {
                 limit: limit + 1, // +1 para verificar si hay más páginas
-                order: [['created_at', 'DESC']], // Ordenamiento explícito
+                order: [['created_at', 'DESC'], ['user_id', 'DESC']],
                 attributes,
             };
 
             if (cursor) {
-                const lastUser = await User.findByPk(cursor);
-                if (lastUser) {
-                    queryOptions.where = {
-                        created_at: {
-                            [Op.lt]: lastUser.getDataValue("created_at")
-                        }
-                    };
-                }
+                // El usuario que cierra la página puede haberse borrado lógicamente
+                // antes de solicitar la siguiente; su posición sigue siendo válida.
+                const lastUser = await User.findByPk(cursor, { paranoid: false });
+                if (!lastUser) throw new AppError(400, 'InvalidCursor');
+                const createdAt = lastUser.getDataValue('created_at');
+                queryOptions.where = {
+                    [Op.or]: [
+                        { created_at: { [Op.lt]: createdAt } },
+                        { created_at: createdAt, user_id: { [Op.lt]: cursor } }
+                    ]
+                };
             }
 
             const users = await User.findAll(queryOptions);
