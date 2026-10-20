@@ -263,6 +263,7 @@ export default function AdminUsuarios() {
   const [activeFilter, setActiveFilter] = useState<'all' | 'recent' | 'oldest' | 'admin'>('all');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [userToDelete, setUserToDelete] = useState<{ id: string; username: string } | null>(null);
   const [notification, setNotification] = useState<{
@@ -275,18 +276,22 @@ export default function AdminUsuarios() {
   const [userToEdit, setUserToEdit] = useState<UserProfile | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  const fetchData = async () => {
+  const fetchData = async (cursor?: string) => {
     if (!token) {
       setError('Por favor, inicia sesión para ver los usuarios');
       setLoading(false);
       return;
     }
 
+    setLoading(true);
+    setError(null);
     try {
-      const response = await userService.getAllUsersForAdmin(token);
+      const response = await userService.getAllUsersForAdmin(token, cursor);
       if (response.success) {
-        setUsers(response.data.users);
-        setFilteredUsers(response.data.users);
+        setUsers(previous => cursor
+          ? [...previous, ...response.data.users.filter(user => !previous.some(loaded => loaded.user_id === user.user_id))]
+          : response.data.users);
+        setNextCursor(response.data.nextCursor);
       } else {
         throw new Error(response.message || 'No pudimos cargar los usuarios');
       }
@@ -299,7 +304,7 @@ export default function AdminUsuarios() {
 
   // Efecto para cargar datos iniciales
   useEffect(() => {
-    fetchData();
+    void fetchData();
   }, [token]);
 
   // Efecto para filtrar y ordenar usuarios
@@ -427,7 +432,10 @@ export default function AdminUsuarios() {
       const response = await userService.updateUserById(userId, requestBody, token);
       if (response.success) {
         setNotification({ message: 'Usuario actualizado correctamente', type: 'success' });
-        fetchData(); // Refrescar la lista completa
+        // Conservar las páginas ya recorridas y actualizar la cuenta en su lugar.
+        setUsers(previous => previous.map(user => user.user_id === userId
+          ? { ...user, ...response.data }
+          : user));
         setShowEditModal(false);
       } else {
         setNotification({ message: response.message || 'Error al actualizar usuario', type: 'error' });
@@ -537,17 +545,20 @@ export default function AdminUsuarios() {
 
           {/* Lista de usuarios */}
           <div className="space-y-4">
-            {error ? (
+            {error && (
               <div className="bg-red-500/10 text-red-500 p-4 rounded-lg">
                 {error}
               </div>
-            ) : loading && filteredUsers.length === 0 ? (
+            )}
+            {loading && filteredUsers.length === 0 ? (
               <div className="flex justify-center items-center h-32">
                 <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
               </div>
             ) : filteredUsers.length === 0 ? (
               <div className="text-center text-gray-500">
-                {searchQuery ? 'No se encontraron usuarios' : 'No hay usuarios para mostrar'}
+                {searchQuery
+                  ? nextCursor ? 'No se encontraron usuarios entre los cargados. Carga más para seguir buscando.' : 'No se encontraron usuarios'
+                  : 'No hay usuarios para mostrar'}
               </div>
             ) : (
               filteredUsers.map((user) => (
@@ -615,6 +626,18 @@ export default function AdminUsuarios() {
               ))
             )}
           </div>
+          {nextCursor && (
+            <div className="mt-6 text-center">
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() => void fetchData(nextCursor)}
+                className="rounded-lg bg-blue-600 px-5 py-2 text-white disabled:opacity-50"
+              >
+                {loading ? 'Cargando...' : 'Cargar más usuarios'}
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
