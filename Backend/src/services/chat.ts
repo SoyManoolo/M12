@@ -1,4 +1,5 @@
-import { ChatMessages, PostComments, User, Friends } from "../models";
+import { ChatMessages, PostComments, User, Friends, Notifications } from "../models";
+import { sequelize } from "../config/database";
 import { AppError } from "../middlewares/errors/AppError";
 import { Op } from "sequelize";
 import { existsUser } from "../utils/modelExists";
@@ -41,7 +42,17 @@ export class ChatService {
                 content,
             };
 
-            const message: ChatMessages = await ChatMessages.create(messageData);
+            const message: ChatMessages = await sequelize.transaction(async transaction => {
+                const created = await ChatMessages.create(messageData, { transaction });
+                if (sender_id !== receiver_id) {
+                    await Notifications.create({
+                        user_id: receiver_id,
+                        type: 'message',
+                        related_id: created.getDataValue('id')
+                    }, { transaction });
+                }
+                return created;
+            });
 
             // Verificar si el mensaje fue creado correctamente
             if (!message) throw new AppError(400, 'MessageNotCreated');

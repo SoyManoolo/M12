@@ -22,6 +22,7 @@ import chatRoutes from './routes/chat';
 import commentRoutes from './routes/comment';
 import friendshipRoutes from './routes/friendship';
 import adminRoutes from './routes/admin';
+import notificationRoutes from './routes/notification';
 
 // Middlewares de error
 import { celebrateErrorHandler } from './middlewares/errors/CelebrateErrorHandler';
@@ -144,6 +145,7 @@ app.use('/chat', chatRoutes);
 app.use('/comments', commentRoutes);
 app.use('/friendship', friendshipRoutes);
 app.use('/admin', adminRoutes);
+app.use('/notifications', notificationRoutes);
 
 // Ruta no encontrada (404)
 app.use((req: Request, res: Response) => {
