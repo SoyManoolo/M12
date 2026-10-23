@@ -166,6 +166,7 @@ export interface PostCreationAttributes
         PostAttributes,
         | "post_id"
         | "media"
+        | "media_type"
         | "created_at"
         | "updated_at"
     > { }
@@ -176,6 +177,7 @@ export interface PostAttributes {
     user_id: string;
     description: string;
     media?: string | null;
+    media_type?: 'image' | 'video' | null;
     created_at?: Date;
     updated_at?: Date | null;
     deleted_at?: Date | null;
