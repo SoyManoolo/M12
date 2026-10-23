@@ -1,4 +1,5 @@
-import { PostComments, Post, User } from '../models';
+import { PostComments, Post, User, Notifications } from '../models';
+import { sequelize } from '../config/database';
 import { AppError } from '../middlewares/errors/AppError';
 import dbLogger from '../config/logger';
 import { existsPost } from '../utils/modelExists';
@@ -21,10 +22,17 @@ export class CommentService {
                 throw new AppError(404, 'UserNotFound');
             }
 
-            const comment = await PostComments.create({
-                post_id,
-                user_id,
-                content
+            const comment = await sequelize.transaction(async transaction => {
+                const created = await PostComments.create({ post_id, user_id, content }, { transaction });
+                const authorId = post.getDataValue('user_id');
+                if (authorId !== user_id) {
+                    await Notifications.create({
+                        user_id: authorId,
+                        type: 'comment',
+                        related_id: created.getDataValue('comment_id')
+                    }, { transaction });
+                }
+                return created;
             });
 
             if (!comment) {
