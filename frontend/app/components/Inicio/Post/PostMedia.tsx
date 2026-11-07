@@ -19,7 +19,7 @@ export default function PostMedia({
 
   return (
     <div
-      className="rounded-lg overflow-hidden bg-gray-800 h-full w-full cursor-pointer relative flex items-center justify-center"
+      className="rounded-lg overflow-hidden bg-soft h-full w-full cursor-pointer relative flex items-center justify-center"
       onClick={onImageClick}
     >
       <SecureImage
@@ -28,7 +28,7 @@ export default function PostMedia({
         className="w-full h-full object-cover"
       />
       {/* Timestamp overlay */}
-      <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 px-3 py-1.5 rounded text-sm text-gray-300">
+      <div className="absolute bottom-2 left-2 bg-page bg-opacity-50 px-3 py-1.5 rounded text-sm text-copy">
         {formatRelativeTime(createdAt)}
       </div>
     </div>

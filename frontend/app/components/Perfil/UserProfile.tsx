@@ -1,13 +1,13 @@
 /**
  * Componente UserProfile
- * 
+ *
  * Este componente muestra la información principal del perfil de usuario.
  * Incluye:
  * - Foto de perfil
  * - Nombre completo
  * - Nombre de usuario
  * - Biografía
- * 
+ *
  * @module UserProfile
  * @requires react
  */
@@ -92,7 +92,7 @@ export default function UserProfile({ user, isOwnProfile, onEditProfile }: UserP
     useEffect(() => {
         const checkFriendshipStatus = async () => {
             if (!token || !user?.user_id || isOwnProfile) return;
-            
+
             try {
                 const response = await friendshipService.getFriendshipStatus(token, user.user_id);
                 if (response.success && response.data) {
@@ -238,10 +238,10 @@ export default function UserProfile({ user, isOwnProfile, onEditProfile }: UserP
 
     return (
         <>
-        <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
+        <div className="bg-surface rounded-lg p-6 border border-line">
             <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-start sm:gap-6">
                     {/* Foto de perfil con efecto hover */}
-                    <div 
+                    <div
                         className="relative group"
                         onMouseEnter={() => setIsHovering(true)}
                         onMouseLeave={() => setIsHovering(false)}
@@ -255,12 +255,12 @@ export default function UserProfile({ user, isOwnProfile, onEditProfile }: UserP
                             <SecureImage
                                 src={profilePicture}
                                 alt={`${user.username} profile`}
-                                className="h-28 w-28 sm:h-40 sm:w-40 rounded-full object-cover border-4 border-gray-800 transition-all duration-300 group-hover:border-blue-500/50 group-hover:scale-105"
+                                className="h-28 w-28 sm:h-40 sm:w-40 rounded-full object-cover border-4 border-line transition-all duration-300 group-hover:border-blue-500/50 group-hover:scale-105"
                             />
                         </button>
                     ) : (
-                            <div className="h-28 w-28 sm:h-40 sm:w-40 rounded-full border-4 border-gray-800 bg-gray-800 flex items-center justify-center cursor-pointer transition-all duration-300 group-hover:border-blue-500/50 group-hover:scale-105">
-                                <span className="text-gray-400 text-4xl sm:text-6xl group-hover:text-blue-500/50 transition-colors duration-300">
+                            <div className="h-28 w-28 sm:h-40 sm:w-40 rounded-full border-4 border-line bg-soft flex items-center justify-center cursor-pointer transition-all duration-300 group-hover:border-blue-500/50 group-hover:scale-105">
+                                <span className="text-muted text-4xl sm:text-6xl group-hover:text-accent/50 transition-colors duration-300">
                                     {user.username.charAt(0).toUpperCase()}
                                 </span>
                             </div>
@@ -269,7 +269,7 @@ export default function UserProfile({ user, isOwnProfile, onEditProfile }: UserP
                         {isOwnProfile && (
                             <div className={`absolute inset-0 flex items-center justify-center transition-all duration-300 rounded-full bg-black/50 backdrop-blur-sm ${isHovering ? 'opacity-100' : 'pointer-events-none opacity-0'}`}>
                                 <div className="flex flex-col space-y-2">
-                                    <label className="px-3 py-1.5 bg-blue-600/90 text-white rounded-lg cursor-pointer hover:bg-blue-500 transition-all duration-300 text-xs shadow-lg flex items-center space-x-1.5 transform hover:scale-105">
+                                    <label className="px-3 py-1.5 bg-primary/90 text-white rounded-lg cursor-pointer hover:bg-primary-hover transition-all duration-300 text-xs shadow-lg flex items-center space-x-1.5 transform hover:scale-105">
                                         <FaCamera className="text-xs" />
                                         <span>Cambiar foto</span>
                                         <input
@@ -298,10 +298,10 @@ export default function UserProfile({ user, isOwnProfile, onEditProfile }: UserP
                 <div className="flex-1 w-full text-center sm:text-left">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2 sm:gap-0">
                         <div>
-                            <h1 className="text-2xl font-bold text-white">
+                            <h1 className="text-2xl font-bold text-ink">
                                 {user.name} {user.surname}
                             </h1>
-                            <p className="text-gray-400">@{user.username}</p>
+                            <p className="text-muted">@{user.username}</p>
                         </div>
                         <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3 w-full sm:w-auto mt-3 sm:mt-0">
                             {!isOwnProfile && (
@@ -309,7 +309,7 @@ export default function UserProfile({ user, isOwnProfile, onEditProfile }: UserP
                                     {friendshipStatus === 'none' && (
                                         <button
                                             onClick={handleAddFriend}
-                                            className="px-4 py-2 bg-blue-600/90 hover:bg-blue-500 text-white rounded-lg flex items-center justify-center space-x-2 transition-colors cursor-pointer w-full sm:w-auto"
+                                            className="px-4 py-2 bg-primary/90 hover:bg-primary-hover text-white rounded-lg flex items-center justify-center space-x-2 transition-colors cursor-pointer w-full sm:w-auto"
                                         >
                                             <FaUserPlus />
                                             <span>Añadir amigo</span>
@@ -318,7 +318,7 @@ export default function UserProfile({ user, isOwnProfile, onEditProfile }: UserP
                                     {friendshipStatus === 'pending' && (
                                         <button
                                             disabled
-                                            className="px-4 py-2 bg-yellow-500/90 text-white rounded-lg flex items-center justify-center space-x-2 cursor-not-allowed w-full sm:w-auto"
+                                            className="px-4 py-2 bg-yellow-500/90 text-ink rounded-lg flex items-center justify-center space-x-2 cursor-not-allowed w-full sm:w-auto"
                                         >
                                             <FaCheck />
                                             <span>Solicitud enviada</span>
@@ -336,7 +336,7 @@ export default function UserProfile({ user, isOwnProfile, onEditProfile }: UserP
                                                 <span>{isSendingCallInvite ? 'Enviando…' : callInviteId ? 'Esperando respuesta…' : 'Videollamar'}</span>
                                             </button>
                                             {callInviteId ? (
-                                                <button type="button" onClick={handleCancelCallInvite} className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg">Cancelar invitación</button>
+                                                <button type="button" onClick={handleCancelCallInvite} className="px-4 py-2 bg-hover hover:bg-hover text-ink rounded-lg">Cancelar invitación</button>
                                             ) : (
                                                 <button
                                                     onClick={handleRemoveFriend}
@@ -353,7 +353,7 @@ export default function UserProfile({ user, isOwnProfile, onEditProfile }: UserP
                             {isOwnProfile && (
                                 <button
                                     onClick={onEditProfile}
-                                    className="px-4 py-2 bg-blue-600/90 hover:bg-blue-500 text-white rounded-lg flex items-center space-x-2 transition-colors cursor-pointer"
+                                    className="px-4 py-2 bg-primary/90 hover:bg-primary-hover text-white rounded-lg flex items-center space-x-2 transition-colors cursor-pointer"
                                 >
                                     <FaEdit />
                                     <span>Editar perfil</span>
@@ -363,7 +363,7 @@ export default function UserProfile({ user, isOwnProfile, onEditProfile }: UserP
                     </div>
 
                         {/* Biografía simple */}
-                        <p className="text-gray-300 whitespace-pre-wrap">
+                        <p className="text-copy whitespace-pre-wrap">
                             {sanitizeUserText(user.bio) || "Sin biografía"}
                         </p>
                     </div>
@@ -390,4 +390,4 @@ export default function UserProfile({ user, isOwnProfile, onEditProfile }: UserP
             )}
         </>
     );
-} 
+}

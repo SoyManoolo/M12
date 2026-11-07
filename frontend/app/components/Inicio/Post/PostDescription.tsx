@@ -17,17 +17,17 @@ export default function PostDescription({
   const safeDescription = sanitizeUserText(description);
 
   const needsTruncation = safeDescription.length > maxLength;
-  const displayText = showFull || !needsTruncation 
+  const displayText = showFull || !needsTruncation
     ? safeDescription
     : safeDescription.slice(0, maxLength);
 
   return (
-    <div className="text-gray-300 text-sm sm:text-base">
+    <div className="text-copy text-sm sm:text-base">
       <p>{displayText}</p>
       {needsTruncation && (
         <button
           onClick={() => setShowFull(!showFull)}
-          className="text-blue-400 hover:text-blue-300 text-sm font-medium block mt-2"
+          className="text-accent hover:text-accent text-sm font-medium block mt-2"
         >
           {showFull ? "Ver menos" : "Leer más..."}
         </button>

@@ -1,2 +1,16 @@
 @import 'tailwindcss';
 
+@theme inline {
+  --color-page: var(--page);
+  --color-surface: var(--surface);
+  --color-soft: var(--soft);
+  --color-hover: var(--hover);
+  --color-ink: var(--ink);
+  --color-copy: var(--copy);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-accent: var(--accent);
+}

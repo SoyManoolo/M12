@@ -29,7 +29,7 @@ export default function PostHeader({ user, layout = "horizontal" }: PostHeaderPr
           onClick={navigateToProfile}
         />
         <p
-          className="font-semibold text-white cursor-pointer hover:underline text-center text-sm"
+          className="font-semibold text-ink cursor-pointer hover:underline text-center text-sm"
           onClick={navigateToProfile}
         >
           {user.username}
@@ -47,7 +47,7 @@ export default function PostHeader({ user, layout = "horizontal" }: PostHeaderPr
         onClick={navigateToProfile}
       />
       <p
-        className="font-semibold text-white cursor-pointer hover:underline text-base truncate flex-1"
+        className="font-semibold text-ink cursor-pointer hover:underline text-base truncate flex-1"
         onClick={navigateToProfile}
       >
         {user.username}

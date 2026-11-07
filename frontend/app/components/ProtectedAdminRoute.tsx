@@ -8,7 +8,7 @@ export function ProtectedAdminRoute({ children }: { children: ReactNode }) {
   const location = useLocation();
 
   if (!user) {
-    return <div className="min-h-screen bg-black" aria-busy="true" />;
+    return <div className="min-h-screen bg-page" aria-busy="true" />;
   }
 
   if (!user.is_moderator) {

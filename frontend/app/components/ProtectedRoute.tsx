@@ -13,9 +13,9 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       // Redirigir al login usando navigate en lugar de Navigate component
-      navigate('/login', { 
-        state: { from: location.pathname }, 
-        replace: true 
+      navigate('/login', {
+        state: { from: location.pathname },
+        replace: true
       });
     }
   }, [isAuthenticated, isLoading, navigate, location.pathname]);
@@ -23,10 +23,10 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   // Mostrar loading mientras verificamos la autenticación
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-950">
+      <div className="min-h-screen flex items-center justify-center bg-surface">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-400">Verificando sesión...</p>
+          <p className="text-muted">Verificando sesión...</p>
         </div>
       </div>
     );
@@ -38,4 +38,4 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   return <>{children}</>;
-} 
+}

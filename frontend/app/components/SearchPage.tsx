@@ -3,13 +3,13 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { environment } from '~/config/environment';
 import Navbar from './Inicio/Navbar';
-import { 
-  FaSearch, 
-  FaUserFriends, 
-  FaUserPlus, 
-  FaUserMinus, 
-  FaUserClock, 
-  FaUserCheck, 
+import {
+  FaSearch,
+  FaUserFriends,
+  FaUserPlus,
+  FaUserMinus,
+  FaUserClock,
+  FaUserCheck,
   FaUserTimes,
   FaUsers,
   FaLightbulb,
@@ -94,7 +94,7 @@ export default function SearchPage() {
           if (data.success && data.data && data.data.users) {
             // Filtrar usuarios que no son amigos y no es el usuario actual
             const friendIds = new Set(friends.map(friend => friend.user.user_id));
-            const suggestedUsers = data.data.users.filter((user: User) => 
+            const suggestedUsers = data.data.users.filter((user: User) =>
               !friendIds.has(user.user_id) && user.user_id !== currentUser?.user_id
             );
             setSuggestedFriends(suggestedUsers);
@@ -117,7 +117,7 @@ export default function SearchPage() {
   useEffect(() => {
     const fetchFriendshipStatuses = async () => {
       if (!token || !suggestedFriends.length) return;
-      
+
       try {
         const statuses: Record<string, FriendshipStatus> = {};
         for (const user of suggestedFriends) {
@@ -147,7 +147,7 @@ export default function SearchPage() {
     try {
       setLoading(true);
       const url = `${environment.apiUrl}/users/username?username=${searchTerm}`;
-      
+
       const response = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -255,9 +255,9 @@ export default function SearchPage() {
     switch (status.status) {
       case 'none':
         return (
-          <button 
+          <button
             onClick={() => handleFriendAction(userId, 'send')}
-            className="px-2 py-1 bg-blue-600/90 text-white rounded-full shadow-md hover:bg-blue-500 transition-all duration-200 text-xs font-semibold flex items-center justify-center gap-1 ml-4 cursor-pointer"
+            className="px-2 py-1 bg-primary/90 text-white rounded-full shadow-md hover:bg-primary-hover transition-all duration-200 text-xs font-semibold flex items-center justify-center gap-1 ml-4 cursor-pointer"
           >
             <FaUserPlus className="text-xs" />
             <span>Añadir</span>
@@ -266,9 +266,9 @@ export default function SearchPage() {
       case 'pending':
         if (status.is_sender) {
           return (
-            <button 
+            <button
               onClick={() => handleFriendAction(userId, 'cancel')}
-              className="px-2 py-1 bg-yellow-500/90 text-white rounded-full shadow-md hover:bg-yellow-400 transition-all duration-200 text-xs font-semibold flex items-center justify-center gap-1 ml-4 cursor-pointer"
+              className="px-2 py-1 bg-yellow-500/90 text-ink rounded-full shadow-md hover:bg-yellow-400 transition-all duration-200 text-xs font-semibold flex items-center justify-center gap-1 ml-4 cursor-pointer"
             >
               <FaUserClock className="text-xs" />
               <span>Pendiente</span>
@@ -277,14 +277,14 @@ export default function SearchPage() {
         }
         return (
           <div className="flex flex-col gap-2 ml-4 w-28">
-            <button 
+            <button
               onClick={() => handleFriendAction(userId, 'accept')}
               className="px-2 py-1 bg-green-500/90 text-white rounded-full shadow-md hover:bg-green-400 transition-all duration-200 text-xs font-semibold flex items-center justify-center gap-1 cursor-pointer"
             >
               <FaUserCheck className="text-xs" />
               <span>Aceptar</span>
             </button>
-            <button 
+            <button
               onClick={() => handleFriendAction(userId, 'reject')}
               className="px-2 py-1 bg-red-500/90 text-white rounded-full shadow-md hover:bg-red-400 transition-all duration-200 text-xs font-semibold flex items-center justify-center gap-1 cursor-pointer"
             >
@@ -295,7 +295,7 @@ export default function SearchPage() {
         );
       case 'friends':
         return (
-          <button 
+          <button
             onClick={() => handleFriendAction(userId, 'remove')}
             className="px-2 py-1 bg-red-500/90 text-white rounded-full shadow-md hover:bg-red-400 transition-all duration-200 text-xs font-semibold flex items-center justify-center gap-1 ml-4 cursor-pointer"
           >
@@ -314,14 +314,14 @@ export default function SearchPage() {
         return (
           <div className="space-y-4">
             {friends.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 bg-gray-900/50 rounded-xl border border-gray-800">
-                <div className="w-24 h-24 bg-gradient-to-br from-blue-600/20 to-purple-600/20 rounded-full flex items-center justify-center mb-6">
-                  <FaUserFriends className="text-5xl text-blue-500" />
+              <div className="flex flex-col items-center justify-center py-12 bg-surface/50 rounded-xl border border-line">
+                <div className="w-24 h-24 bg-gradient-to-br from-primary/20 to-primary/20 rounded-full flex items-center justify-center mb-6">
+                  <FaUserFriends className="text-5xl text-accent" />
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-2">
+                <h3 className="text-xl font-semibold text-ink mb-2">
                   No tienes amigos aún
                 </h3>
-                <p className="text-gray-400 text-center max-w-md">
+                <p className="text-muted text-center max-w-md">
                   Busca usuarios y agrégalos como amigos para empezar a conectar y compartir momentos.
                 </p>
               </div>
@@ -329,7 +329,7 @@ export default function SearchPage() {
               friends.map((friend) => (
                 <div
                   key={friend.friendship_id}
-                  className="relative p-4 bg-gray-900 rounded-lg border border-gray-800 hover:border-blue-500 transition-all duration-300 group min-h-[90px] cursor-pointer"
+                  className="relative p-4 bg-surface rounded-lg border border-line hover:border-blue-500 transition-all duration-300 group min-h-[90px] cursor-pointer"
                   onClick={() => handleUserClick(friend.user.username)}
                   >
                   <div className="flex items-center justify-between w-full">
@@ -338,26 +338,26 @@ export default function SearchPage() {
                       <SecureImage
                         src={friend.user.profile_picture}
                         alt={friend.user.username}
-                        className="w-12 h-12 rounded-full object-cover border-2 border-gray-800 group-hover:border-blue-500 transition-all duration-300"
+                        className="w-12 h-12 rounded-full object-cover border-2 border-line group-hover:border-blue-500 transition-all duration-300"
                       />
                     ) : (
-                      <div className="w-12 h-12 rounded-full border-2 border-gray-800 bg-gray-800 flex items-center justify-center group-hover:border-blue-500 transition-all duration-300">
-                        <span className="text-gray-400 text-lg group-hover:text-blue-400 transition-colors">
+                      <div className="w-12 h-12 rounded-full border-2 border-line bg-soft flex items-center justify-center group-hover:border-blue-500 transition-all duration-300">
+                        <span className="text-muted text-lg group-hover:text-accent transition-colors">
                           {friend.user.username.charAt(0).toUpperCase()}
                         </span>
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
-                      <h2 className="text-lg font-semibold text-white group-hover:text-blue-400 transition-colors truncate">
+                      <h2 className="text-lg font-semibold text-ink group-hover:text-accent transition-colors truncate">
                         {friend.user.username}
                       </h2>
-                      <p className="text-sm text-gray-400 truncate flex items-center gap-2">
+                      <p className="text-sm text-muted truncate flex items-center gap-2">
                         <FaUserCircle className="text-xs" />
                         {friend.user.name} {friend.user.surname}
                       </p>
                     </div>
                   </div>
-                  <button 
+                  <button
                     onClick={(e) => {
                       e.stopPropagation();
                       handleFriendAction(friend.user.user_id, 'remove');
@@ -380,17 +380,17 @@ export default function SearchPage() {
             {loading ? (
               <div className="flex flex-col items-center justify-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-                <p className="text-gray-400 mt-4">Cargando sugerencias...</p>
+                <p className="text-muted mt-4">Cargando sugerencias...</p>
               </div>
             ) : suggestedFriends.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 bg-gray-900/50 rounded-xl border border-gray-800">
+              <div className="flex flex-col items-center justify-center py-12 bg-surface/50 rounded-xl border border-line">
                 <div className="w-24 h-24 bg-gradient-to-br from-purple-600/20 to-blue-600/20 rounded-full flex items-center justify-center mb-6">
                   <FaLightbulb className="text-5xl text-purple-500" />
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-2">
+                <h3 className="text-xl font-semibold text-ink mb-2">
                   No hay usuarios disponibles
                 </h3>
-                <p className="text-gray-400 text-center max-w-md">
+                <p className="text-muted text-center max-w-md">
                   Todos los usuarios ya son tus amigos o no hay usuarios registrados en este momento.
                 </p>
               </div>
@@ -398,7 +398,7 @@ export default function SearchPage() {
               suggestedFriends.map((user) => (
                 <div
                   key={user.user_id}
-                  className="relative p-4 bg-gray-900 rounded-lg border border-gray-800 hover:border-purple-500 transition-all duration-300 group min-h-[90px] cursor-pointer"
+                  className="relative p-4 bg-surface rounded-lg border border-line hover:border-purple-500 transition-all duration-300 group min-h-[90px] cursor-pointer"
                   onClick={() => handleUserClick(user.username)}
                   >
                   <div className="flex items-center justify-between w-full">
@@ -407,20 +407,20 @@ export default function SearchPage() {
                       <SecureImage
                         src={user.profile_picture}
                         alt={user.username}
-                        className="w-12 h-12 rounded-full object-cover border-2 border-gray-800 group-hover:border-purple-500 transition-all duration-300"
+                        className="w-12 h-12 rounded-full object-cover border-2 border-line group-hover:border-purple-500 transition-all duration-300"
                       />
                     ) : (
-                      <div className="w-12 h-12 rounded-full border-2 border-gray-800 bg-gray-800 flex items-center justify-center group-hover:border-purple-500 transition-all duration-300">
-                        <span className="text-gray-400 text-lg group-hover:text-purple-400 transition-colors">
+                      <div className="w-12 h-12 rounded-full border-2 border-line bg-soft flex items-center justify-center group-hover:border-purple-500 transition-all duration-300">
+                        <span className="text-muted text-lg group-hover:text-accent transition-colors">
                           {user.username.charAt(0).toUpperCase()}
                         </span>
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
-                      <h2 className="text-lg font-semibold text-white group-hover:text-purple-400 transition-colors truncate">
+                      <h2 className="text-lg font-semibold text-ink group-hover:text-accent transition-colors truncate">
                         {user.username}
                       </h2>
-                      <p className="text-sm text-gray-400 truncate flex items-center gap-2">
+                      <p className="text-sm text-muted truncate flex items-center gap-2">
                         <FaUserCircle className="text-xs" />
                         {user.name} {user.surname}
                       </p>
@@ -445,15 +445,15 @@ export default function SearchPage() {
                   <input
                     type="text"
                     placeholder="Buscar por nombre de usuario... (presiona Enter)"
-                    className="w-full pl-10 sm:pl-12 pr-4 py-2 sm:py-3 rounded-lg bg-gray-900 border border-gray-800 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base"
+                    className="w-full pl-10 sm:pl-12 pr-4 py-2 sm:py-3 rounded-lg bg-surface border border-line text-ink placeholder-muted focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm sm:text-base"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
-                  <FaSearch className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm sm:text-base" />
+                  <FaSearch className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-muted text-sm sm:text-base" />
                 </div>
                 <button
                   type="submit"
-                  className="px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:from-green-500 hover:to-green-600 transition-all duration-300 shadow-lg shadow-green-500/20 flex items-center justify-center gap-2 text-sm sm:text-base"
+                  className="px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-green-600 to-green-700 text-ink rounded-lg hover:from-green-500 hover:to-green-600 transition-all duration-300 shadow-lg shadow-green-500/20 flex items-center justify-center gap-2 text-sm sm:text-base"
                 >
                   <FaSearch className="text-base sm:text-lg" />
                   <span>Buscar</span>
@@ -464,17 +464,17 @@ export default function SearchPage() {
             {loading ? (
               <div className="flex flex-col items-center justify-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
-                <p className="text-gray-400 mt-4">Buscando usuarios...</p>
+                <p className="text-muted mt-4">Buscando usuarios...</p>
               </div>
             ) : users.length === 0 && searchTerm !== '' ? (
-              <div className="flex flex-col items-center justify-center py-12 bg-gray-900/50 rounded-xl border border-gray-800">
+              <div className="flex flex-col items-center justify-center py-12 bg-surface/50 rounded-xl border border-line">
                 <div className="w-24 h-24 bg-gradient-to-br from-green-600/20 to-blue-600/20 rounded-full flex items-center justify-center mb-6">
                   <FaSearch className="text-5xl text-green-500" />
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-2">
+                <h3 className="text-xl font-semibold text-ink mb-2">
                   No se encontraron usuarios
                 </h3>
-                <p className="text-gray-400 text-center max-w-md">
+                <p className="text-muted text-center max-w-md">
                   Intenta buscar con un nombre de usuario, nombre o apellido diferente.
                 </p>
               </div>
@@ -483,7 +483,7 @@ export default function SearchPage() {
                 {users.map((user) => (
                   <div
                     key={user.user_id}
-                    className="relative p-3 sm:p-4 bg-gray-900 rounded-lg border border-gray-800 hover:border-green-500 transition-all duration-300 group min-h-[80px] sm:min-h-[90px] cursor-pointer"
+                    className="relative p-3 sm:p-4 bg-surface rounded-lg border border-line hover:border-green-500 transition-all duration-300 group min-h-[80px] sm:min-h-[90px] cursor-pointer"
                     onClick={() => handleUserClick(user.username)}
                     >
                     <div className="flex items-center justify-between w-full">
@@ -492,20 +492,20 @@ export default function SearchPage() {
                         <SecureImage
                           src={user.profile_picture}
                           alt={user.username}
-                          className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-gray-800 group-hover:border-green-500 transition-all duration-300"
+                          className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-line group-hover:border-green-500 transition-all duration-300"
                         />
                       ) : (
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 border-gray-800 bg-gray-800 flex items-center justify-center group-hover:border-green-500 transition-all duration-300">
-                          <span className="text-gray-400 text-base sm:text-lg group-hover:text-green-400 transition-colors">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 border-line bg-soft flex items-center justify-center group-hover:border-green-500 transition-all duration-300">
+                          <span className="text-muted text-base sm:text-lg group-hover:text-green-400 transition-colors">
                             {user.username.charAt(0).toUpperCase()}
                           </span>
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <h2 className="text-base sm:text-lg font-semibold text-white group-hover:text-green-400 transition-colors truncate">
+                        <h2 className="text-base sm:text-lg font-semibold text-ink group-hover:text-green-400 transition-colors truncate">
                           {user.username}
                         </h2>
-                        <p className="text-xs sm:text-sm text-gray-400 truncate flex items-center gap-2">
+                        <p className="text-xs sm:text-sm text-muted truncate flex items-center gap-2">
                           <FaUserCircle className="text-xs" />
                           {user.name} {user.surname}
                         </p>
@@ -525,19 +525,19 @@ export default function SearchPage() {
   };
 
   return (
-    <div className="h-screen bg-black text-white flex flex-col sm:flex-row">
+    <div className="h-screen bg-page text-ink flex flex-col sm:flex-row">
       <Navbar />
-      
+
       <div className="w-full sm:w-5/6 sm:ml-[16.666667%] pt-16 pb-16 p-4 sm:p-6">
         <div className="max-w-3xl mx-auto">
           <div className="mb-6 sm:mb-8">
             <div className="flex flex-col items-center sm:items-start text-center sm:text-left mb-4">
-              <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-3">
+              <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent mb-3">
                 Amigos
               </h1>
-              <div className="flex items-center gap-2 bg-gray-900/50 px-4 py-2 rounded-full border border-gray-800 mt-3 sm:mt-0">
-                <FaUsers className="text-blue-500 text-lg" />
-                <p className="text-gray-300 text-sm">
+              <div className="flex items-center gap-2 bg-surface/50 px-4 py-2 rounded-full border border-line mt-3 sm:mt-0">
+                <FaUsers className="text-accent text-lg" />
+                <p className="text-copy text-sm">
                   Conecta y comparte con tus amigos
                 </p>
               </div>
@@ -550,8 +550,8 @@ export default function SearchPage() {
               onClick={() => setActiveTab('friends')}
               className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg transition-all duration-300 flex items-center justify-center sm:justify-start gap-2 ${
                 activeTab === 'friends'
-                  ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-500/20'
-                  : 'bg-gray-900 text-gray-400 hover:bg-gray-800 hover:text-white'
+                  ? 'bg-gradient-to-r from-primary to-blue-700 text-white shadow-lg shadow-blue-500/20'
+                  : 'bg-surface text-muted hover:bg-soft hover:text-ink'
               }`}
             >
               <FaUserFriends className="text-base sm:text-lg" />
@@ -561,8 +561,8 @@ export default function SearchPage() {
               onClick={() => setActiveTab('suggestions')}
               className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg transition-all duration-300 flex items-center justify-center sm:justify-start gap-2 ${
                 activeTab === 'suggestions'
-                  ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-lg shadow-purple-500/20'
-                  : 'bg-gray-900 text-gray-400 hover:bg-gray-800 hover:text-white'
+                  ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-ink shadow-lg shadow-purple-500/20'
+                  : 'bg-surface text-muted hover:bg-soft hover:text-ink'
               }`}
             >
               <FaLightbulb className="text-base sm:text-lg" />
@@ -572,8 +572,8 @@ export default function SearchPage() {
               onClick={() => setActiveTab('search')}
               className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg transition-all duration-300 flex items-center justify-center sm:justify-start gap-2 ${
                 activeTab === 'search'
-                  ? 'bg-gradient-to-r from-green-600 to-green-700 text-white shadow-lg shadow-green-500/20'
-                  : 'bg-gray-900 text-gray-400 hover:bg-gray-800 hover:text-white'
+                  ? 'bg-gradient-to-r from-green-600 to-green-700 text-ink shadow-lg shadow-green-500/20'
+                  : 'bg-surface text-muted hover:bg-soft hover:text-ink'
               }`}
             >
               <FaSearchIcon className="text-base sm:text-lg" />
@@ -589,7 +589,7 @@ export default function SearchPage() {
       {notification && (
         <div className={`fixed bottom-4 right-4 px-4 sm:px-6 py-2 sm:py-3 rounded-lg shadow-lg flex items-center gap-2 text-sm sm:text-base ${
           notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'
-        } text-white transform transition-all duration-300 animate-fade-in`}>
+        } text-ink transform transition-all duration-300 animate-fade-in`}>
           {notification.type === 'success' ? (
             <FaUserCheck className="text-lg sm:text-xl" />
           ) : (

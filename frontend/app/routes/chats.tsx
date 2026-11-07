@@ -16,7 +16,7 @@ import RightPanel from '~/components/Shared/RightPanel';
 import { FaSearch, FaEnvelope } from 'react-icons/fa';
 import { useAuth } from "~/hooks/useAuth";
 // Importación de la función Singleton segura para el cliente
-import { getChatService } from "~/services/chat.service"; 
+import { getChatService } from "~/services/chat.service";
 import { friendshipService } from '~/services/friendship.service';
 import { developmentLogger } from '~/utils/logger';
 
@@ -73,13 +73,13 @@ export default function Chats() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [deletingChatId, setDeletingChatId] = useState<string | null>(null);
-  
+
   // Usar ref para mantener la última versión de friends sin causar re-renders
   const friendsRef = useRef<Friend[]>([]);
-  
+
   // Flag para evitar múltiples llamadas
   const hasLoadedRef = useRef(false);
-  
+
   // Actualizar la ref cada vez que friends cambie
   useEffect(() => {
     friendsRef.current = friends;
@@ -87,7 +87,7 @@ export default function Chats() {
 
   useEffect(() => {
     if (!token || !user) return;
-    
+
     // Evitar múltiples cargas
     if (hasLoadedRef.current) return;
     hasLoadedRef.current = true;
@@ -95,7 +95,7 @@ export default function Chats() {
     // --- MODIFICACIÓN: Obtener la instancia del ChatService aquí ---
     const chatServiceInstance = getChatService();
     // ---------------------------------------------------------------
-    
+
     const unsubscribeFunctions: (() => void)[] = [];
 
     const fetchData = async () => {
@@ -103,7 +103,7 @@ export default function Chats() {
         // --- MODIFICACIÓN: Usar chatServiceInstance ---
         const activeChats = await chatServiceInstance.getActiveChats(token);
         // ---------------------------------------------
-        
+
         const formattedChats: Chat[] = activeChats
           .filter((chat: any) => chat.other_user && chat.other_user.user_id !== user.user_id) // Filtrar chats con uno mismo
           .map((chat: any) => ({
@@ -161,7 +161,7 @@ export default function Chats() {
       if (message.sender_id === user.user_id || message.receiver_id === user.user_id) {
         setChats(prevChats => {
           const otherUserId = message.sender_id === user.user_id ? message.receiver_id : message.sender_id;
-          const existingChatIndex = prevChats.findIndex(chat => 
+          const existingChatIndex = prevChats.findIndex(chat =>
             chat.user.user_id === otherUserId
           );
 
@@ -183,7 +183,7 @@ export default function Chats() {
           } else {
             // Buscar la información del usuario en la lista de amigos usando la ref
             const otherUser = friendsRef.current.find(f => f.user.user_id === otherUserId)?.user;
-            
+
             if (otherUser) {
               // Crear nuevo chat con la información del amigo
               return [{
@@ -201,7 +201,7 @@ export default function Chats() {
                 unread_count: message.sender_id === user.user_id ? 0 : 1
               }, ...prevChats];
             }
-            
+
             // Si no encontramos al usuario en la lista de amigos, no creamos el chat
             return prevChats;
           }
@@ -248,19 +248,19 @@ export default function Chats() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col lg:flex-row">
+    <div className="min-h-screen bg-page text-ink flex flex-col lg:flex-row">
       {/* Navbar */}
       <Navbar />
 
       {/* Contenido principal */}
-      <div className="w-full lg:w-2/3 lg:ml-[16.666667%] lg:border-r border-gray-800">
+      <div className="w-full lg:w-2/3 lg:ml-[16.666667%] lg:border-r border-line">
         <div className="pt-16 pb-16 p-3 sm:p-6">
           {/* Encabezado */}
           <div className="mb-8">
             <div className="flex justify-between items-center mb-6">
               <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Mensajes</h1>
-                <p className="text-gray-400 mt-1">Gestiona tus conversaciones y mensajes</p>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">Mensajes</h1>
+                <p className="text-muted mt-1">Gestiona tus conversaciones y mensajes</p>
               </div>
             </div>
           </div>
@@ -268,11 +268,11 @@ export default function Chats() {
           {/* Barra de búsqueda */}
           <div className="mb-6">
             <div className="relative">
-              <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted" />
               <input
                 type="text"
                 placeholder="Buscar en mensajes..."
-                className="w-full bg-gray-900 rounded-full py-3 pl-12 pr-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-surface rounded-full py-3 pl-12 pr-4 text-ink placeholder-muted focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -288,11 +288,11 @@ export default function Chats() {
             <div className="text-red-500 text-center py-8">{error}</div>
           ) : filteredChats.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12">
-              <div className="w-24 h-24 bg-gradient-to-br from-blue-600/20 to-purple-600/20 rounded-full flex items-center justify-center mb-6">
-                <FaEnvelope className="text-5xl text-blue-500" />
+              <div className="w-24 h-24 bg-gradient-to-br from-primary/20 to-primary/20 rounded-full flex items-center justify-center mb-6">
+                <FaEnvelope className="text-5xl text-accent" />
               </div>
-              <h3 className="text-xl font-semibold text-white mb-3">No hay mensajes</h3>
-              <p className="text-gray-400 text-center max-w-md mb-6">
+              <h3 className="text-xl font-semibold text-ink mb-3">No hay mensajes</h3>
+              <p className="text-muted text-center max-w-md mb-6">
                 {searchQuery ? 'No se encontraron mensajes con esa búsqueda' : 'No tienes conversaciones todavía'}
               </p>
             </div>

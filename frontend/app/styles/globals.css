@@ -1,40 +1,74 @@
-/* Estilos globales para la barra de scroll */
+/* Identidad FriendsGo: celeste y violeta sobre superficies suaves. */
 :root {
-  /* Para Chrome, Safari y navegadores basados en WebKit */
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-
-  ::-webkit-scrollbar-track {
-    background: #1f2937;
-    border-radius: 3px;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    background: #4b5563;
-    border-radius: 3px;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    background: #6b7280;
-  }
-
-  /* Para Firefox */
-  * {
-    scrollbar-width: thin;
-    scrollbar-color: #4b5563 #1f2937;
-  }
+  color-scheme: light;
+  --page: #f8f9ff;
+  --surface: #ffffff;
+  --soft: #edf0ff;
+  --hover: #e3e7fc;
+  --ink: #24213f;
+  --copy: #504e69;
+  --muted: #68657f;
+  --line: #e1e4f2;
+  --line-strong: #aaa9c4;
+  --primary: #7041d6;
+  --primary-hover: #5d30bd;
+  --accent: #6740c8;
+  --brand-sky: #38bdf8;
+  --brand-violet: #8b5cf6;
+  --brand-tint: #eee8ff;
+  --brand-sky-tint: #e3f5ff;
+  font-family: "Inter", "Segoe UI", Arial, Helvetica, sans-serif;
+  background: var(--page);
+  color: var(--ink);
 }
-
-/* Asegurar que los estilos se apliquen a todos los elementos scrollables */
-html, body, div, section, main, aside, nav, ul, ol, li, table, tbody, thead, tr, td, th {
-  scrollbar-width: thin;
-  scrollbar-color: #4b5563 #1f2937;
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #131221;
+  --surface: #1c1b30;
+  --soft: #28263f;
+  --hover: #35314e;
+  --ink: #f3f3ef;
+  --copy: #d0d2cf;
+  --muted: #aeb3b2;
+  --line: #39364f;
+  --line-strong: #7b7699;
+  --primary: #7041d6;
+  --primary-hover: #8051e5;
+  --accent: #c6b2ff;
+  --brand-tint: #30254d;
+  --brand-sky-tint: #1c3447;
 }
-
-/* Asegurar que los estilos se apliquen a elementos con overflow */
-.overflow-y-auto, .overflow-x-auto, .overflow-auto {
-  scrollbar-width: thin;
-  scrollbar-color: #4b5563 #1f2937;
-}
+body { margin: 0; }
+button, input, textarea, select { font: inherit; }
+button:not(:disabled), a { -webkit-tap-highlight-color: transparent; }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; }
+::selection { background: var(--ink); color: var(--page); }
+* { scrollbar-width: thin; scrollbar-color: var(--line-strong) var(--page); }
+::-webkit-scrollbar { width: 7px; height: 7px; }
+::-webkit-scrollbar-track { background: var(--page); }
+::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+.theme-toggle { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 40px; padding: 8px 14px; border: 1px solid var(--line); border-radius: 999px; color: var(--ink); background: var(--surface); font-size: 12px; font-weight: 600; cursor: pointer; }
+.theme-toggle:hover { background: var(--soft); }
+.theme-toggle-icon { width: 14px; height: 14px; flex-shrink: 0; border: 1px solid currentColor; border-radius: 50%; background: linear-gradient(90deg, currentColor 50%, transparent 50%); }
+.theme-toggle-floating { position: fixed; top: 16px; right: 16px; z-index: 40; }
+.landing-shell { width: min(100% - 40px, 1240px); margin-inline: auto; }
+.landing-eyebrow { font-size: 13px; font-weight: 600; letter-spacing: .02em; }
+.landing-title { font-size: clamp(44px, 5.5vw, 76px); line-height: 1.09; font-weight: 750; letter-spacing: -.045em; }
+.brand-word { color: var(--accent); }
+.brand-gradient { background: linear-gradient(115deg, #087bb5, #7041d6); background-clip: text; color: transparent; }
+:root[data-theme="dark"] .brand-gradient { background-image: linear-gradient(115deg, #38bdf8, #b99aff); }
+.friendly-button { border-radius: 999px; box-shadow: 0 8px 22px rgb(112 65 214 / .16); transition: background-color .2s, transform .2s; }
+.friendly-button:hover { transform: translateY(-2px); }
+.community-scene { position: relative; padding: 32px; border: 1px solid var(--line); border-radius: 40px; background: linear-gradient(140deg, var(--brand-sky-tint), var(--brand-tint)); }
+.community-card { background: var(--surface); border: 1px solid var(--line); border-radius: 24px; box-shadow: 0 16px 40px rgb(55 47 106 / .07); }
+.community-orbit { position: absolute; width: 70px; height: 70px; display: grid; place-items: center; border: 5px solid var(--surface); border-radius: 24px; background: var(--brand-tint); color: var(--accent); font-size: 28px; transform: rotate(10deg); top: -22px; right: 18px; }
+.feature-card { border: 1px solid var(--line); border-radius: 28px; padding: 28px; background: var(--surface); }
+.feature-icon { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 18px; background: var(--brand-tint); color: var(--accent); }
+.feature-card:nth-child(2) .feature-icon { background: var(--brand-sky-tint); color: #0879aa; }
+:root[data-theme="dark"] .feature-card:nth-child(2) .feature-icon { color: #38bdf8; }
+.friendly-cta { border: 1px solid var(--line); border-radius: 36px; background: linear-gradient(115deg, var(--brand-sky-tint), var(--brand-tint)); }
+.landing-arrow { transition: transform .2s; }
+a:hover .landing-arrow { transform: translate(3px, -3px); }
+@media (min-width: 768px) { .landing-shell { width: min(100% - 80px, 1240px); } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; } }

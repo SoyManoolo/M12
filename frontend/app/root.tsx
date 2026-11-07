@@ -7,6 +7,8 @@ import {
     useLocation,
 } from "react-router";
 import { AuthProvider } from "./hooks/useAuth.tsx";
+import { ThemeProvider } from './hooks/useTheme';
+import ThemeToggle from './components/Shared/ThemeToggle';
 
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { ProtectedAdminRoute } from "./components/ProtectedAdminRoute";
@@ -36,12 +38,17 @@ export default function App() {
     const isPublicRoute = publicRoutes.includes(location.pathname);
 
     return (
-        <html lang="es" className="h-full">
+        <html lang="es" className="h-full" suppressHydrationWarning>
             <head>
+                <meta charSet="utf-8" />
+                <meta name="viewport" content="width=device-width, initial-scale=1" />
+                <script dangerouslySetInnerHTML={{ __html: "try{document.documentElement.dataset.theme=localStorage.getItem('friendsgo-theme')==='dark'?'dark':'light'}catch{document.documentElement.dataset.theme='light'}" }} />
                 <Meta />
                 <Links />
             </head>
-            <body className="min-h-full bg-black text-white antialiased">
+            <body className="min-h-full bg-page text-ink antialiased">
+                <ThemeProvider>
+                {isPublicRoute && location.pathname !== '/' && <ThemeToggle className="theme-toggle-floating" />}
                 <AuthProvider>
                     <CallInvitationListener />
                     {/* El contenido se renderiza SIEMPRE, tanto en SSR como en Cliente */}
@@ -59,6 +66,7 @@ export default function App() {
                         </ProtectedRoute>
                     )}
                 </AuthProvider>
+                </ThemeProvider>
                 <ScrollRestoration />
                 <Scripts />
             </body>
