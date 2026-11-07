@@ -1,3 +1,5 @@
+// Cargar los modelos antes que nada, como app.ts, para evitar el import circular con config/database
+import '../models/index';
 import { hash } from 'bcryptjs';
 import { User } from '../models/User';
 import { sequelize } from '../config/database';
@@ -50,5 +52,7 @@ createAdmin()
         process.exitCode = 1;
     })
     .finally(async () => {
-        await sequelize.close();
+        await sequelize.close().catch(() => undefined);
+        // El cron de limpieza de logs mantiene vivo el proceso
+        process.exit();
     });
