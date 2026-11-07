@@ -3,10 +3,10 @@
  * @description Componente de página de registro que permite a los usuarios crear una nueva cuenta.
  * Incluye registro con credenciales (nombre, apellido, usuario, email y contraseña) y opciones
  * de registro social (Google y Facebook).
- * 
+ *
  * @module SignUpPage
  * @exports SignUpPage
- * 
+ *
  * @requires react
  * @requires react-router
  * @requires react-router
@@ -30,7 +30,7 @@ import { environment } from '~/config/environment';
  * @description Función del servidor que maneja el envío del formulario de registro
  * @param {Object} request - Objeto de solicitud HTTP
  * @returns {Promise<Response>} Redirección a la página de inicio o de error
- * 
+ *
  * @throws {Error} Si hay problemas de conexión con el servidor
  */
 export const action: ActionFunction = async ({ request }) => {
@@ -49,7 +49,7 @@ export const action: ActionFunction = async ({ request }) => {
       email,
       password
     });
-    
+
     if (response.success) {
       return redirect('/login');
     } else {
@@ -64,14 +64,14 @@ export const action: ActionFunction = async ({ request }) => {
  * @function SignUpPage
  * @description Componente principal de la página de registro
  * @returns {JSX.Element} Formulario de registro con opciones de autenticación
- * 
+ *
  * @state {string} name - Estado para el nombre del usuario
  * @state {string} surname - Estado para el apellido del usuario
  * @state {string} username - Estado para el nombre de usuario
  * @state {string} email - Estado para el correo electrónico
  * @state {string} password - Estado para la contraseña
  * @state {string} error - Estado para mensajes de error
- * 
+ *
  * @method handleSubmit - Maneja el envío del formulario de registro
  * @method handleGoogleSignUp - Maneja el registro con Google (pendiente)
  * @method handleFacebookSignUp - Maneja el registro con Facebook (pendiente)
@@ -95,8 +95,8 @@ export default function SignUpPage(): React.ReactElement {
   }, []);
 
   if (!mounted) {
-    return <div className="min-h-screen bg-black flex items-center justify-center">
-      <div className="text-white">Cargando...</div>
+    return <div className="min-h-screen bg-page flex items-center justify-center">
+      <div className="text-ink">Cargando...</div>
     </div>;
   }
 
@@ -127,7 +127,7 @@ export default function SignUpPage(): React.ReactElement {
         email,
         password
       });
-      
+
       if (response.success) {
         setNotification({
           message: response.message || '¡Cuenta creada con éxito! Ya puedes iniciar sesión',
@@ -151,10 +151,11 @@ export default function SignUpPage(): React.ReactElement {
   };
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-black border border-gray-800 rounded-lg p-8">
-        <h1 className="text-4xl text-white text-center mb-8 font-bold tracking-wider">REGISTRARSE</h1>
-        
+    <div className="min-h-screen bg-page flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-surface border border-line rounded-3xl p-6 shadow-xl shadow-purple-950/5 sm:p-8">
+        <h1 className="text-3xl text-ink text-center mb-3 font-bold tracking-tight">Tu historia empieza aquí</h1>
+        <p className="mb-8 text-center text-sm text-muted">Crea tu cuenta y encuentra a tu gente.</p>
+
         {notification && (
           <Notification
             message={notification.message}
@@ -162,11 +163,11 @@ export default function SignUpPage(): React.ReactElement {
             onClose={() => setNotification(null)}
           />
         )}
-        
+
         <Form method="post" onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label htmlFor="name" className="block text-gray-300 text-sm font-medium mb-2 tracking-wider">
-              NOMBRE
+            <label htmlFor="name" className="block text-copy text-sm font-medium mb-2 tracking-normal">
+              Nombre
             </label>
             <input
               type="text"
@@ -174,14 +175,14 @@ export default function SignUpPage(): React.ReactElement {
               name="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 bg-transparent border border-gray-600 rounded-md text-white focus:outline-none focus:border-white cursor-text"
+              className="w-full px-3 py-2 bg-transparent border border-line-strong rounded-md text-ink focus:outline-none focus:border-ink cursor-text"
               required
             />
           </div>
 
           <div>
-            <label htmlFor="surname" className="block text-gray-300 text-sm font-medium mb-2 tracking-wider">
-              APELLIDOS
+            <label htmlFor="surname" className="block text-copy text-sm font-medium mb-2 tracking-normal">
+              Apellidos
             </label>
             <input
               type="text"
@@ -189,13 +190,13 @@ export default function SignUpPage(): React.ReactElement {
               name="surname"
               value={surname}
               onChange={(e) => setSurname(e.target.value)}
-              className="w-full px-3 py-2 bg-transparent border border-gray-600 rounded-md text-white focus:outline-none focus:border-white cursor-text"
+              className="w-full px-3 py-2 bg-transparent border border-line-strong rounded-md text-ink focus:outline-none focus:border-ink cursor-text"
               required
             />
           </div>
 
           <div>
-            <label htmlFor="username" className="block text-gray-300 text-sm font-medium mb-2 tracking-wider">
+            <label htmlFor="username" className="block text-copy text-sm font-medium mb-2 tracking-normal">
               NOMBRE DE USUARIO
             </label>
             <input
@@ -204,13 +205,13 @@ export default function SignUpPage(): React.ReactElement {
               name="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-3 py-2 bg-transparent border border-gray-600 rounded-md text-white focus:outline-none focus:border-white cursor-text"
+              className="w-full px-3 py-2 bg-transparent border border-line-strong rounded-md text-ink focus:outline-none focus:border-ink cursor-text"
               required
             />
           </div>
 
           <div>
-            <label htmlFor="email" className="block text-gray-300 text-sm font-medium mb-2 tracking-wider">
+            <label htmlFor="email" className="block text-copy text-sm font-medium mb-2 tracking-normal">
               CORREO ELECTRÓNICO
             </label>
             <input
@@ -219,14 +220,14 @@ export default function SignUpPage(): React.ReactElement {
               name="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 bg-transparent border border-gray-600 rounded-md text-white focus:outline-none focus:border-white cursor-text"
+              className="w-full px-3 py-2 bg-transparent border border-line-strong rounded-md text-ink focus:outline-none focus:border-ink cursor-text"
               required
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-gray-300 text-sm font-medium mb-2 tracking-wider">
-              CONTRASEÑA
+            <label htmlFor="password" className="block text-copy text-sm font-medium mb-2 tracking-normal">
+              Contraseña
             </label>
             <div className="relative">
               <input
@@ -235,14 +236,14 @@ export default function SignUpPage(): React.ReactElement {
                 name="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2 bg-transparent border border-gray-600 rounded-md text-white focus:outline-none focus:border-white cursor-text pr-10"
+                className="w-full px-3 py-2 bg-transparent border border-line-strong rounded-md text-ink focus:outline-none focus:border-ink cursor-text pr-10"
                 required
               />
               <button
                 type="button"
                 aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors cursor-pointer"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted hover:text-ink transition-colors cursor-pointer"
               >
                 {showPassword ? <FaEyeSlash size={18} /> : <FaEye size={18} />}
               </button>
@@ -251,15 +252,15 @@ export default function SignUpPage(): React.ReactElement {
 
           <button
             type="submit"
-            className="w-full bg-white text-black py-2 px-4 rounded-md hover:bg-gray-200 transition-colors tracking-wider cursor-pointer"
+            className="friendly-button w-full bg-primary text-white py-3 px-4 hover:bg-primary-hover transition-colors tracking-normal cursor-pointer"
           >
-            REGISTRARSE
+            Crear mi cuenta
           </button>
 
           <a
             href={`${environment.apiUrl}/auth/google`}
             aria-label="Continuar con Google"
-            className="flex w-full items-center justify-center gap-3 rounded-md border border-gray-600 px-4 py-2 text-white transition-colors hover:bg-gray-900"
+            className="flex w-full items-center justify-center gap-3 rounded-md border border-line-strong px-4 py-2 text-ink transition-colors hover:bg-surface"
           >
             <span aria-hidden="true" className="rounded bg-white px-2 py-0.5 font-bold text-blue-600">G</span>
             Continuar con Google
@@ -268,7 +269,7 @@ export default function SignUpPage(): React.ReactElement {
           <div className="text-center mt-6">
             <Link
               to="/login"
-              className="inline-block text-gray-400 hover:text-white text-sm tracking-wider border border-gray-600 px-6 py-2 rounded-md cursor-pointer"
+              className="inline-block text-muted hover:text-ink text-sm tracking-normal border border-line-strong px-6 py-2 rounded-md cursor-pointer"
             >
               VOLVER A INICIAR SESIÓN
             </Link>
