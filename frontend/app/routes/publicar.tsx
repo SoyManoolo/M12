@@ -76,7 +76,7 @@ export default function Publicar() {
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    
+
     const file = e.dataTransfer.files?.[0];
     if (file && file.type.startsWith('image/')) {
       if (file.size > 10 * 1024 * 1024) {
@@ -157,7 +157,7 @@ export default function Publicar() {
       // La publicación ya existe: no se vuelve a habilitar el envío mientras
       // se muestra la confirmación y se redirige al usuario.
       setIsPublished(true);
-      
+
       setTimeout(() => {
         resetForm();
         navigate('/inicio');
@@ -177,33 +177,33 @@ export default function Publicar() {
   }
 
   return (
-    <div className="min-h-screen bg-black lg:pl-[16.666667%]">
+    <div className="min-h-screen bg-page lg:pl-[16.666667%]">
       <Navbar />
       <div className="flex min-h-screen w-full flex-col items-center justify-center p-3 pt-16 pb-16 sm:p-8 lg:pt-0 lg:pb-0">
-        <div className="w-full max-w-[900px] bg-gray-900 rounded-xl shadow-xl p-3 sm:p-8 border border-gray-800">
+        <div className="w-full max-w-[900px] bg-surface rounded-xl shadow-xl p-3 sm:p-8 border border-line">
           {/* Encabezado */}
           <div className="flex flex-col sm:flex-row items-center justify-between mb-6 sm:mb-8 gap-2 sm:gap-0">
             <button
               onClick={() => navigate('/inicio')}
-              className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors text-base sm:text-lg"
+              className="flex items-center space-x-2 text-muted hover:text-ink transition-colors text-base sm:text-lg"
             >
               <FaArrowLeft />
               <span>Volver</span>
             </button>
-            <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent text-center w-full sm:w-auto">
+            <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent text-center w-full sm:w-auto">
               Crear Nueva Publicación
             </h1>
             <div className="hidden sm:block w-24"></div> {/* Espaciador solo en escritorio */}
           </div>
-          
+
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-8">
             {/* Área de imagen */}
             <div className="flex-1 w-full">
-              <div 
+              <div
                 className={`border-2 border-dashed rounded-xl p-4 sm:p-6 text-center min-h-[200px] sm:min-h-[350px] flex items-center justify-center transition-all duration-300 ${
-                  isDragging 
-                    ? 'border-blue-500 bg-blue-500/10' 
-                    : 'border-gray-700 bg-gray-800 hover:border-gray-600'
+                  isDragging
+                    ? 'border-blue-500 bg-primary-hover/10'
+                    : 'border-line bg-soft hover:border-line-strong'
                 }`}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
@@ -228,13 +228,13 @@ export default function Publicar() {
                   </div>
                 ) :
                   <div className="space-y-4 sm:space-y-6 w-full">
-                    <div className="w-20 h-20 sm:w-24 sm:h-24 mx-auto bg-gradient-to-br from-blue-600/20 to-purple-600/20 rounded-full flex items-center justify-center">
-                      <FaImage className="text-3xl sm:text-4xl text-blue-500" />
+                    <div className="w-20 h-20 sm:w-24 sm:h-24 mx-auto bg-gradient-to-br from-primary/20 to-primary/20 rounded-full flex items-center justify-center">
+                      <FaImage className="text-3xl sm:text-4xl text-accent" />
                     </div>
                     <div className="flex flex-col items-center space-y-2 sm:space-y-4">
                       <label
                         htmlFor="file-upload"
-                        className="cursor-pointer bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-lg hover:from-blue-500 hover:to-purple-500 transition-all duration-300 text-sm sm:text-base font-medium shadow-lg transform hover:scale-105"
+                        className="cursor-pointer bg-gradient-to-r from-primary to-primary text-white px-4 py-2 sm:px-6 sm:py-3 rounded-lg hover:from-primary-hover hover:to-primary-hover transition-all duration-300 text-sm sm:text-base font-medium shadow-lg transform hover:scale-105"
                       >
                         Seleccionar imagen
                       </label>
@@ -246,10 +246,10 @@ export default function Publicar() {
                         accept="image/*"
                         onChange={handleImageChange}
                       />
-                      <p className="text-xs sm:text-sm text-gray-400">
+                      <p className="text-xs sm:text-sm text-muted">
                         Arrastra una imagen o haz clic para seleccionar
                       </p>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted">
                         PNG, JPG, GIF hasta 10MB
                       </p>
                     </div>
@@ -262,7 +262,7 @@ export default function Publicar() {
             <div className="flex-1 flex flex-col w-full mt-4 sm:mt-0">
               <div className="flex-1">
                 <textarea
-                  className="w-full h-32 sm:h-[350px] p-3 sm:p-6 bg-gray-800 border border-gray-700 rounded-xl resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-400 text-base sm:text-lg transition-all duration-300"
+                  className="w-full h-32 sm:h-[350px] p-3 sm:p-6 bg-soft border border-line rounded-xl resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-ink placeholder-muted text-base sm:text-lg transition-all duration-300"
                   placeholder="¿Qué quieres compartir con tus amigos?..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
@@ -271,7 +271,7 @@ export default function Publicar() {
               </div>
               {/* Contador de caracteres */}
               <div className="mt-2 text-right">
-                <span className={`text-xs sm:text-sm ${description.length > 500 ? 'text-red-500' : 'text-gray-400'}`}> 
+                <span className={`text-xs sm:text-sm ${description.length > 500 ? 'text-red-500' : 'text-muted'}`}>
                   {description.length}/500
                 </span>
               </div>
@@ -280,7 +280,7 @@ export default function Publicar() {
                 <button
                   onClick={handleSubmit}
                   disabled={isSubmitting || isPublished || !description.trim()}
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 sm:px-8 py-2 sm:py-3 rounded-lg hover:from-blue-500 hover:to-purple-500 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-base sm:text-lg font-medium shadow-lg transform hover:scale-105 disabled:transform-none disabled:hover:scale-100 flex items-center space-x-2"
+                  className="bg-gradient-to-r from-primary to-primary text-white px-6 sm:px-8 py-2 sm:py-3 rounded-lg hover:from-primary-hover hover:to-primary-hover transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-base sm:text-lg font-medium shadow-lg transform hover:scale-105 disabled:transform-none disabled:hover:scale-100 flex items-center space-x-2"
                 >
                   {isSubmitting || isPublished ? (
                     <>

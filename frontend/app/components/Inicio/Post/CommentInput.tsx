@@ -55,11 +55,11 @@ export default function CommentInput({
 
   return (
     <div className="relative">
-      <div className="flex items-center bg-gray-800 rounded-lg p-2 sm:p-3">
+      <div className="flex items-center bg-soft rounded-lg p-2 sm:p-3">
         <input
           type="text"
           placeholder={placeholder}
-          className="flex-1 bg-transparent border-none text-white placeholder-gray-500 focus:outline-none text-sm sm:text-base"
+          className="flex-1 bg-transparent border-none text-ink placeholder-muted focus:outline-none text-sm sm:text-base"
           value={content}
           onChange={(e) => setContent(e.target.value)}
           onKeyPress={(e) => {
@@ -72,8 +72,8 @@ export default function CommentInput({
         <button
           className={`ml-2 sm:ml-3 ${
             isSubmitting
-              ? "text-gray-600"
-              : "text-gray-400 hover:text-white cursor-pointer"
+              ? "text-muted"
+              : "text-muted hover:text-ink cursor-pointer"
           }`}
           onClick={() => setShowEmojiPicker(!showEmojiPicker)}
           disabled={isSubmitting}
@@ -84,8 +84,8 @@ export default function CommentInput({
         <button
           className={`ml-2 sm:ml-3 ${
             isSubmitting
-              ? "text-gray-600"
-              : "text-gray-400 hover:text-white cursor-pointer"
+              ? "text-muted"
+              : "text-muted hover:text-ink cursor-pointer"
           }`}
           onClick={handleSubmit}
           disabled={isSubmitting}

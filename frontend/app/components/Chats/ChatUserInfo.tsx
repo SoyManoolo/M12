@@ -1,6 +1,6 @@
 /**
  * Componente ChatUserInfo
- * 
+ *
  * Muestra la información del usuario con quien se está chateando
  * Incluye:
  * - Foto de perfil
@@ -8,7 +8,7 @@
  * - @username
  * - Descripción/bio
  * - Estado en línea
- * 
+ *
  * @module ChatUserInfo
  */
 
@@ -28,24 +28,24 @@ export default function ChatUserInfo({ user }: ChatUserInfoProps) {
           <SecureImage
             src={user.profile_picture}
             alt={user.username}
-            className="w-32 h-32 rounded-full object-cover mb-4 border-2 border-gray-800"
+            className="w-32 h-32 rounded-full object-cover mb-4 border-2 border-line"
           />
         ) : (
-          <div className="w-32 h-32 rounded-full border-2 border-gray-800 bg-gray-800 flex items-center justify-center mb-4">
-            <span className="text-gray-400 text-5xl select-none">{user.username.charAt(0).toUpperCase()}</span>
+          <div className="w-32 h-32 rounded-full border-2 border-line bg-soft flex items-center justify-center mb-4">
+            <span className="text-muted text-5xl select-none">{user.username.charAt(0).toUpperCase()}</span>
           </div>
         )}
-        <h2 className="text-xl font-bold text-white text-center">{user.name} {user.surname}</h2>
-        <p className="text-gray-400 text-center">@{user.username}</p>
+        <h2 className="text-xl font-bold text-ink text-center">{user.name} {user.surname}</h2>
+        <p className="text-muted text-center">@{user.username}</p>
       </div>
 
       {/* Bio */}
       {user.bio && (
         <div className="mb-2 w-full flex flex-col items-center">
-          <h3 className="text-sm font-semibold text-gray-400 mb-1">Biografía</h3>
-          <p className="text-white text-center break-words">{user.bio}</p>
+          <h3 className="text-sm font-semibold text-muted mb-1">Biografía</h3>
+          <p className="text-ink text-center break-words">{user.bio}</p>
         </div>
       )}
     </div>
   );
-} 
+}

@@ -1,7 +1,7 @@
 import { developmentLogger } from '~/utils/logger';
 /**
  * Componente RightPanel
- * 
+ *
  * Panel lateral derecho reutilizable que puede mostrar:
  * - Lista de amigos sugeridos (para perfil propio)
  * - Lista de amigos en común (para perfil de otros)
@@ -11,7 +11,7 @@ import { developmentLogger } from '~/utils/logger';
  * - Lista de usuarios
  * - Funcionalidad de seguimiento (en modo sugeridos)
  * - Indicador de estado en línea (en modo online)
- * 
+ *
  * @module RightPanel
  */
 
@@ -64,12 +64,12 @@ interface RightPanelProps {
   customTitle?: string;
 }
 
-export default function RightPanel({ 
-  friends = [], 
+export default function RightPanel({
+  friends = [],
   users = [],
-  mode = 'suggested', 
+  mode = 'suggested',
   showSearch = true,
-  onSearch, 
+  onSearch,
   customTitle
 }: RightPanelProps) {
   const navigate = useNavigate();
@@ -77,7 +77,7 @@ export default function RightPanel({
   const [friendshipStatuses, setFriendshipStatuses] = useState<Record<string, FriendshipStatus>>({});
   const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [localFriends, setLocalFriends] = useState<Friend[]>(friends);
-  
+
   // Actualizar el estado local cuando cambien los props
   useEffect(() => {
     if (JSON.stringify(friends) !== JSON.stringify(localFriends)) {
@@ -85,26 +85,26 @@ export default function RightPanel({
     }
   }, [friends]);
 
-  const title = customTitle || (mode === 'suggested' 
-    ? 'Amigos sugeridos' 
-    : mode === 'common' 
-    ? 'Amigos en común' 
+  const title = customTitle || (mode === 'suggested'
+    ? 'Amigos sugeridos'
+    : mode === 'common'
+    ? 'Amigos en común'
     : mode === 'friends'
     ? 'Mis amigos'
     : 'Sugerencias de amistades');
-    
-  const emptyMessage = mode === 'suggested' 
-    ? 'No hay sugerencias disponibles' 
+
+  const emptyMessage = mode === 'suggested'
+    ? 'No hay sugerencias disponibles'
     : mode === 'common'
     ? 'No hay amigos en común'
     : mode === 'friends'
     ? (
       <div className="flex flex-col items-center justify-center py-8">
-        <div className="w-20 h-20 bg-gradient-to-br from-blue-600/20 to-purple-600/20 rounded-full flex items-center justify-center mb-4">
-          <FaUserFriends className="text-4xl text-blue-500" />
+        <div className="w-20 h-20 bg-gradient-to-br from-primary/20 to-primary/20 rounded-full flex items-center justify-center mb-4">
+          <FaUserFriends className="text-4xl text-accent" />
         </div>
-        <h4 className="text-lg font-semibold text-white mb-2">¡Aún no tienes amigos!</h4>
-        <p className="text-gray-400 text-center max-w-xs">
+        <h4 className="text-lg font-semibold text-ink mb-2">¡Aún no tienes amigos!</h4>
+        <p className="text-muted text-center max-w-xs">
           Conecta con personas, envía solicitudes de amistad y tu lista de amigos aparecerá aquí. ¡Empieza a crear tu red!
         </p>
       </div>
@@ -114,7 +114,7 @@ export default function RightPanel({
   useEffect(() => {
     const fetchFriendshipStatuses = async () => {
       if (!token || !users.length) return;
-      
+
       try {
       const statuses: Record<string, FriendshipStatus> = {};
       for (const user of users) {
@@ -218,9 +218,9 @@ export default function RightPanel({
     switch (status.status) {
       case 'none':
         return (
-          <button 
+          <button
             onClick={() => handleFriendAction(userId, 'send')}
-            className="px-2 py-1 bg-blue-600/90 text-white rounded-full shadow-md hover:bg-blue-500 transition-all duration-200 text-xs font-semibold flex items-center justify-center gap-1 ml-4 cursor-pointer"
+            className="px-2 py-1 bg-primary/90 text-white rounded-full shadow-md hover:bg-primary-hover transition-all duration-200 text-xs font-semibold flex items-center justify-center gap-1 ml-4 cursor-pointer"
           >
             <FaUserPlus className="text-xs" />
             <span>Añadir</span>
@@ -229,9 +229,9 @@ export default function RightPanel({
       case 'pending':
         if (status.is_sender) {
           return (
-            <button 
+            <button
               onClick={() => handleFriendAction(userId, 'cancel')}
-              className="px-2 py-1 bg-yellow-500/90 text-white rounded-full shadow-md hover:bg-yellow-400 transition-all duration-200 text-xs font-semibold flex items-center justify-center gap-1 ml-4 cursor-pointer"
+              className="px-2 py-1 bg-yellow-500/90 text-ink rounded-full shadow-md hover:bg-yellow-400 transition-all duration-200 text-xs font-semibold flex items-center justify-center gap-1 ml-4 cursor-pointer"
             >
               <FaUserClock className="text-xs" />
               <span>Pendiente</span>
@@ -240,14 +240,14 @@ export default function RightPanel({
         } else {
           return (
             <div className="flex flex-col gap-2 ml-4 w-28">
-              <button 
+              <button
                 onClick={() => handleFriendAction(userId, 'accept')}
                 className="px-2 py-1 bg-green-500/90 text-white rounded-full shadow-md hover:bg-green-400 transition-all duration-200 text-xs font-semibold flex items-center justify-center gap-1 cursor-pointer"
               >
                 <FaUserCheck className="text-xs" />
                 <span>Aceptar</span>
               </button>
-              <button 
+              <button
                 onClick={() => handleFriendAction(userId, 'reject')}
                 className="px-2 py-1 bg-red-500/90 text-white rounded-full shadow-md hover:bg-red-400 transition-all duration-200 text-xs font-semibold flex items-center justify-center gap-1 cursor-pointer"
               >
@@ -259,7 +259,7 @@ export default function RightPanel({
         }
       case 'friends':
         return (
-          <button 
+          <button
             onClick={() => handleFriendAction(userId, 'remove')}
             className="px-2 py-1 bg-red-500/90 text-white rounded-full shadow-md hover:bg-red-400 transition-all duration-200 text-xs font-semibold flex items-center justify-center gap-1 ml-4 cursor-pointer"
           >
@@ -288,11 +288,11 @@ export default function RightPanel({
         {showSearch && (
           <div className="mb-6">
             <div className="relative">
-              <FaSearch className="absolute left-3 top-3 text-gray-400" />
+              <FaSearch className="absolute left-3 top-3 text-muted" />
               <input
                 type="text"
                 placeholder="Buscar amigos..."
-                className="w-full bg-gray-900 rounded-full py-2 pl-10 pr-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-surface rounded-full py-2 pl-10 pr-4 text-ink placeholder-muted focus:outline-none focus:ring-2 focus:ring-blue-500"
                 onChange={(e) => onSearch?.(e.target.value)}
               />
             </div>
@@ -300,11 +300,11 @@ export default function RightPanel({
         )}
 
         {/* Panel principal */}
-        <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
-          <h3 className="text-lg font-semibold mb-4 text-white">{title}</h3>
+        <div className="bg-surface rounded-lg p-4 border border-line">
+          <h3 className="text-lg font-semibold mb-4 text-ink">{title}</h3>
           {displayFriends.length === 0 ? (
             typeof emptyMessage === 'string'
-              ? <p className="py-8 text-center text-gray-400">{emptyMessage}</p>
+              ? <p className="py-8 text-center text-muted">{emptyMessage}</p>
               : emptyMessage
           ) : (
             <div className="space-y-2">
@@ -314,19 +314,19 @@ export default function RightPanel({
                 return (
                   <div key={friend.friendship_id} className="flex items-center justify-between py-2">
                     <div className="flex items-center p-2 rounded-lg transition-colors w-full">
-                    <div 
+                    <div
                         className="relative cursor-pointer"
                       onClick={() => handleUserClick(friend.user.username)}
                     >
                         {imageUrl ? (
-                          <SecureImage 
+                          <SecureImage
                             src={imageUrl}
                             alt={friend.user.username}
-                            className="w-12 h-12 rounded-full object-cover border-2 border-gray-800 transition-all duration-200 hover:scale-110 hover:border-blue-500 hover:shadow-lg cursor-pointer"
+                            className="w-12 h-12 rounded-full object-cover border-2 border-line transition-all duration-200 hover:scale-110 hover:border-blue-500 hover:shadow-lg cursor-pointer"
                           />
                         ) : (
-                          <div className="w-12 h-12 rounded-full border-2 border-gray-800 bg-gray-800 flex items-center justify-center transition-all duration-200 hover:scale-110 hover:border-blue-500 hover:shadow-lg cursor-pointer">
-                            <span className="text-gray-400 text-sm">{friend.user.username.charAt(0).toUpperCase()}</span>
+                          <div className="w-12 h-12 rounded-full border-2 border-line bg-soft flex items-center justify-center transition-all duration-200 hover:scale-110 hover:border-blue-500 hover:shadow-lg cursor-pointer">
+                            <span className="text-muted text-sm">{friend.user.username.charAt(0).toUpperCase()}</span>
                           </div>
                         )}
                         {mode === 'online' && friend.user.is_online && (
@@ -334,17 +334,17 @@ export default function RightPanel({
                         )}
                       </div>
                       <div className="ml-4 flex flex-col">
-                        <p 
-                          className="font-semibold text-white hover:text-blue-400 text-base cursor-pointer"
+                        <p
+                          className="font-semibold text-ink hover:text-accent text-base cursor-pointer"
                           onClick={() => handleUserClick(friend.user.username)}
                         >
                           {friend.user.username}
                         </p>
-                        <p className="text-sm text-gray-400">
+                        <p className="text-sm text-muted">
                           {friend.user.name} {friend.user.surname}
                         </p>
                         {mode === 'suggested' && friend.user.common_friends_count !== undefined && (
-                          <p className="text-xs text-gray-500 mt-1">
+                          <p className="text-xs text-muted mt-1">
                             {friend.user.common_friends_count} {friend.user.common_friends_count === 1 ? 'amigo' : 'amigos'} en común
                           </p>
                         )}
@@ -354,7 +354,7 @@ export default function RightPanel({
                       </div>
                     </div>
                     {mode === 'friends' ? (
-                      <button 
+                      <button
                         onClick={() => handleFriendAction(friend.user.user_id, 'remove')}
                         className="px-2 py-1 bg-red-500/90 text-white rounded-full shadow-md hover:bg-red-400 transition-all duration-200 text-xs font-semibold flex items-center justify-center gap-1 ml-4 cursor-pointer"
                       >
@@ -380,4 +380,4 @@ export default function RightPanel({
       )}
     </div>
   );
-} 
+}

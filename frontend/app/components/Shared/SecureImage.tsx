@@ -74,7 +74,7 @@ export default function SecureImage({ src, alt, className, onClick }: SecureImag
   }, [src, isVisible]);
 
   return (
-    <div ref={containerRef} className={`${className || ''} ${!imageUrl ? 'bg-gray-800' : ''}`}>
+    <div ref={containerRef} className={`${className || ''} ${!imageUrl ? 'bg-soft' : ''}`}>
       {imageUrl ? (
         <img src={imageUrl} alt={alt} className="h-full w-full object-cover" onClick={onClick} loading="lazy" />
       ) : failed ? (

@@ -1,9 +1,9 @@
 /**
  * Componente UserPosts
- * 
+ *
  * Este componente muestra la lista de publicaciones del usuario en su perfil.
  * Reutiliza el componente Post existente para mantener la consistencia.
- * 
+ *
  * @module UserPosts
  * @requires react
  * @requires ~/components/Inicio/Post
@@ -56,15 +56,15 @@ interface UserPostsProps {
 export default function UserPosts({ posts = [], onLike, onSave, onDelete, onEdit }: UserPostsProps) {
   const { user } = useAuth();
   const currentUserId = user?.user_id;
-  
+
   // Estados para el ImageZoomModal global
   const [showImageZoomModal, setShowImageZoomModal] = useState(false);
   const [zoomImageUrl, setZoomImageUrl] = useState('');
 
   if (!posts || posts.length === 0) {
     return (
-      <div className="bg-gray-900 rounded-lg p-6 text-center border border-gray-800">
-        <p className="text-gray-400">No hay publicaciones para mostrar</p>
+      <div className="bg-surface rounded-lg p-6 text-center border border-line">
+        <p className="text-muted">No hay publicaciones para mostrar</p>
       </div>
     );
   }

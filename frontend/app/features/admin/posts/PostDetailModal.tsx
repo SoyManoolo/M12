@@ -48,7 +48,7 @@ export default function PostDetailModal({ isOpen, onClose, post, onImageClick }:
   useEffect(() => {
     const loadComments = async () => {
       if (!isOpen || !post) return;
-      
+
       try {
         if (!token) return;
         const response = await commentService.getComments(token, post.post_id);
@@ -108,22 +108,22 @@ export default function PostDetailModal({ isOpen, onClose, post, onImageClick }:
         role="dialog"
         aria-modal="true"
         aria-label="Detalle de publicación"
-        className="relative z-10 bg-gray-900 rounded-2xl shadow-2xl w-full max-w-7xl h-[95vh] sm:h-[90vh] mx-auto p-0 overflow-hidden flex flex-col"
+        className="relative z-10 bg-surface rounded-2xl shadow-2xl w-full max-w-7xl h-[95vh] sm:h-[90vh] mx-auto p-0 overflow-hidden flex flex-col"
       >
         <button
           ref={closeButtonRef}
           type="button"
           onClick={onClose}
           aria-label="Cerrar detalle de publicación"
-          className="absolute top-4 right-4 text-gray-400 hover:text-white text-2xl z-10 cursor-pointer bg-gray-800/50 hover:bg-gray-800 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200"
+          className="absolute top-4 right-4 text-muted hover:text-ink text-2xl z-10 cursor-pointer bg-soft/50 hover:bg-soft w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200"
         >
           ×
         </button>
-        
+
         <div className="flex flex-col sm:flex-row h-full">
           {/* Imagen arriba en móvil, izquierda en escritorio */}
           {post.media && (
-            <div className="w-full sm:w-1/2 bg-black flex items-center justify-center relative max-h-72 sm:max-h-none">
+            <div className="w-full sm:w-1/2 bg-page flex items-center justify-center relative max-h-72 sm:max-h-none">
               <button
                 type="button"
                 className="w-full h-full flex items-center justify-center cursor-zoom-in group"
@@ -132,13 +132,13 @@ export default function PostDetailModal({ isOpen, onClose, post, onImageClick }:
                   onImageClick(post.media);
                 }}
               >
-                <SecureImage 
-                  src={post.media} 
+                <SecureImage
+                  src={post.media}
                   alt="Imagen publicación"
-                  className="max-h-72 sm:max-h-[90vh] w-auto object-contain transition-transform duration-300 group-hover:scale-105 mx-auto" 
+                  className="max-h-72 sm:max-h-[90vh] w-auto object-contain transition-transform duration-300 group-hover:scale-105 mx-auto"
                 />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center">
-                  <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <span className="text-ink opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     Click para ampliar
                   </span>
                 </div>
@@ -147,13 +147,13 @@ export default function PostDetailModal({ isOpen, onClose, post, onImageClick }:
           )}
 
           {/* Detalles y comentarios */}
-          <div className={`${post.media ? 'w-full sm:w-1/2' : 'w-full'} flex flex-col h-full bg-gray-900`}>
+          <div className={`${post.media ? 'w-full sm:w-1/2' : 'w-full'} flex flex-col h-full bg-surface`}>
             {/* Cabecera con información del usuario */}
-            <div className="p-6 border-b border-gray-800 bg-gray-900/95 backdrop-blur-sm">
+            <div className="p-6 border-b border-line bg-surface/95 backdrop-blur-sm">
               <div className="flex items-center gap-3">
                 <button
                   type="button"
-                  className="flex items-center gap-3 cursor-pointer hover:bg-gray-800/50 p-2 rounded-lg transition-colors duration-200 text-left"
+                  className="flex items-center gap-3 cursor-pointer hover:bg-soft/50 p-2 rounded-lg transition-colors duration-200 text-left"
                   onClick={() => navigate(`/perfil?username=${encodeURIComponent(post.author.username)}`)}
                 >
                   {post.author.profile_picture ? (
@@ -163,45 +163,45 @@ export default function PostDetailModal({ isOpen, onClose, post, onImageClick }:
                       className="w-12 h-12 rounded-full ring-2 ring-blue-500/50"
                     />
                   ) : (
-                    <div className="w-12 h-12 rounded-full bg-gray-800 border-2 border-gray-700 flex items-center justify-center">
-                      <span className="text-gray-400 text-base font-bold">
+                    <div className="w-12 h-12 rounded-full bg-soft border-2 border-line flex items-center justify-center">
+                      <span className="text-muted text-base font-bold">
                         {post.author.username?.charAt(0).toUpperCase()}
                       </span>
                     </div>
                   )}
                   <div className="flex flex-col">
-                    <span className="font-semibold text-lg text-white">{post.author.name}</span>
-                    <span className="text-sm text-gray-400">@{post.author.username}</span>
+                    <span className="font-semibold text-lg text-ink">{post.author.name}</span>
+                    <span className="text-sm text-muted">@{post.author.username}</span>
                   </div>
                 </button>
               </div>
             </div>
 
             {/* Descripción del post */}
-            <div className="p-6 border-b border-gray-800 bg-gray-900/95 backdrop-blur-sm">
-              <p className="text-gray-200 whitespace-pre-line text-base break-words leading-relaxed">{post.description}</p>
-              <div className="flex items-center justify-between text-sm text-gray-400 mt-4">
+            <div className="p-6 border-b border-line bg-surface/95 backdrop-blur-sm">
+              <p className="text-copy whitespace-pre-line text-base break-words leading-relaxed">{post.description}</p>
+              <div className="flex items-center justify-between text-sm text-muted mt-4">
                 <div className="flex gap-4">
                   <span className="flex items-center gap-1">
                     <span className="text-red-500">❤️</span> {post.likes_count}
                   </span>
                   <span className="flex items-center gap-1">
-                    <span className="text-blue-500">ðŸ’¬</span> {post.comments_count}
+                    <span className="text-accent">ðŸ’¬</span> {post.comments_count}
                   </span>
                 </div>
-                <span className="text-gray-500 bg-gray-800/50 px-3 py-1 rounded-full text-xs">
+                <span className="text-muted bg-soft/50 px-3 py-1 rounded-full text-xs">
                   {`hace ${formatTimeAgo(post.created_at)}`}
                 </span>
               </div>
             </div>
 
             {/* Sección de comentarios */}
-            <div className="flex-1 overflow-y-auto p-6 bg-gray-900/95 backdrop-blur-sm">
-              <h4 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
-                <span className="text-blue-500">ðŸ’¬</span> Comentarios
+            <div className="flex-1 overflow-y-auto p-6 bg-surface/95 backdrop-blur-sm">
+              <h4 className="text-xl font-semibold text-ink mb-6 flex items-center gap-2">
+                <span className="text-accent">ðŸ’¬</span> Comentarios
               </h4>
               {comments.length === 0 ? (
-                <div className="text-center text-gray-400 py-12 bg-gray-800/30 rounded-xl">
+                <div className="text-center text-muted py-12 bg-soft/30 rounded-xl">
                   <span className="text-4xl mb-4 block">ðŸ’­</span>
                   <p className="text-lg">No hay comentarios aún</p>
                   <p className="text-sm mt-2">Sé el primero en comentar</p>
@@ -209,7 +209,7 @@ export default function PostDetailModal({ isOpen, onClose, post, onImageClick }:
               ) : (
                 <div className="space-y-4">
                   {comments.map((comment) => (
-                    <div key={comment.comment_id} className="bg-gray-800/50 rounded-xl p-4 hover:bg-gray-800/70 transition-colors duration-200">
+                    <div key={comment.comment_id} className="bg-soft/50 rounded-xl p-4 hover:bg-soft/70 transition-colors duration-200">
                       <div className="flex items-start gap-3 mb-1">
                         {/* Foto de perfil o inicial */}
                         {comment.author.profile_picture ? (
@@ -219,8 +219,8 @@ export default function PostDetailModal({ isOpen, onClose, post, onImageClick }:
                             className="w-9 h-9 rounded-full"
                           />
                         ) : (
-                          <div className="w-9 h-9 rounded-full bg-gray-800 border-2 border-gray-700 flex items-center justify-center">
-                            <span className="text-gray-400 text-lg font-bold">
+                          <div className="w-9 h-9 rounded-full bg-soft border-2 border-line flex items-center justify-center">
+                            <span className="text-muted text-lg font-bold">
                               {comment.author.username?.charAt(0).toUpperCase()}
                             </span>
                           </div>
@@ -229,8 +229,8 @@ export default function PostDetailModal({ isOpen, onClose, post, onImageClick }:
                         <div className="flex-1">
                           <div className="flex justify-between items-start">
                             <div>
-                              <span className="font-bold text-white mr-2">{comment.author.username}</span>
-                              <span className="text-gray-300">{comment.content}</span>
+                              <span className="font-bold text-ink mr-2">{comment.author.username}</span>
+                              <span className="text-copy">{comment.content}</span>
                             </div>
                             <button
                               onClick={() => handleDeleteComment(comment.comment_id)}
@@ -241,7 +241,7 @@ export default function PostDetailModal({ isOpen, onClose, post, onImageClick }:
                             </button>
                           </div>
                           {/* Fecha */}
-                          <div className="flex items-center gap-4 mt-1 text-xs text-gray-400">
+                          <div className="flex items-center gap-4 mt-1 text-xs text-muted">
                             <span>{`hace ${formatTimeAgo(comment.created_at)}`}</span>
                           </div>
                         </div>

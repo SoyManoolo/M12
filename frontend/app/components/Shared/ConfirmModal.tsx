@@ -29,16 +29,16 @@ export default function ConfirmModal({
 
   return (
     <div className="fixed inset-0 backdrop-blur-sm bg-black/30 flex items-center justify-center z-50" onMouseDown={onClose}>
-      <div ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="confirm-modal-title" className="bg-gray-900/95 rounded-xl p-6 max-w-md w-full mx-4 border border-gray-800 shadow-xl" onMouseDown={(event) => event.stopPropagation()}>
+      <div ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="confirm-modal-title" className="bg-surface/95 rounded-xl p-6 max-w-md w-full mx-4 border border-line shadow-xl" onMouseDown={(event) => event.stopPropagation()}>
         <div className="flex items-center justify-center mb-4">
           <FaExclamationTriangle className="text-yellow-500 text-4xl" />
         </div>
-        
-        <h3 id="confirm-modal-title" className="text-xl font-bold text-center mb-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+
+        <h3 id="confirm-modal-title" className="text-xl font-bold text-center mb-2 bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
           {title}
         </h3>
-        
-        <p className="text-gray-400 text-center mb-6">
+
+        <p className="text-muted text-center mb-6">
           {message}
         </p>
 
@@ -46,7 +46,7 @@ export default function ConfirmModal({
           <button
             ref={cancelButtonRef}
             onClick={onClose}
-            className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors cursor-pointer"
+            className="px-4 py-2 bg-hover hover:bg-hover text-ink rounded-lg transition-colors cursor-pointer"
           >
             {cancelText}
           </button>

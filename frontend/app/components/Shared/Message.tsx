@@ -16,9 +16,9 @@ const Message: React.FC<MessageProps> = ({ type, message, onClose }) => {
       case 'warning':
         return 'bg-yellow-500/10 border-yellow-500 text-yellow-500';
       case 'info':
-        return 'bg-blue-500/10 border-blue-500 text-blue-500';
+        return 'bg-primary-hover/10 border-blue-500 text-accent';
       default:
-        return 'bg-gray-500/10 border-gray-500 text-gray-500';
+        return 'bg-gray-500/10 border-line-strong text-muted';
     }
   };
 
@@ -39,4 +39,4 @@ const Message: React.FC<MessageProps> = ({ type, message, onClose }) => {
   );
 };
 
-export default Message; 
+export default Message;

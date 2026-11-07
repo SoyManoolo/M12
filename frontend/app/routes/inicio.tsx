@@ -5,10 +5,10 @@ import { developmentLogger } from '~/utils/logger';
  * @description Componente principal de la página de inicio que muestra el feed de publicaciones
  * y la barra lateral con usuarios sugeridos. Incluye funcionalidades de búsqueda, seguimiento,
  * likes y guardado de posts.
- * 
+ *
  * @module InicioPage
  * @exports InicioPage
- * 
+ *
  * @requires react
  * @requires react-router
  * @requires ~/components/Inicio/Navbar
@@ -16,11 +16,11 @@ import { developmentLogger } from '~/utils/logger';
  * @requires ~/components/Shared/RightPanel
  * @requires ~/components/Shared/ConfirmModal
  * @requires ~/components/Shared/Notification
- * 
+ *
  * @interface User - Define la estructura de datos de un usuario
  * @interface Post - Define la estructura de datos de una publicación
  * @interface SuggestedUser - Define la estructura de datos de un usuario sugerido
- * 
+ *
  * @constant MOCK_POSTS - Array de publicaciones de ejemplo
  * @constant MOCK_SUGGESTED_USERS - Array de usuarios sugeridos de ejemplo
  */
@@ -124,11 +124,11 @@ interface Post {
  * @function InicioPage
  * @description Componente principal de la página de inicio
  * @returns {JSX.Element} Renderiza la estructura de la página de inicio
- * 
+ *
  * @state {string} searchQuery - Estado para la búsqueda de usuarios
  * @state {Post[]} posts - Lista de publicaciones en el feed
  * @state {SuggestedUser[]} suggestedUsers - Lista de usuarios sugeridos
- * 
+ *
  * @method handleSearch - Maneja la búsqueda de usuarios
  * @method handleFollow - Maneja el seguimiento de usuarios
  * @method handleLike - Maneja los likes en publicaciones
@@ -223,7 +223,7 @@ export default function InicioPage() {
         }
       } catch (err) {
         let errorMessage = 'Lo sentimos, algo salió mal';
-        
+
         if (err instanceof Error) {
           if (err.message.includes('Failed to fetch')) {
             errorMessage = 'No pudimos conectar con el servidor. Por favor, verifica tu conexión a internet.';
@@ -233,7 +233,7 @@ export default function InicioPage() {
             errorMessage = err.message;
           }
         }
-        
+
         setError(errorMessage);
       } finally {
         setLoading(false);
@@ -340,7 +340,7 @@ export default function InicioPage() {
     try {
       const response = await postService.updatePost(token, postToEdit.post_id, newDescription);
       if (response.success) {
-        setPosts(prev => prev.map(post => 
+        setPosts(prev => prev.map(post =>
           post.post_id === postToEdit.post_id
             ? { ...post, description: newDescription }
             : post
@@ -395,7 +395,7 @@ export default function InicioPage() {
 
   return (
     <>
-      <AppLayout mainClassName="border-r border-gray-800" rightPanel={<RightPanel users={suggestedUsers} mode="suggested" />}>
+      <AppLayout mainClassName="border-r border-line" rightPanel={<RightPanel users={suggestedUsers} mode="suggested" />}>
       <div className="flex w-full flex-col">
         <div
           className="p-2 sm:p-4 md:p-6 space-y-6"
@@ -413,19 +413,19 @@ export default function InicioPage() {
               <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
             </div>
           ) : visiblePosts.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 bg-gray-900/50 rounded-xl border border-gray-800">
-              <div className="w-24 h-24 bg-gradient-to-br from-blue-600/20 to-purple-600/20 rounded-full flex items-center justify-center mb-6">
-                <FaCamera className="text-4xl text-blue-500" />
+            <div className="flex flex-col items-center justify-center py-16 bg-surface/50 rounded-xl border border-line">
+              <div className="w-24 h-24 bg-gradient-to-br from-primary/20 to-primary/20 rounded-full flex items-center justify-center mb-6">
+                <FaCamera className="text-4xl text-accent" />
               </div>
-              <h3 className="text-xl font-semibold text-white mb-2">
+              <h3 className="text-xl font-semibold text-ink mb-2">
               No hay publicaciones para mostrar
               </h3>
-              <p className="text-gray-400 text-center max-w-md">
+              <p className="text-muted text-center max-w-md">
                 Sé el primero en compartir un momento especial. ¡Comienza a publicar y conecta con tus amigos!
               </p>
               <Link
                 to="/publicar"
-                className="mt-6 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+                className="mt-6 px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors flex items-center space-x-2"
               >
                 <FaCamera className="text-sm" />
                 <span>Crear nueva publicación</span>
@@ -468,7 +468,7 @@ export default function InicioPage() {
                   <button
                     onClick={handleLoadMore}
                     disabled={loading}
-                    className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
+                    className="px-6 py-2 bg-primary text-white rounded-md hover:bg-primary-hover transition-colors disabled:opacity-50"
                   >
                     {loading ? 'Cargando...' : 'Cargar más'}
                   </button>
@@ -515,4 +515,4 @@ export default function InicioPage() {
       )}
     </>
   );
-} 
+}

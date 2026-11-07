@@ -26,7 +26,7 @@ export default function PostActions({
   isOwner,
   layout = "horizontal",
 }: PostActionsProps) {
-  const baseButtonClass = layout === "vertical" 
+  const baseButtonClass = layout === "vertical"
     ? "flex flex-col items-center"
     : "flex items-center gap-1";
 
@@ -39,7 +39,7 @@ export default function PostActions({
         onClick={onLike}
         disabled={isLoading}
         className={`${baseButtonClass} cursor-pointer ${
-          isLiked ? "text-red-500" : "text-gray-400 hover:text-white"
+          isLiked ? "text-red-500" : "text-muted hover:text-ink"
         } ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
       >
         {isLiked ? (
@@ -62,7 +62,7 @@ export default function PostActions({
             <button
               onClick={onEdit}
               title="Editar publicación"
-              className={`${baseButtonClass} text-blue-500 hover:text-blue-700 focus:outline-none cursor-pointer`}
+              className={`${baseButtonClass} text-accent hover:text-blue-700 focus:outline-none cursor-pointer`}
             >
               <FaPencilAlt className={iconSize} />
               {layout === "vertical" && <span className="text-sm">Editar</span>}

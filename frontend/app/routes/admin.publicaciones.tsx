@@ -1,7 +1,7 @@
 import { pageMeta } from '~/utils/seo';
 /**
  * Página de Administración de Publicaciones
- * 
+ *
  * Esta página permite gestionar todas las publicaciones de la aplicación.
  * Incluye:
  * - Lista de publicaciones con opciones de edición y eliminación
@@ -98,7 +98,7 @@ export default function AdminPublicaciones() {
           setFilteredPosts(newPosts);
         } else {
           const query = searchQuery.toLowerCase().trim();
-          const filtered = newPosts.filter(post => 
+          const filtered = newPosts.filter(post =>
             post.author.username.toLowerCase().includes(query) ||
             post.author.name.toLowerCase().includes(query)
           );
@@ -134,7 +134,7 @@ export default function AdminPublicaciones() {
     try {
       const response = await postService.updatePost(token, postToEdit.post_id, newDescription);
       if (response.success) {
-        setPosts(prev => prev.map(post => 
+        setPosts(prev => prev.map(post =>
           post.post_id === postToEdit.post_id
             ? { ...post, description: newDescription }
             : post
@@ -183,27 +183,27 @@ export default function AdminPublicaciones() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col lg:flex-row">
+    <div className="min-h-screen bg-page text-ink flex flex-col lg:flex-row">
       <Navbar />
-      
+
       <div className="w-full lg:w-5/6 lg:ml-[16.666667%] pt-16 pb-16 p-3 sm:p-6">
         <div className="max-w-7xl mx-auto">
           {/* Encabezado */}
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-8 gap-4 sm:gap-0">
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
                 Gestión de Publicaciones
               </h1>
-              <p className="text-gray-400 mt-2">Administra y modera el contenido de la plataforma</p>
+              <p className="text-muted mt-2">Administra y modera el contenido de la plataforma</p>
             </div>
-            
+
             {/* Barra de búsqueda */}
             <div className="relative w-full sm:w-96">
-              <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted" />
               <input
                 type="text"
                 placeholder="Buscar por nombre de usuario..."
-                className="w-full bg-gray-900 rounded-xl py-3 pl-12 pr-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+                className="w-full bg-surface rounded-xl py-3 pl-12 pr-4 text-ink placeholder-muted focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -211,35 +211,35 @@ export default function AdminPublicaciones() {
           </div>
 
           {/* Filtros */}
-          <div className="bg-gray-900 rounded-lg p-4 mb-6 border border-gray-800">
+          <div className="bg-surface rounded-lg p-4 mb-6 border border-line">
             <div className="flex items-center space-x-4">
-              <FaFilter className="text-gray-400" />
-              <button 
+              <FaFilter className="text-muted" />
+              <button
                 onClick={() => setActiveFilter('all')}
                 className={`px-4 py-2 rounded-lg transition-colors ${
-                  activeFilter === 'all' 
-                    ? 'bg-blue-600 text-white' 
-                    : 'bg-gray-800 text-white hover:bg-gray-700'
+                  activeFilter === 'all'
+                    ? 'bg-primary text-white'
+                    : 'bg-soft text-ink hover:bg-hover'
                 }`}
               >
                 Todas
               </button>
-              <button 
+              <button
                 onClick={() => setActiveFilter('recent')}
                 className={`px-4 py-2 rounded-lg transition-colors ${
-                  activeFilter === 'recent' 
-                    ? 'bg-blue-600 text-white' 
-                    : 'bg-gray-800 text-white hover:bg-gray-700'
+                  activeFilter === 'recent'
+                    ? 'bg-primary text-white'
+                    : 'bg-soft text-ink hover:bg-hover'
                 }`}
               >
                 Más recientes
               </button>
-              <button 
+              <button
                 onClick={() => setActiveFilter('oldest')}
                 className={`px-4 py-2 rounded-lg transition-colors ${
-                  activeFilter === 'oldest' 
-                    ? 'bg-blue-600 text-white' 
-                    : 'bg-gray-800 text-white hover:bg-gray-700'
+                  activeFilter === 'oldest'
+                    ? 'bg-primary text-white'
+                    : 'bg-soft text-ink hover:bg-hover'
                 }`}
               >
                 Más antiguas
@@ -258,7 +258,7 @@ export default function AdminPublicaciones() {
                 <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
               </div>
             ) : filteredPosts.length === 0 ? (
-              <div className="col-span-3 text-center text-gray-500">
+              <div className="col-span-3 text-center text-muted">
                 {searchQuery ? 'No se encontraron publicaciones para este usuario' : 'No hay publicaciones para mostrar'}
               </div>
             ) : (
@@ -268,7 +268,7 @@ export default function AdminPublicaciones() {
                     key={post.post_id}
                     role="button"
                     tabIndex={0}
-                    className="bg-gray-900 rounded-lg border border-gray-800 hover:border-blue-500 transition-colors flex flex-col w-full cursor-pointer"
+                    className="bg-surface rounded-lg border border-line hover:border-blue-500 transition-colors flex flex-col w-full cursor-pointer"
                     onClick={() => { setSelectedPost(post); setShowPostModal(true); }}
                     onKeyDown={(event) => {
                       if (event.key === 'Enter' || event.key === ' ') {
@@ -279,7 +279,7 @@ export default function AdminPublicaciones() {
                     }}
                   >
                     {/* Cabecera con información del usuario */}
-                    <div className="p-3 border-b border-gray-800 flex-shrink-0">
+                    <div className="p-3 border-b border-line flex-shrink-0">
                       <div className="flex justify-between items-start gap-2">
                         <div className="flex items-center gap-2 min-w-0">
                           {post.author.profile_picture ? (
@@ -289,26 +289,26 @@ export default function AdminPublicaciones() {
                               className="w-8 h-8 rounded-full flex-shrink-0 object-cover"
                             />
                           ) : (
-                            <div className="w-8 h-8 rounded-full bg-gray-800 border-2 border-gray-700 flex items-center justify-center flex-shrink-0">
-                              <span className="text-gray-400 text-base font-bold">
+                            <div className="w-8 h-8 rounded-full bg-soft border-2 border-line flex items-center justify-center flex-shrink-0">
+                              <span className="text-muted text-base font-bold">
                                 {post.author.username?.charAt(0).toUpperCase()}
                               </span>
                             </div>
                           )}
                           <div className="min-w-0">
                             <h3 className="font-semibold text-sm truncate">{post.author.name}</h3>
-                            <p className="text-xs text-gray-400 truncate">@{post.author.username}</p>
+                            <p className="text-xs text-muted truncate">@{post.author.username}</p>
                           </div>
                         </div>
                         <div className="flex gap-2 flex-shrink-0">
-                          <button 
+                          <button
                             onClick={e => { e.stopPropagation(); handleEdit(post.post_id); }}
-                            className="p-2.5 text-blue-500 hover:bg-blue-500/10 rounded-lg transition-colors cursor-pointer"
+                            className="p-2.5 text-accent hover:bg-primary-hover/10 rounded-lg transition-colors cursor-pointer"
                             title="Editar publicación"
                           >
                             <FaEdit className="w-5 h-5" />
                           </button>
-                          <button 
+                          <button
                             onClick={e => { e.stopPropagation(); handleDelete(post.post_id); }}
                             className="p-2.5 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors cursor-pointer"
                             title="Eliminar publicación"
@@ -320,16 +320,16 @@ export default function AdminPublicaciones() {
                     </div>
 
                     {/* Imagen cuadrada */}
-                    <div className="w-full h-[300px] aspect-square relative overflow-hidden bg-gray-800 flex items-center justify-center">
+                    <div className="w-full h-[300px] aspect-square relative overflow-hidden bg-soft flex items-center justify-center">
                       {post.media ? (
-                        <SecureImage 
-                          src={post.media} 
-                          alt="Contenido multimedia" 
+                        <SecureImage
+                          src={post.media}
+                          alt="Contenido multimedia"
                           className="w-full h-full object-cover object-center"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gray-800/50">
-                          <p className="text-sm text-gray-400 text-center p-4 line-clamp-4">
+                        <div className="w-full h-full flex items-center justify-center bg-soft/50">
+                          <p className="text-sm text-muted text-center p-4 line-clamp-4">
                             {post.description}
                           </p>
                         </div>
@@ -337,16 +337,16 @@ export default function AdminPublicaciones() {
                     </div>
 
                     {/* Pie de tarjeta con información */}
-                    <div className="p-3 bg-gray-900/95 backdrop-blur-sm border-t border-gray-800 flex-shrink-0">
-                      <p className="text-sm text-gray-300 line-clamp-2 mb-2">
+                    <div className="p-3 bg-surface/95 backdrop-blur-sm border-t border-line flex-shrink-0">
+                      <p className="text-sm text-copy line-clamp-2 mb-2">
                         {post.description}
                       </p>
-                      <div className="flex items-center justify-between text-xs text-gray-400">
+                      <div className="flex items-center justify-between text-xs text-muted">
                         <div className="flex gap-3">
                           <span>❤️ {post.likes_count}</span>
                           <span>ðŸ’¬ {post.comments_count}</span>
                         </div>
-                        <span className="text-gray-500">
+                        <span className="text-muted">
                           {`hace ${formatTimeAgo(post.created_at)}`}
                         </span>
                       </div>
@@ -359,7 +359,7 @@ export default function AdminPublicaciones() {
                     <button
                       onClick={handleLoadMore}
                       disabled={loading}
-                      className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-6 py-2 bg-primary text-white rounded-md hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {loading ? 'Cargando...' : 'Cargar más'}
                     </button>
@@ -394,10 +394,10 @@ export default function AdminPublicaciones() {
         currentDescription={postToEdit?.description || ''}
       />
 
-      <PostDetailModal 
-        isOpen={showPostModal} 
-        onClose={() => setShowPostModal(false)} 
-        post={selectedPost} 
+      <PostDetailModal
+        isOpen={showPostModal}
+        onClose={() => setShowPostModal(false)}
+        post={selectedPost}
         onImageClick={(imageUrl) => {
           setGlobalZoomImageUrl(imageUrl);
           setShowGlobalImageZoomModal(true);
@@ -420,4 +420,4 @@ export default function AdminPublicaciones() {
       )}
     </div>
   );
-} 
+}

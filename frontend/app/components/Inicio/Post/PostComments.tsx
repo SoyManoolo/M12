@@ -46,7 +46,7 @@ export default function PostComments({
 
   if (comments.length === 0) {
     return (
-      <div className="text-center text-gray-400 py-4 sm:py-6 rounded-xl">
+      <div className="text-center text-muted py-4 sm:py-6 rounded-xl">
         <span className="text-3xl sm:text-5xl mb-2 sm:mb-3 block">💭</span>
         <p className="text-base sm:text-xl">No hay comentarios aún</p>
         <p className="text-sm sm:text-base mt-2 hidden sm:block">
@@ -72,16 +72,16 @@ export default function PostComments({
               <div className="flex-1 pr-2">
                 <div className="flex items-center gap-2">
                   <span
-                    className="font-semibold text-white text-xs sm:text-base cursor-pointer hover:underline"
+                    className="font-semibold text-ink text-xs sm:text-base cursor-pointer hover:underline"
                     onClick={() => navigateToProfile(comment.author.username)}
                   >
                     {comment.author.username}
                   </span>
-                  <span className="text-gray-400 text-xs sm:text-sm">
+                  <span className="text-muted text-xs sm:text-sm">
                     {formatRelativeTime(comment.created_at)}
                   </span>
                 </div>
-                <p className="text-gray-300 text-xs sm:text-base mt-0.5 sm:mt-1.5">
+                <p className="text-copy text-xs sm:text-base mt-0.5 sm:mt-1.5">
                   {sanitizeUserText(comment.content)}
                 </p>
               </div>
@@ -104,7 +104,7 @@ export default function PostComments({
         <button
           onClick={() => void onLoadMore()}
           disabled={isLoadingMore}
-          className="text-blue-400 hover:text-blue-300 text-xs sm:text-base font-medium w-full text-center py-1 sm:py-3 cursor-pointer mt-2 sm:mt-3"
+          className="text-accent hover:text-accent text-xs sm:text-base font-medium w-full text-center py-1 sm:py-3 cursor-pointer mt-2 sm:mt-3"
         >
           {isLoadingMore ? "Cargando comentarios..." : "Ver más comentarios"}
         </button>

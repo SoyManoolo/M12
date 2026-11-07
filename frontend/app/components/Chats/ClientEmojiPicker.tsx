@@ -21,11 +21,11 @@ export default function ClientEmojiPicker(props: ClientEmojiPickerProps) {
   }, []);
 
   if (!isClient) {
-    return <div className="p-4 text-center text-gray-400">Cargando emojis...</div>;
+    return <div className="p-4 text-center text-muted">Cargando emojis...</div>;
   }
 
   return (
-    <Suspense fallback={<div className="p-4 text-center text-gray-400">Cargando emojis...</div>}>
+    <Suspense fallback={<div className="p-4 text-center text-muted">Cargando emojis...</div>}>
       <EmojiPickerWrapper {...props} />
     </Suspense>
   );

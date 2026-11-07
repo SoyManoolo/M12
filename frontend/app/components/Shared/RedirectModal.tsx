@@ -40,22 +40,22 @@ export default function RedirectModal({
 
   return (
     <div className="fixed inset-0 backdrop-blur-sm bg-black/30 flex items-center justify-center z-50">
-      <div ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="redirect-modal-title" className="bg-gray-900/95 rounded-xl p-8 max-w-md w-full mx-4 border border-gray-800 shadow-xl">
+      <div ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="redirect-modal-title" className="bg-surface/95 rounded-xl p-8 max-w-md w-full mx-4 border border-line shadow-xl">
         <div className="flex flex-col items-center text-center space-y-6">
           <div className="flex items-center justify-center w-16 h-16 rounded-full bg-green-900/50">
             <FaCheckCircle className="text-green-500 text-4xl" />
           </div>
 
           <div className="space-y-2">
-            <h3 id="redirect-modal-title" className="text-xl font-bold text-center bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <h3 id="redirect-modal-title" className="text-xl font-bold text-center bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
               {message}
             </h3>
-            <p className="text-gray-400">
-              Serás redirigido al login en <span className="text-white font-bold">{countdown}</span> segundos
+            <p className="text-muted">
+              Serás redirigido al login en <span className="text-ink font-bold">{countdown}</span> segundos
             </p>
           </div>
 
-          <div className="w-full bg-gray-800 rounded-full h-2 mt-4">
+          <div className="w-full bg-soft rounded-full h-2 mt-4">
             <div
               className="bg-green-500 h-2 rounded-full transition-all duration-1000"
               style={{ width: `${(countdown / redirectTime) * 100}%` }}

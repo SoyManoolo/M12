@@ -47,11 +47,11 @@ export default function SearchUsers() {
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         placeholder="Buscar usuarios... (presiona Enter)"
-                        className="w-full rounded-lg border border-gray-700 bg-gray-900 px-4 py-2 text-white placeholder-gray-500 focus:border-transparent focus:ring-2 focus:ring-blue-500"
+                        className="w-full rounded-lg border border-line bg-surface px-4 py-2 text-ink placeholder-muted focus:border-transparent focus:ring-2 focus:ring-blue-500"
                     />
                     <button
                         type="submit"
-                        className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                        className="px-4 py-2 bg-primary-hover text-white rounded-lg hover:bg-primary transition-colors"
                     >
                         Buscar
                     </button>
@@ -75,9 +75,9 @@ export default function SearchUsers() {
                         type="button"
                         key={user.user_id}
                         onClick={() => handleUserClick(user.username)}
-                        className="flex w-full items-center space-x-3 rounded-lg p-3 text-left transition-colors hover:bg-gray-800"
+                        className="flex w-full items-center space-x-3 rounded-lg p-3 text-left transition-colors hover:bg-soft"
                     >
-                        <div className="h-10 w-10 overflow-hidden rounded-full bg-gray-800">
+                        <div className="h-10 w-10 overflow-hidden rounded-full bg-soft">
                             {user.profile_picture ? (
                                 <img
                                     src={user.profile_picture}
@@ -85,23 +85,23 @@ export default function SearchUsers() {
                                     className="w-full h-full object-cover"
                                 />
                             ) : (
-                                <div className="flex h-full w-full items-center justify-center bg-gray-700 text-gray-200">
+                                <div className="flex h-full w-full items-center justify-center bg-hover text-copy">
                                     {user.name.charAt(0)}
                                 </div>
                             )}
                         </div>
                         <div>
-                            <h3 className="font-medium text-white">{user.name} {user.surname}</h3>
-                            <p className="text-sm text-gray-400">@{user.username}</p>
+                            <h3 className="font-medium text-ink">{user.name} {user.surname}</h3>
+                            <p className="text-sm text-muted">@{user.username}</p>
                         </div>
                     </button>
                 ))}
                 {searchTerm && !isLoading && users.length === 0 && !error && (
-                    <div className="py-4 text-center text-gray-400">
+                    <div className="py-4 text-center text-muted">
                         No se encontraron usuarios
                     </div>
                 )}
             </div>
         </div>
     );
-} 
+}

@@ -2,7 +2,7 @@ import { pageMeta } from '~/utils/seo';
 import { developmentLogger } from '~/utils/logger';
 /**
  * Página de perfil de usuario
- * 
+ *
  * Esta página muestra el perfil del usuario, ya sea propio o de otro usuario.
  * Incluye:
  * - Información personal
@@ -10,7 +10,7 @@ import { developmentLogger } from '~/utils/logger';
  * - Biografía
  * - Publicaciones
  * - Amigos sugeridos
- * 
+ *
  * @module Perfil
  */
 
@@ -104,7 +104,7 @@ clientLoader.hydrate = true as const;
 
 export function HydrateFallback() {
   return (
-    <div className="min-h-screen bg-black text-white flex items-center justify-center">
+    <div className="min-h-screen bg-page text-ink flex items-center justify-center">
       <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
     </div>
   );
@@ -290,7 +290,7 @@ export default function Perfil() {
     try {
       const response = await postService.updatePost(token, postToEdit.post_id, newDescription);
       if (response.success) {
-        setPosts(prev => prev.map(post => 
+        setPosts(prev => prev.map(post =>
           post.post_id === postToEdit.post_id
             ? { ...post, description: newDescription }
             : post
@@ -315,7 +315,7 @@ export default function Perfil() {
 
   const confirmDelete = async () => {
     if (!token || !postToDelete) return;
-    
+
     setLoading(true);
     try {
       const response = await postService.deletePost(token, postToDelete);
@@ -343,13 +343,13 @@ export default function Perfil() {
 
   if (data.error) {
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+      <div className="min-h-screen bg-page text-ink flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Usuario no encontrado</h1>
-          <p className="text-gray-400 mb-4">El perfil que buscas no existe o ha sido eliminado.</p>
+          <p className="text-muted mb-4">El perfil que buscas no existe o ha sido eliminado.</p>
           <button
             onClick={() => navigate('/inicio')}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+            className="px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg transition-colors"
           >
             Volver al inicio
           </button>
@@ -360,16 +360,16 @@ export default function Perfil() {
 
   if (!data.user) {
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+      <div className="min-h-screen bg-page text-ink flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col lg:flex-row">
+    <div className="min-h-screen bg-page text-ink flex flex-col lg:flex-row">
       <Navbar />
-      <div className="w-full lg:w-2/3 lg:ml-[16.666667%] lg:border-r border-gray-800">
+      <div className="w-full lg:w-2/3 lg:ml-[16.666667%] lg:border-r border-line">
         <div className="pt-16 pb-16 p-3 sm:p-6 space-y-6">
           {/* Espacio extra en móvil */}
           <div className="h-2 sm:h-0" />
@@ -383,7 +383,7 @@ export default function Perfil() {
           <div className="h-4 lg:h-2" />
 
           {/* Título de publicaciones */}
-          <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">
+          <h2 className="text-xl sm:text-2xl font-bold text-ink mb-2">
             {data.isOwnProfile
               ? 'Mis publicaciones'
               : `Publicaciones de ${data.user.name ? data.user.name : '@' + data.user.username}`}
@@ -391,21 +391,21 @@ export default function Perfil() {
 
           {/* Publicaciones del usuario */}
           {posts.length === 0 ? (
-            <div className="bg-gray-900 rounded-xl p-4 sm:p-6 text-center border border-gray-800 shadow-md mb-4">
+            <div className="bg-surface rounded-xl p-4 sm:p-6 text-center border border-line shadow-md mb-4">
               {data.isOwnProfile ? (
                 <>
-                  <div className="w-24 h-24 bg-gradient-to-br from-blue-600/20 to-purple-600/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <FaCamera className="text-4xl text-blue-500" />
+                  <div className="w-24 h-24 bg-gradient-to-br from-primary/20 to-primary/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <FaCamera className="text-4xl text-accent" />
                   </div>
-                  <h3 className="text-xl font-semibold text-white mb-2">
+                  <h3 className="text-xl font-semibold text-ink mb-2">
                     No has publicado nada aún
                   </h3>
-                  <p className="text-gray-400 text-center max-w-md mx-auto mb-6">
+                  <p className="text-muted text-center max-w-md mx-auto mb-6">
                     ¡Comparte tus momentos especiales con tus amigos! Crea tu primera publicación y comienza a conectar.
                   </p>
                   <Link
                     to="/publicar"
-                    className="inline-flex items-center space-x-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="inline-flex items-center space-x-2 px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors"
                   >
                     <FaCamera className="text-sm" />
                     <span>Crear mi primera publicación</span>
@@ -414,12 +414,12 @@ export default function Perfil() {
               ) : (
                 <>
                   <div className="w-24 h-24 bg-gradient-to-br from-gray-600/20 to-gray-800/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <FaCamera className="text-4xl text-gray-500" />
+                    <FaCamera className="text-4xl text-muted" />
                   </div>
-                  <h3 className="text-xl font-semibold text-white mb-2">
+                  <h3 className="text-xl font-semibold text-ink mb-2">
                     {data.user.username} aún no ha publicado nada
                   </h3>
-                  <p className="text-gray-400 text-center max-w-md mx-auto">
+                  <p className="text-muted text-center max-w-md mx-auto">
                     Cuando {data.user.username} comparta algo, aparecerá aquí.
                   </p>
                 </>
@@ -434,14 +434,14 @@ export default function Perfil() {
                 onDelete={handleDelete}
                 onEdit={handleEdit}
               />
-              
+
               {/* Botón de cargar más */}
               {nextCursor && (
                 <div className="flex justify-center mt-6">
                   <button
                     onClick={handleLoadMore}
                     disabled={loading}
-                    className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-6 py-2 bg-primary text-white rounded-md hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {loading ? 'Cargando...' : 'Cargar más'}
                   </button>
@@ -493,4 +493,4 @@ export default function Perfil() {
       )}
     </div>
   );
-} 
+}

@@ -107,13 +107,13 @@ export default function Post({
     : "sm:h-[450px] sm:min-h-[450px] sm:max-h-[450px]";
 
   return (
-    <div className={`bg-gray-900 rounded-lg p-2 sm:p-4 mb-4 w-full ${containerHeight}`}>
+    <div className={`bg-surface rounded-lg p-2 sm:p-4 mb-4 w-full ${containerHeight}`}>
       {/* ========== MOBILE LAYOUT ========== */}
       <div className="block sm:hidden">
         {/* Imagen arriba (mobile) */}
         {hasMedia && (
           <div className="w-full mb-3">
-            <div className="rounded-lg overflow-hidden bg-gray-800 cursor-pointer">
+            <div className="rounded-lg overflow-hidden bg-soft cursor-pointer">
               <SecureImage
                 src={media_url}
                 alt="Contenido del post"
@@ -152,8 +152,8 @@ export default function Post({
         {/* Comentarios */}
         <div className="mb-2">
           <div className="flex items-center gap-2 mb-2">
-            <h3 className="text-white font-semibold text-base">Comentarios</h3>
-            <span className="text-xs text-gray-400">({commentCount})</span>
+            <h3 className="text-ink font-semibold text-base">Comentarios</h3>
+            <span className="text-xs text-muted">({commentCount})</span>
           </div>
           <div className="max-h-32 overflow-y-auto">
             <PostComments
@@ -169,7 +169,7 @@ export default function Post({
         </div>
 
         {/* Input comentarios */}
-        <div className="mt-2 pt-2 border-t border-gray-800">
+        <div className="mt-2 pt-2 border-t border-line">
           <CommentInput onSubmit={addComment} isSubmitting={isCommenting} />
         </div>
       </div>
@@ -208,7 +208,7 @@ export default function Post({
           <div className="flex-1 flex flex-col pl-4 h-full">
             {/* Descripción */}
             <div className="mb-5 flex-shrink-0">
-              <h3 className="text-white font-semibold mb-3 text-lg">
+              <h3 className="text-ink font-semibold mb-3 text-lg">
                 Descripción
               </h3>
               <PostDescription
@@ -220,8 +220,8 @@ export default function Post({
             {/* Comentarios con scroll */}
             <div className="flex-1 flex flex-col overflow-hidden">
               <div className="flex items-center gap-2 mb-3 flex-shrink-0">
-                <h3 className="text-white font-semibold text-lg">Comentarios</h3>
-                <span className="text-sm text-gray-400">({commentCount})</span>
+                <h3 className="text-ink font-semibold text-lg">Comentarios</h3>
+                <span className="text-sm text-muted">({commentCount})</span>
               </div>
               <div className="flex-1 overflow-y-auto pr-2">
                 <PostComments
@@ -237,7 +237,7 @@ export default function Post({
             </div>
 
             {/* Input comentarios */}
-            <div className="mt-5 pt-4 border-t border-gray-800 flex-shrink-0">
+            <div className="mt-5 pt-4 border-t border-line flex-shrink-0">
               <CommentInput onSubmit={addComment} isSubmitting={isCommenting} />
             </div>
           </div>

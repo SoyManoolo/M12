@@ -2,7 +2,7 @@ import { pageMeta } from '~/utils/seo';
 import { developmentLogger } from '~/utils/logger';
 /**
  * Página de Administración de Usuarios
- * 
+ *
  * Esta página permite gestionar todos los usuarios de la aplicación.
  * Incluye:
  * - Lista de usuarios con opciones de edición y eliminación
@@ -116,7 +116,7 @@ function EditUserModal({ isOpen, onClose, user, onSave, isLoading }: EditUserMod
 
     try {
       await onSave(user.user_id, formData);
-      
+
       // Si es el usuario actual y se modificaron credenciales sensibles
       if (isCurrentUser() && (formData.username !== user.username || formData.email !== user.email || formData.password)) {
         // Cerrar sesión y redirigir al login
@@ -136,8 +136,8 @@ function EditUserModal({ isOpen, onClose, user, onSave, isLoading }: EditUserMod
   return (
     <>
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 backdrop-blur-sm sm:p-6" onMouseDown={() => !showWarningModal && onClose()}>
-        <div ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="edit-user-title" className="max-h-[calc(100dvh-1.5rem)] w-full max-w-xl overflow-y-auto rounded-xl border border-gray-800 bg-gray-900/95 p-4 shadow-xl sm:max-h-[calc(100dvh-3rem)] sm:p-6" onMouseDown={e => e.stopPropagation()}>
-          <h2 id="edit-user-title" className="mb-5 text-center text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent sm:text-2xl">
+        <div ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="edit-user-title" className="max-h-[calc(100dvh-1.5rem)] w-full max-w-xl overflow-y-auto rounded-xl border border-line bg-surface/95 p-4 shadow-xl sm:max-h-[calc(100dvh-3rem)] sm:p-6" onMouseDown={e => e.stopPropagation()}>
+          <h2 id="edit-user-title" className="mb-5 text-center text-xl font-bold bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent sm:text-2xl">
             Editar Usuario
           </h2>
           {notification && (
@@ -149,7 +149,7 @@ function EditUserModal({ isOpen, onClose, user, onSave, isLoading }: EditUserMod
           )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="edit-user-username" className="block text-sm font-medium mb-1 text-gray-300">Nombre de usuario</label>
+              <label htmlFor="edit-user-username" className="block text-sm font-medium mb-1 text-copy">Nombre de usuario</label>
               <input
                 ref={firstInputRef}
                 type="text"
@@ -157,64 +157,64 @@ function EditUserModal({ isOpen, onClose, user, onSave, isLoading }: EditUserMod
                 name="username"
                 value={formData.username}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-white"
+                className="w-full px-3 py-2 bg-soft border border-line rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-ink"
               />
             </div>
             <div>
-              <label htmlFor="edit-user-email" className="block text-sm font-medium mb-1 text-gray-300">Correo electrónico</label>
+              <label htmlFor="edit-user-email" className="block text-sm font-medium mb-1 text-copy">Correo electrónico</label>
               <input
                 type="email"
                 id="edit-user-email"
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-white"
+                className="w-full px-3 py-2 bg-soft border border-line rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-ink"
               />
             </div>
             <div>
-              <label htmlFor="edit-user-name" className="block text-sm font-medium mb-1 text-gray-300">Nombre</label>
+              <label htmlFor="edit-user-name" className="block text-sm font-medium mb-1 text-copy">Nombre</label>
               <input
                 type="text"
                 id="edit-user-name"
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-white"
+                className="w-full px-3 py-2 bg-soft border border-line rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-ink"
               />
             </div>
             <div>
-              <label htmlFor="edit-user-surname" className="block text-sm font-medium mb-1 text-gray-300">Apellido</label>
+              <label htmlFor="edit-user-surname" className="block text-sm font-medium mb-1 text-copy">Apellido</label>
               <input
                 type="text"
                 id="edit-user-surname"
                 name="surname"
                 value={formData.surname}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-white"
+                className="w-full px-3 py-2 bg-soft border border-line rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-ink"
               />
             </div>
             <div>
-              <label htmlFor="edit-user-bio" className="block text-sm font-medium mb-1 text-gray-300">Biografía</label>
+              <label htmlFor="edit-user-bio" className="block text-sm font-medium mb-1 text-copy">Biografía</label>
               <textarea
                 id="edit-user-bio"
                 name="bio"
                 value={formData.bio}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-white resize-none min-h-[100px]"
+                className="w-full px-3 py-2 bg-soft border border-line rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-ink resize-none min-h-[100px]"
               />
             </div>
             <div>
-              <label htmlFor="edit-user-password" className="block text-sm font-medium mb-1 text-gray-300">Nueva Contraseña</label>
+              <label htmlFor="edit-user-password" className="block text-sm font-medium mb-1 text-copy">Nueva Contraseña</label>
               <input
                 type="password"
                 id="edit-user-password"
                 name="password"
                 value={formData.password}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-white"
+                className="w-full px-3 py-2 bg-soft border border-line rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-ink"
                 placeholder="••••••••"
               />
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-muted mt-1">
                 Debe tener al menos 8 caracteres, incluyendo una mayúscula, una minúscula, un número y un caracter especial (@$!%*?&.#)
               </p>
             </div>
@@ -222,14 +222,14 @@ function EditUserModal({ isOpen, onClose, user, onSave, isLoading }: EditUserMod
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
+                className="px-4 py-2 bg-hover text-ink rounded-md hover:bg-hover transition-colors"
                 disabled={isLoading}
               >
                 Cancelar
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-hover transition-colors"
                 disabled={isLoading}
               >
                 {isLoading ? 'Guardando...' : 'Guardar Cambios'}
@@ -269,7 +269,7 @@ export default function AdminUsuarios() {
     message: string;
     type: 'success' | 'error';
   } | null>(null);
-  
+
   // userToEdit sigue siendo UserProfile | null porque el modal lo espera
   const [showEditModal, setShowEditModal] = useState(false);
   const [userToEdit, setUserToEdit] = useState<UserProfile | null>(null);
@@ -309,7 +309,7 @@ export default function AdminUsuarios() {
     // Aplicar filtro de búsqueda
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
-      filtered = filtered.filter(user => 
+      filtered = filtered.filter(user =>
         (user.username?.toLowerCase() || '').includes(query) ||
         (user.name?.toLowerCase() || '').includes(query) ||
         (user.email?.toLowerCase() || '').includes(query)
@@ -461,27 +461,27 @@ export default function AdminUsuarios() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col lg:flex-row">
+    <div className="min-h-screen bg-page text-ink flex flex-col lg:flex-row">
       <Navbar />
-      
+
       <div className="w-full lg:w-5/6 lg:ml-[16.666667%] pt-16 pb-16 p-3 sm:p-6">
         <div className="max-w-7xl mx-auto">
           {/* Encabezado */}
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-8 gap-4 sm:gap-0">
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">
                 Gestión de Usuarios
               </h1>
-              <p className="text-gray-400 mt-2">Administra y modera los usuarios de la plataforma</p>
+              <p className="text-muted mt-2">Administra y modera los usuarios de la plataforma</p>
             </div>
-            
+
             {/* Barra de búsqueda */}
             <div className="relative w-full sm:w-96">
-              <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted" />
               <input
                 type="text"
                 placeholder="Buscar por nombre, usuario o email..."
-                className="w-full bg-gray-900 rounded-xl py-3 pl-12 pr-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+                className="w-full bg-surface rounded-xl py-3 pl-12 pr-4 text-ink placeholder-muted focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -489,45 +489,45 @@ export default function AdminUsuarios() {
           </div>
 
           {/* Filtros */}
-          <div className="bg-gray-900 rounded-lg p-4 mb-6 border border-gray-800">
+          <div className="bg-surface rounded-lg p-4 mb-6 border border-line">
             <div className="flex flex-wrap gap-2 items-center">
-              <FaFilter className="text-gray-400" />
-              <button 
+              <FaFilter className="text-muted" />
+              <button
                 onClick={() => setActiveFilter('all')}
                 className={`px-4 py-2 rounded-lg transition-colors cursor-pointer ${
-                  activeFilter === 'all' 
-                    ? 'bg-blue-600 text-white' 
-                    : 'bg-gray-800 text-white hover:bg-gray-700'
+                  activeFilter === 'all'
+                    ? 'bg-primary text-white'
+                    : 'bg-soft text-ink hover:bg-hover'
                 }`}
               >
                 Todas
               </button>
-              <button 
+              <button
                 onClick={() => setActiveFilter('admin')}
                 className={`px-4 py-2 rounded-lg transition-colors cursor-pointer ${
-                  activeFilter === 'admin' 
-                    ? 'bg-blue-600 text-white' 
-                    : 'bg-gray-800 text-white hover:bg-gray-700'
+                  activeFilter === 'admin'
+                    ? 'bg-primary text-white'
+                    : 'bg-soft text-ink hover:bg-hover'
                 }`}
               >
                 Moderador
               </button>
-              <button 
+              <button
                 onClick={() => setActiveFilter('recent')}
                 className={`px-4 py-2 rounded-lg transition-colors cursor-pointer ${
-                  activeFilter === 'recent' 
-                    ? 'bg-blue-600 text-white' 
-                    : 'bg-gray-800 text-white hover:bg-gray-700'
+                  activeFilter === 'recent'
+                    ? 'bg-primary text-white'
+                    : 'bg-soft text-ink hover:bg-hover'
                 }`}
               >
                 Nuevos
               </button>
-              <button 
+              <button
                 onClick={() => setActiveFilter('oldest')}
                 className={`px-4 py-2 rounded-lg transition-colors cursor-pointer ${
-                  activeFilter === 'oldest' 
-                    ? 'bg-blue-600 text-white' 
-                    : 'bg-gray-800 text-white hover:bg-gray-700'
+                  activeFilter === 'oldest'
+                    ? 'bg-primary text-white'
+                    : 'bg-soft text-ink hover:bg-hover'
                 }`}
               >
                 Antiguos
@@ -546,15 +546,15 @@ export default function AdminUsuarios() {
                 <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
               </div>
             ) : filteredUsers.length === 0 ? (
-              <div className="text-center text-gray-500">
+              <div className="text-center text-muted">
                 {searchQuery ? 'No se encontraron usuarios' : 'No hay usuarios para mostrar'}
               </div>
             ) : (
               filteredUsers.map((user) => (
-                <div key={user.user_id} className="bg-gray-900 rounded-lg p-4 border border-gray-800 hover:border-blue-500 transition-colors">
+                <div key={user.user_id} className="bg-surface rounded-lg p-4 border border-line hover:border-blue-500 transition-colors">
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0 flex items-center space-x-3">
-                      <Link 
+                      <Link
                         to={`/perfil?username=${user.username}`}
                         className="flex items-center space-x-3 cursor-pointer hover:opacity-80 transition-opacity"
                       >
@@ -562,17 +562,17 @@ export default function AdminUsuarios() {
                           <SecureImage
                             src={user.profile_picture}
                             alt="Usuario"
-                            className="w-10 h-10 rounded-full object-cover border border-gray-800"
+                            className="w-10 h-10 rounded-full object-cover border border-line"
                           />
                         ) : (
-                          <div className="w-10 h-10 rounded-full border border-gray-800 bg-gray-800 flex items-center justify-center">
-                            <span className="text-gray-400 text-sm">{user.username.charAt(0).toUpperCase()}</span>
+                          <div className="w-10 h-10 rounded-full border border-line bg-soft flex items-center justify-center">
+                            <span className="text-muted text-sm">{user.username.charAt(0).toUpperCase()}</span>
                           </div>
                         )}
                         <div className="min-w-0">
                           <div className="flex flex-wrap items-center gap-2">
                             <h3 className="font-semibold text-sm">{user.username}</h3>
-                            <span className="px-1.5 py-0.5 bg-blue-500/10 text-blue-500 rounded-full text-xs">
+                            <span className="px-1.5 py-0.5 bg-primary-hover/10 text-accent rounded-full text-xs">
                               {user.is_moderator ? 'Moderador' : 'Usuario'}
                             </span>
                             {user.deleted_at === null && (
@@ -581,13 +581,13 @@ export default function AdminUsuarios() {
                               </span>
                             )}
                           </div>
-                          <p className="truncate text-xs text-gray-400">{user.name} {user.surname}</p>
-                          <p className="truncate text-xs text-gray-400">{user.email}</p>
+                          <p className="truncate text-xs text-muted">{user.name} {user.surname}</p>
+                          <p className="truncate text-xs text-muted">{user.email}</p>
                         </div>
                       </Link>
                     </div>
                     <div className="flex items-center justify-between gap-4 sm:justify-end">
-                      <div className="text-xs text-gray-400">
+                      <div className="text-xs text-muted">
                         <p>Registro: {user.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}</p>
                         {user.deleted_at !== null && user.deleted_at !== undefined && (
                           <p>Eliminado: {new Date(user.deleted_at).toLocaleDateString()}</p>
@@ -596,7 +596,7 @@ export default function AdminUsuarios() {
                       <div className="flex space-x-2">
                         <button
                           onClick={() => handleEdit(user)}
-                          className="p-2.5 text-blue-500 hover:bg-blue-500/10 rounded-lg transition-colors cursor-pointer"
+                          className="p-2.5 text-accent hover:bg-primary-hover/10 rounded-lg transition-colors cursor-pointer"
                           title="Editar usuario"
                         >
                           <FaEdit className="text-base" />

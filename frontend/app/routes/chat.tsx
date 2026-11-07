@@ -17,7 +17,7 @@ import ChatUserInfo from '~/components/Chats/ChatUserInfo';
 import { FaPaperPlane, FaSmile, FaVideo } from 'react-icons/fa';
 import type { User } from '~/types/user.types';
 // Importación de la función Singleton segura para el cliente
-import { getChatService } from "~/services/chat.service"; 
+import { getChatService } from "~/services/chat.service";
 import { useAuth } from '~/hooks/useAuth';
 import { userService } from '~/services/user.service';
 // import { jwtDecode } from 'jwt-decode'; // No se usa, se puede dejar comentado o eliminar.
@@ -253,7 +253,7 @@ export default function Chat() {
         // --- MODIFICACIÓN: Usar la instancia para getMessages ---
         const { messages: chatMessages } = await chatServiceInstance.getMessages(userId, token);
         // --------------------------------------------------------
-        
+
         if (isComponentMounted) {
           // Asegurarse de que no haya duplicados al cargar mensajes iniciales
           const uniqueMessages = chatMessages.reduce((acc: Message[], msg) => {
@@ -358,7 +358,7 @@ export default function Chat() {
     e.preventDefault();
 
     // Obtener la instancia de chatService aquí también para las funciones
-    const chatServiceInstance = getChatService(); 
+    const chatServiceInstance = getChatService();
 
     if (!newMessage.trim() || !token || !userId || !chatUser || !currentUser || connectionStatus !== 'connected') {
       developmentLogger.log('No se puede enviar mensaje:', {
@@ -434,7 +434,7 @@ export default function Chat() {
 
   const handleTyping = () => {
     // Obtener la instancia de chatService aquí también para las funciones
-    const chatServiceInstance = getChatService(); 
+    const chatServiceInstance = getChatService();
 
     if (!chatUser || !token || connectionStatus !== 'connected') {
       developmentLogger.log('No se puede enviar estado de escritura:', {
@@ -480,10 +480,10 @@ export default function Chat() {
   // Mostrar estado de carga mientras se obtiene el usuario
   if (!currentUser) {
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+      <div className="min-h-screen bg-page text-ink flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-400">Cargando información del usuario...</p>
+          <p className="text-muted">Cargando información del usuario...</p>
         </div>
       </div>
     );
@@ -491,7 +491,7 @@ export default function Chat() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+      <div className="min-h-screen bg-page text-ink flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     );
@@ -499,13 +499,13 @@ export default function Chat() {
 
   if (!chatUser) {
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+      <div className="min-h-screen bg-page text-ink flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">No tienes chats activos</h1>
-          <p className="text-gray-400 mb-4">Busca usuarios para comenzar una conversación</p>
+          <p className="text-muted mb-4">Busca usuarios para comenzar una conversación</p>
           <button
             onClick={() => navigate('/buscar')}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+            className="px-4 py-2 bg-primary hover:bg-primary-hover text-white rounded-lg transition-colors"
           >
             Buscar usuarios
           </button>
@@ -515,16 +515,16 @@ export default function Chat() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col lg:flex-row">
+    <div className="min-h-screen bg-page text-ink flex flex-col lg:flex-row">
       {/* Navbar */}
       <Navbar />
 
       {/* Contenido principal */}
-      <div className="w-full lg:w-2/3 lg:ml-[16.666667%] lg:border-r border-gray-800">
+      <div className="w-full lg:w-2/3 lg:ml-[16.666667%] lg:border-r border-line">
         {/* Área de chat */}
         <div className="flex flex-col h-[calc(100vh-4rem)] lg:h-screen pt-16 p-3 sm:p-6">
           {/* Encabezado del chat con estado de conexión */}
-          <div className="p-3 sm:p-4 border-b border-gray-800">
+          <div className="p-3 sm:p-4 border-b border-line">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <h1 className="truncate text-xl font-bold">{chatUser?.name} {chatUser?.surname}</h1>
               <div className="flex flex-wrap items-center gap-2 sm:gap-3">
@@ -534,7 +534,7 @@ export default function Chat() {
                     onClick={handleCallFriend}
                     disabled={isSendingCallInvite}
                     aria-label={`Iniciar videollamada con ${chatUser.username}`}
-                    className="inline-flex items-center gap-2 rounded-lg border border-blue-500/40 bg-blue-600/15 px-3 py-2 text-sm font-semibold text-blue-200 transition-colors hover:bg-blue-600/30 focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex items-center gap-2 rounded-lg border border-blue-500/40 bg-primary/15 px-3 py-2 text-sm font-semibold text-accent transition-colors hover:bg-primary/30 focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     <FaVideo aria-hidden="true" />
                     {isSendingCallInvite ? 'Enviando…' : 'Videollamada'}
@@ -560,9 +560,9 @@ export default function Chat() {
                 )}
               </div>
             </div>
-            {callInviteMessage && <p role="status" aria-live="polite" className="mt-2 text-sm text-gray-300">{callInviteMessage}</p>}
+            {callInviteMessage && <p role="status" aria-live="polite" className="mt-2 text-sm text-copy">{callInviteMessage}</p>}
             {isTyping && (
-              <p className="text-sm text-gray-400 mt-1">Escribiendo...</p>
+              <p className="text-sm text-muted mt-1">Escribiendo...</p>
             )}
           </div>
 
@@ -588,13 +588,13 @@ export default function Chat() {
                   >
                     <div
                       className={`max-w-[85%] sm:max-w-[70%] p-3 rounded-2xl ${message.is_own
-                        ? 'bg-blue-600 text-white rounded-br-none'
-                        : 'bg-gray-800 text-white rounded-bl-none'
+                        ? 'bg-primary text-white rounded-br-none'
+                        : 'bg-soft text-ink rounded-bl-none'
                         } shadow-md hover:shadow-lg transition-shadow duration-200`}
                     >
                       <p className="break-words text-[15px] leading-relaxed">{sanitizeUserText(message.content)}</p>
                       <div className="flex items-center justify-end space-x-2 mt-1.5">
-                        <p className="text-xs text-gray-400">
+                        <p className={`text-xs ${message.is_own ? 'text-white/80' : 'text-muted'}`}>
                           {new Date(message.created_at).toLocaleTimeString([], {
                             hour: '2-digit',
                             minute: '2-digit'
@@ -603,11 +603,11 @@ export default function Chat() {
                         {message.is_own && (
                           <span className="text-xs flex items-center space-x-1">
                             {message.read_at ? (
-                              <span className="text-blue-300" title="Leído">✓✓</span>
+                              <span className="text-white" title="Leído">✓✓</span>
                             ) : message.is_delivered ? (
-                              <span className="text-gray-300" title="Entregado">✓</span>
+                              <span className="text-white/80" title="Entregado">✓</span>
                             ) : (
-                              <span className="text-gray-500 animate-pulse" title="Enviando">•</span>
+                              <span className="text-white/80 animate-pulse" title="Enviando">•</span>
                             )}
                           </span>
                         )}
@@ -635,7 +635,7 @@ export default function Chat() {
           </style>
 
           {/* Input de mensaje con estado de conexión */}
-          <form onSubmit={handleSendMessage} className="p-3 sm:p-4 border-t border-gray-800 bg-black/20">
+          <form onSubmit={handleSendMessage} className="p-3 sm:p-4 border-t border-line bg-page">
             <div className="flex items-center relative">
               <div className="relative flex-1">
                 <input
@@ -648,14 +648,14 @@ export default function Chat() {
                   // onKeyPress={handleTyping} // Se puede quitar ya que onChange es suficiente para el debounce
                   placeholder={connectionStatus === 'connected' ? "Escribe un mensaje..." : "Conectando..."}
                   disabled={connectionStatus !== 'connected'}
-                  className={`w-full bg-gray-900 rounded-lg py-2 px-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 ${connectionStatus !== 'connected' ? 'opacity-50 cursor-not-allowed' : ''
+                  className={`w-full bg-surface rounded-lg py-2 px-4 text-ink placeholder-muted focus:outline-none focus:ring-2 focus:ring-blue-500 ${connectionStatus !== 'connected' ? 'opacity-50 cursor-not-allowed' : ''
                     }`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                   disabled={connectionStatus !== 'connected'}
-                  className={`absolute right-2 top-1/2 -translate-y-1/2 p-2 text-gray-400 hover:text-white transition-colors ${connectionStatus !== 'connected' ? 'opacity-50 cursor-not-allowed' : ''
+                  className={`absolute right-2 top-1/2 -translate-y-1/2 p-2 text-muted hover:text-ink transition-colors ${connectionStatus !== 'connected' ? 'opacity-50 cursor-not-allowed' : ''
                     }`}
                 >
                   <FaSmile className="text-xl" />
@@ -665,7 +665,7 @@ export default function Chat() {
                     ref={emojiPickerRef}
                     className="absolute bottom-12 right-0 z-50"
                   >
-                    <ClientEmojiPicker 
+                    <ClientEmojiPicker
                       onEmojiClick={onEmojiClick}
                       width={350}
                       height={400}
@@ -676,8 +676,8 @@ export default function Chat() {
               <button
                 type="submit"
                 disabled={connectionStatus !== 'connected' || !newMessage.trim()}
-                className={`ml-2 sm:ml-4 p-2.5 bg-blue-600 rounded-lg transition-colors ${connectionStatus === 'connected' && newMessage.trim()
-                    ? 'hover:bg-blue-700'
+                className={`ml-2 sm:ml-4 p-2.5 bg-primary rounded-lg transition-colors ${connectionStatus === 'connected' && newMessage.trim()
+                    ? 'hover:bg-primary-hover'
                     : 'opacity-50 cursor-not-allowed'
                   }`}
               >

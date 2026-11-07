@@ -136,22 +136,22 @@ export default function CallInvitationListener() {
   return (
     <>
       {notice && (
-        <div role="status" aria-live="polite" className="fixed bottom-5 right-5 z-[70] max-w-sm rounded-lg border border-gray-700 bg-gray-900 px-4 py-3 text-white shadow-xl">
+        <div role="status" aria-live="polite" className="fixed bottom-5 right-5 z-[70] max-w-sm rounded-lg border border-line bg-surface px-4 py-3 text-ink shadow-xl">
           <div className="flex items-center gap-3">
             <span>{notice}</span>
-            <button type="button" aria-label="Cerrar aviso" onClick={() => setNotice('')} className="rounded px-2 py-1 text-gray-300 hover:bg-gray-700">×</button>
+            <button type="button" aria-label="Cerrar aviso" onClick={() => setNotice('')} className="rounded px-2 py-1 text-copy hover:bg-hover">×</button>
           </div>
         </div>
       )}
       {invitation && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-          <section ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="incoming-call-title" className="w-full max-w-md rounded-xl border border-gray-700 bg-gray-900 p-6 text-center shadow-2xl">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-blue-500/15 text-2xl text-blue-300" aria-hidden="true">☎</div>
-            <h2 id="incoming-call-title" className="text-xl font-bold text-white">Videollamada entrante</h2>
-            <p className="mt-2 text-gray-300"><span className="font-semibold text-white">@{invitation.caller.username}</span> quiere llamarte.</p>
-            <p className="mt-2 text-sm text-gray-400">La invitación caduca en 30 segundos.</p>
+          <section ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="incoming-call-title" className="w-full max-w-md rounded-xl border border-line bg-surface p-6 text-center shadow-2xl">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primary-hover/15 text-2xl text-accent" aria-hidden="true">☎</div>
+            <h2 id="incoming-call-title" className="text-xl font-bold text-ink">Videollamada entrante</h2>
+            <p className="mt-2 text-copy"><span className="font-semibold text-ink">@{invitation.caller.username}</span> quiere llamarte.</p>
+            <p className="mt-2 text-sm text-muted">La invitación caduca en 30 segundos.</p>
             <div className="mt-6 flex justify-center gap-3">
-              <button type="button" onClick={() => respond(false)} disabled={isResponding} className="rounded-lg bg-gray-700 px-4 py-2 font-semibold text-white hover:bg-gray-600 disabled:opacity-60">Rechazar</button>
+              <button type="button" onClick={() => respond(false)} disabled={isResponding} className="rounded-lg bg-hover px-4 py-2 font-semibold text-ink hover:bg-hover disabled:opacity-60">Rechazar</button>
               <button ref={acceptRef} type="button" onClick={() => respond(true)} disabled={isResponding} className="rounded-lg bg-green-600 px-4 py-2 font-semibold text-white hover:bg-green-500 disabled:opacity-60">{isResponding ? 'Enviando…' : 'Aceptar llamada'}</button>
             </div>
           </section>

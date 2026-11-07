@@ -2,7 +2,7 @@ import { pageMeta } from '~/utils/seo';
 import { developmentLogger } from '~/utils/logger';
 /**
  * Página de Notificaciones
- * 
+ *
  * Muestra todas las notificaciones del usuario en una lista mezclada.
  * Incluye:
  * - Notificaciones de solicitudes de amistad
@@ -10,7 +10,7 @@ import { developmentLogger } from '~/utils/logger';
  * - Notificaciones de comentarios
  * - Notificaciones de publicaciones
  * - Notificaciones de videollamadas
- * 
+ *
  * @module Notificaciones
  */
 
@@ -186,7 +186,7 @@ export default function Notificaciones(): React.ReactElement {
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'friend_request':
-        return <FaUserFriends className="text-blue-500" />;
+        return <FaUserFriends className="text-accent" />;
       case 'message':
         return <FaComment className="text-green-500" />;
       case 'comment':
@@ -202,19 +202,19 @@ export default function Notificaciones(): React.ReactElement {
 
   const getNotificationStyle = (type: string, isRead: boolean) => {
     const baseStyle = 'p-4 rounded-lg border transition-colors';
-    const readStyle = isRead ? 'border-gray-800 bg-gray-900/50' : 'border-blue-500 bg-blue-500/10';
-    
+    const readStyle = isRead ? 'border-line bg-surface/50' : 'border-blue-500 bg-primary-hover/10';
+
     switch (type) {
       case 'friend_request':
         return `${baseStyle} ${readStyle}`;
       case 'message':
-        return `${baseStyle} ${isRead ? 'border-gray-800 bg-gray-900/50' : 'border-green-500 bg-green-500/10'}`;
+        return `${baseStyle} ${isRead ? 'border-line bg-surface/50' : 'border-green-500 bg-green-500/10'}`;
       case 'comment':
-        return `${baseStyle} ${isRead ? 'border-gray-800 bg-gray-900/50' : 'border-yellow-500 bg-yellow-500/10'}`;
+        return `${baseStyle} ${isRead ? 'border-line bg-surface/50' : 'border-yellow-500 bg-yellow-500/10'}`;
       case 'post':
-        return `${baseStyle} ${isRead ? 'border-gray-800 bg-gray-900/50' : 'border-red-500 bg-red-500/10'}`;
+        return `${baseStyle} ${isRead ? 'border-line bg-surface/50' : 'border-red-500 bg-red-500/10'}`;
       case 'video_call':
-        return `${baseStyle} ${isRead ? 'border-gray-800 bg-gray-900/50' : 'border-purple-500 bg-purple-500/10'}`;
+        return `${baseStyle} ${isRead ? 'border-line bg-surface/50' : 'border-purple-500 bg-purple-500/10'}`;
       default:
         return `${baseStyle} ${readStyle}`;
     }
@@ -254,22 +254,22 @@ export default function Notificaciones(): React.ReactElement {
     }, {} as Record<string, InboxNotification[]>);
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col lg:flex-row">
+    <div className="min-h-screen bg-page text-ink flex flex-col lg:flex-row">
       <Navbar />
 
       {/* Contenido central */}
-      <div className="w-full lg:w-2/3 lg:ml-[16.666667%] lg:border-r border-gray-800">
+      <div className="w-full lg:w-2/3 lg:ml-[16.666667%] lg:border-r border-line">
         <div className="pt-16 pb-16 p-3 sm:p-6">
           {/* Encabezado */}
           <div className="mb-6 sm:mb-8">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4 sm:mb-6">
               <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Notificaciones</h1>
-                <p className="text-gray-400 mt-1">Mantente al día con tus actividades</p>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">Notificaciones</h1>
+                <p className="text-muted mt-1">Mantente al día con tus actividades</p>
               </div>
               <button
                 onClick={handleMarkAllAsRead}
-                className="px-4 py-2 bg-blue-600/20 text-blue-400 rounded-lg hover:bg-blue-600/30 transition-colors flex items-center space-x-2"
+                className="px-4 py-2 bg-primary/20 text-accent rounded-lg hover:bg-primary/30 transition-colors flex items-center space-x-2"
               >
                 <FaCheckDouble className="text-sm" />
                 <span>Marcar todas como leídas</span>
@@ -279,11 +279,11 @@ export default function Notificaciones(): React.ReactElement {
             {/* Barra de búsqueda y filtros */}
             <div className="space-y-3 sm:space-y-4">
               <div className="relative">
-                <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted" />
                 <input
                   type="text"
                   placeholder="Buscar en notificaciones..."
-                  className="w-full bg-gray-900 rounded-xl py-3 pl-12 pr-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+                  className="w-full bg-surface rounded-xl py-3 pl-12 pr-4 text-ink placeholder-muted focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -292,9 +292,9 @@ export default function Notificaciones(): React.ReactElement {
                 <button
                   onClick={() => setSelectedFilter('all')}
                   className={`px-3 py-1.5 rounded-lg text-sm transition-colors whitespace-nowrap ${
-                    selectedFilter === 'all' 
-                      ? 'bg-blue-600 text-white' 
-                      : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                    selectedFilter === 'all'
+                      ? 'bg-primary text-white'
+                      : 'bg-soft text-copy hover:bg-hover'
                   }`}
                 >
                   Todas
@@ -302,9 +302,9 @@ export default function Notificaciones(): React.ReactElement {
                 <button
                   onClick={() => setSelectedFilter('friend_request')}
                   className={`px-3 py-1.5 rounded-lg text-sm transition-colors whitespace-nowrap ${
-                    selectedFilter === 'friend_request' 
-                      ? 'bg-blue-600 text-white' 
-                      : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                    selectedFilter === 'friend_request'
+                      ? 'bg-primary text-white'
+                      : 'bg-soft text-copy hover:bg-hover'
                   }`}
                 >
                   Solicitudes
@@ -312,9 +312,9 @@ export default function Notificaciones(): React.ReactElement {
                 <button
                   onClick={() => setSelectedFilter('message')}
                   className={`px-3 py-1.5 rounded-lg text-sm transition-colors whitespace-nowrap ${
-                    selectedFilter === 'message' 
-                      ? 'bg-blue-600 text-white' 
-                      : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                    selectedFilter === 'message'
+                      ? 'bg-primary text-white'
+                      : 'bg-soft text-copy hover:bg-hover'
                   }`}
                 >
                   Mensajes
@@ -322,9 +322,9 @@ export default function Notificaciones(): React.ReactElement {
                 <button
                   onClick={() => setSelectedFilter('post')}
                   className={`px-3 py-1.5 rounded-lg text-sm transition-colors whitespace-nowrap ${
-                    selectedFilter === 'post' 
-                      ? 'bg-blue-600 text-white' 
-                      : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                    selectedFilter === 'post'
+                      ? 'bg-primary text-white'
+                      : 'bg-soft text-copy hover:bg-hover'
                   }`}
                 >
                   Publicaciones
@@ -340,19 +340,19 @@ export default function Notificaciones(): React.ReactElement {
           )}
 
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-16 bg-gray-900/50 rounded-xl border border-gray-800" role="status">
-              <FaBell className="mb-4 text-3xl text-blue-500 animate-pulse" aria-hidden="true" />
-              <p className="text-gray-300">Cargando notificaciones…</p>
+            <div className="flex flex-col items-center justify-center py-16 bg-surface/50 rounded-xl border border-line" role="status">
+              <FaBell className="mb-4 text-3xl text-accent animate-pulse" aria-hidden="true" />
+              <p className="text-copy">Cargando notificaciones…</p>
             </div>
           ) : error ? (
             <div className="flex flex-col items-center justify-center py-16 bg-red-950/20 rounded-xl border border-red-900/60" role="alert">
               <FaBell className="mb-4 text-3xl text-red-400" aria-hidden="true" />
-              <h2 className="text-lg font-semibold text-white">No pudimos cargar las notificaciones</h2>
-              <p className="mt-2 text-center text-gray-300">{error}</p>
+              <h2 className="text-lg font-semibold text-ink">No pudimos cargar las notificaciones</h2>
+              <p className="mt-2 text-center text-copy">{error}</p>
               <button
                 type="button"
                 onClick={() => setReloadKey((value) => value + 1)}
-                className="mt-5 rounded-lg bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-500"
+                className="mt-5 rounded-lg bg-primary px-4 py-2 text-white transition-colors hover:bg-primary-hover"
               >
                 Reintentar
               </button>
@@ -362,7 +362,7 @@ export default function Notificaciones(): React.ReactElement {
           <div className="space-y-4 sm:space-y-6">
             {Object.entries(filteredNotifications).map(([group, notifications]) => (
               <div key={group} className="space-y-2">
-                <h2 className="text-xs sm:text-sm font-semibold text-gray-400 mb-2 sm:mb-3">{group}</h2>
+                <h2 className="text-xs sm:text-sm font-semibold text-muted mb-2 sm:mb-3">{group}</h2>
                 {notifications.map((notification) => (
                   <div
                     key={notification.notification_id}
@@ -382,7 +382,7 @@ export default function Notificaciones(): React.ReactElement {
                             {notification.type === 'comment' && 'Nuevo comentario en tu publicación'}
                             {notification.type === 'post' && 'Nueva publicación'}
                           </p>
-                          <p className="text-xs text-gray-400">
+                          <p className="text-xs text-muted">
                             {formatDistanceToNow(new Date(notification.created_at), {
                               addSuffix: true,
                               locale: es
@@ -413,7 +413,7 @@ export default function Notificaciones(): React.ReactElement {
                         {!notification.is_read && (
                           <button
                             onClick={() => handleMarkAsRead(notification.notification_id)}
-                            className="text-blue-400 hover:text-blue-300 text-sm transition-colors"
+                            className="text-accent hover:text-accent text-sm transition-colors"
                             title="Marcar como leída"
                           >
                             Marcar como leída
@@ -421,7 +421,7 @@ export default function Notificaciones(): React.ReactElement {
                         )}
                         <button
                           onClick={() => handleDeleteNotification(notification.notification_id)}
-                          className="p-2 text-gray-400 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all duration-200"
+                          className="p-2 text-muted hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all duration-200"
                           title="Eliminar notificación"
                         >
                           <FaTrash className="w-4 h-4" />
@@ -429,7 +429,7 @@ export default function Notificaciones(): React.ReactElement {
                       </div>
                     </div>
                     {!notification.is_read && (
-                      <div className="absolute top-0 right-0 w-2 h-2 bg-blue-500 rounded-full transform translate-x-1 -translate-y-1" />
+                      <div className="absolute top-0 right-0 w-2 h-2 bg-primary-hover rounded-full transform translate-x-1 -translate-y-1" />
                     )}
                   </div>
                 ))}
@@ -438,15 +438,15 @@ export default function Notificaciones(): React.ReactElement {
 
             {/* Mensaje cuando no hay notificaciones */}
             {Object.keys(filteredNotifications).length === 0 && (
-              <div className="flex flex-col items-center justify-center py-16 bg-gray-900/50 rounded-xl border border-gray-800">
-                <div className="w-24 h-24 bg-gradient-to-br from-blue-600/20 to-purple-600/20 rounded-full flex items-center justify-center mb-6">
-                  <FaBell className="text-4xl text-blue-500" />
+              <div className="flex flex-col items-center justify-center py-16 bg-surface/50 rounded-xl border border-line">
+                <div className="w-24 h-24 bg-gradient-to-br from-primary/20 to-primary/20 rounded-full flex items-center justify-center mb-6">
+                  <FaBell className="text-4xl text-accent" />
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-2">
+                <h3 className="text-xl font-semibold text-ink mb-2">
                   {searchQuery ? 'No se encontraron notificaciones' : 'No tienes notificaciones'}
                 </h3>
-                <p className="text-gray-400 text-center max-w-md">
-                  {searchQuery 
+                <p className="text-muted text-center max-w-md">
+                  {searchQuery
                     ? 'Intenta con otros términos de búsqueda'
                     : 'Las notificaciones aparecerán aquí cuando tengas nuevas interacciones'}
                 </p>
@@ -484,4 +484,4 @@ export default function Notificaciones(): React.ReactElement {
       </style>
     </div>
   );
-} 
+}
