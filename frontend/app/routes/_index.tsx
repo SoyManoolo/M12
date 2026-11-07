@@ -1,6 +1,7 @@
 import { Link } from 'react-router';
 import { FaArrowRight, FaComments, FaHeart, FaSmile, FaUserFriends, FaVideo } from 'react-icons/fa';
 import ThemeToggle from '~/components/Shared/ThemeToggle';
+import Logo from '~/components/Shared/Logo';
 import { pageMeta } from '~/utils/seo';
 
 export const meta = () => pageMeta(
@@ -20,8 +21,8 @@ export default function LandingPage() {
     <main className="min-h-screen bg-page text-ink">
       <header>
         <div className="landing-shell flex min-h-24 flex-wrap items-center justify-between gap-4 py-5">
-          <Link to="/" className="flex items-center gap-2 text-2xl font-bold tracking-tight" aria-label="FriendsGo, inicio">
-            <img src="/images/friendsgo-mark.svg" alt="" className="h-10 w-10" />Friends<span className="brand-word -ml-2">Go</span>
+          <Link to="/" className="flex items-center" aria-label="FriendsGo, inicio">
+            <Logo />
           </Link>
           <nav className="flex flex-wrap items-center gap-3 sm:gap-6" aria-label="Acceso">
             <Link to="/login" className="text-sm font-semibold hover:text-accent">Iniciar sesión</Link>
