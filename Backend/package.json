@@ -11,6 +11,9 @@
         "url": "git+https://github.com/SoyManoolo/M12.git"
     },
     "license": "ISC",
+    "engines": {
+        "node": "20.x"
+    },
     "author": "Erik Manuel Saldaña Diaz",
     "type": "commonjs",
     "jest": {

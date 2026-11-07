@@ -24,6 +24,16 @@ const envSchema = z.object({
 
     // Frontend
     FRONTEND_URL: z.string().url().optional(),
+    // Orígenes extra permitidos por CORS, separados por comas.
+    CORS_ORIGINS: z.string().optional(),
+
+    // Proxy inverso
+    // Número de proxies de confianza delante de la app (Railway: 1; Cloudflare Tunnel + Traefik: 2).
+    TRUST_PROXY: z.string().default('1').transform(Number),
+    // Redirigir a HTTPS según X-Forwarded-Proto. Desactívalo si el borde (Cloudflare) ya fuerza HTTPS.
+    FORCE_HTTPS: z.string().default('true').transform(val => val === 'true'),
+    // SSL en conexiones por DATABASE_URL. Desactívalo para PostgreSQL en la red interna de Coolify.
+    DB_SSL: z.string().default('true').transform(val => val === 'true'),
 
     // Opcionales
     DB_UPDATE: z.string()

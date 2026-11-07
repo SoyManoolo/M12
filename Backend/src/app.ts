@@ -30,9 +30,9 @@ import { AppErrorHandler } from './middlewares/errors/AppErrorHandler';
 
 export const app = express();
 
-// En Railway hay un único proxy inverso delante de la aplicación. En local no
+// En producción se confía en TRUST_PROXY saltos de proxy (Railway: 1). En local no
 // debemos confiar en cabeceras X-Forwarded-* enviadas por cualquier cliente.
-app.set('trust proxy', env.NODE_ENV === 'production' ? 1 : false);
+app.set('trust proxy', env.NODE_ENV === 'production' ? env.TRUST_PROXY : false);
 
 // Logging
 if (env.NODE_ENV === 'development') {
@@ -55,7 +55,7 @@ app.use(cors(corsOptions));
 app.use(helmet(helmetOptions));
 
 // HTTPS Enforcement en producción
-if (env.NODE_ENV === 'production') {
+if (env.NODE_ENV === 'production' && env.FORCE_HTTPS) {
     app.use((req: Request, res: Response, next: NextFunction) => {
         // Railway y otros PaaS usan el header 'x-forwarded-proto'
         if (req.headers['x-forwarded-proto'] !== 'https') {

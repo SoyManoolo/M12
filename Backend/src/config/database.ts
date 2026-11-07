@@ -40,13 +40,14 @@ let sequelize: Sequelize;
 if (DatabaseURL) {
     // ENTORNO DE PRODUCCIÓN (RAILWAY)
 
-    // Detectar si es una conexión interna de Railway (no requiere SSL)
+    // Las redes internas (Railway, Coolify con DB_SSL=false) no requieren SSL
     const isRailwayInternal = DatabaseURL.includes('.railway.internal');
+    const useSsl = env.DB_SSL && !isRailwayInternal;
 
     // Opciones específicas para Producción
     const prodOptions: Options = {
         ...baseOptions,
-        dialectOptions: isRailwayInternal ? {} : {
+        dialectOptions: !useSsl ? {} : {
             ssl: {
                 require: true,
                 rejectUnauthorized: false
@@ -63,7 +64,7 @@ if (DatabaseURL) {
     // Overload 3: new Sequelize(uri: string, options?: Options)
     sequelize = new Sequelize(DatabaseURL, prodOptions);
 
-    dbLogger.info(`Database connection mode: ${isRailwayInternal ? 'Railway Internal Network' : 'External/SSL'}`);
+    dbLogger.info(`Database connection mode: ${useSsl ? 'External/SSL' : 'Internal network'}`);
 
 } else {
     // ENTORNO DE DESARROLLO (LOCALHOST)

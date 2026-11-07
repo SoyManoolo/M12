@@ -45,12 +45,18 @@ function startMatchingSystem() {
     }, 5000);
 }
 
-process.on('SIGINT', () => {
+// Coolify/Docker detienen el contenedor con SIGTERM; SIGINT llega en local.
+function shutdown() {
     if (matchingInterval) {
         clearInterval(matchingInterval);
     }
-    process.exit(0);
-});
+    io.close();
+    server.close(() => process.exit(0));
+    setTimeout(() => process.exit(0), 10000).unref();
+}
+
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
 
 const port: number = env.PORT;
 const host = '0.0.0.0'; // CRÍTICO: Railway requiere escuchar en 0.0.0.0
