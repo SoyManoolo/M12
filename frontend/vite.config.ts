@@ -107,9 +107,6 @@ export default defineConfig(({ mode }) => {
         'react/jsx-runtime',
         'date-fns'
       ],
-      exclude: [
-        'react-router'
-      ],
       esbuildOptions: {
         target: 'esnext'
       }

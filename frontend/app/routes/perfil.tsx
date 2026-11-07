@@ -61,17 +61,13 @@ interface LoaderData {
   error?: string;
 }
 
-export async function loader({ request }: { request: Request }) {
+// La sesión vive en una cookie HttpOnly del dominio de la API, así que los
+// datos se cargan desde el navegador (clientLoader) y no en el servidor SSR.
+export async function clientLoader({ request }: { request: Request }): Promise<LoaderData | Response> {
   const url = new URL(request.url);
   const username = url.searchParams.get("username");
-  
-  // Obtener el token de las cookies
-  const cookieHeader = request.headers.get("Cookie");
-  const token = cookieHeader?.split(";").find(c => c.trim().startsWith("session="))?.split("=")[1];
-
-  if (!token) {
-    return redirect("/login");
-  }
+  // Marcador de compatibilidad: la API autentica con la cookie HttpOnly.
+  const token = 'cookie-session';
 
   try {
     // Primero obtenemos el usuario actual para comparar IDs
@@ -86,7 +82,7 @@ export async function loader({ request }: { request: Request }) {
       // Si hay username en la URL, cargar ese perfil
       const response = await userService.getUserByUsername(username, token);
       if (!response.success) {
-        return Response.json({ error: "Usuario no encontrado" }, { status: 404 });
+        return { error: "Usuario no encontrado" };
       }
       userData = response.data;
     } else {
@@ -94,21 +90,31 @@ export async function loader({ request }: { request: Request }) {
       userData = currentUserResponse.data;
     }
 
-    return Response.json({
-      user: userData,
+    return {
+      user: userData as User,
       isOwnProfile: userData.user_id === currentUserId
-    });
+    };
   } catch (error) {
     developmentLogger.error('Error en loader de perfil:', error);
-    return Response.json({ error: "Error al cargar el perfil" }, { status: 500 });
+    return { error: "Error al cargar el perfil" };
   }
+}
+
+clientLoader.hydrate = true as const;
+
+export function HydrateFallback() {
+  return (
+    <div className="min-h-screen bg-black text-white flex items-center justify-center">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+    </div>
+  );
 }
 
 export const meta = () => pageMeta('Perfil', 'Perfil y publicaciones de usuario en FriendsGo.', { path: '/perfil' });
 
 export default function Perfil() {
-  const data = useLoaderData<typeof loader>() as LoaderData;
-  const { token, isAuthenticated } = useAuth();
+  const data = useLoaderData<typeof clientLoader>() as LoaderData;
+  const { token, isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(false);
@@ -124,14 +130,15 @@ export default function Perfil() {
   } | null>(null);
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/login');
-      return;
+    // Esperar a que termine la comprobación de sesión antes de redirigir.
+    if (!isLoading && !isAuthenticated) {
+      navigate('/login', { replace: true });
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, isLoading, navigate]);
 
   useEffect(() => {
     const fetchData = async () => {
+      if (isLoading) return;
       if (!token) {
         setNotification({
           message: 'Por favor, inicia sesión para ver el perfil',
@@ -191,7 +198,7 @@ export default function Perfil() {
     };
 
     fetchData();
-  }, [token, data.user]);
+  }, [token, isLoading, data.user]);
 
   const handleEditProfile = () => {
     navigate('/configuracion?section=cuenta');
