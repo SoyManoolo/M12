@@ -22,6 +22,7 @@ export const meta = () => [
     { name: "viewport", content: "width=device-width, initial-scale=1" },
     { tagName: "link", rel: "icon", href: "/favicon.ico" },
     { tagName: "link", rel: "icon", type: "image/svg+xml", href: "/images/friendsgo-mark.svg" },
+    { tagName: "link", rel: "apple-touch-icon", href: "/icons/apple-touch-icon.png" },
     { tagName: "link", rel: "manifest", href: "/manifest.webmanifest" },
     { title: "FriendsGo" },
     { name: "description", content: "Conecta y comparte con tus amigos." },

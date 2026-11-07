@@ -15,6 +15,7 @@
 // src/components/Navbar.tsx
 import { Link } from "react-router";
 import ThemeToggle from '~/components/Shared/ThemeToggle';
+import Logo from '~/components/Shared/Logo';
 import { FaVideo, FaUpload, FaBell, FaEnvelope, FaCog, FaUser, FaShieldAlt, FaNewspaper, FaUsers, FaChevronDown, FaSearch, FaHome } from 'react-icons/fa';
 import { useAuth } from "~/hooks/useAuth";
 import { useState, useEffect } from 'react';
@@ -41,12 +42,8 @@ export default function Navbar() {
       <div className="w-1/6 h-screen bg-page border-r border-line p-4 fixed left-0 top-0 overflow-y-auto hidden lg:block">
       {/* Contenedor del logo */}
       <div className="mb-6 flex justify-center">
-        <Link to="/inicio">
-          <img
-            src="/images/friendsgo-mark.svg"
-            alt="Logo FriendsGo"
-            className="h-24 cursor-pointer"
-          />
+        <Link to="/inicio" aria-label="FriendsGo, inicio">
+          <Logo layout="stacked" markClassName="h-16 w-16" textClassName="text-xl" />
         </Link>
       </div>
 
@@ -160,12 +157,8 @@ export default function Navbar() {
       {/* Header Móvil (Solo en móviles) */}
       <div className="fixed top-0 left-0 right-0 h-16 bg-page border-b border-line flex items-center justify-between px-4 lg:hidden z-50">
         {/* Logo */}
-        <Link to="/inicio" className="flex items-center">
-          <img
-            src="/images/friendsgo-mark.svg"
-            alt="Logo FriendsGo"
-            className="h-10 cursor-pointer"
-          />
+        <Link to="/inicio" className="flex items-center" aria-label="FriendsGo, inicio">
+          <Logo markClassName="h-9 w-9" textClassName="text-lg" />
         </Link>
 
         {/* Iconos de la derecha */}
