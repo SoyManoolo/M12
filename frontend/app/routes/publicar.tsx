@@ -1,3 +1,4 @@
+import { fetchWithSession } from '~/services/session';
 import { pageMeta } from '~/utils/seo';
 import { useState, useEffect } from 'react';
 import Navbar from '~/components/Inicio/Navbar';
@@ -136,11 +137,8 @@ export default function Publicar() {
         formData.append('media', selectedFile);
       }
 
-      const response = await fetch(`${environment.apiUrl}/posts`, {
+      const response = await fetchWithSession(`${environment.apiUrl}/posts`, token, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
         body: formData
       });
 

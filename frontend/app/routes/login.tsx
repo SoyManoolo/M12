@@ -1,3 +1,4 @@
+import { COOKIE_SESSION } from '~/services/session';
 /**
  * @file login.tsx
  * @description Componente de página de inicio de sesión que maneja la autenticación de usuarios.
@@ -74,7 +75,7 @@ export default function LoginPage() {
             const response = await authService.login({ id, password });
 
             if (response.success) {
-                setToken('cookie-session');
+                setToken(COOKIE_SESSION);
 
                 setNotification({
                     message: response.message || '¡Bienvenido de nuevo!',

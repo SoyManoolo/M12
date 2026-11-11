@@ -1,3 +1,4 @@
+import { COOKIE_SESSION } from '~/services/session';
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { authService } from '../services/auth.service';
 import { developmentLogger } from '../utils/logger';
@@ -89,7 +90,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     };
 
     const value: AuthContextType = {
-        token: isAuthenticated ? 'cookie-session' : null,
+        token: isAuthenticated ? COOKIE_SESSION : null,
         setToken,
         // CRÍTICO: isAuthenticated ahora verifica que tengamos token Y que no estemos cargando
         // Esto evita que se redirija a login mientras se está cargando el usuario

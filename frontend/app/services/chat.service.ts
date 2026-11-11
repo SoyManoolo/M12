@@ -4,7 +4,8 @@ import { developmentLogger } from '~/utils/logger';
 import type { Socket } from 'socket.io-client';
 import { environment } from '../config/environment';
 import { chatApi } from './chat/api';
-import { decodeUserId, loadSocketClient } from './chat/client';
+import { legacySessionToken } from './session';
+import { loadSocketClient } from './chat/client';
 import type { ChatMessage as Message, ChatSummary as Chat, ConnectionStatus, DeliveryStatus, ReadStatus, TypingStatus } from './chat/types';
 
 // ===================================
@@ -49,6 +50,7 @@ class ChatService {
             }
             this.socket = socketIO.io(environment.apiUrl, {
                 autoConnect: false,
+                withCredentials: true,
                 reconnection: true,
                 reconnectionAttempts: 5,
                 reconnectionDelay: 1000,
@@ -75,7 +77,7 @@ class ChatService {
                 // Asegurarse de que el usuario se una a su sala
                 this.socket?.emit('join-user', {
                     userId: this.lastUserId,
-                    token: this.lastToken
+                    token: legacySessionToken(this.lastToken)
                 });
             }
 
@@ -239,28 +241,11 @@ class ChatService {
         }
 
         try {
-            const decoded = decodeUserId(token);
-
-            if (!decoded) {
-                developmentLogger.error('❌ No se pudo decodificar el token');
-                return;
-            }
-
-            if (decoded !== userId) {
-                developmentLogger.error('❌ El token no coincide con el usuario:', {
-                    tokenUserId: decoded,
-                    providedUserId: userId,
-                    message: 'Asegúrate de pasar tu propio user_id, no el del chat'
-                });
-                return;
-            }
-
-            developmentLogger.log('🚀 Iniciando conexión del socket...');
-            developmentLogger.log('👤 User ID:', decoded);
             this.isConnecting = true;
             this.lastToken = token;
-            this.lastUserId = decoded;
-            this.socket.auth = { token };
+            this.lastUserId = userId;
+            const legacyToken = legacySessionToken(token);
+            this.socket.auth = legacyToken ? { token: legacyToken } : {};
 
             // Si ya está conectado, desconectar primero para asegurar una conexión limpia
             if (this.socket.connected) {
@@ -317,7 +302,7 @@ class ChatService {
             developmentLogger.log('Socket no conectado, intentando reconectar...');
             // Llama a connect para reconectar y luego, si tiene éxito, se envía.
             // Por simplicidad, solo llamamos a connect y dejamos el reenvío a la lógica de chat/reconexión.
-            this.connect(token, receiverId);
+            if (this.lastUserId) void this.connect(token, this.lastUserId);
             return;
         }
 
@@ -327,7 +312,7 @@ class ChatService {
                 receiver_id: receiverId,
                 content
             },
-            token
+            token: legacySessionToken(token)
         });
     }
 
@@ -340,7 +325,7 @@ class ChatService {
             message_id: messageId,
             status: 'delivered',
             delivered_at: new Date().toISOString(),
-            token
+            token: legacySessionToken(token)
         });
     }
 
@@ -351,7 +336,7 @@ class ChatService {
             message_id: messageId,
             status: 'read',
             read_at: new Date().toISOString(),
-            token
+            token: legacySessionToken(token)
         });
     }
 
@@ -364,23 +349,14 @@ class ChatService {
         // Verificar que el socket está conectado
         if (!this.socket.connected) {
             developmentLogger.log('Socket no conectado, reconectando...');
-            // Obtener el userId del token
-            try {
-                const decodedToken = decodeUserId(token);
-                if (decodedToken) {
-                    this.connect(token, decodedToken);
-                }
-            } catch (error) {
-                developmentLogger.error('Error al decodificar el token para reconexión:', error);
-                return;
-            }
+            if (this.lastUserId) void this.connect(token, this.lastUserId);
             return;
         }
 
         this.socket.emit('typing', {
             receiver_id: receiverId,
             isTyping,
-            token
+            token: legacySessionToken(token)
         });
     }
 
@@ -477,30 +453,13 @@ class ChatService {
                             content,
                             client_message_id: clientMessageId
                         },
-                        token
+                        token: legacySessionToken(token)
                     });
                 });
             } else {
                 // Si no hay socket o no está conectado, usar HTTP
                 developmentLogger.log('Socket no conectado, usando HTTP');
-                const response = await fetch(`${environment.apiUrl}/chat`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        receiver_id: receiverId,
-                        content
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error('Error al crear el mensaje');
-                }
-
-                const data = await response.json();
-                return data.data;
+                return await chatApi.createMessage(receiverId, content, token);
             }
         } catch (error) {
             developmentLogger.error('Error al crear mensaje:', error);

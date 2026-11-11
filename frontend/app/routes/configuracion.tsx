@@ -1,3 +1,4 @@
+import { fetchWithSession } from '~/services/session';
 import { pageMeta } from '~/utils/seo';
 import { developmentLogger } from '~/utils/logger';
 /**
@@ -60,11 +61,9 @@ export default function ConfiguracionPage() {
       }
 
       try {
-        const response = await fetch(`${environment.apiUrl}/users/me`, {
+        const response = await fetchWithSession(`${environment.apiUrl}/users/me`, token, {
           method: 'GET',
-          credentials: 'include',
           headers: {
-            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
         });
