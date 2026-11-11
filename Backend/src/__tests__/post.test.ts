@@ -1,7 +1,8 @@
 import supertest from "supertest";
 import { app } from "../app";
 import { sequelize } from "../config/database";
-import { Post } from "../models/Post";
+import { Post, User } from "../models";
+import { cleanupOldData } from "../scripts/cleanup";
 import { ALLOWED_ORIGINS } from "../config/cors";
 import fs from "fs";
 import path from "path";
@@ -138,6 +139,38 @@ describe('Post test:', () => {
 
         expect(fs.readdirSync(staging).sort()).toEqual(filesBefore);
     });
+
+    test('Retira el medio del acceso público hasta purgarlo del disco', async () => {
+        const image = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aVZkAAAAASUVORK5CYII=', 'base64');
+        const response = await api.post('/posts').set('Cookie', sessionCookie).set('Origin', ALLOWED_ORIGINS[1])
+            .field('description', 'Publicación para eliminar')
+            .attach('media', image, { filename: 'remove.png', contentType: 'image/png' }).expect(200);
+        const { post_id, media } = response.body.newPost;
+        const filename = path.join(process.cwd(), media);
+
+        try {
+            await api.get(media).expect(200);
+            await api.delete(`/posts/${post_id}`).set('Cookie', sessionCookie).set('Origin', ALLOWED_ORIGINS[1]).expect(200);
+            await api.get(media).expect(404);
+            expect(fs.existsSync(filename)).toBe(true);
+            await api.get(`/admin/posts/${post_id}/media`).set('Cookie', sessionCookie).expect(403);
+
+            await User.update({ is_moderator: true }, { where: { username: registeredUsername } });
+            await api.get(`/admin/posts/${post_id}/media`).set('Cookie', sessionCookie).expect(200);
+
+            const old = new Date(2000, 0, 1);
+            fs.utimesSync(filename, old, old);
+            await Post.update({ deleted_at: old }, { where: { post_id }, paranoid: false });
+            await cleanupOldData();
+            expect(await Post.findByPk(post_id, { paranoid: false })).toBeNull();
+            expect(fs.existsSync(filename)).toBe(false);
+        } finally {
+            await User.update({ is_moderator: false }, { where: { username: registeredUsername } });
+            await Post.destroy({ where: { post_id }, force: true });
+            fs.rmSync(filename, { force: true });
+        }
+    });
+
 
     afterAll(async () => {
         await sequelize.close();

@@ -14,6 +14,7 @@ import { helmetOptions } from './config/helmet';
 import dbLogger from './config/logger';
 import { env } from './config/env';
 import { sequelize } from './config/database';
+import { Post, User } from './models';
 
 // Rutas
 import userRoutes from './routes/user'
@@ -128,19 +129,31 @@ app.get('/health', async (_req, res) => {
 });
 
 // Configurar middleware para servir archivos estáticos desde la carpeta 'media'
-app.use('/media', (req, res, next) => {
-    if (!parseMediaPath(`/media${decodeURIComponent(req.path)}`)) {
+app.use('/media', async (req, res, next) => {
+    const media = `/media${req.path}`;
+    const file = parseMediaPath(media);
+    if (!file) {
+        res.sendStatus(404);
+        return;
+    }
+
+    const post = await Post.findOne({ where: { media }, attributes: ['post_id'] });
+    const avatar = !post && file.format.folder === 'images'
+        && await User.findOne({ where: { profile_picture: media }, attributes: ['user_id'] });
+    if (!post && !avatar) {
         res.sendStatus(404);
         return;
     }
     next();
 }, express.static(mediaDirectory, {
+    cacheControl: false,
     index: false,
     redirect: false,
     setHeaders(res, filename) {
         const format = mediaFormat(filename);
         if (format) res.setHeader('Content-Type', format.mime);
         res.setHeader('X-Content-Type-Options', 'nosniff');
+        res.setHeader('Cache-Control', 'no-cache');
     },
 }));
 
