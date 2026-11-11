@@ -70,4 +70,10 @@ export interface PaginatedUsersResponse {
   page: number;
   limit: number;
   hasMore: boolean;
-} 
+}
+
+export interface AdminUsersPage {
+  users: User[];
+  hasNextPage: boolean;
+  nextCursor: string | null;
+}

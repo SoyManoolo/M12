@@ -1,6 +1,6 @@
 import { developmentLogger } from '~/utils/logger';
 import { environment } from '../config/environment';
-import type { UserProfile, ApiResponse, PaginatedUsersResponse } from '../types/user.types';
+import type { UserProfile, ApiResponse, PaginatedUsersResponse, AdminUsersPage } from '../types/user.types';
 import type { User } from '~/types/user.types';
 
 export const userService = {
@@ -64,9 +64,11 @@ export const userService = {
      * Obtiene todos los usuarios incluyendo al administrador actual
      * Esta función es específica para la página de administración
      */
-    async getAllUsersForAdmin(token: string): Promise<ApiResponse<PaginatedUsersResponse>> {
+    async getAllUsersForAdmin(token: string, cursor?: string): Promise<ApiResponse<AdminUsersPage>> {
         try {
-            const response = await fetch(`${environment.apiUrl}/users/admin`, {
+            const url = new URL(`${environment.apiUrl}/users/admin`);
+            if (cursor) url.searchParams.set('cursor', cursor);
+            const response = await fetch(url.toString(), {
                 credentials: 'include',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -83,13 +85,7 @@ export const userService = {
                 success: true,
                 status: 200,
                 message: 'Usuarios obtenidos correctamente',
-                data: {
-                    users: data.data.users,
-                    total: data.data.users.length,
-                    page: 1,
-                    limit: data.data.users.length,
-                    hasMore: false
-                }
+                data: data.data
             };
         } catch (error) {
             developmentLogger.error('Error al obtener usuarios:', error);
@@ -99,10 +95,8 @@ export const userService = {
                 message: 'Error al obtener usuarios',
                 data: {
                     users: [],
-                    total: 0,
-                    page: 1,
-                    limit: 0,
-                    hasMore: false
+                    hasNextPage: false,
+                    nextCursor: null
                 }
             };
         }
