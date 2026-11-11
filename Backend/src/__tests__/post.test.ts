@@ -9,15 +9,17 @@ import path from "path";
 const api = supertest(app)
 
 let sessionCookie = '';
+let registeredUsername = '';
 
 describe('Post test:', () => {
     beforeAll(async () => {
         const suffix = `${Date.now()}-${Math.floor(Math.random() * 1_000_000)}`;
+        registeredUsername = `post-ci-${suffix}`;
         const response = await api
         .post('/auth/register')
         .send({
             email: `post-ci-${suffix}@example.com`,
-            username: `post-ci-${suffix}`,
+            username: registeredUsername,
             name: "CI",
             surname: "Test",
             password: "Test1234!"

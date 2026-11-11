@@ -1,6 +1,8 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import PostMedia from './PostMedia';
+
+afterEach(cleanup);
 
 vi.mock('~/components/Shared/SecureImage', () => ({
   default: ({ src, alt, onClick }: { src: string; alt: string; onClick: () => void }) => (
