@@ -1,4 +1,5 @@
 import { Sequelize, Options, Dialect } from "sequelize";
+import { checkServerIdentity, type ConnectionOptions } from 'node:tls';
 import { AppError } from "../middlewares/errors/AppError";
 import dbLogger, { enableDatabaseLogging } from "./logger";
 import { env } from './env';
@@ -38,21 +39,8 @@ let sequelize: Sequelize;
 // ----------------------------------------------------
 
 if (DatabaseURL) {
-    // ENTORNO DE PRODUCCIÓN (RAILWAY)
-
-    // Las redes internas (Railway, Coolify con DB_SSL=false) no requieren SSL
-    const isRailwayInternal = DatabaseURL.includes('.railway.internal');
-    const useSsl = env.DB_SSL && !isRailwayInternal;
-
-    // Opciones específicas para Producción
     const prodOptions: Options = {
         ...baseOptions,
-        dialectOptions: !useSsl ? {} : {
-            ssl: {
-                require: true,
-                rejectUnauthorized: false
-            }
-        },
         pool: {
             max: 5,
             min: 0,
@@ -61,9 +49,23 @@ if (DatabaseURL) {
         }
     };
 
-    // Overload 3: new Sequelize(uri: string, options?: Options)
     sequelize = new Sequelize(DatabaseURL, prodOptions);
+    const host = sequelize.config.host || 'localhost';
+    const useSsl = env.DB_SSL && !host.toLowerCase().endsWith('.railway.internal');
 
+    // Sequelize lee las opciones TLS de la URL antes de aplicar este hook.
+    sequelize.addHook('beforeConnect', config => {
+        const dialectOptions: NonNullable<typeof config.dialectOptions> & { ssl?: ConnectionOptions | boolean } = {
+            ...config.dialectOptions
+        };
+        const urlSsl = dialectOptions.ssl;
+        dialectOptions.ssl = useSsl ? {
+            ...(typeof urlSsl === 'object' && urlSsl),
+            rejectUnauthorized: true,
+            checkServerIdentity: (_hostname, certificate) => checkServerIdentity(host, certificate)
+        } : false;
+        config.dialectOptions = dialectOptions;
+    });
     dbLogger.info(`Database connection mode: ${useSsl ? 'External/SSL' : 'Internal network'}`);
 
 } else {
