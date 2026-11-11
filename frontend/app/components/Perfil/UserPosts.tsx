@@ -21,6 +21,7 @@ interface UserPostsProps {
     description: string;
     media_url: string | null;
     media?: string | null;
+    media_type?: 'image' | 'video' | null;
     created_at: string;
     updated_at: string;
     deleted_at: string | null;
@@ -83,6 +84,7 @@ export default function UserPosts({ posts = [], onLike, onSave, onDelete, onEdit
           }}
           description={post.description}
           media_url={post.media_url || ''}
+          media_type={post.media_type}
           comments={post.comments?.map(comment => ({
             comment_id: comment.comment_id,
             author: {

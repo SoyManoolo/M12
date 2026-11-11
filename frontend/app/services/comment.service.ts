@@ -1,3 +1,4 @@
+import { fetchWithSession } from '~/services/session';
 import { developmentLogger } from '~/utils/logger';
 import { environment } from '../config/environment';
 
@@ -36,11 +37,9 @@ interface CommentsResponse {
 class CommentService {
   async createComment(token: string, postId: string, content: string): Promise<CommentResponse> {
     try {
-      const response = await fetch(`${environment.apiUrl}/comments`, {
+      const response = await fetchWithSession(`${environment.apiUrl}/comments`, token, {
         method: 'POST',
-        credentials: 'include',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -73,11 +72,7 @@ class CommentService {
   async getComments(token: string, postId: string, offset = 0, limit = 10): Promise<CommentsResponse> {
     try {
       const params = new URLSearchParams({ offset: String(offset), limit: String(limit) });
-      const response = await fetch(`${environment.apiUrl}/comments/${postId}?${params}`, {
-        credentials: 'include',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const response = await fetchWithSession(`${environment.apiUrl}/comments/${postId}?${params}`, token, {
       });
 
       if (!response.ok) {
@@ -103,12 +98,8 @@ class CommentService {
 
   async deleteComment(token: string, commentId: string): Promise<{ success: boolean; message: string }> {
     try {
-      const response = await fetch(`${environment.apiUrl}/comments/${commentId}`, {
+      const response = await fetchWithSession(`${environment.apiUrl}/comments/${commentId}`, token, {
         method: 'DELETE',
-        credentials: 'include',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
       });
 
       if (!response.ok) {

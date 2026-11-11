@@ -3,7 +3,7 @@ import { Request, Response, NextFunction } from 'express';
 import { PostController } from "../controllers/post";
 import { PostService } from "../services/post";
 import { AuthToken } from "../middlewares/validation/authentication/jwt";
-import upload from "../middlewares/multer"
+import { removeUploadedMedia, uploadPostMedia } from "../middlewares/multer";
 import { PostValidator } from "../middlewares/validation/post/PostValidator";
 
 const router = express.Router();
@@ -16,7 +16,17 @@ router.get('/username', AuthToken.verifyToken, async (req: Request, res: Respons
     await postController.getPostsUser(req, res, next);
 });
 
-router.post('/', AuthToken.verifyToken, CreatePostValidator, upload.single('media'), async (req: Request, res: Response, next: NextFunction) => {
+const validateCreatePost = (req: Request, res: Response, next: NextFunction) => {
+    CreatePostValidator(req, res, (error?: unknown) => {
+        if (!error || !req.file) {
+            next(error);
+        } else {
+            void removeUploadedMedia(req).then(() => next(error)).catch(next);
+        }
+    });
+};
+
+router.post('/', AuthToken.verifyToken, uploadPostMedia, validateCreatePost, async (req: Request, res: Response, next: NextFunction) => {
     await postController.createPost(req, res, next);
 });
 

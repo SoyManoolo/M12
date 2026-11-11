@@ -1,3 +1,4 @@
+import { fetchWithSession } from '~/services/session';
 import { useEffect, useState } from 'react';
 import Navbar from '~/components/Inicio/Navbar';
 import { FaUsers, FaVideo, FaComments, FaNewspaper, FaCalendarAlt } from 'react-icons/fa';
@@ -37,9 +38,7 @@ export default function AdminEstadisticas() {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`${environment.apiUrl}/admin/stats`, {
-          credentials: 'include',
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        const response = await fetchWithSession(`${environment.apiUrl}/admin/stats`, token, {
           signal: controller.signal
         });
         const result = await response.json();

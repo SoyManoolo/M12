@@ -1,3 +1,4 @@
+import { fetchWithSession } from '~/services/session';
 import { developmentLogger } from '~/utils/logger';
 import { environment } from '../config/environment';
 
@@ -7,6 +8,7 @@ interface Post {
   description: string;
   media_url: string | null;
   media?: string | null;
+  media_type?: 'image' | 'video' | null;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
@@ -80,12 +82,7 @@ class PostService {
         url.searchParams.append('cursor', cursor);
       }
 
-      const response = await fetch(url.toString(), {
-        credentials: 'include',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const response = await fetchWithSession(url.toString(), token);
 
       // Verificar si la respuesta es JSON
       const contentType = response.headers.get('content-type');
@@ -137,11 +134,8 @@ class PostService {
 
   async deletePost(token: string, postId: string): Promise<{ success: boolean; message: string }> {
     try {
-      const response = await fetch(`${environment.apiUrl}/posts/${postId}`, {
+      const response = await fetchWithSession(`${environment.apiUrl}/posts/${postId}`, token, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
       });
 
       // Verificar si la respuesta es JSON
@@ -171,10 +165,9 @@ class PostService {
 
   async updatePost(token: string, postId: string, description: string): Promise<{ success: boolean; message: string; data?: any }> {
     try {
-      const response = await fetch(`${environment.apiUrl}/posts/${postId}`, {
+      const response = await fetchWithSession(`${environment.apiUrl}/posts/${postId}`, token, {
         method: 'PATCH',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ description })
@@ -202,11 +195,8 @@ class PostService {
 
   async likePost(token: string, postId: string): Promise<{ success: boolean; message: string }> {
     try {
-      const response = await fetch(`${environment.apiUrl}/posts/${postId}/like`, {
+      const response = await fetchWithSession(`${environment.apiUrl}/posts/${postId}/like`, token, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
       });
 
       const data = await response.json();
@@ -230,11 +220,8 @@ class PostService {
 
   async unlikePost(token: string, postId: string): Promise<{ success: boolean; message: string }> {
     try {
-      const response = await fetch(`${environment.apiUrl}/posts/${postId}/like`, {
+      const response = await fetchWithSession(`${environment.apiUrl}/posts/${postId}/like`, token, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
       });
 
       const data = await response.json();
@@ -258,11 +245,7 @@ class PostService {
 
   async checkUserLike(token: string, postId: string): Promise<{ hasLiked: boolean }> {
     try {
-      const response = await fetch(`${environment.apiUrl}/posts/${postId}/like`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const response = await fetchWithSession(`${environment.apiUrl}/posts/${postId}/like`, token);
 
       const data = await response.json();
 

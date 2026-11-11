@@ -1,13 +1,11 @@
 import { environment } from '~/config/environment';
 import type { ChatMessage, ChatSummary } from './types';
+import { fetchWithSession } from '../session';
 
 type ApiResponse<T> = { success?: boolean; data: T };
 
 async function request<T>(path: string, token: string, init: RequestInit = {}): Promise<T> {
-  const response = await fetch(`${environment.apiUrl}${path}`, {
-    ...init,
-    headers: { Authorization: `Bearer ${token}`, ...init.headers },
-  });
+  const response = await fetchWithSession(`${environment.apiUrl}${path}`, token, init);
   if (!response.ok) throw new Error(`Chat request failed (${response.status})`);
   return (await response.json() as ApiResponse<T>).data;
 }
@@ -19,7 +17,7 @@ export const chatApi = {
   getMessages(userId: string, token: string, limit = 20, cursor?: string) {
     const params = new URLSearchParams({ receiver_id: userId, limit: String(limit) });
     if (cursor) params.set('cursor', cursor);
-    return request<{ messages: ChatMessage[]; nextCursor: string | null }>(`/chat?${params}`, token, { credentials: 'include' });
+    return request<{ messages: ChatMessage[]; nextCursor: string | null }>(`/chat?${params}`, token);
   },
   createMessage(receiverId: string, content: string, token: string) {
     return request<ChatMessage>('/chat', token, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ receiver_id: receiverId, content }) });
@@ -28,7 +26,7 @@ export const chatApi = {
     return request<{ result: boolean; message_id: string }>(`/chat/${messageId}`, token, { method: 'DELETE' });
   },
   deleteConversation(userId: string, token: string) {
-    return request<{ deleted: boolean; deleted_messages: number }>(`/chat/conversation/${encodeURIComponent(userId)}`, token, { method: 'DELETE', credentials: 'include' });
+    return request<{ deleted: boolean; deleted_messages: number }>(`/chat/conversation/${encodeURIComponent(userId)}`, token, { method: 'DELETE' });
   },
   markDelivered(messageId: string, token: string) {
     return request<ChatMessage>(`/chat/${messageId}/delivered`, token, { method: 'POST' });

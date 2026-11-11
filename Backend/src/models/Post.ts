@@ -33,6 +33,14 @@ Post.init(
         media: {
             type: DataTypes.STRING(255),
             allowNull: true,
+        },
+        media_type: {
+            type: DataTypes.VIRTUAL,
+            get(this: Post): 'image' | 'video' | null {
+                const media = this.getDataValue('media');
+                if (!media) return null;
+                return media.startsWith('/media/videos/') ? 'video' : 'image';
+            },
         }
     },
     {

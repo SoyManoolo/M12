@@ -23,7 +23,7 @@ export function chatEvents(socket: Socket, io: Server) {
     // Unirse a la sala del usuario
     socket.on("join-user", async (data: { userId: string; token: string }) => {
         try {
-            dbLogger.debug("[SOCKET][DEBUG] Evento recibido: join-user", [data]);
+            dbLogger.debug("[SOCKET][DEBUG] Evento recibido: join-user");
             const { userId } = data;
 
             const user_id = socket.data.user_id;  // Ya verificado por el middleware
@@ -148,19 +148,10 @@ export function chatEvents(socket: Socket, io: Server) {
         } catch (error) {
             dbLogger.error('[SOCKET] Error en \'chat-message\':', { error });
 
-            // Solo emitir error si es un error de autenticación o si el mensaje no se pudo crear
-            if (error instanceof AppError && error.type === 'UserNotAuthenticated') {
-                socket.emit('error', {
-                    type: 'UserNotAuthenticated',
-                    message: 'Usuario no autenticado'
-                });
-            } else if (error instanceof Error && error.message.includes('Error al crear el mensaje')) {
-                socket.emit('error', {
-                    type: 'MessageCreationError',
-                    message: 'No se pudo crear el mensaje'
-                });
-            }
-            // No emitir error para otros casos ya que el mensaje se envió correctamente
+            socket.emit('error', {
+                type: error instanceof AppError ? error.type : 'InternalServerError',
+                message: error instanceof AppError ? error.message : 'No se pudo crear el mensaje'
+            });
         }
     });
 
@@ -288,7 +279,7 @@ export function chatEvents(socket: Socket, io: Server) {
     });
 
     // Listener global para depuración de eventos
-    socket.onAny((event, ...args) => {
-        dbLogger.debug(`[SOCKET][DEBUG] Evento recibido:`, { event, args });
+    socket.onAny((event) => {
+        dbLogger.debug(`[SOCKET][DEBUG] Evento recibido:`, { event });
     });
 }

@@ -1,3 +1,4 @@
+import { fetchWithSession } from '~/services/session';
 import { developmentLogger } from '~/utils/logger';
 import { environment } from '~/config/environment';
 import type { User } from '~/types/user.types';
@@ -41,10 +42,9 @@ class FriendshipService {
 
   async sendFriendRequest(token: string, receiver_id: string): Promise<{ success: boolean; message: string; data?: FriendRequest }> {
     try {
-      const response = await fetch(`${this.baseUrl}/friendship/request`, {
+      const response = await fetchWithSession(`${this.baseUrl}/friendship/request`, token, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ receiver_id })
@@ -67,11 +67,8 @@ class FriendshipService {
 
   async acceptFriendRequest(token: string, request_id: string): Promise<{ success: boolean; message: string }> {
     try {
-      const response = await fetch(`${this.baseUrl}/friendship/request/${request_id}/accept`, {
+      const response = await fetchWithSession(`${this.baseUrl}/friendship/request/${request_id}/accept`, token, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
       });
 
       const data = await response.json();
@@ -90,11 +87,8 @@ class FriendshipService {
 
   async rejectFriendRequest(token: string, request_id: string): Promise<{ success: boolean; message: string }> {
     try {
-      const response = await fetch(`${this.baseUrl}/friendship/request/${request_id}/reject`, {
+      const response = await fetchWithSession(`${this.baseUrl}/friendship/request/${request_id}/reject`, token, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
       });
 
       const data = await response.json();
@@ -113,11 +107,8 @@ class FriendshipService {
 
   async cancelFriendRequest(token: string, request_id: string): Promise<{ success: boolean; message: string }> {
     try {
-      const response = await fetch(`${this.baseUrl}/friendship/request/${request_id}/cancel`, {
+      const response = await fetchWithSession(`${this.baseUrl}/friendship/request/${request_id}/cancel`, token, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
       });
 
       const data = await response.json();
@@ -136,11 +127,7 @@ class FriendshipService {
 
   async getPendingFriendRequests(token: string): Promise<{ success: boolean; message: string; data?: FriendRequest[] }> {
     try {
-      const response = await fetch(`${this.baseUrl}/friendship/pending`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const response = await fetchWithSession(`${this.baseUrl}/friendship/pending`, token);
 
       const data = await response.json();
       return {
@@ -159,11 +146,7 @@ class FriendshipService {
 
   async getSentFriendRequests(token: string): Promise<{ success: boolean; message: string; data?: FriendRequest[] }> {
     try {
-      const response = await fetch(`${this.baseUrl}/friendship/sent`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const response = await fetchWithSession(`${this.baseUrl}/friendship/sent`, token);
 
       const data = await response.json();
       return {
@@ -182,12 +165,7 @@ class FriendshipService {
 
   async getUserFriends(token: string): Promise<{ success: boolean; message: string; data?: Friend[] }> {
     try {
-      const response = await fetch(`${this.baseUrl}/friendship/friends`, {
-        credentials: 'include',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const response = await fetchWithSession(`${this.baseUrl}/friendship/friends`, token);
 
       const data = await response.json();
       return {
@@ -206,11 +184,7 @@ class FriendshipService {
 
   async getFriendshipStatus(token: string, other_user_id: string): Promise<{ success: boolean; message: string; data?: FriendshipStatus }> {
     try {
-      const response = await fetch(`${this.baseUrl}/friendship/status/${other_user_id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const response = await fetchWithSession(`${this.baseUrl}/friendship/status/${other_user_id}`, token);
 
       const data = await response.json();
       return {
@@ -229,11 +203,8 @@ class FriendshipService {
 
   async removeFriendship(token: string, friend_id: string): Promise<{ success: boolean; message: string }> {
     try {
-      const response = await fetch(`${this.baseUrl}/friendship/remove/${friend_id}`, {
+      const response = await fetchWithSession(`${this.baseUrl}/friendship/remove/${friend_id}`, token, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
       });
 
       const data = await response.json();

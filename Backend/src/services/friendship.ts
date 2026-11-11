@@ -60,6 +60,10 @@ export class FriendshipService {
      */
     public async sendFriendRequest(sender_id: string, receiver_id: string, created_from: 'search' | 'video_call' | 'suggestion' = 'search') {
         try {
+            if (sender_id === receiver_id) {
+                throw new AppError(400, 'CannotFriendYourself');
+            }
+
             // Verificar que ambos usuarios existan
             const [sender, receiver] = await Promise.all([
                 User.findByPk(sender_id),
@@ -145,6 +149,9 @@ export class FriendshipService {
                 const requestData = friendRequest.toJSON();
                 if (!requestData.sender_id || !requestData.receiver_id) {
                     throw new AppError(500, 'InvalidFriendRequestData');
+                }
+                if (requestData.sender_id === requestData.receiver_id) {
+                    throw new AppError(400, 'CannotFriendYourself');
                 }
 
                 const block = await UserBlocks.findOne({
@@ -240,6 +247,7 @@ export class FriendshipService {
      */
     public async getUserFriends(user_id: string) {
         try {
+            const publicUserAttributes = ['user_id', 'username', 'name', 'surname', 'profile_picture', 'bio', 'created_at'];
             const friendships = await Friends.findAll({
                 where: {
                     [Op.or]: [
@@ -247,17 +255,18 @@ export class FriendshipService {
                         { user2_id: user_id }
                     ]
                 },
+                attributes: ['friendship_id', 'user1_id', 'user2_id', 'created_at'],
                 include: [
                     {
                         model: User,
                         as: 'user1',
-                        attributes: ['user_id', 'username', 'name', 'surname', 'email', 'profile_picture', 'bio', 'email_verified', 'is_moderator', 'deleted_at', 'created_at', 'updated_at'],
+                        attributes: publicUserAttributes,
                         required: true
                     },
                     {
                         model: User,
                         as: 'user2',
-                        attributes: ['user_id', 'username', 'name', 'surname', 'email', 'profile_picture', 'bio', 'email_verified', 'is_moderator', 'deleted_at', 'created_at', 'updated_at'],
+                        attributes: publicUserAttributes,
                         required: true
                     }
                 ]
@@ -272,8 +281,8 @@ export class FriendshipService {
                         user1_id: string;
                         user2_id: string;
                         created_at: Date;
-                        user1: UserAttributes;
-                        user2: UserAttributes;
+                        user1: Pick<UserAttributes, 'user_id' | 'username' | 'name' | 'surname' | 'profile_picture' | 'bio' | 'created_at'>;
+                        user2: Pick<UserAttributes, 'user_id' | 'username' | 'name' | 'surname' | 'profile_picture' | 'bio' | 'created_at'>;
                     };
                     const isUser1 = f.user1.user_id === user_id;
                     const amigo = isUser1 ? f.user2 : f.user1;
@@ -282,7 +291,15 @@ export class FriendshipService {
                         user1_id: f.user1_id,
                         user2_id: f.user2_id,
                         created_at: f.created_at,
-                        user: amigo
+                        user: {
+                            user_id: amigo.user_id,
+                            username: amigo.username,
+                            name: amigo.name,
+                            surname: amigo.surname,
+                            profile_picture: amigo.profile_picture,
+                            bio: amigo.bio,
+                            created_at: amigo.created_at
+                        }
                     };
                 })
             };

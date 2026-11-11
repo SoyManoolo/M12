@@ -95,6 +95,7 @@ interface Post {
   user_id: string;
   description: string;
   media: string;
+  media_type?: 'image' | 'video' | null;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
@@ -177,6 +178,7 @@ export default function InicioPage() {
             user_id: post.user_id,
             description: post.description,
             media: post.media || '',
+            media_type: post.media_type,
             created_at: post.created_at,
             updated_at: post.updated_at,
             deleted_at: post.deleted_at,
@@ -255,6 +257,7 @@ export default function InicioPage() {
           user_id: post.user_id,
           description: post.description,
           media: post.media || '',
+          media_type: post.media_type,
           created_at: post.created_at,
           updated_at: post.updated_at,
           deleted_at: post.deleted_at,
@@ -445,6 +448,7 @@ export default function InicioPage() {
                   }}
                   description={post.description}
                   media_url={postService.getMediaUrl(post.media) || ''}
+                  media_type={post.media_type}
                   comments={post.comments || []}
                   created_at={post.created_at}
                   likes_count={post.likes_count}

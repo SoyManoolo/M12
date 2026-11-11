@@ -31,7 +31,11 @@ export class UserController {
 
     public async getAdminUsers(req: Request, res: Response, next: NextFunction) {
         try {
-            const users = await this.userService.getAdminUsers();
+            const cursor = req.query.cursor;
+            if (cursor !== undefined && (typeof cursor !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(cursor))) {
+                throw new AppError(400, 'InvalidCursor');
+            }
+            const users = await this.userService.getAdminUsers(100, cursor);
             res.status(200).json({ success: true, status: 200, data: users });
         } catch (error) {
             next(error);

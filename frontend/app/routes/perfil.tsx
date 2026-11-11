@@ -1,3 +1,4 @@
+import { COOKIE_SESSION } from '~/services/session';
 import { pageMeta } from '~/utils/seo';
 import { developmentLogger } from '~/utils/logger';
 /**
@@ -67,7 +68,7 @@ export async function clientLoader({ request }: { request: Request }): Promise<L
   const url = new URL(request.url);
   const username = url.searchParams.get("username");
   // Marcador de compatibilidad: la API autentica con la cookie HttpOnly.
-  const token = 'cookie-session';
+  const token = COOKIE_SESSION;
 
   try {
     // Primero obtenemos el usuario actual para comparar IDs

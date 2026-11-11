@@ -38,8 +38,7 @@ export const socketAuthMiddleware = (socket: Socket) => {
             // Si no hay token y no es un evento de desconexión, lanzar error
             if (!token && packet[0] !== 'disconnect') {
                 dbLogger.error("[SOCKET] Token no encontrado en el paquete:", {
-                    event: packet[0],
-                    data: packet[1]
+                    event: packet[0]
                 });
                 throw new AppError(401, 'TokenRequired');
             }
