@@ -5,6 +5,7 @@ import { PostService } from "../services/post";
 import { AuthToken } from "../middlewares/validation/authentication/jwt";
 import upload from "../middlewares/multer"
 import { PostValidator } from "../middlewares/validation/post/PostValidator";
+import { unlink } from "fs/promises";
 
 const router = express.Router();
 const postService = new PostService();
@@ -16,7 +17,17 @@ router.get('/username', AuthToken.verifyToken, async (req: Request, res: Respons
     await postController.getPostsUser(req, res, next);
 });
 
-router.post('/', AuthToken.verifyToken, CreatePostValidator, upload.single('media'), async (req: Request, res: Response, next: NextFunction) => {
+const validateCreatePost = (req: Request, res: Response, next: NextFunction) => {
+    CreatePostValidator(req, res, (error?: unknown) => {
+        if (!error || !req.file) {
+            next(error);
+        } else {
+            void unlink(req.file.path).then(() => next(error)).catch(next);
+        }
+    });
+};
+
+router.post('/', AuthToken.verifyToken, upload.single('media'), validateCreatePost, async (req: Request, res: Response, next: NextFunction) => {
     await postController.createPost(req, res, next);
 });
 
