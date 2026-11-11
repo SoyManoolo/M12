@@ -69,11 +69,12 @@ CREATE TABLE friend_requests (
     request_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     sender_id UUID REFERENCES users(user_id) ON DELETE CASCADE ON UPDATE CASCADE NOT NULL,
     receiver_id UUID REFERENCES users(user_id) ON DELETE CASCADE ON UPDATE CASCADE NOT NULL,
-    status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'rejected')),
+    status VARCHAR(20) DEFAULT 'pending',
     created_from VARCHAR(20) CHECK (created_from IN ('search', 'video_call', 'suggestion')),
     video_call_id UUID REFERENCES video_calls(call_id) ON DELETE SET NULL ON UPDATE CASCADE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT friend_requests_status_check CHECK (status IN ('pending', 'accepted', 'rejected', 'cancelled')),
     CONSTRAINT unique_friend_request UNIQUE (sender_id, receiver_id),
     CONSTRAINT different_users_friend_request CHECK (sender_id != receiver_id)
 );
@@ -162,8 +163,10 @@ CREATE TABLE notifications (
 
 -- Tabla de JWT tokens
 CREATE TABLE jwt (
-    token VARCHAR PRIMARY KEY,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+    token TEXT PRIMARY KEY,
+    user_id UUID NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL
 );
 
 -- Tabla de logs

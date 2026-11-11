@@ -114,6 +114,29 @@ const migrations: Migration[] = [
                 });
             }
         }
+    },
+    {
+        name: '20261111000000-allow-cancelled-friend-requests',
+        async up(_queryInterface, sequelize, transaction) {
+            await sequelize.query(`
+                ALTER TABLE friend_requests
+                    DROP CONSTRAINT IF EXISTS friend_requests_status_check,
+                    ADD CONSTRAINT friend_requests_status_check
+                        CHECK (status IN ('pending', 'accepted', 'rejected', 'cancelled'))
+            `, { transaction });
+        }
+    },
+    {
+        name: '20261111000100-adopt-published-jwt-schema',
+        async up(_queryInterface, sequelize, transaction) {
+            // The published SQL lacked session metadata. Keep legacy rows;
+            // authentication already requires a matching user and expiry.
+            await sequelize.query(`
+                ALTER TABLE jwt
+                    ADD COLUMN IF NOT EXISTS user_id UUID,
+                    ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ
+            `, { transaction });
+        }
     }
 ];
 
