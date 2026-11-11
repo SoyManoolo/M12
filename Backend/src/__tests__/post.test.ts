@@ -100,7 +100,7 @@ describe('Post test:', () => {
             .set('Origin', ALLOWED_ORIGINS[1])
             .field('description', 'Publicación con vídeo')
             .attach('media', video, { filename: 'clip.mp4', contentType: 'video/mp4' })
-            .expect(201);
+            .expect(200);
 
         const { post_id, media, media_type } = created.body.newPost;
         try {
