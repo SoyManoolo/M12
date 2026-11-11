@@ -1,8 +1,10 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { User } from '~/types/user.types';
 import AdminUsuarios from './admin.usuarios';
+
+afterEach(cleanup);
 
 const { getAllUsersForAdmin, updateUserById } = vi.hoisted(() => ({
   getAllUsersForAdmin: vi.fn(),
