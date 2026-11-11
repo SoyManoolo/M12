@@ -4,17 +4,17 @@ import { User } from "./User";
 import { IChatMessages, ChatMessagesCreationAttributes } from "../types/custom";
 
 class ChatMessages extends Model<IChatMessages, ChatMessagesCreationAttributes> implements IChatMessages {
-    public id!: string;
-    public sender_id!: string;
-    public receiver_id!: string;
-    public content!: string;
-    public is_delivered!: boolean;
-    public delivered_at!: Date | null;
-    public read_at!: Date | null;
-    public created_at!: Date;
-    public updated_at!: Date;
-    public sender?: User;
-    public receiver?: User;
+    declare id: string;
+    declare sender_id: string;
+    declare receiver_id: string;
+    declare content: string;
+    declare is_delivered: boolean;
+    declare delivered_at: Date | null;
+    declare read_at: Date | null;
+    declare created_at: Date;
+    declare updated_at: Date;
+    declare sender?: User;
+    declare receiver?: User;
 };
 
 ChatMessages.init(
