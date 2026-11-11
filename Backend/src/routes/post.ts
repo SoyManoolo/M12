@@ -3,9 +3,8 @@ import { Request, Response, NextFunction } from 'express';
 import { PostController } from "../controllers/post";
 import { PostService } from "../services/post";
 import { AuthToken } from "../middlewares/validation/authentication/jwt";
-import { uploadPostMedia } from "../middlewares/multer";
+import { removeUploadedMedia, uploadPostMedia } from "../middlewares/multer";
 import { PostValidator } from "../middlewares/validation/post/PostValidator";
-import { unlink } from "fs/promises";
 
 const router = express.Router();
 const postService = new PostService();
@@ -22,7 +21,7 @@ const validateCreatePost = (req: Request, res: Response, next: NextFunction) => 
         if (!error || !req.file) {
             next(error);
         } else {
-            void unlink(req.file.path).then(() => next(error)).catch(next);
+            void removeUploadedMedia(req).then(() => next(error)).catch(next);
         }
     });
 };
