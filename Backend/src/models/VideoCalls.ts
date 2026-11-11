@@ -5,14 +5,14 @@ import { VideoCallAttributes } from "../types/custom";
 import { VideoCallCreationAttributes } from "../types/custom";
 
 export class VideoCalls extends Model<VideoCallAttributes, VideoCallCreationAttributes> implements VideoCallAttributes {
-    call_id!: string;
-    user1_id!: string;
-    user2_id!: string;
-    started_at!: Date;
-    ended_at!: Date | null;
-    call_duration!: number | null;
-    status!: string;
-    match_status!: boolean;
+    declare call_id: string;
+    declare user1_id: string;
+    declare user2_id: string;
+    declare started_at: Date;
+    declare ended_at: Date | null;
+    declare call_duration: number | null;
+    declare status: string;
+    declare match_status: boolean;
 }
 
 VideoCalls.init(
