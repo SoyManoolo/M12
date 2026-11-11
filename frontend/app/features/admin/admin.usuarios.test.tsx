@@ -2,7 +2,7 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-li
 import { MemoryRouter } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { User } from '~/types/user.types';
-import AdminUsuarios from './admin.usuarios';
+import AdminUsuarios from '~/routes/admin.usuarios';
 
 afterEach(cleanup);
 
