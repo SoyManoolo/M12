@@ -23,7 +23,7 @@ export function chatEvents(socket: Socket, io: Server) {
     // Unirse a la sala del usuario
     socket.on("join-user", async (data: { userId: string; token: string }) => {
         try {
-            dbLogger.debug("[SOCKET][DEBUG] Evento recibido: join-user", [data]);
+            dbLogger.debug("[SOCKET][DEBUG] Evento recibido: join-user");
             const { userId } = data;
 
             const user_id = socket.data.user_id;  // Ya verificado por el middleware
@@ -288,7 +288,7 @@ export function chatEvents(socket: Socket, io: Server) {
     });
 
     // Listener global para depuración de eventos
-    socket.onAny((event, ...args) => {
-        dbLogger.debug(`[SOCKET][DEBUG] Evento recibido:`, { event, args });
+    socket.onAny((event) => {
+        dbLogger.debug(`[SOCKET][DEBUG] Evento recibido:`, { event });
     });
 }
