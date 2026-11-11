@@ -1,58 +1,79 @@
 import multer from 'multer';
+import { randomUUID } from 'node:crypto';
+import { mkdirSync } from 'node:fs';
+import { open, rename, rm } from 'node:fs/promises';
+import path from 'node:path';
+import type { RequestHandler } from 'express';
 import { AppError } from './errors/AppError';
-import path from 'path';
-import fs from 'fs';
+import { mediaDirectory, mediaExtension, mediaFormat } from '../utils/mediaFiles';
 
-// Guarda la ruta de la carpeta media y las subcarpetas images y videos
-const uploadDir = path.join(process.cwd(), 'media');
-const imageDir = path.join(uploadDir, 'images');
-const videoDir = path.join(uploadDir, 'videos');
-
-// Crear directorios si no existen
-[uploadDir, imageDir, videoDir].forEach(dir => {
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-});
+const stagingDirectory = path.join(mediaDirectory, '.staging');
+for (const directory of [stagingDirectory, path.join(mediaDirectory, 'images'), path.join(mediaDirectory, 'videos')]) {
+    mkdirSync(directory, { recursive: true });
+}
 
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    // Determinar si es imagen o video
-    if (file.mimetype.startsWith('image/')) {
-      cb(null, imageDir);
-    } else if (file.mimetype.startsWith('video/')) {
-      cb(null, videoDir);
-    } else {
-      cb(new Error('Tipo de archivo no soportado'), '');
-    }
-  },
-  filename: (req, file, cb) => {
-    // Patrón común para nombres únicos:
-    // [fieldname]-[timestamp]-[numerorandom].[extension]
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const ext = path.extname(file.originalname);
-    cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
-  }
+    destination: stagingDirectory,
+    filename: (_req, file, callback) => {
+        callback(null, `media-${randomUUID()}${mediaExtension(file.originalname)}`);
+    },
 });
 
-// Tipos de archivos permitidos
-const fileFilter = (req: any, file: Express.Multer.File, cb: any) => {
-  const allowedTypes = ['image/', 'video/'];
+function uploadMedia(imagesOnly: boolean): RequestHandler {
+    const parse = multer({
+        storage,
+        limits: { fileSize: 30 * 1024 * 1024 },
+        fileFilter: (_req, file, callback) => {
+            const format = mediaFormat(file.originalname);
+            if (!format || format.mime !== file.mimetype || (imagesOnly && format.folder !== 'images')) {
+                callback(new AppError(400, 'InvalidFileExtension'));
+                return;
+            }
+            callback(null, true);
+        },
+    }).single('media');
 
-  if (allowedTypes.some(type => file.mimetype.startsWith(type))) {
-    cb(null, true);
-  } else {
-    cb(new AppError(400, "InvalidFileExtension"), false);
-  }
-};
+    return (req, res, next) => {
+        parse(req, res, async (error?: unknown) => {
+            const file = req.file;
+            if (error || !file) {
+                next(error);
+                return;
+            }
 
-// Configuración de Multer
-const upload = multer({
-  storage,
-  fileFilter,
-  limits: {
-    fileSize: 30 * 1024 * 1024, // 30MB como límite de tamaño
-  }
-});
+            try {
+                const format = mediaFormat(file.filename);
+                const header = Buffer.alloc(24);
+                const handle = await open(file.path, 'r');
+                let bytesRead: number;
+                try {
+                    ({ bytesRead } = await handle.read(header));
+                } finally {
+                    await handle.close();
+                }
+                if (!format?.matches(header.subarray(0, bytesRead))) {
+                    throw new AppError(400, 'InvalidFileExtension');
+                }
 
-export default upload;
+                const destination = path.join(mediaDirectory, format.folder);
+                const newPath = path.join(destination, file.filename);
+                await rename(file.path, newPath);
+                file.destination = destination;
+                file.path = newPath;
+            } catch (validationError) {
+                try {
+                    await rm(file.path, { force: true });
+                } catch (cleanupError) {
+                    next(cleanupError);
+                    return;
+                }
+                next(validationError);
+                return;
+            }
+            next();
+        });
+    };
+}
+
+export const uploadPostMedia = uploadMedia(false);
+export const uploadProfilePicture = uploadMedia(true);

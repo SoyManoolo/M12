@@ -4,6 +4,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import path from 'path';
+import { mediaDirectory, mediaFormat, parseMediaPath } from './utils/mediaFiles';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 
@@ -127,7 +128,21 @@ app.get('/health', async (_req, res) => {
 });
 
 // Configurar middleware para servir archivos estáticos desde la carpeta 'media'
-app.use('/media', express.static(path.join(process.cwd(), 'media')));
+app.use('/media', (req, res, next) => {
+    if (!parseMediaPath(`/media${decodeURIComponent(req.path)}`)) {
+        res.sendStatus(404);
+        return;
+    }
+    next();
+}, express.static(mediaDirectory, {
+    index: false,
+    redirect: false,
+    setHeaders(res, filename) {
+        const format = mediaFormat(filename);
+        if (format) res.setHeader('Content-Type', format.mime);
+        res.setHeader('X-Content-Type-Options', 'nosniff');
+    },
+}));
 
 // Configurar middleware para servir archivos estáticos desde la carpeta 'assets'
 app.use('/assets', express.static(path.join(process.cwd(), 'src/assets')));

@@ -67,7 +67,7 @@ describe('Post test:', () => {
                 }
             } finally {
                 for (const filename of fs.readdirSync(imageDir)) {
-                    if (!filesBefore.has(filename) && /^media-\d+-\d+\.png$/.test(filename)) {
+                    if (!filesBefore.has(filename) && /^media-[\da-f-]+\.png$/.test(filename)) {
                         fs.unlinkSync(path.join(imageDir, filename));
                     }
                 }
@@ -123,6 +123,20 @@ describe('Post test:', () => {
             await Post.destroy({ where: { post_id }, force: true });
             fs.unlinkSync(path.join(process.cwd(), media));
         }
+    });
+
+    test('Rechaza el medio si el contenido no corresponde al formato admitido', async () => {
+        const staging = path.join(process.cwd(), 'media', '.staging');
+        const filesBefore = fs.readdirSync(staging).sort();
+        await api
+            .post('/posts')
+            .set('Cookie', sessionCookie)
+            .set('Origin', ALLOWED_ORIGINS[1])
+            .field('description', 'Medio no compatible')
+            .attach('media', Buffer.from('datos de prueba'), { filename: 'not-a-photo.png', contentType: 'image/png' })
+            .expect(400);
+
+        expect(fs.readdirSync(staging).sort()).toEqual(filesBefore);
     });
 
     afterAll(async () => {

@@ -4,7 +4,7 @@ import { UserService } from "../services/user";
 import { UserController } from "../controllers/user";
 import { UserValidator } from "../middlewares/validation/user/UserValidator";
 import { AuthToken } from "../middlewares/validation/authentication/jwt";
-import upload from "../middlewares/multer";
+import { uploadProfilePicture } from "../middlewares/multer";
 import { User } from "../models";
 import { AppError } from "../middlewares/errors/AppError";
 
@@ -65,7 +65,7 @@ router.delete('/username', AuthToken.verifyToken, UsernameValidator, authorizeUs
     await userController.deleteUser(req, res, next);
 });
 
-router.post('/username/profile-picture', AuthToken.verifyToken, UsernameValidator, authorizeUserMutation, upload.single('media'), async (req: Request, res: Response, next: NextFunction) => {
+router.post('/username/profile-picture', AuthToken.verifyToken, UsernameValidator, authorizeUserMutation, uploadProfilePicture, async (req: Request, res: Response, next: NextFunction) => {
     await userController.uploadProfilePicture(req, res, next);
 });
 
@@ -85,7 +85,7 @@ router.delete('/:id', AuthToken.verifyToken, IdValidator, authorizeUserMutation,
     await userController.deleteUser(req, res, next);
 });
 
-router.post('/:id/profile-picture', AuthToken.verifyToken, IdValidator, authorizeUserMutation, upload.single('media'), async (req: Request, res: Response, next: NextFunction) => {
+router.post('/:id/profile-picture', AuthToken.verifyToken, IdValidator, authorizeUserMutation, uploadProfilePicture, async (req: Request, res: Response, next: NextFunction) => {
     await userController.uploadProfilePicture(req, res, next);
 });
 

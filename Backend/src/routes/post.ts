@@ -3,7 +3,7 @@ import { Request, Response, NextFunction } from 'express';
 import { PostController } from "../controllers/post";
 import { PostService } from "../services/post";
 import { AuthToken } from "../middlewares/validation/authentication/jwt";
-import upload from "../middlewares/multer"
+import { uploadPostMedia } from "../middlewares/multer";
 import { PostValidator } from "../middlewares/validation/post/PostValidator";
 import { unlink } from "fs/promises";
 
@@ -27,7 +27,7 @@ const validateCreatePost = (req: Request, res: Response, next: NextFunction) => 
     });
 };
 
-router.post('/', AuthToken.verifyToken, upload.single('media'), validateCreatePost, async (req: Request, res: Response, next: NextFunction) => {
+router.post('/', AuthToken.verifyToken, uploadPostMedia, validateCreatePost, async (req: Request, res: Response, next: NextFunction) => {
     await postController.createPost(req, res, next);
 });
 
