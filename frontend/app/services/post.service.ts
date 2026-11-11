@@ -7,6 +7,7 @@ interface Post {
   description: string;
   media_url: string | null;
   media?: string | null;
+  media_type?: 'image' | 'video' | null;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;

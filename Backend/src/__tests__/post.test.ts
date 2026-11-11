@@ -92,6 +92,37 @@ describe('Post test:', () => {
         expect(fs.readdirSync(imageDir).sort()).toEqual(filesBefore);
     });
 
+    test('Los posts de vídeo exponen el tipo y sirven rangos del archivo', async () => {
+        const video = Buffer.from('00000018667479706d703432000000006d70343269736f6d', 'hex');
+        const created = await api
+            .post('/posts')
+            .set('Cookie', sessionCookie)
+            .set('Origin', ALLOWED_ORIGINS[1])
+            .field('description', 'Publicación con vídeo')
+            .attach('media', video, { filename: 'clip.mp4', contentType: 'video/mp4' })
+            .expect(201);
+
+        const { post_id, media, media_type } = created.body.newPost;
+        try {
+            expect(media_type).toBe('video');
+            const feed = await api.get('/posts').set('Cookie', sessionCookie).expect(200);
+            expect(feed.body.data.posts).toEqual(expect.arrayContaining([
+                expect.objectContaining({ post_id, media, media_type: 'video' })
+            ]));
+            const profile = await api.get('/posts/username').query({ username: registeredUsername })
+                .set('Cookie', sessionCookie).expect(200);
+            expect(profile.body.data.posts).toEqual(expect.arrayContaining([
+                expect.objectContaining({ post_id, media, media_type: 'video' })
+            ]));
+            const partial = await api.get(media).set('Range', 'bytes=0-7').expect(206);
+            expect(partial.headers['content-range']).toBe('bytes 0-7/24');
+            expect(partial.headers['content-type']).toBe('video/mp4');
+        } finally {
+            await Post.destroy({ where: { post_id }, force: true });
+            fs.unlinkSync(path.join(process.cwd(), media));
+        }
+    });
+
     afterAll(async () => {
         await sequelize.close();
     })
