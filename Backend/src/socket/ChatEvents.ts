@@ -148,19 +148,10 @@ export function chatEvents(socket: Socket, io: Server) {
         } catch (error) {
             dbLogger.error('[SOCKET] Error en \'chat-message\':', { error });
 
-            // Solo emitir error si es un error de autenticación o si el mensaje no se pudo crear
-            if (error instanceof AppError && error.type === 'UserNotAuthenticated') {
-                socket.emit('error', {
-                    type: 'UserNotAuthenticated',
-                    message: 'Usuario no autenticado'
-                });
-            } else if (error instanceof Error && error.message.includes('Error al crear el mensaje')) {
-                socket.emit('error', {
-                    type: 'MessageCreationError',
-                    message: 'No se pudo crear el mensaje'
-                });
-            }
-            // No emitir error para otros casos ya que el mensaje se envió correctamente
+            socket.emit('error', {
+                type: error instanceof AppError ? error.type : 'InternalServerError',
+                message: error instanceof AppError ? error.message : 'No se pudo crear el mensaje'
+            });
         }
     });
 
